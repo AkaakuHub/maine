@@ -1,5 +1,5 @@
 .control_Container {
-  background-color: rgba(0, 0, 0, 0.6);
+  /* background-color: rgba(0, 0, 0, 0.4); */
   position: absolute;
   top: 0;
   bottom: 0;
@@ -9,13 +9,21 @@
   z-index: 1;
   display: flex;
   justify-content: space-between;
+  cursor: default;
+  /* opacity: 1; */
+  visibility: visible;
+}
+
+.hidden {
+  /* opacity: 0; */
+  visibility: hidden;
 }
 
 .top_container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 5px 20px;
+  /* margin: 5px 20px; */
 }
 
 .mid__container {
@@ -27,6 +35,7 @@
 .icon__btn {
   padding: 0 10px;
   color: #7b2cbf;
+  cursor: pointer;
 }
 
 .slider__container {
@@ -44,7 +53,7 @@
 
 .inner__controls {
   display: flex;
-  padding: 10px 0;
+  /* padding: 10px 0; */
   align-items: center;
   width: 50%;
 }

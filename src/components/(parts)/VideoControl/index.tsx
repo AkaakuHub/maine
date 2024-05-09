@@ -1,12 +1,14 @@
 import React, { Dispatch } from "react";
 import { Slider, Button, Tooltip, Popover, Grid } from "@mui/material";
-import { FastForward, FastRewind, Pause, PlayArrow, SkipNext, VolumeUp, VolumeOff } from "@mui/icons-material";
+import { FastForward, FastRewind, Pause, PlayArrow, SkipNext, VolumeUp, VolumeOff, Fullscreen, FullscreenExit, PictureInPicture } from "@mui/icons-material";
 import styled from '@emotion/styled';
 
 import { VideoControlProps } from "@/type";
 
 import "./index.css";
 
+
+// styledを使わないとMUIは変更できない
 const VolumeSlider = styled(Slider)({
   width: "100px",
   color: "#9556CC",
@@ -55,7 +57,7 @@ const PrettoSlider = styled(Slider)({
 const Control: React.FC<VideoControlProps> = (
   {
     onPlayPause,
-    playing,
+    isPlaying,
     onRewind,
     onForward,
     played,
@@ -64,25 +66,28 @@ const Control: React.FC<VideoControlProps> = (
     volume,
     onVolumeChange,
     onVolumeSeekUp,
-    muted,
+    isMuted,
     onMute,
     duration,
     currentTime,
     controlRef,
+    onToggleFullscreen,
+    onTogglePictureInPicture,
+    onChangePlaybackRate,
+    isFullScreen,
   }
 ) => {
   return (
     <div className="control_Container" ref={controlRef}>
       <div className="top_container">
-        <h2>Video PLayer</h2>
       </div>
       <div className="mid__container">
-        <div className="icon__btn" onDoubleClick={onRewind}>
+        {/* <div className="icon__btn" onDoubleClick={onRewind}>
           <FastRewind fontSize="medium" />
         </div>
 
         <div className="icon__btn" onClick={onPlayPause}>
-          {playing ? (
+          {isPlaying ? (
             <Pause fontSize="medium" />
           ) : (
             <PlayArrow fontSize="medium" />
@@ -91,7 +96,7 @@ const Control: React.FC<VideoControlProps> = (
 
         <div className="icon__btn">
           <FastForward fontSize="medium" onDoubleClick={onForward} />
-        </div>
+        </div> */}
       </div>
       <div className="bottom__container">
         <div className="slider__container">
@@ -105,26 +110,46 @@ const Control: React.FC<VideoControlProps> = (
         </div>
         <div className="control__box">
           <div className="inner__controls">
-            {/* <div className="icon__btn">
-              <PlayArrow fontSize="medium" />
-            </div> */}
-            {/* <div className="icon__btn">
-              <SkipNext fontSize="medium" />
-            </div> */}
+            <div className="icon__btn" onClick={onPlayPause}>
+              {isPlaying ? (
+                <Pause fontSize="medium" />
+              ) : (
+                <PlayArrow fontSize="medium" />
+              )}{" "}
+            </div>
             <div className="icon__btn" onClick={onMute} >
-              {muted ? (
+              {isMuted ? (
                 <VolumeOff fontSize="medium" />
               ) : (
                 <VolumeUp fontSize="medium" />
               )}
             </div>
-
             <VolumeSlider
-              value={volume * 100}
+              value={!isMuted ? volume * 100 : 0}
               onChange={onVolumeChange}
               onChangeCommitted={onVolumeSeekUp}
             />
             <span>{currentTime} : {duration}</span>
+            <div className="icon__btn" onClick={onToggleFullscreen}>
+              {isFullScreen ? (
+                <FullscreenExit fontSize="medium" />
+              ) : (
+                <Fullscreen fontSize="medium" />
+              )
+              }
+            </div>
+            <div className="icon__btn" onClick={onTogglePictureInPicture}>
+              <PictureInPicture fontSize="medium" />
+            </div>
+            <div className="icon__btn" onClick={() => onChangePlaybackRate(1.0)}>
+              <span>1x</span>
+            </div>
+            <div className="icon__btn" onClick={() => onChangePlaybackRate(1.5)}>
+              <span>1.5x</span>
+            </div>
+            <div className="icon__btn" onClick={() => onChangePlaybackRate(2.0)}>
+              <span>2x</span>
+            </div>
           </div>
         </div>
       </div>

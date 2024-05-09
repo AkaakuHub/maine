@@ -2,7 +2,7 @@ export type DatabaseJsonType = Record<string, string[]>;
 
 export type VideoControlProps = {
   onPlayPause: React.MouseEventHandler<HTMLDivElement>;
-  playing: boolean;
+  isPlaying: boolean;
   onRewind: () => void;
   onForward: () => void;
   played: number;
@@ -11,9 +11,13 @@ export type VideoControlProps = {
   volume: number;
   onVolumeChange: ((e: Event, value: number | number[], activeThumb: number) => void);
   onVolumeSeekUp: ((e: Event | React.SyntheticEvent<Element, Event>, value: number | number[]) => void);
-  muted: boolean;
+  isMuted: boolean;
   onMute: React.MouseEventHandler<HTMLDivElement>;
   duration: string;
   currentTime: string;
   controlRef: React.RefObject<HTMLDivElement>;
+  onToggleFullscreen: React.MouseEventHandler<HTMLDivElement>;
+  onTogglePictureInPicture: React.MouseEventHandler<HTMLDivElement>;
+  onChangePlaybackRate: (rate: number) => void;
+  isFullScreen: boolean;
 };

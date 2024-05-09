@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, use } from "react";
 import ReactPlayer from "react-player";
 
 import "./index.css";
@@ -11,8 +11,7 @@ import { VideoControlProps } from "@/type";
 
 import formatTime from "@/libs/formatTime";
 
-import OnProgressProps from "react-player";
-
+// import OnProgressProps from "react-player";
 
 type VideoProps = {
   parentDir: string;
@@ -22,35 +21,38 @@ type VideoProps = {
 const Video: React.FC<VideoProps> = ({ parentDir, filename }) => {
 
   type videoStateType = {
-    playing: boolean;
-    muted: boolean;
+    isPlaying: boolean;
+    isMuted: boolean;
     volume: number;
     played: number;
-    seeking: boolean;
-    buffer: boolean;
+    isSeeking: boolean;
+    isBuffering: boolean;
+    playbackRate: number;
+    isFullScreen: boolean;
   };
 
   const [videoState, setVideoState] = useState<videoStateType>({
-    playing: false,
-    muted: false,
-    volume: 0.5,
+    isPlaying: true,
+    isMuted: false,
+    volume: 1.0,
     played: 0,
-    seeking: false,
-    buffer: true
+    isSeeking: false,
+    isBuffering: true,
+    playbackRate: 1.0,
+    isFullScreen: false,
   });
+
+  const [isPreviousPlying, setIsPreviousPlying] = useState<boolean>(false);
 
   const videoPlayerRef = useRef<ReactPlayer>(null);
   const controlRef = useRef<HTMLDivElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
-  let visibilityCount: number = 0;
-
+  const [visibilityCount, setVisibilityCount] = useState<number>(0);
 
   const playPauseHandler = () => {
     //plays and pause the video (toggling)
-    // setVideoState({ ...videoState, playing: !videoState.playing });
-    setVideoState((prevState) => {
-      return { ...prevState, playing: !prevState.playing };
-    });
+    setVideoState({ ...videoState, isPlaying: !videoState.isPlaying });
   };
 
   const rewindHandler = () => {
@@ -65,30 +67,36 @@ const Video: React.FC<VideoProps> = ({ parentDir, filename }) => {
     videoPlayerRef.current.seekTo(videoPlayerRef.current.getCurrentTime() + 10);
   };
 
-  const progressHandler: ((state: OnProgressProps) => void) = (state: OnProgressProps) => {
+  const progressHandler: ((state: any) => void) = (state: any) => {
     if (!controlRef.current) { return; }
-    if (visibilityCount > 3) {
-      // toggling player control container
-      controlRef.current.style.visibility = "hidden";
-    } else if (controlRef.current.style.visibility === "visible") {
-      visibilityCount += 1;
+    if (visibilityCount > 1) {
+      controlRef.current.classList.add("hidden");
+    } else if (!controlRef.current.classList.contains("hidden")) {
+      setVisibilityCount(visibilityCount + 1);
     }
-    if (!videoState.seeking) {
+    if (!videoState.isSeeking) {
       setVideoState({ ...videoState, ...state });
     }
   };
 
   const seekHandler: ((event: Event, value: number | number[], activeThumb: number) => void) = (e, value) => {
-    if (!(typeof value === "number")) { return; } // 型が怪しい
-    setVideoState({ ...videoState, played: value / 100 });
+    if (!(typeof value === "number")) { return; }
+    const played: number = value / 100;
+    if (videoPlayerRef.current) {
+      videoPlayerRef.current.seekTo(played, "fraction");
+    }
+    if (videoState.isPlaying) { setIsPreviousPlying(true); } // 途中でシークした場合、再生中だったら、再生中のままにする
+    setVideoState((prevState) => ({ ...prevState, played: played, isPlaying: false }));
   };
 
   const seekMouseUpHandler: ((e: Event | React.SyntheticEvent<Element, Event>, value: number | number[]) => void) = (e, value) => {
     if (!(typeof value === "number")) { return; }
     if (!videoPlayerRef.current) { return; }
-    setVideoState({ ...videoState, seeking: false });
-    videoPlayerRef.current.seekTo(value / 100);
+    // videoPlayerRef.current.seekTo(value / 100);
+    setVideoState((prevState) => ({ ...prevState, played: value / 100, isSeeking: false, isPlaying: isPreviousPlying }));
+    setIsPreviousPlying(false);
   };
+
 
   const volumeChangeHandler: ((e: Event, value: number | number[], activeThumb: number) => void) = (e, value) => {
     if (!(typeof value === "number")) { return; }
@@ -96,7 +104,7 @@ const Video: React.FC<VideoProps> = ({ parentDir, filename }) => {
     setVideoState({
       ...videoState,
       volume: newVolume,
-      muted: Number(newVolume) === 0 ? true : false, // volume === 0 then muted
+      isMuted: Number(newVolume) === 0 ? true : false, // volume === 0 then isMuted
     })
   };
 
@@ -106,29 +114,26 @@ const Video: React.FC<VideoProps> = ({ parentDir, filename }) => {
     setVideoState({
       ...videoState,
       volume: newVolume,
-      muted: newVolume === 0 ? true : false,
+      isMuted: newVolume === 0 ? true : false,
     })
   };
 
   const muteHandler = () => {
-    //Mutes the video player
-    setVideoState({ ...videoState, muted: !videoState.muted });
+    setVideoState({ ...videoState, isMuted: !videoState.isMuted });
   };
 
   const mouseMoveHandler = () => {
     if (!controlRef.current) { return; }
-    controlRef.current.style.visibility = "visible";
-    visibilityCount = 0;
+    controlRef.current.classList.remove("hidden");
+    setVisibilityCount(0);
   };
 
   const bufferStartHandler = () => {
-    console.log("Bufering.......");
-    setVideoState({ ...videoState, buffer: true })
+    setVideoState({ ...videoState, isBuffering: true })
   };
 
   const bufferEndHandler = () => {
-    console.log("buffering stoped ,,,,,,play");
-    setVideoState({ ...videoState, buffer: false })
+    setVideoState({ ...videoState, isBuffering: false })
   };
 
   const currentTime: number = videoPlayerRef.current ? videoPlayerRef.current.getCurrentTime() : 0;
@@ -137,11 +142,49 @@ const Video: React.FC<VideoProps> = ({ parentDir, filename }) => {
   const formattedCurrentTime: string = formatTime(currentTime);
   const formattedDuration: string = formatTime(duration);
 
+  // useEffectで、playingを監視する、currentTime, durationで、最後まで行ったらplayingをfalseにする
+  useEffect(() => {
+    if (videoState.isPlaying && currentTime === duration) {
+      setVideoState({ ...videoState, isPlaying: false });
+    }
+  }, [currentTime, duration]);
+
+  const toggleFullscreen = () => {
+    if (videoContainerRef.current) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        setVideoState({ ...videoState, isFullScreen: false });
+      } else {
+        videoContainerRef.current.requestFullscreen();
+        setVideoState({ ...videoState, isFullScreen: true });
+      }
+    }
+  };
+
+
+  const togglePictureInPicture = async () => {
+    // ピクチャ・イン・ピクチャへの切り替え
+    if (videoPlayerRef.current) {
+      const internalPlayer: any = videoPlayerRef.current.getInternalPlayer();
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture();
+      } else {
+        internalPlayer.requestPictureInPicture();
+      }
+    }
+  };
+
+  const changePlaybackRate = (rate: number) => {
+    // 再生速度の切り替え
+    setVideoState({ ...videoState, playbackRate: rate });
+  };
+
+
   const url = `/HLS/${parentDir}/${filename}/playlist.m3u8`;
 
   const ControlProp: VideoControlProps = {
     onPlayPause: playPauseHandler,
-    playing: videoState.playing,
+    isPlaying: videoState.isPlaying,
     onRewind: rewindHandler,
     onForward: fastForwardHandler,
     played: videoState.played,
@@ -150,38 +193,84 @@ const Video: React.FC<VideoProps> = ({ parentDir, filename }) => {
     volume: videoState.volume,
     onVolumeChange: volumeChangeHandler,
     onVolumeSeekUp: volumeSeekUpHandler,
-    muted: videoState.muted,
+    isMuted: videoState.isMuted,
     onMute: muteHandler,
     duration: formattedDuration,
     currentTime: formattedCurrentTime,
-    controlRef: controlRef
+    controlRef: controlRef,
+    onToggleFullscreen: toggleFullscreen,
+    onTogglePictureInPicture: togglePictureInPicture,
+    onChangePlaybackRate: changePlaybackRate,
+    isFullScreen: videoState.isFullScreen,
   }
+
+  // キーボード設定
+  // スペースキー, Kで再生・一時停止
+  // J, Lキーで巻き戻し・早送り
+  // Fキーでフルスクリーン
+  // Mキーでミュート
+  // useEffect(() => {
+  //   const keyDownHandler = (e: KeyboardEvent) => {
+  //     if (e.key === " ") {
+  //       playPauseHandler();
+  //     } else if (e.key === "k") {
+  //       playPauseHandler();
+  //     } else if (e.key === "j") {
+  //       rewindHandler();
+  //     } else if (e.key === "l") {
+  //       fastForwardHandler();
+  //     } else if (e.key === "f") {
+  //       toggleFullscreen();
+  //     } else if (e.key === "m") {
+  //       muteHandler();
+  //     }
+  //   };
+  //   document.addEventListener("keydown", keyDownHandler);
+  //   return () => {
+  //     document.removeEventListener("keydown", keyDownHandler);
+  //   };
+  // }, []);
 
 
   return (
-    <div className="video_container">
-      <Container maxWidth="md">
-        <div className="player__wrapper">
-          <div onMouseDown={mouseMoveHandler} >
+    <div className="video_container" ref={videoContainerRef}
+    >
+      {/* <Container maxWidth="md"> */}
+      <div className="player__wrapper">
+        <div
+        // onMouseDown={mouseMoveHandler}
+        // ここの階層がうまくいってない
+        >
+
+          <div
+            onClick={() => {
+              playPauseHandler();
+              mouseMoveHandler();
+            }}
+            onMouseMove={mouseMoveHandler}
+            onDoubleClick={toggleFullscreen}
+          >
             <ReactPlayer
               ref={videoPlayerRef}
               className="player"
               url={url}
               width="100%"
               height="100%"
-              playing={videoState.playing}
-              muted={videoState.muted}
+              playing={videoState.isPlaying}
+              muted={videoState.isMuted}
               onProgress={progressHandler}
               volume={videoState.volume}
               onBuffer={bufferStartHandler}
               onBufferEnd={bufferEndHandler}
+              playbackRate={videoState.playbackRate}
             />
-            <Control {...ControlProp} />
           </div>
+          <Control {...ControlProp} />
         </div>
-      </Container>
-      {videoState.buffer && <p>Loading</p>}
-    </div>
+      </div>
+      {/* </Container > */}
+      {videoState.isBuffering && <p>Buffering</p>}
+    </div >
   );
 };
 
