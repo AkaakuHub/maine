@@ -1,13 +1,13 @@
-.cardRoot{
-  width: 500px;
-  background-color: #e4e4e4;
-  border-radius: 10px;
+.cardRoot {
+	width: 500px;
+	background-color: #e4e4e4;
+	border-radius: 10px;
 }
 
 .thumbnail {
-  width: 400px;
+	width: 400px;
 }
 
-.animeTitle{
-  font-size: 1em;
+.animeTitle {
+	font-size: 1em;
 }
