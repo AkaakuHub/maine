@@ -9,10 +9,14 @@
 # testing
 /coverage
 
+
 # next.js
 /.next/
 /out/
 
+# local env files
+.env.local
+.env
 # production
 /build
 
@@ -38,3 +42,4 @@ next-env.d.ts
 # HLS
 /public/HLS/
 /public/Files/
+/src/generated/prisma

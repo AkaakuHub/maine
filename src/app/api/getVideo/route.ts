@@ -1,6 +1,7 @@
-import fs from "fs";
-import path from "path";
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { createReadStream, statSync } from "node:fs";
+import { validateSecureFilePath } from "@/libs/fileUtils";
 
 export async function GET(req: NextRequest) {
 	try {
@@ -11,28 +12,49 @@ export async function GET(req: NextRequest) {
 			return new NextResponse("File path is required", { status: 400 });
 		}
 
-		// ベースディレクトリを設定（サーバー上の動画ファイルが保存されているディレクトリ）
-		const BASE_DIR = process.env.ORIGIN_PATH ?? "";
-
-		// セキュリティ対策: リクエストされたパスを正規化し、ベースディレクトリ内に収まるか確認
-		const resolvedPath = path.resolve(BASE_DIR, filePath);
-		if (!resolvedPath.startsWith(BASE_DIR)) {
+		// セキュアなファイルパス検証
+		const validation = await validateSecureFilePath(filePath);
+		if (!validation.isValid) {
+			console.error("Invalid file path:", validation.error);
 			return new NextResponse("Invalid file path", { status: 403 });
 		}
 
 		// ファイルが存在するか確認
-		if (!fs.existsSync(resolvedPath)) {
+		if (!validation.exists) {
 			return new NextResponse("File not found", { status: 404 });
 		}
 
 		// ファイルをストリームとして返す
-		const fileStream = fs.createReadStream(resolvedPath);
-		const stat = fs.statSync(resolvedPath);
+		const stat = statSync(validation.fullPath);
 
-		return new NextResponse(fileStream, {
+		// Range requestsのサポート（動画の途中再生など）
+		const range = req.headers.get("range");
+		
+		if (range) {
+			const parts = range.replace(/bytes=/, "").split("-");
+			const start = Number.parseInt(parts[0], 10);
+			const end = parts[1] ? Number.parseInt(parts[1], 10) : stat.size - 1;
+			const chunksize = (end - start) + 1;
+			
+			const stream = createReadStream(validation.fullPath, { start, end });
+			
+			return new NextResponse(stream as unknown as ReadableStream, {
+				status: 206,
+				headers: {
+					"Content-Range": `bytes ${start}-${end}/${stat.size}`,
+					"Accept-Ranges": "bytes",
+					"Content-Length": chunksize.toString(),
+					"Content-Type": "video/mp4",
+				},
+			});
+		}
+
+		const fileStream = createReadStream(validation.fullPath);
+		return new NextResponse(fileStream as unknown as ReadableStream, {
 			headers: {
 				"Content-Type": "video/mp4",
 				"Content-Length": stat.size.toString(),
+				"Accept-Ranges": "bytes",
 			},
 		});
 	} catch (error) {

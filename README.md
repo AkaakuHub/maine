@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+# My Anime Storage
 
-First, run the development server:
+セルフホスト型のアニメ動画ストレージ＆ストリーミングWebアプリです。
+クロスプラットフォーム（Windows/Mac/Linux）対応、2025年最新のNext.js 15/Tailwind CSS v4/Prisma ORM構成。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 特徴
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Prisma + SQLite** による堅牢な動画メタデータ管理（JSONファイルは不使用）
+- **クロスプラットフォーム**なファイルパス処理とセキュリティ対策
+- **MP4動画のストリーミング**（HLS変換不要、Rangeリクエスト対応）
+- **Tailwind CSS v4**による2025年風の美しいダークUI
+- **アニメ一覧・検索・ソート・グリッド/リスト切替**
+- **動画プレイヤー**（キーボードショートカット・シーク・フルスクリーン等）
+- **自動ディレクトリスキャン＆DB同期**（新規/削除/更新を自動反映）
+- **APIは全てPrisma経由**で高速・信頼性抜群
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 実装内容の詳細
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- `prisma/schema.prisma` で `Anime` モデルを定義。動画ファイルのメタデータ（タイトル、エピソード、年、ファイルサイズ、パス等）をDBで管理。
+- `src/libs/prisma.ts` でPrismaクライアントをシングルトンで初期化。
+- `src/libs/fileUtils.ts` でパストラバーサル対策・正規化・存在確認などクロスプラットフォーム対応のファイルユーティリティを実装。
+- `src/app/api/updateDatabase/route.ts` でディレクトリを再帰的にスキャンし、DBとファイルシステムを同期。
+- `src/app/api/animes/route.ts` でPrismaからアニメ一覧を取得、検索・ソート・フィルタ対応。
+- `src/app/api/video/[filePath]/route.ts` で安全なファイルパス検証＆Range対応の動画ストリーミングAPIを実装。
+- `src/components/AnimeGrid` でPrisma型に準拠したアニメ一覧UI（グリッド/リスト切替、検索、ソート、サムネイル最適化）
+- `src/app/page.tsx` でDB同期→アニメ一覧取得→AnimeGrid表示の流れを自動化。
+- `src/app/play/[filePath]/page.tsx` で動画再生ページを実装。API経由で安全にストリーミング。
+- `src/components/VideoPlayer` で高機能な動画プレイヤーUI（ショートカット、音量、シーク、フルスクリーン等）
+- `.env` で `VIDEO_DIRECTORY`を指定可能。未指定時はエラー。
 
-## Learn More
+## セットアップ方法
 
-To learn more about Next.js, take a look at the following resources:
+1. **リポジトリをクローン**
+   ```bash
+   git clone <このリポジトリのURL>
+   cd my-anime-storage
+   ```
+2. **依存パッケージをインストール**
+   ```bash
+   pnpm install
+   # または npm install / yarn install
+   ```
+3. **.envファイルを作成し、動画ディレクトリを指定**
+   ```env
+   VIDEO_DIRECTORY=/path/to/your/anime/videos
+   ```
+4. **Prisma DBを初期化**
+   ```bash
+   pnpm prisma db push
+   ```
+5. **開発サーバーを起動**
+   ```bash
+   pnpm dev
+   # http://localhost:3000 でアクセス
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 使い方
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+1. トップページで「データベースを読み込み中...」が消えるまで待つと、アニメ一覧が表示されます。
+2. 検索・ソート・グリッド/リスト切替で好きなアニメを探せます。
+3. サムネイルまたはリストから再生したい動画をクリックすると、動画プレイヤー画面に遷移します。
+4. 動画プレイヤーではキーボードショートカットやフルスクリーン、シーク等が利用できます。
 
-## Deploy on Vercel
+## 注意点・Tips
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- サポート動画形式はMP4推奨。他形式は環境依存です。
+- サムネイルは現状ファイルパスで指定。自動生成は未実装。
+- DBと動画ディレクトリの同期は「ページアクセス時」に自動で行われます。
+- Windows/Mac/Linuxどれでも動作確認済み。
+- セキュリティのため、APIは必ずパス検証・存在確認を行います。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+---
+本アプリは2025年最新のNext.js/Tailwind/Prisma構成で、セルフホスト型のアニメ動画管理・視聴体験を最大化します！
