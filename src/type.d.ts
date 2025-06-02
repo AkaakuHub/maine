@@ -59,16 +59,6 @@ export type AnimeCollection = {
   description?: string;
 };
 
-export type VideoPlayerProps = {
-  src: string;
-  title?: string;
-  onEnded?: () => void;
-  autoPlay?: boolean;
-  controls?: boolean;
-  width?: string | number;
-  height?: string | number;
-};
-
 export type VideoControlProps = {
   onPlayPause: React.MouseEventHandler<HTMLDivElement>;
   isPlaying: boolean;

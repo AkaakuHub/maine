@@ -43,3 +43,5 @@ next-env.d.ts
 /public/HLS/
 /public/Files/
 /src/generated/prisma
+
+/prisma/*.db
