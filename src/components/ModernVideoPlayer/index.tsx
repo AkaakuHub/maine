@@ -275,22 +275,17 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
         "absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-opacity duration-300 p-4",
         showControls ? "opacity-100" : "opacity-0"
       )}>
-        {/* 上部: タイトルと戻るボタン */}
+        {/* 上部: 戻るボタンのみ */}
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {onBack && (
               <button
                 type="button"
                 onClick={onBack}
-                className="p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition-colors"
+                className="p-2 bg-gradient-to-r from-purple-600/50 to-blue-600/50 backdrop-blur-sm rounded-full hover:from-purple-500/70 hover:to-blue-500/70 transition-all duration-300"
               >
                 <ArrowLeft className="h-5 w-5 text-white" />
               </button>
-            )}
-            {title && (
-              <h1 className="text-white font-semibold text-lg truncate max-w-md">
-                {title}
-              </h1>
             )}
           </div>
           <button
@@ -309,27 +304,27 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
             max={duration || 0}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer slider"
+            className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider progress-slider"
           />
         </div>
 
         {/* 下部コントロール */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button type="button" onClick={togglePlay} className="text-white hover:text-blue-400 transition-colors">
+            <button type="button" onClick={togglePlay} className="text-white hover:text-purple-300 transition-colors">
               {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
             </button>
             
-            <button type="button" onClick={() => skip(-10)} className="text-white hover:text-blue-400 transition-colors">
+            <button type="button" onClick={() => skip(-10)} className="text-white hover:text-blue-300 transition-colors">
               <SkipBack className="h-5 w-5" />
             </button>
             
-            <button type="button" onClick={() => skip(10)} className="text-white hover:text-blue-400 transition-colors">
+            <button type="button" onClick={() => skip(10)} className="text-white hover:text-blue-300 transition-colors">
               <SkipForward className="h-5 w-5" />
             </button>
 
             <div className="flex items-center gap-2">
-              <button type="button" onClick={toggleMute} className="text-white hover:text-blue-400 transition-colors">
+              <button type="button" onClick={toggleMute} className="text-white hover:text-cyan-300 transition-colors">
                 {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
               </button>
               <input
@@ -339,7 +334,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
                 step="0.1"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-16 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer slider"
+                className="w-16 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer slider volume-slider"
               />
             </div>
 
@@ -354,13 +349,13 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
               <button
                 type="button"
                 onClick={() => setShowSettings(!showSettings)}
-                className="text-white hover:text-blue-400 transition-colors"
+                className="text-white hover:text-yellow-300 transition-colors"
               >
                 <Settings className="h-5 w-5" />
               </button>
               {showSettings && (
-                <div className="absolute bottom-8 right-0 bg-black/90 backdrop-blur-sm rounded-lg p-3 min-w-32">
-                  <div className="text-white text-sm mb-2">再生速度</div>
+                <div className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-32 shadow-xl">
+                  <div className="text-purple-300 text-sm mb-2 font-semibold">再生速度</div>
                   {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
                     <button
                       key={rate}
@@ -368,7 +363,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
                       onClick={() => handlePlaybackRateChange(rate)}
                       className={cn(
                         "block w-full text-left px-2 py-1 text-sm rounded transition-colors",
-                        playbackRate === rate ? "bg-blue-500 text-white" : "text-gray-300 hover:bg-white/10"
+                        playbackRate === rate ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white" : "text-slate-300 hover:bg-purple-500/20"
                       )}
                     >
                       {rate}x
@@ -378,11 +373,11 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
               )}
             </div>
 
-            <button type="button" onClick={togglePictureInPicture} className="text-white hover:text-blue-400 transition-colors">
+            <button type="button" onClick={togglePictureInPicture} className="text-white hover:text-green-300 transition-colors">
               <PictureInPicture2 className="h-5 w-5" />
             </button>
 
-            <button type="button" onClick={toggleFullscreen} className="text-white hover:text-blue-400 transition-colors">
+            <button type="button" onClick={toggleFullscreen} className="text-white hover:text-pink-300 transition-colors">
               {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
             </button>
           </div>
@@ -391,24 +386,43 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
 
       {/* カスタムスライダースタイル */}
       <style jsx>{`
-        .slider::-webkit-slider-thumb {
+        .progress-slider::-webkit-slider-thumb {
           appearance: none;
           height: 16px;
           width: 16px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: linear-gradient(45deg, #8b5cf6, #3b82f6);
           cursor: pointer;
           border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
         }
-        .slider::-moz-range-thumb {
+        .progress-slider::-moz-range-thumb {
           height: 16px;
           width: 16px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: linear-gradient(45deg, #8b5cf6, #3b82f6);
           cursor: pointer;
           border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+        }
+        .volume-slider::-webkit-slider-thumb {
+          appearance: none;
+          height: 12px;
+          width: 12px;
+          border-radius: 50%;
+          background: linear-gradient(45deg, #06b6d4, #10b981);
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
+        }
+        .volume-slider::-moz-range-thumb {
+          height: 12px;
+          width: 12px;
+          border-radius: 50%;
+          background: linear-gradient(45deg, #06b6d4, #10b981);
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
         }
       `}</style>
     </div>

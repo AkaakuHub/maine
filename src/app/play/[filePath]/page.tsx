@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import ModernVideoPlayer from "@/components/ModernVideoPlayer";
-import { ArrowLeft, Home, Share2, Download, MoreVertical, Heart, ThumbsUp, ThumbsDown, List } from "lucide-react";
+import { ArrowLeft, Home, Share2, Download, MoreVertical, Heart, ThumbsUp, ThumbsDown, List, Play } from "lucide-react";
 
 interface AnimeInfo {
   title: string;
@@ -108,16 +108,16 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="h-screen bg-black overflow-hidden">
-      {/* ナビゲーションバー */}
-      <nav className="relative z-50 bg-gradient-to-r from-black/95 via-black/90 to-black/95 backdrop-blur-sm border-b border-white/5 h-16 flex-shrink-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-blue-900/20">
+      {/* ナビゲーションバー - 全画面で表示 */}
+      <nav className="relative z-50 bg-gradient-to-r from-slate-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-sm border-b border-purple-500/20 h-16 flex-shrink-0">
         <div className="container mx-auto px-4 h-full">
           <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={handleGoBack}
-                className="flex items-center gap-2 text-white hover:text-blue-400 transition-all duration-200 p-2 rounded-lg hover:bg-white/10 active:scale-95"
+                className="flex items-center gap-2 text-white hover:text-purple-300 transition-all duration-200 p-2 rounded-lg hover:bg-purple-500/10 active:scale-95"
               >
                 <ArrowLeft size={18} />
                 <span className="hidden sm:inline">戻る</span>
@@ -126,34 +126,25 @@ export default function PlayPage() {
               <button
                 type="button"
                 onClick={handleGoHome}
-                className="flex items-center gap-2 text-white hover:text-blue-400 transition-all duration-200 p-2 rounded-lg hover:bg-white/10 active:scale-95"
+                className="flex items-center gap-2 text-white hover:text-blue-300 transition-all duration-200 p-2 rounded-lg hover:bg-blue-500/10 active:scale-95"
               >
                 <Home size={18} />
                 <span className="hidden sm:inline">ホーム</span>
               </button>
             </div>
             
-            <div className="text-white text-center flex-1 mx-4">
-              <h1 className="text-base sm:text-lg font-semibold truncate">
-                {animeInfo.title}
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-400 truncate">
-                {animeInfo.episode}
-              </p>
-            </div>
-            
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleShare}
-                className="p-2 text-white hover:text-blue-400 hover:bg-white/10 rounded-lg transition-all duration-200 active:scale-95"
+                className="p-2 text-white hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all duration-200 active:scale-95"
                 aria-label="共有"
               >
                 <Share2 size={18} />
               </button>
               <button
                 type="button"
-                className="p-2 text-white hover:text-gray-300 hover:bg-white/10 rounded-lg transition-all duration-200 active:scale-95"
+                className="p-2 text-white hover:text-slate-300 hover:bg-white/10 rounded-lg transition-all duration-200 active:scale-95"
                 aria-label="その他のオプション"
               >
                 <MoreVertical size={18} />
@@ -163,38 +154,35 @@ export default function PlayPage() {
         </div>
       </nav>
 
-      {/* メインコンテンツ */}
-      <div className="flex flex-col xl:flex-row h-[calc(100vh-64px)] overflow-hidden">
-        {/* 動画プレイヤーセクション */}
-        <div className="flex-1 h-full xl:max-w-none">
-          <div className="h-full w-full">
-            <ModernVideoPlayer
-              src={videoSrc}
-              title={animeInfo.fullTitle}
-              onBack={handleGoBack}
-            />
-          </div>
+      {/* モバイル・縦画面レイアウト */}
+      <div className="lg:hidden">
+        {/* 動画プレイヤー */}
+        <div className="w-full">
+          <ModernVideoPlayer
+            src={videoSrc}
+            title={animeInfo.fullTitle}
+            onBack={handleGoBack}
+          />
         </div>
 
-        {/* サイドバー（情報・関連動画エリア） - デスクトップのみ表示 */}
-        <div className="hidden xl:block xl:w-96 xl:border-l xl:border-white/10 bg-gray-900/50 backdrop-blur-sm h-full overflow-y-auto flex-shrink-0">
-          {/* 動画情報 */}
-          <div className="p-4 sm:p-6 border-b border-white/10">
-            <div className="mb-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                {animeInfo.title}
-              </h2>
-              <p className="text-gray-300 text-sm sm:text-base mb-3">
-                {animeInfo.episode}
-              </p>
-              
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-4">
-                <span>{animeInfo.genre}</span>
-                <span>•</span>
-                <span>{animeInfo.year}</span>
-                <span>•</span>
-                <span>{animeInfo.duration}</span>
-              </div>
+        {/* モバイル用コンテンツエリア */}
+        <div className="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+          {/* 動画情報セクション */}
+          <div className="p-4 border-b border-purple-500/20">
+            <h1 className="text-xl font-bold text-white mb-2 leading-tight">
+              {animeInfo.title}
+            </h1>
+            <p className="text-purple-300 mb-3 font-medium">
+              {animeInfo.episode}
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300 mb-4">
+              <span className="px-2 py-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-medium">
+                {animeInfo.genre}
+              </span>
+              <span>{animeInfo.year}</span>
+              <span>•</span>
+              <span>{animeInfo.duration}</span>
             </div>
 
             {/* アクションボタン */}
@@ -202,10 +190,10 @@ export default function PlayPage() {
               <button
                 type="button"
                 onClick={toggleLike}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
                   isLiked 
-                    ? 'bg-red-600 text-white' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white shadow-lg shadow-pink-500/25' 
+                    : 'bg-slate-700/50 text-slate-300 hover:bg-gradient-to-r hover:from-pink-500/20 hover:to-red-500/20 hover:text-pink-300 border border-slate-600'
                 }`}
               >
                 <Heart size={16} className={isLiked ? 'fill-current' : ''} />
@@ -215,14 +203,23 @@ export default function PlayPage() {
               <button
                 type="button"
                 onClick={toggleWatchlist}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
                   isInWatchlist 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25' 
+                    : 'bg-slate-700/50 text-slate-300 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:text-blue-300 border border-slate-600'
                 }`}
               >
                 <List size={16} />
-                <span className="text-sm">リストに追加</span>
+                <span className="text-sm">リスト追加</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShare}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 bg-slate-700/50 text-slate-300 hover:bg-gradient-to-r hover:from-green-500/20 hover:to-emerald-500/20 hover:text-green-300 border border-slate-600"
+              >
+                <Share2 size={16} />
+                <span className="text-sm">共有</span>
               </button>
             </div>
 
@@ -231,17 +228,17 @@ export default function PlayPage() {
               <button
                 type="button"
                 onClick={() => setShowDescription(!showDescription)}
-                className="text-left w-full"
+                className="text-left w-full mb-3"
               >
-                <h3 className="text-white font-semibold mb-2 flex items-center justify-between">
+                <h3 className="text-white font-semibold flex items-center justify-between">
                   概要
-                  <span className="text-gray-400 text-sm">
+                  <span className="text-purple-300 text-sm font-medium">
                     {showDescription ? '簡潔に表示' : 'もっと見る'}
                   </span>
                 </h3>
               </button>
               
-              <p className={`text-gray-300 text-sm leading-relaxed transition-all duration-200 ${
+              <p className={`text-slate-300 text-sm leading-relaxed transition-all duration-300 ${
                 showDescription 
                   ? '' 
                   : 'overflow-hidden text-ellipsis'
@@ -257,23 +254,192 @@ export default function PlayPage() {
             </div>
           </div>
 
-          {/* 関連動画プレースホルダー */}
-          <div className="p-4 sm:p-6">
-            <h3 className="text-white font-semibold mb-4">関連動画</h3>
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                  <div className="w-24 h-16 bg-gray-700 rounded flex-shrink-0 flex items-center justify-center">
-                    <span className="text-gray-400 text-xs">動画{i}</span>
+          {/* 関連動画セクション */}
+          <div className="p-4">
+            <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+              <div className="w-1 h-6 bg-gradient-to-b from-purple-500 to-blue-500 rounded-full" />
+              関連動画
+            </h3>
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex gap-3 p-3 rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-700/30 border border-slate-700/50 hover:border-purple-500/30 transition-all duration-300 cursor-pointer group">
+                  <div className="w-32 h-20 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-lg flex-shrink-0 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-400/40 transition-colors">
+                    <Play className="text-purple-300 group-hover:text-purple-200" size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white text-sm font-medium truncate">
-                      関連動画 {i}
+                    <h4 className="text-white text-sm font-medium mb-1 group-hover:text-purple-200 transition-colors">
+                      {animeInfo.title} - エピソード {i + 1}
                     </h4>
-                    <p className="text-gray-400 text-xs mt-1">24:00</p>
+                    <p className="text-slate-400 text-xs mb-1">24:00</p>
+                    <p className="text-slate-500 text-xs">1週間前</p>
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* デスクトップレイアウト */}
+      <div className="hidden lg:block h-screen">
+        {/* ナビゲーションバー */}
+        <nav className="relative z-50 bg-gradient-to-r from-slate-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-sm border-b border-purple-500/20 h-16 flex-shrink-0">
+          <div className="container mx-auto px-4 h-full">
+            <div className="flex items-center justify-between h-full">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleGoBack}
+                  className="flex items-center gap-2 text-white hover:text-purple-300 transition-all duration-200 p-2 rounded-lg hover:bg-purple-500/10 active:scale-95"
+                >
+                  <ArrowLeft size={18} />
+                  <span>戻る</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleGoHome}
+                  className="flex items-center gap-2 text-white hover:text-blue-300 transition-all duration-200 p-2 rounded-lg hover:bg-blue-500/10 active:scale-95"
+                >
+                  <Home size={18} />
+                  <span>ホーム</span>
+                </button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="p-2 text-white hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all duration-200 active:scale-95"
+                  aria-label="共有"
+                >
+                  <Share2 size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="p-2 text-white hover:text-slate-300 hover:bg-white/10 rounded-lg transition-all duration-200 active:scale-95"
+                  aria-label="その他のオプション"
+                >
+                  <MoreVertical size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* メインコンテンツ */}
+        <div className="flex h-[calc(100vh-64px)]">
+          {/* 動画プレイヤーセクション */}
+          <div className="flex-1">
+            <ModernVideoPlayer
+              src={videoSrc}
+              title={animeInfo.fullTitle}
+              onBack={handleGoBack}
+            />
+          </div>
+
+          {/* サイドバー */}
+          <div className="w-96 border-l border-purple-500/20 bg-gradient-to-b from-slate-900/80 to-slate-800/80 backdrop-blur-sm overflow-y-auto">
+            {/* 動画情報 */}
+            <div className="p-6 border-b border-purple-500/20">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                {animeInfo.title}
+              </h2>
+              <p className="text-purple-300 text-base mb-3 font-medium">
+                {animeInfo.episode}
+              </p>
+              
+              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300 mb-4">
+                <span className="px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-medium">
+                  {animeInfo.genre}
+                </span>
+                <span>{animeInfo.year}</span>
+                <span>•</span>
+                <span>{animeInfo.duration}</span>
+              </div>
+
+              {/* アクションボタン */}
+              <div className="flex items-center gap-3 mb-4">
+                <button
+                  type="button"
+                  onClick={toggleLike}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    isLiked 
+                      ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white shadow-lg shadow-pink-500/25' 
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-gradient-to-r hover:from-pink-500/20 hover:to-red-500/20 hover:text-pink-300 border border-slate-600'
+                  }`}
+                >
+                  <Heart size={16} className={isLiked ? 'fill-current' : ''} />
+                  <span className="text-sm">いいね</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={toggleWatchlist}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    isInWatchlist 
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25' 
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 hover:text-blue-300 border border-slate-600'
+                  }`}
+                >
+                  <List size={16} />
+                  <span className="text-sm">リスト追加</span>
+                </button>
+              </div>
+
+              {/* 概要 */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowDescription(!showDescription)}
+                  className="text-left w-full"
+                >
+                  <h3 className="text-white font-semibold mb-2 flex items-center justify-between">
+                    概要
+                    <span className="text-purple-300 text-sm font-medium">
+                      {showDescription ? '簡潔に表示' : 'もっと見る'}
+                    </span>
+                  </h3>
+                </button>
+                
+                <p className={`text-slate-300 text-sm leading-relaxed transition-all duration-300 ${
+                  showDescription 
+                    ? '' 
+                    : 'overflow-hidden text-ellipsis'
+                }`}
+                style={!showDescription ? {
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                } : {}}>
+                  {animeInfo.description}
+                </p>
+              </div>
+            </div>
+
+            {/* 関連動画 */}
+            <div className="p-6">
+              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                <div className="w-1 h-6 bg-gradient-to-b from-purple-500 to-blue-500 rounded-full" />
+                関連動画
+              </h3>
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex gap-3 p-3 rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-700/30 border border-slate-700/50 hover:border-purple-500/30 transition-all duration-300 cursor-pointer group">
+                    <div className="w-24 h-16 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-lg flex-shrink-0 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-400/40 transition-colors">
+                      <Play className="text-purple-300 group-hover:text-purple-200" size={16} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white text-sm font-medium truncate group-hover:text-purple-200 transition-colors">
+                        {animeInfo.title} - エピソード {i + 1}
+                      </h4>
+                      <p className="text-slate-400 text-xs mt-1">24:00</p>
+                      <p className="text-slate-500 text-xs">1週間前</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
