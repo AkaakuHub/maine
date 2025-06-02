@@ -239,7 +239,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
         tabIndex={0}
         aria-label={`動画: ${title || '無題'}`}
       >
-        <track kind="captions" src="" srcLang="ja" label="日本語字幕" default />
+        <track kind="captions" srcLang="ja" label="日本語字幕" />
       </video>
 
       {/* バッファリング表示 */}

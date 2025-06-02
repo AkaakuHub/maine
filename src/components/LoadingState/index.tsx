@@ -10,10 +10,17 @@ interface LoadingStateProps {
 
 const LoadingSpinner = ({ className }: { className?: string }) => (
   <div className={cn("relative", className)}>
-    <div className="w-16 h-16 border-4 border-slate-700 rounded-full animate-spin">
-      <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-blue-400 rounded-full animate-spin" />
+    {/* 外側のリング */}
+    <div className="w-20 h-20 relative">
+      <div className="absolute inset-0 border-4 border-slate-700/30 rounded-full" />
+      <div className="absolute inset-0 border-4 border-transparent border-t-blue-500 border-r-blue-400 rounded-full animate-spin" />
     </div>
-    <div className="absolute top-2 left-2 w-12 h-12 border-4 border-transparent border-t-purple-400 rounded-full animate-spin animate-reverse" style={{ animationDuration: "1.5s" }} />
+    {/* 内側のリング */}
+    <div className="absolute top-2 left-2 w-16 h-16">
+      <div className="absolute inset-0 border-3 border-transparent border-t-purple-500 border-l-purple-400 rounded-full animate-spin" style={{ animationDuration: "1.5s", animationDirection: "reverse" }} />
+    </div>
+    {/* 中心の点 */}
+    <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
   </div>
 );
 
@@ -111,9 +118,15 @@ const LoadingState = ({
   const content = getContent();
 
   return (
-    <div className={cn("min-h-screen", className)}>
-      {content.centerContent}
-      {content.showGrid && <LoadingGrid />}
+    <div className={cn("min-h-screen flex flex-col items-center justify-center", className)}>
+      <div className="container mx-auto px-4">
+        {content.centerContent}
+        {content.showGrid && (
+          <div className="mt-12">
+            <LoadingGrid />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

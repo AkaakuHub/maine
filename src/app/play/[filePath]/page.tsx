@@ -108,11 +108,11 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="h-screen bg-black overflow-hidden">
       {/* ナビゲーションバー */}
-      <nav className="relative z-50 bg-gradient-to-r from-black/95 via-black/90 to-black/95 backdrop-blur-sm border-b border-white/5">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
+      <nav className="relative z-50 bg-gradient-to-r from-black/95 via-black/90 to-black/95 backdrop-blur-sm border-b border-white/5 h-16 flex-shrink-0">
+        <div className="container mx-auto px-4 h-full">
+          <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -164,10 +164,10 @@ export default function PlayPage() {
       </nav>
 
       {/* メインコンテンツ */}
-      <div className="flex flex-col xl:flex-row min-h-[calc(100vh-64px)]">
+      <div className="flex flex-col xl:flex-row h-[calc(100vh-64px)] overflow-hidden">
         {/* 動画プレイヤーセクション */}
-        <div className="xl:flex-1 xl:max-w-none">
-          <div className="aspect-video xl:h-[calc(100vh-64px)] xl:aspect-auto">
+        <div className="flex-1 h-full xl:max-w-none">
+          <div className="h-full w-full">
             <ModernVideoPlayer
               src={videoSrc}
               title={animeInfo.fullTitle}
@@ -176,8 +176,8 @@ export default function PlayPage() {
           </div>
         </div>
 
-        {/* サイドバー（情報・関連動画エリア） */}
-        <div className="xl:w-96 xl:border-l xl:border-white/10 bg-gray-900/50 backdrop-blur-sm">
+        {/* サイドバー（情報・関連動画エリア） - デスクトップのみ表示 */}
+        <div className="hidden xl:block xl:w-96 xl:border-l xl:border-white/10 bg-gray-900/50 backdrop-blur-sm h-full overflow-y-auto flex-shrink-0">
           {/* 動画情報 */}
           <div className="p-4 sm:p-6 border-b border-white/10">
             <div className="mb-4">
