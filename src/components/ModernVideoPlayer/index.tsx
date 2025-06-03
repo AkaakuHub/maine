@@ -17,6 +17,22 @@ import {
 } from "lucide-react";
 import { cn, formatDuration } from "@/libs/utils";
 
+// フルスクリーン用の型定義
+interface HTMLVideoElementWithFullscreen extends HTMLVideoElement {
+  webkitRequestFullscreen?: () => Promise<void>;
+  mozRequestFullScreen?: () => Promise<void>;
+  msRequestFullscreen?: () => Promise<void>;
+}
+
+interface DocumentWithFullscreen extends Document {
+  webkitFullscreenElement?: Element | null;
+  mozFullScreenElement?: Element | null;
+  msFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void>;
+  mozCancelFullScreen?: () => Promise<void>;
+  msExitFullscreen?: () => Promise<void>;
+}
+
 interface ModernVideoPlayerProps {
   src: string;
   title?: string;
@@ -25,7 +41,7 @@ interface ModernVideoPlayerProps {
 }
 
 const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPlayerProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -76,7 +92,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
     }
   }, [isMuted, volume]);
 
-  // フルスクリーン切り替え
+  // フルスクリーン切り替え - 新しいアプローチ
   const toggleFullscreen = useCallback(async () => {
     if (!containerRef.current) return;
 
@@ -85,6 +101,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
         await document.exitFullscreen();
         setIsFullscreen(false);
       } else {
+        // コンテナをフルスクリーンにして、CSSでレイアウトを制御
         await containerRef.current.requestFullscreen();
         setIsFullscreen(true);
       }
@@ -100,6 +117,21 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
     videoRef.current.currentTime = time;
     setCurrentTime(time);
   };
+
+  // 動画の長さに応じてシークバーのstep値を計算
+  const getSeekStep = useCallback(() => {
+    if (duration === 0) return 0.01;
+    
+    // シンプルな解決策: 常に小さなstepを使用
+    // 動画の長さに応じて適切な刻みを設定
+    if (duration <= 10) return 0.01;     // 10秒以下: 0.01秒刻み
+    if (duration <= 30) return 0.1;      // 30秒以下: 0.1秒刻み
+    if (duration <= 60) return 0.25;     // 1分以下: 0.25秒刻み
+    if (duration <= 300) return 0.5;     // 5分以下: 0.5秒刻み
+    if (duration <= 600) return 1;       // 10分以下: 1秒刻み
+    if (duration <= 1800) return 2;      // 30分以下: 2秒刻み
+    return 5;                            // 30分超: 5秒刻み
+  }, [duration]);
 
   // 再生速度変更
   const handlePlaybackRateChange = (rate: number) => {
@@ -189,22 +221,49 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
     const video = videoRef.current;
     if (!video) return;
 
-    const handleTimeUpdate = () => setCurrentTime(video.currentTime);
+    const handleTimeUpdate = () => {
+      const currentTime = video.currentTime;
+      const duration = video.duration;
+      
+      // 動画が終了に近い場合（最後の0.1秒）は終了時刻に設定
+      if (duration - currentTime < 0.1) {
+        setCurrentTime(duration);
+      } else {
+        setCurrentTime(currentTime);
+      }
+    };
+    
     const handleDurationChange = () => setDuration(video.duration);
     const handleLoadStart = () => setIsBuffering(true);
     const handleCanPlay = () => setIsBuffering(false);
+    const handleEnded = () => {
+      setCurrentTime(video.duration);
+      setIsPlaying(false);
+    };
 
     video.addEventListener("timeupdate", handleTimeUpdate);
     video.addEventListener("durationchange", handleDurationChange);
     video.addEventListener("loadstart", handleLoadStart);
     video.addEventListener("canplay", handleCanPlay);
+    video.addEventListener("ended", handleEnded);
 
     return () => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("durationchange", handleDurationChange);
       video.removeEventListener("loadstart", handleLoadStart);
       video.removeEventListener("canplay", handleCanPlay);
+      video.removeEventListener("ended", handleEnded);
     };
+  }, []);
+
+  // フルスクリーン状態の変更を監視
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   // マウス移動でコントロール表示
@@ -217,7 +276,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
       ref={containerRef}
       className={cn(
         "relative bg-black rounded-lg overflow-hidden group",
-        isFullscreen && "!rounded-none",
+        isFullscreen && "!fixed !inset-0 !w-screen !h-screen !rounded-none !z-50 flex flex-col",
         className
       )}
       onMouseMove={resetControlsTimeout}
@@ -227,7 +286,10 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
       <video
         ref={videoRef}
         src={src}
-        className="w-full h-full"
+        className={cn(
+          "w-full h-full object-contain",
+          isFullscreen && "flex-1"
+        )}
         onClick={togglePlay}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -300,8 +362,9 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
         <div className="mb-3">
           <input
             type="range"
-            min="0"
+            min={0}
             max={duration || 0}
+            step={getSeekStep()}
             value={currentTime}
             onChange={handleSeek}
             className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider progress-slider"
@@ -386,6 +449,24 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
 
       {/* カスタムスライダースタイル */}
       <style jsx>{`
+        /* フルスクリーン時のスタイル */
+        .group:fullscreen {
+          display: flex;
+          flex-direction: column;
+          width: 100vw !important;
+          height: 100vh !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          border-radius: 0 !important;
+        }
+        
+        .group:fullscreen video {
+          flex: 1;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: contain;
+        }
+        
         .progress-slider::-webkit-slider-thumb {
           appearance: none;
           height: 16px;
