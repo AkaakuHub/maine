@@ -18,6 +18,8 @@ model VideoProgress {
   watchTime     Float?   // 現在の再生時間（秒）
   isLiked       Boolean  @default(false) // お気に入り状態
   likedAt       DateTime? // お気に入りに追加した日時
+  isInWatchlist Boolean  @default(false) // ウォッチリスト状態
+  watchlistAt   DateTime? // ウォッチリストに追加した日時
   lastWatched   DateTime? // 最後に視聴した日時
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

@@ -4,7 +4,7 @@ import { prisma } from "@/libs/prisma";
 export async function PUT(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { filePath, watchTime, watchProgress, isLiked } = body;
+		const { filePath, watchTime, watchProgress, isLiked, isInWatchlist } = body;
 
 		if (!filePath) {
 			return NextResponse.json(
@@ -20,6 +20,8 @@ export async function PUT(request: NextRequest) {
 			watchProgress?: number;
 			isLiked?: boolean;
 			likedAt?: Date | null;
+			isInWatchlist?: boolean;
+			watchlistAt?: Date | null;
 			updatedAt: Date;
 		} = {
 			updatedAt: new Date(),
@@ -41,6 +43,12 @@ export async function PUT(request: NextRequest) {
 			updateData.likedAt = isLiked ? new Date() : null;
 		}
 
+		// ウォッチリスト状態の更新
+		if (typeof isInWatchlist === "boolean") {
+			updateData.isInWatchlist = isInWatchlist;
+			updateData.watchlistAt = isInWatchlist ? new Date() : null;
+		}
+
 		// データベースを更新（upsert使用）
 		const updatedVideo = await prisma.videoProgress.upsert({
 			where: { filePath },
@@ -55,6 +63,8 @@ export async function PUT(request: NextRequest) {
 				watchProgress: true,
 				isLiked: true,
 				likedAt: true,
+				isInWatchlist: true,
+				watchlistAt: true,
 				lastWatched: true,
 			},
 		});
@@ -92,6 +102,8 @@ export async function GET(request: NextRequest) {
 				watchProgress: true,
 				isLiked: true,
 				likedAt: true,
+				isInWatchlist: true,
+				watchlistAt: true,
 				lastWatched: true,
 			},
 		});
@@ -106,6 +118,8 @@ export async function GET(request: NextRequest) {
 					watchProgress: 0,
 					isLiked: false,
 					likedAt: null,
+					isInWatchlist: false,
+					watchlistAt: null,
 					lastWatched: null,
 				},
 			});
