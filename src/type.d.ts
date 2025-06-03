@@ -1,78 +1,33 @@
-// Prisma Video model types
-export interface VideoData {
+// 再生進捗関連の型定義（現在の設計で使用）
+export interface VideoProgressData {
 	id: string;
-	title: string;
-	fileName: string;
 	filePath: string;
-	duration?: number | null;
-	fileSize: string; // BigInt serialized as string
-	thumbnail?: string | null;
-	episode?: number | null;
-	season?: string | null;
-	genre?: string | null;
-	year?: number | null;
-	rating?: number | null;
-	lastWatched?: Date | null;
-	watchTime?: number | null;
-	watchProgress: number; // watch progress percentage (0-100)
-	isLiked: boolean; // like status
-	likedAt?: Date | null; // when it was liked
+	watchTime: number; // 視聴時間（秒）
+	watchProgress: number; // 進捗率（0-100）
+	isLiked: boolean;
+	lastWatched: Date | null;
 	createdAt: Date;
 	updatedAt: Date;
 }
 
-export interface VideoResponse {
-	videos: VideoData[];
-	pagination: {
-		page: number;
-		limit: number;
-		total: number;
-		totalPages: number;
-	};
-}
-
-// Legacy types for backward compatibility - to be removed after migration
-export interface VideoData extends VideoData {}
-export interface VideoResponse {
-	videos: VideoData[];
-	pagination: {
-		page: number;
-		limit: number;
-		total: number;
-		totalPages: number;
-	};
-}
-
-export interface DatabaseUpdateResponse {
-	message: string;
-	stats: {
-		total: number;
-		added: number;
-		updated: number;
-		deleted: number;
-		scanned: number;
-	};
-}
-
-// Legacy types for backward compatibility
-export type DatabaseJsonType = {
-	newDatabase: Record<string, string[]>;
-};
-
-export type VideoFile = {
-	name: string;
-	path: string;
-	size?: number;
-	duration?: number;
-	thumbnail?: string;
-};
-
-export type VideoCollection = {
+// 動画ファイル情報の型定義（リアルタイムスキャンで取得）
+export interface VideoFileData {
+	id: string;
 	title: string;
-	episodes: VideoFile[];
-	thumbnail?: string;
-	description?: string;
-};
+	fileName: string;
+	filePath: string;
+	duration?: number;
+	fileSize: number;
+	episode?: number;
+	season?: string;
+	genre?: string;
+	year?: number;
+	// 再生進捗情報（DBから取得）
+	watchProgress?: number;
+	watchTime?: number;
+	isLiked?: boolean;
+	lastWatched?: Date | null;
+}
 
 export type VideoControlProps = {
 	onPlayPause: React.MouseEventHandler<HTMLDivElement>;

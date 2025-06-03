@@ -29,14 +29,4 @@ const fetch_callFFmpeg = async (filename: string) => {
 	return res;
 };
 
-const fetch_updateDatabase = async () => {
-	const res = await fetch("../../api/updateDatabase", {
-		method: "GET",
-		headers: {
-			"Content-Type": "application/json",
-		},
-	});
-	return res;
-};
-
-export { judgeStatus, fetch_updateDatabase, fetch_callFFmpeg };
+export { judgeStatus, fetch_callFFmpeg };

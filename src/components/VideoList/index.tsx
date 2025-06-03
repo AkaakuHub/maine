@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
 	Play,
 	Calendar,
@@ -11,16 +10,15 @@ import {
 	Info,
 	MoreHorizontal,
 } from "lucide-react";
-import type { VideoData } from "@/type";
+import type { VideoFileData } from "@/type";
 import { cn, formatFileSize, truncateText, formatDuration } from "@/libs/utils";
 
 interface VideoListProps {
-	videos: VideoData[];
+	videos: VideoFileData[];
 	className?: string;
 }
 
-const VideoListItem = ({ video }: { video: VideoData }) => {
-	const [imageError, setImageError] = useState(false);
+const VideoListItem = ({ video }: { video: VideoFileData }) => {
 	const [showMenu, setShowMenu] = useState(false);
 
 	return (
@@ -32,20 +30,9 @@ const VideoListItem = ({ video }: { video: VideoData }) => {
 				<div className="flex items-center gap-4">
 					{/* サムネイル */}
 					<div className="relative w-28 h-16 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg overflow-hidden flex-shrink-0">
-						{video.thumbnail && !imageError ? (
-							<Image
-								src={video.thumbnail}
-								alt={video.title}
-								fill
-								className="object-cover transition-transform duration-300 group-hover:scale-110"
-								onError={() => setImageError(true)}
-								unoptimized
-							/>
-						) : (
-							<div className="w-full h-full flex items-center justify-center">
-								<Play className="h-6 w-6 text-slate-400 group-hover:text-white transition-colors" />
-							</div>
-						)}
+						<div className="w-full h-full flex items-center justify-center">
+							<Play className="h-6 w-6 text-slate-400 group-hover:text-white transition-colors" />
+						</div>
 
 						{/* 再生ボタンオーバーレイ */}
 						<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

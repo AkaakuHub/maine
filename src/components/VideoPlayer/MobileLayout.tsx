@@ -60,6 +60,7 @@ export default function MobileLayout({
 					onToggleWatchlist={onToggleWatchlist}
 					onShare={onShare}
 					onToggleDescription={onToggleDescription}
+					variant="mobile"
 				/>
 
 				{/* 関連動画セクション */}

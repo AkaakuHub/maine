@@ -101,7 +101,6 @@ export const SUCCESS_MESSAGES = {
 export const API = {
 	ENDPOINTS: {
 		VIDEOS: "/api/videos",
-		UPDATE_DATABASE: "/api/updateDatabase",
 		GET_VIDEO: "/api/getVideo",
 		VIDEO_STREAM: "/api/video",
 		PROGRESS: "/api/progress",

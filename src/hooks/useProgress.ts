@@ -2,14 +2,14 @@ import { useState, useCallback } from "react";
 import { API } from "@/utils/constants";
 
 export interface UpdateProgressParams {
-	id: string;
+	filePath: string;
 	watchTime?: number;
 	watchProgress?: number;
 	isLiked?: boolean;
 }
 
 export interface ProgressData {
-	id: string;
+	filePath: string;
 	watchTime?: number | null;
 	watchProgress: number;
 	isLiked: boolean;
@@ -21,7 +21,7 @@ export interface UseProgressReturn {
 	updateProgress: (
 		params: UpdateProgressParams,
 	) => Promise<ProgressData | null>;
-	getProgress: (id: string) => Promise<ProgressData | null>;
+	getProgress: (filePath: string) => Promise<ProgressData | null>;
 	loading: boolean;
 	error: string | null;
 }
@@ -68,13 +68,13 @@ export function useProgress(): UseProgressReturn {
 	);
 
 	const getProgress = useCallback(
-		async (id: string): Promise<ProgressData | null> => {
+		async (filePath: string): Promise<ProgressData | null> => {
 			try {
 				setLoading(true);
 				setError(null);
 
 				const response = await fetch(
-					`${API.ENDPOINTS.PROGRESS}?id=${encodeURIComponent(id)}`,
+					`${API.ENDPOINTS.PROGRESS}?filePath=${encodeURIComponent(filePath)}`,
 					{
 						signal: AbortSignal.timeout(API.TIMEOUT),
 					},

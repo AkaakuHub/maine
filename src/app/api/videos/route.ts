@@ -1,78 +1,36 @@
+import { VideoScanService } from "@/services";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { RealtimeVideoService } from "@/services/realtimeVideoService";
-import type {
-	VideoSearchFilters,
-	VideoSearchSorting,
-	VideoSearchPagination,
-} from "@/services/realtimeVideoService";
 
 export async function GET(request: NextRequest) {
 	try {
 		const { searchParams } = new URL(request.url);
 
-		// 明示的な検索要求をチェック
-		const loadAll = searchParams.get("loadAll") === "true";
-		const hasSearchFilters =
-			searchParams.has("search") ||
-			searchParams.has("genre") ||
-			searchParams.has("year");
+		// 検索クエリを取得
+		const query = searchParams.get("search") || "";
 
-		// デバッグログ
-		console.log("[API] Request params:", {
-			loadAll,
-			hasSearchFilters,
-			search: searchParams.get("search"),
-			genre: searchParams.get("genre"),
-			year: searchParams.get("year"),
-		});
+		console.log("[API] Searching videos with query:", query);
 
-		// 検索クエリもloadAllフラグもない場合は空の結果を返す
-		if (!loadAll && !hasSearchFilters) {
-			console.log("[API] No search conditions - returning empty result");
-			return NextResponse.json({
-				videos: [],
-				pagination: {
-					page: 1,
-					limit: 20,
-					total: 0,
-					totalPages: 0,
-				},
-			});
+		// VideoScanServiceを使用してリアルタイム検索
+		const result = await VideoScanService.searchVideos(query);
+
+		if (!result.success) {
+			return NextResponse.json(
+				{ error: result.message, details: result.error },
+				{ status: 500 },
+			);
 		}
 
-		// パラメータを解析
-		const filters: VideoSearchFilters = {
-			search: searchParams.get("search") || undefined,
-			genre: searchParams.get("genre") || undefined,
-			year: searchParams.get("year") || undefined,
-		};
-
-		const sorting: VideoSearchSorting = {
-			sortBy: (searchParams.get("sortBy") as VideoSearchSorting["sortBy"]) || "title",
-			sortOrder:
-				(searchParams.get("sortOrder") as VideoSearchSorting["sortOrder"]) || "asc",
-		};
-
-		const pagination: VideoSearchPagination = {
-			page: parseInt(searchParams.get("page") || "1", 10),
-			limit: parseInt(searchParams.get("limit") || "20", 10),
-		};
-
-		// リアルタイム検索サービスを使用してデータを取得
-		const result = await RealtimeVideoService.searchVideos(filters, sorting, pagination);
-
-		console.log("[API] Returning result:", {
-			videoCount: result.videos.length,
-			total: result.pagination.total,
+		return NextResponse.json({
+			videos: result.videos,
+			total: result.totalFound,
+			message: result.message,
 		});
-
-		return NextResponse.json(result);
 	} catch (error) {
-		console.error("Get videos error:", error);
+		console.error("Video search error:", error);
 		return NextResponse.json(
 			{
-				error: "Failed to fetch videos",
+				error: "Internal server error",
 				details: error instanceof Error ? error.message : "Unknown error",
 			},
 			{ status: 500 },

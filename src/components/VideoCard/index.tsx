@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Play, Clock, Calendar, HardDrive, Info, Heart } from "lucide-react";
-import type { VideoData } from "@/type";
+import type { VideoFileData } from "@/type";
 import { cn, formatFileSize, truncateText } from "@/libs/utils";
 import { useProgress } from "@/hooks/useProgress";
 
 interface VideoCardProps {
-	video: VideoData;
+	video: VideoFileData;
 	priority?: boolean;
 	className?: string;
-	onLikeUpdate?: (id: string, isLiked: boolean) => void;
+	onLikeUpdate?: (filePath: string, isLiked: boolean) => void;
 }
 
 const VideoCard = ({
@@ -21,9 +20,8 @@ const VideoCard = ({
 	className,
 	onLikeUpdate,
 }: VideoCardProps) => {
-	const [imageError, setImageError] = useState(false);
 	const [isHovered, setIsHovered] = useState(false);
-	const [isLiked, setIsLiked] = useState(video.isLiked);
+	const [isLiked, setIsLiked] = useState(video.isLiked || false);
 	const { updateProgress, loading: progressLoading } = useProgress();
 
 	// ライクボタンの処理
@@ -36,10 +34,10 @@ const VideoCard = ({
 
 		try {
 			await updateProgress({
-				id: video.id,
+				filePath: video.filePath,
 				isLiked: newLikeStatus,
 			});
-			onLikeUpdate?.(video.id, newLikeStatus);
+			onLikeUpdate?.(video.filePath, newLikeStatus);
 		} catch (error) {
 			// エラー時は元に戻す
 			setIsLiked(isLiked);
@@ -67,21 +65,9 @@ const VideoCard = ({
 			>
 				{/* サムネイル */}
 				<div className="relative aspect-video bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
-					{video.thumbnail && !imageError ? (
-						<Image
-							src={video.thumbnail}
-							alt={video.title}
-							fill
-							priority={priority}
-							className="object-cover transition-transform duration-300 group-hover:scale-110"
-							onError={() => setImageError(true)}
-							unoptimized
-						/>
-					) : (
-						<div className="w-full h-full flex items-center justify-center">
-							<Play className="h-12 w-12 text-slate-400 transition-colors group-hover:text-white" />
-						</div>
-					)}
+					<div className="w-full h-full flex items-center justify-center">
+						<Play className="h-12 w-12 text-slate-400 transition-colors group-hover:text-white" />
+					</div>
 					{/* ホバー時のオーバーレイ */}
 					<div
 						className={cn(

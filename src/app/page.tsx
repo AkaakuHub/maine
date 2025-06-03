@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Search, Grid, List, X, Filter, SortAsc, SortDesc } from "lucide-react";
-import { useDatabaseUpdate } from "@/hooks/useDatabaseUpdate";
+import { Search, Grid, List, X, SortAsc, SortDesc } from "lucide-react";
 import { useVideos } from "@/hooks/useVideos";
 import VideoGridContainer from "@/components/VideoGridContainer";
 import VideoList from "@/components/VideoList";
@@ -39,7 +38,7 @@ const Home = () => {
 		hasPrevPage,
 	} = useVideos({
 		filters: {
-			search: searchQuery || undefined, // searchQueryを使用
+			search: searchQuery || undefined,
 			genre: selectedGenre || undefined,
 			year: selectedYear || undefined,
 		},
@@ -51,32 +50,17 @@ const Home = () => {
 			page: currentPage,
 			limit: PAGINATION.DEFAULT_LIMIT,
 		},
-		loadAll: showAll, // 明示的な一覧読み込み
+		loadAll: showAll,
 	});
-	// データベース更新のフック
-	const {
-		updating,
-		error: updateError,
-		stats,
-		updateDatabase,
-		clearError,
-	} = useDatabaseUpdate();
-	// データベース更新
-	const handleDatabaseUpdate = useCallback(async () => {
-		const success = await updateDatabase();
-		if (success) {
-			// 更新成功後、現在の表示状態に応じて再フェッチ
-			if (showAll || searchQuery) {
-				await refetchVideos();
-			}
-		}
-	}, [updateDatabase, showAll, searchQuery, refetchVideos]);
+
 	// 一覧表示ボタンのハンドラー
 	const handleShowAll = useCallback(() => {
 		console.log("[HomePage] Show all button clicked");
 		setShowAll(true);
 		setCurrentPage(1);
-	}, []); // 検索実行
+	}, []);
+
+	// 検索実行
 	const handleSearch = useCallback(() => {
 		console.log("[HomePage] Search button clicked with:", searchTerm);
 		setSearchQuery(searchTerm);
@@ -101,11 +85,13 @@ const Home = () => {
 	const handlePageChange = useCallback((newPage: number) => {
 		setCurrentPage(newPage);
 	}, []);
+
 	// エラーハンドリング
 	const handleRetry = useCallback(async () => {
-		clearError();
 		await refetchVideos();
-	}, [clearError, refetchVideos]); // ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
+	}, [refetchVideos]);
+
+	// ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
 	const hasContent =
 		videos.length > 0 ||
 		searchQuery ||
@@ -121,7 +107,7 @@ const Home = () => {
 		);
 	}
 
-	if (updateError || videosError) {
+	if (videosError) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 				<div className="container mx-auto px-4 py-8">
@@ -165,49 +151,37 @@ const Home = () => {
 							</p>
 						</div>
 
-						{/* データベース更新ボタンと表示モード切り替え */}
-						<div className="flex items-center gap-4">
-							<Button
-								onClick={handleDatabaseUpdate}
-								loading={updating}
-								disabled={updating}
-								variant="secondary"
-								size="sm"
+						{/* 表示モード切り替え */}
+						<div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-1 border border-slate-700">
+							<button
+								type="button"
+								onClick={() => setViewMode("grid")}
+								className={cn(
+									"flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
+									viewMode === "grid"
+										? "bg-blue-500 text-white shadow-lg"
+										: "text-slate-400 hover:text-white hover:bg-slate-700/50",
+								)}
 							>
-								{updating ? "更新中..." : "DB更新"}
-							</Button>
-
-							{/* 表示モード切り替え */}
-							<div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-1 border border-slate-700">
-								<button
-									type="button"
-									onClick={() => setViewMode("grid")}
-									className={cn(
-										"flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
-										viewMode === "grid"
-											? "bg-blue-500 text-white shadow-lg"
-											: "text-slate-400 hover:text-white hover:bg-slate-700/50",
-									)}
-								>
-									<Grid className="h-4 w-4" />
-									<span className="hidden sm:inline">グリッド</span>
-								</button>
-								<button
-									type="button"
-									onClick={() => setViewMode("list")}
-									className={cn(
-										"flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
-										viewMode === "list"
-											? "bg-blue-500 text-white shadow-lg"
-											: "text-slate-400 hover:text-white hover:bg-slate-700/50",
-									)}
-								>
-									<List className="h-4 w-4" />
-									<span className="hidden sm:inline">リスト</span>
-								</button>
-							</div>
+								<Grid className="h-4 w-4" />
+								<span className="hidden sm:inline">グリッド</span>
+							</button>
+							<button
+								type="button"
+								onClick={() => setViewMode("list")}
+								className={cn(
+									"flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
+									viewMode === "list"
+										? "bg-blue-500 text-white shadow-lg"
+										: "text-slate-400 hover:text-white hover:bg-slate-700/50",
+								)}
+							>
+								<List className="h-4 w-4" />
+								<span className="hidden sm:inline">リスト</span>
+							</button>
 						</div>
-					</div>{" "}
+					</div>
+
 					{/* 検索バー */}
 					<div className="bg-slate-800/30 backdrop-blur-xl rounded-xl p-4 border border-slate-700/50">
 						<div className="flex flex-col sm:flex-row gap-4">
@@ -250,7 +224,7 @@ const Home = () => {
 										size="sm"
 										className="h-8 px-3"
 									>
-										検索{" "}
+										検索
 									</Button>
 								</div>
 								{/* 検索ヘルプメッセージ */}
@@ -302,25 +276,11 @@ const Home = () => {
 							</div>
 						</div>
 					</div>
-					{/* 更新統計表示 */}
-					{stats && (
-						<div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-							<p>
-								データベース更新完了: 追加 {stats.added}件, 更新 {stats.updated}
-								件, 削除 {stats.deleted}件 (全{stats.total}件)
-							</p>
-						</div>
-					)}
-					{/* エラー表示 */}
-					{updateError && (
-						<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-							<p>エラー: {updateError}</p>
-						</div>
-					)}
-				</div>{" "}
+				</div>
+
 				{/* コンテンツ */}
 				{videos.length === 0 &&
-				!searchTerm &&
+				!searchQuery &&
 				!selectedGenre &&
 				!selectedYear &&
 				!showAll ? (
@@ -355,12 +315,13 @@ const Home = () => {
 						</div>
 					</div>
 				) : videos.length === 0 ? (
-					<EmptyState type="no-search-results" searchTerm={searchTerm} />
+					<EmptyState type="no-search-results" searchTerm={searchQuery} />
 				) : viewMode === "grid" ? (
 					<VideoGridContainer videos={videos} />
 				) : (
 					<VideoList videos={videos} />
 				)}
+
 				{/* ページネーション */}
 				{pagination.totalPages > 1 && (
 					<div className="flex justify-center items-center space-x-4 mt-8">

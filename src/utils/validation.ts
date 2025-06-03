@@ -80,7 +80,7 @@ export function validateYearParam(year?: string | null): number | undefined {
 	const yearNum = Number.parseInt(year, 10);
 	const currentYear = new Date().getFullYear();
 
-	if (isNaN(yearNum) || yearNum < 1900 || yearNum > currentYear + 10) {
+	if (Number.isNaN(yearNum) || yearNum < 1900 || yearNum > currentYear + 10) {
 		return undefined;
 	}
 

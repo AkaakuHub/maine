@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { VideoInfoType } from "@/types/VideoInfo";
-import type { VideoData } from "@/type";
+import type { VideoFileData } from "@/type";
 import { useProgress } from "./useProgress";
 import { API } from "@/utils/constants";
 
 export function useVideoPlayer() {
 	const params = useParams();
 	const router = useRouter();
-	const [videoData, setVideoData] = useState<VideoData | null>(null);
+	const [videoData, setVideoData] = useState<VideoFileData | null>(null);
 	const [videoInfo, setVideoInfo] = useState<VideoInfoType>({
 		title: "",
 		episode: "",
@@ -37,7 +37,7 @@ export function useVideoPlayer() {
 				if (response.ok) {
 					const data = await response.json();
 					const video = data.videos?.find(
-						(a: VideoData) => a.filePath === decodedPath,
+						(a: VideoFileData) => a.filePath === decodedPath,
 					);
 
 					if (video) {
@@ -126,7 +126,7 @@ export function useVideoPlayer() {
 
 				try {
 					await updateProgress({
-						id: videoData.id,
+						filePath: videoData.filePath,
 						watchTime: currentTime,
 						watchProgress: progress,
 					});
@@ -178,7 +178,7 @@ export function useVideoPlayer() {
 
 		try {
 			await updateProgress({
-				id: videoData.id,
+				filePath: videoData.filePath,
 				isLiked: newLikeStatus,
 			});
 		} catch (error) {

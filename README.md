@@ -14,7 +14,7 @@
 - **📱 レスポンシブ**: デスクトップ・モバイル対応のレスポンシブデザイン
 - **⚡ 高性能**: Prisma + SQLiteによる高速データベース操作
 - **🔒 セキュリティ**: パストラバーサル対策・ファイルアクセス制御
-- **🔄 自動同期**: ディレクトリスキャン＆データベース自動同期
+- **🔄 リアルタイムスキャン**: 検索時にファイルシステムをリアルタイムスキャン
 - **🎮 キーボードショートカット**: 動画プレイヤーの豊富な操作機能
 
 ## 🏗️ アーキテクチャ
@@ -25,8 +25,8 @@
 src/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API Routes (簡素化・最適化済み)
-│   │   ├── videos/        # 動画データAPI
-│   │   ├── updateDatabase/ # データベース更新API
+│   │   ├── videos/        # 動画データAPI (リアルタイムスキャン)
+│   │   ├── progress/      # 再生進捗API
 │   │   └── video/         # 動画ストリーミングAPI
 │   ├── play/              # 動画再生ページ
 │   ├── page.tsx           # メインページ (リファクタリング済み)
@@ -46,8 +46,8 @@ src/
 │   ├── videoScanService.ts # 動画スキャン関連のサービス
 │   └── index.ts          # エクスポート管理
 ├── hooks/                # カスタムフック
-│   ├── useVideos.ts      # 動画データ取得フック
-│   ├── useDatabaseUpdate.ts # データベース更新フック
+│   ├── useVideos.ts      # 動画データ取得フック (リアルタイムスキャン対応)
+│   ├── useProgress.ts    # 再生進捗管理フック
 │   ├── useVideoPlayer.ts # 動画プレイヤーフック
 │   └── index.ts          # エクスポート管理
 ├── utils/                # ユーティリティ関数
@@ -140,8 +140,8 @@ pnpm dev
 
 ### 基本操作
 
-1. **初回アクセス**: 自動でディレクトリスキャンが実行され、動画ファイルがデータベースに登録されます
-2. **検索・フィルタ**: 検索バーでリアルタイム検索、ジャンルや年でフィルタリング
+1. **検索・フィルタ**: 検索バーでリアルタイム検索、ジャンルや年でフィルタリング
+2. **一覧表示**: 「すべての動画を表示」ボタンで全動画をリストアップ
 3. **表示切替**: グリッド表示とリスト表示を切り替え可能
 4. **動画再生**: カードをクリックして動画プレイヤーページへ移動
 
@@ -155,11 +155,11 @@ pnpm dev
 | `F` | フルスクリーン切替 |
 | `M` | ミュート切替 |
 
-### データベース管理
+### データ管理の特徴
 
-- **自動同期**: ページアクセス時に自動実行
-- **手動更新**: ヘッダーの「データベース更新」ボタン
-- **統計表示**: 追加・更新・削除されたファイル数を表示
+- **リアルタイムスキャン**: 検索・一覧表示時にファイルシステムを動的にスキャン
+- **軽量DB**: データベースには再生進捗・お気に入り等のユーザーデータのみ保存
+- **同期不要**: 動画ファイルの追加・削除は即座に反映（データベース同期が不要）
 
 ## 🛠️ 開発ガイド
 
@@ -241,28 +241,32 @@ export async function GET(request: NextRequest) {
 ### データベース設計
 
 ```sql
--- Videoモデル (prisma/schema.prisma)
-model Video {
-  id          String   @id @default(cuid())
-  title       String
-  episode     String?
-  year        Int?
-  genre       String?
-  filePath    String   @unique
-  fileName    String
-  fileSize    BigInt
-  duration    Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+-- VideoProgressモデル (prisma/schema.prisma)
+-- 動画ファイル情報はDB保存せず、再生進捗とユーザーデータのみ管理
+model VideoProgress {
+  id            String   @id @default(cuid())
+  filePath      String   @unique // 動画ファイルのパス（ユニークキー）
+  watchProgress Float    @default(0) // 再生進捗率 (0-100)
+  watchTime     Float?   // 現在の再生時間（秒）
+  isLiked       Boolean  @default(false) // お気に入り状態
+  likedAt       DateTime? // お気に入りに追加した日時
+  lastWatched   DateTime? // 最後に視聴した日時
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 ```
+
+**設計思想**:
+- 動画ファイル情報（タイトル、ファイルサイズ等）はファイルシステムから取得
+- データベースには再生進捗・お気に入り等のユーザーデータのみ保存
+- ファイル追加・削除時のDB同期が不要で運用が簡単
 
 ### API層の設計
 
 | エンドポイント | 機能 | 実装ファイル |
 |---------------|------|-------------|
-| `/api/videos` | 動画一覧取得・検索・フィルタ | `src/app/api/videos/route.ts` |
-| `/api/updateDatabase` | ディレクトリスキャン・DB同期 | `src/app/api/updateDatabase/route.ts` |
+| `/api/videos` | 動画一覧取得・検索・フィルタ (リアルタイムスキャン) | `src/app/api/videos/route.ts` |
+| `/api/progress` | 再生進捗の取得・保存 | `src/app/api/progress/route.ts` |
 | `/api/video/[filePath]` | 動画ストリーミング配信 | `src/app/api/video/[filePath]/route.ts` |
 
 ### セキュリティ対策

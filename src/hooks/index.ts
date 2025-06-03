@@ -1,6 +1,5 @@
 // Custom hooks
 export { useVideos } from "./useVideos";
-export { useDatabaseUpdate } from "./useDatabaseUpdate";
 export { useProgress } from "./useProgress";
 
 // Types
@@ -11,11 +10,6 @@ export type {
 	UseVideosOptions,
 	UseVideosReturn,
 } from "./useVideos";
-
-export type {
-	DatabaseUpdateStats,
-	UseDatabaseUpdateReturn,
-} from "./useDatabaseUpdate";
 
 export type {
 	UpdateProgressParams,

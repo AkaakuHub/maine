@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type { VideoData } from "@/type";
+import type { VideoFileData } from "@/type";
 import { API } from "@/utils/constants";
 
 export interface UseVideosFilters {
@@ -27,7 +27,7 @@ export interface UseVideosOptions {
 }
 
 export interface UseVideosReturn {
-	videos: VideoData[];
+	videos: VideoFileData[];
 	loading: boolean;
 	error: string | null;
 	pagination: {
@@ -49,7 +49,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 		enabled = true,
 		loadAll = false,
 	} = options;
-	const [videos, setVideos] = useState<VideoData[]>([]);
+	const [videos, setVideos] = useState<VideoFileData[]>([]);
 	const [loading, setLoading] = useState(false); // 初期状態はfalseに変更
 	const [error, setError] = useState<string | null>(null);
 	const [paginationInfo, setPaginationInfo] = useState({
@@ -141,7 +141,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 			}
 
 			interface ApiResponse {
-				videos?: VideoData[];
+				videos?: VideoFileData[];
 				pagination?: {
 					page: number;
 					limit: number;

@@ -16,12 +16,12 @@ export const formatDuration = (seconds: number): string => {
 	return `${minutes}:${secs.toString().padStart(2, "0")}`;
 };
 
-export const formatFileSize = (sizeStr: string): string => {
-	const size = Number.parseInt(sizeStr, 10);
-	if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-	if (size < 1024 * 1024 * 1024)
-		return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-	return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+export const formatFileSize = (size: number | string): string => {
+	const sizeNum = typeof size === "string" ? Number.parseInt(size, 10) : size;
+	if (sizeNum < 1024 * 1024) return `${(sizeNum / 1024).toFixed(1)} KB`;
+	if (sizeNum < 1024 * 1024 * 1024)
+		return `${(sizeNum / (1024 * 1024)).toFixed(1)} MB`;
+	return `${(sizeNum / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 };
 
 export const truncateText = (text: string, maxLength: number): string => {
