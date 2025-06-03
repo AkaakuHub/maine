@@ -39,7 +39,9 @@ export default function DesktopLayout({
 			{/* メインコンテンツ */}
 			<div className="flex h-full">
 				{/* 動画プレイヤーセクション */}
-				<div className="flex-1">					<ModernVideoPlayer
+				<div className="flex-1">
+					{" "}
+					<ModernVideoPlayer
 						src={videoSrc}
 						title={animeInfo.fullTitle}
 						onBack={onBack}

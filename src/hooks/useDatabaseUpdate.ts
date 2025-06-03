@@ -56,7 +56,12 @@ export function useDatabaseUpdate(): UseDatabaseUpdateReturn {
 			try {
 				data = JSON.parse(responseText);
 			} catch (parseError) {
-				console.error("JSON parse error:", parseError, "Response:", responseText);
+				console.error(
+					"JSON parse error:",
+					parseError,
+					"Response:",
+					responseText,
+				);
 				throw new Error("Invalid JSON response from server");
 			}
 

@@ -37,7 +37,9 @@ export default function MobileLayout({
 	return (
 		<div className="lg:hidden">
 			{/* 動画プレイヤー */}
-			<div className="w-full">				<ModernVideoPlayer
+			<div className="w-full">
+				{" "}
+				<ModernVideoPlayer
 					src={videoSrc}
 					title={animeInfo.fullTitle}
 					onBack={onBack}

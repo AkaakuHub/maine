@@ -64,7 +64,8 @@ export interface AnimeQueryResult {
 	};
 }
 
-export class AnimeService {	/**
+export class AnimeService {
+	/**
 	 * アニメデータを検索・フィルタリング・ソートして取得
 	 */
 	static async getAnimes(
@@ -168,7 +169,8 @@ export class AnimeService {	/**
 		if (filters.search) {
 			// 部分文字列検索の最適化
 			const searchTerm = filters.search.trim();
-			if (searchTerm.length >= 2) { // 最低2文字以上で検索
+			if (searchTerm.length >= 2) {
+				// 最低2文字以上で検索
 				where.OR = [
 					{ title: { contains: searchTerm } },
 					{ fileName: { contains: searchTerm } },

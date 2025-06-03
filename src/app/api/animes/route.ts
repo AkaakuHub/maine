@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
 
 		// 明示的な検索要求をチェック
 		const loadAll = searchParams.get("loadAll") === "true";
-		const hasSearchFilters = 
-			searchParams.has("search") || 
-			searchParams.has("genre") || 
+		const hasSearchFilters =
+			searchParams.has("search") ||
+			searchParams.has("genre") ||
 			searchParams.has("year");
 
 		// デバッグログ
@@ -62,9 +62,9 @@ export async function GET(request: NextRequest) {
 		// サービス層を使用してデータを取得
 		const result = await AnimeService.getAnimes(filters, sorting, pagination);
 
-		console.log("[API] Returning result:", { 
-			animeCount: result.animes.length, 
-			total: result.pagination.total 
+		console.log("[API] Returning result:", {
+			animeCount: result.animes.length,
+			total: result.pagination.total,
 		});
 
 		return NextResponse.json(result);

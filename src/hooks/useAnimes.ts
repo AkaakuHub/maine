@@ -96,9 +96,9 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 		if (!enabled) return;
 
 		// 検索条件もloadAllフラグもない場合は何もしない
-		const hasSearchConditions = 
+		const hasSearchConditions =
 			(filters.search && filters.search.trim().length >= 2) ||
-			filters.genre || 
+			filters.genre ||
 			filters.year ||
 			loadAll;
 
@@ -123,7 +123,9 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 			setError(null);
 			lastParamsRef.current = searchParams;
 
-			console.log(`[useAnimes] Fetching: ${API.ENDPOINTS.ANIMES}?${searchParams}`);
+			console.log(
+				`[useAnimes] Fetching: ${API.ENDPOINTS.ANIMES}?${searchParams}`,
+			);
 
 			const response = await fetch(`${API.ENDPOINTS.ANIMES}?${searchParams}`, {
 				signal: AbortSignal.timeout(API.TIMEOUT),
@@ -138,17 +140,32 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 				throw new Error("Empty response from server");
 			}
 
-			let data;
+			interface ApiResponse {
+				animes?: AnimeData[];
+				pagination?: {
+					page: number;
+					limit: number;
+					total: number;
+					totalPages: number;
+				};
+			}
+
+			let data: ApiResponse;
 			try {
 				data = JSON.parse(responseText);
 			} catch (parseError) {
-				console.error("JSON parse error:", parseError, "Response:", responseText);
+				console.error(
+					"JSON parse error:",
+					parseError,
+					"Response:",
+					responseText,
+				);
 				throw new Error("Invalid JSON response from server");
 			}
 
-			console.log(`[useAnimes] Response:`, { 
-				animeCount: data.animes?.length || 0, 
-				total: data.pagination?.total || 0 
+			console.log("[useAnimes] Response:", {
+				animeCount: data.animes?.length || 0,
+				total: data.pagination?.total || 0,
 			});
 
 			setAnimes(data.animes || []);
@@ -169,15 +186,24 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 				limit: pagination.limit,
 				total: 0,
 				totalPages: 0,
-			});} finally {
+			});
+		} finally {
 			setLoading(false);
 		}
-	}, [enabled, searchParams, filters.search, filters.genre, filters.year, loadAll, pagination.limit]);
+	}, [
+		enabled,
+		searchParams,
+		filters.search,
+		filters.genre,
+		filters.year,
+		loadAll,
+		pagination.limit,
+	]);
 
 	// 初期化とパラメータ変更時にデータを取得
 	useEffect(() => {
 		fetchAnimes();
-	}, [searchParams]); // fetchAnimesは依存配列から除外
+	}, [fetchAnimes]); // fetchAnimesを依存配列に追加
 
 	// 再フェッチ用の安定した関数
 	const refetch = useCallback(async () => {

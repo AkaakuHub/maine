@@ -31,15 +31,19 @@ export function useVideoPlayer() {
 
 			try {
 				// APIからアニメデータを取得
-				const response = await fetch(`${API.ENDPOINTS.ANIMES}?search=${encodeURIComponent(decodedPath)}&loadAll=true`);
+				const response = await fetch(
+					`${API.ENDPOINTS.ANIMES}?search=${encodeURIComponent(decodedPath)}&loadAll=true`,
+				);
 				if (response.ok) {
 					const data = await response.json();
-					const anime = data.animes?.find((a: AnimeData) => a.filePath === decodedPath);
-					
+					const anime = data.animes?.find(
+						(a: AnimeData) => a.filePath === decodedPath,
+					);
+
 					if (anime) {
 						setAnimeData(anime);
 						setIsLiked(anime.isLiked);
-						
+
 						setAnimeInfo({
 							title: anime.title,
 							episode: anime.episode?.toString() || "",
@@ -47,7 +51,13 @@ export function useVideoPlayer() {
 							description: `${anime.title}をお楽しみください。`,
 							genre: anime.genre || "アニメ",
 							year: anime.year?.toString() || "不明",
-							duration: anime.duration ? `${Math.floor(anime.duration / 60)}:${Math.floor(anime.duration % 60).toString().padStart(2, '0')}` : "不明",
+							duration: anime.duration
+								? `${Math.floor(anime.duration / 60)}:${Math.floor(
+										anime.duration % 60,
+									)
+										.toString()
+										.padStart(2, "0")}`
+								: "不明",
 						});
 					} else {
 						// フォールバック: ファイルパスからタイトルを抽出
@@ -67,7 +77,7 @@ export function useVideoPlayer() {
 					}
 				}
 			} catch (error) {
-				console.error('Failed to fetch anime data:', error);
+				console.error("Failed to fetch anime data:", error);
 				// フォールバック処理
 				const pathParts = decodedPath.split("\\");
 				const animeTitle = pathParts[0];
@@ -91,7 +101,7 @@ export function useVideoPlayer() {
 	}, [params.filePath]);
 	useEffect(() => {
 		initializePlayer();
-		
+
 		// クリーンアップ
 		return () => {
 			if (progressSaveIntervalRef.current) {
@@ -101,31 +111,40 @@ export function useVideoPlayer() {
 	}, [initializePlayer]);
 
 	// 視聴進捗を保存する関数
-	const saveProgress = useCallback(async (currentTime: number, duration: number) => {
-		if (!animeData || !duration) return;
+	const saveProgress = useCallback(
+		async (currentTime: number, duration: number) => {
+			if (!animeData || !duration) return;
 
-		const progress = Math.min(100, Math.max(0, (currentTime / duration) * 100));
-		
-		// 5秒以上の差がある場合のみ保存（頻繁すぎる更新を防ぐ）
-		if (Math.abs(currentTime - lastProgressSaveRef.current) >= 5) {
-			lastProgressSaveRef.current = currentTime;
-			
-			try {
-				await updateProgress({
-					id: animeData.id,
-					watchTime: currentTime,
-					watchProgress: progress,
-				});
-			} catch (error) {
-				console.error('Failed to save progress:', error);
+			const progress = Math.min(
+				100,
+				Math.max(0, (currentTime / duration) * 100),
+			);
+
+			// 5秒以上の差がある場合のみ保存（頻繁すぎる更新を防ぐ）
+			if (Math.abs(currentTime - lastProgressSaveRef.current) >= 5) {
+				lastProgressSaveRef.current = currentTime;
+
+				try {
+					await updateProgress({
+						id: animeData.id,
+						watchTime: currentTime,
+						watchProgress: progress,
+					});
+				} catch (error) {
+					console.error("Failed to save progress:", error);
+				}
 			}
-		}
-	}, [animeData, updateProgress]);
+		},
+		[animeData, updateProgress],
+	);
 
 	// ビデオの時間更新ハンドラー
-	const handleTimeUpdate = useCallback((currentTime: number, duration: number) => {
-		saveProgress(currentTime, duration);
-	}, [saveProgress]);
+	const handleTimeUpdate = useCallback(
+		(currentTime: number, duration: number) => {
+			saveProgress(currentTime, duration);
+		},
+		[saveProgress],
+	);
 
 	const handleGoBack = () => {
 		router.back();
@@ -153,10 +172,10 @@ export function useVideoPlayer() {
 	};
 	const toggleLike = async () => {
 		if (!animeData) return;
-		
+
 		const newLikeStatus = !isLiked;
 		setIsLiked(newLikeStatus); // 楽観的更新
-		
+
 		try {
 			await updateProgress({
 				id: animeData.id,
@@ -165,7 +184,7 @@ export function useVideoPlayer() {
 		} catch (error) {
 			// エラー時は元に戻す
 			setIsLiked(!newLikeStatus);
-			console.error('Failed to update like status:', error);
+			console.error("Failed to update like status:", error);
 		}
 	};
 

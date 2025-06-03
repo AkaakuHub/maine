@@ -35,7 +35,8 @@ export default function PlayPage() {
 				onGoBack={handleGoBack}
 				onGoHome={handleGoHome}
 				onShare={handleShare}
-			/>			{/* モバイル・縦画面レイアウト */}
+			/>{" "}
+			{/* モバイル・縦画面レイアウト */}
 			<MobileLayout
 				videoSrc={videoSrc}
 				animeInfo={animeInfo}
@@ -49,7 +50,8 @@ export default function PlayPage() {
 				onToggleDescription={toggleDescription}
 				onTimeUpdate={handleTimeUpdate}
 				initialTime={animeData?.watchTime || 0}
-			/>			{/* デスクトップレイアウト */}
+			/>{" "}
+			{/* デスクトップレイアウト */}
 			<DesktopLayout
 				videoSrc={videoSrc}
 				animeInfo={animeInfo}

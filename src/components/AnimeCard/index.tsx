@@ -15,7 +15,12 @@ interface AnimeCardProps {
 	onLikeUpdate?: (id: string, isLiked: boolean) => void;
 }
 
-const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCardProps) => {
+const AnimeCard = ({
+	anime,
+	priority = false,
+	className,
+	onLikeUpdate,
+}: AnimeCardProps) => {
 	const [imageError, setImageError] = useState(false);
 	const [isHovered, setIsHovered] = useState(false);
 	const [isLiked, setIsLiked] = useState(anime.isLiked);
@@ -38,7 +43,7 @@ const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCa
 		} catch (error) {
 			// エラー時は元に戻す
 			setIsLiked(isLiked);
-			console.error('Failed to update like status:', error);
+			console.error("Failed to update like status:", error);
 		}
 	};
 
@@ -77,7 +82,6 @@ const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCa
 							<Play className="h-12 w-12 text-slate-400 transition-colors group-hover:text-white" />
 						</div>
 					)}
-
 					{/* ホバー時のオーバーレイ */}
 					<div
 						className={cn(
@@ -94,7 +98,8 @@ const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCa
 								<span className="text-white text-sm font-medium">再生</span>
 							</div>
 						</div>
-					</div>					{/* エピソード番号 */}
+					</div>{" "}
+					{/* エピソード番号 */}
 					{anime.episode && (
 						<div className="absolute top-3 left-3">
 							<div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md">
@@ -104,7 +109,6 @@ const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCa
 							</div>
 						</div>
 					)}
-
 					{/* ライクボタン */}
 					<div className="absolute top-3 right-3 flex gap-2">
 						{anime.year && (
@@ -121,14 +125,14 @@ const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCa
 							className={cn(
 								"bg-black/70 backdrop-blur-sm p-1.5 rounded-md transition-all duration-200",
 								"hover:bg-black/90 disabled:opacity-50",
-								isLiked ? "text-red-400" : "text-white/70"
+								isLiked ? "text-red-400" : "text-white/70",
 							)}
 						>
-							<Heart 
+							<Heart
 								className={cn(
-									"h-4 w-4 transition-all duration-200", 
-									isLiked && "fill-current"
-								)} 
+									"h-4 w-4 transition-all duration-200",
+									isLiked && "fill-current",
+								)}
 							/>
 						</button>
 					</div>
@@ -169,7 +173,6 @@ const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCa
 					</div>
 				</div>
 			</Link>
-
 			{/* 詳細ボタン（ホバー時に表示） */}
 			<div
 				className={cn(
@@ -187,12 +190,15 @@ const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCa
 				>
 					<Info className="h-4 w-4 text-white" />
 				</button>
-			</div>			{/* 進行状況バー（視聴進捗があれば表示） */}
+			</div>{" "}
+			{/* 進行状況バー（視聴進捗があれば表示） */}
 			{watchProgressPercentage > 0 && (
 				<div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">
 					<div
 						className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-						style={{ width: `${Math.min(100, Math.max(0, watchProgressPercentage))}%` }}
+						style={{
+							width: `${Math.min(100, Math.max(0, watchProgressPercentage))}%`,
+						}}
 					/>
 				</div>
 			)}

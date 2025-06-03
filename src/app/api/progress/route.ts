@@ -9,7 +9,7 @@ export async function PUT(request: NextRequest) {
 		if (!id) {
 			return NextResponse.json(
 				{ error: "Anime ID is required" },
-				{ status: 400 }
+				{ status: 400 },
 			);
 		}
 
@@ -56,7 +56,7 @@ export async function PUT(request: NextRequest) {
 		console.error("Error updating anime:", error);
 		return NextResponse.json(
 			{ error: "Failed to update anime" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 		if (!id) {
 			return NextResponse.json(
 				{ error: "Anime ID is required" },
-				{ status: 400 }
+				{ status: 400 },
 			);
 		}
 
@@ -86,10 +86,7 @@ export async function GET(request: NextRequest) {
 		});
 
 		if (!anime) {
-			return NextResponse.json(
-				{ error: "Anime not found" },
-				{ status: 404 }
-			);
+			return NextResponse.json({ error: "Anime not found" }, { status: 404 });
 		}
 
 		return NextResponse.json({
@@ -100,7 +97,7 @@ export async function GET(request: NextRequest) {
 		console.error("Error fetching anime progress:", error);
 		return NextResponse.json(
 			{ error: "Failed to fetch anime progress" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }

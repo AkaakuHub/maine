@@ -36,7 +36,8 @@ const Home = () => {
 		pagination,
 		refetch: refetchAnimes,
 		hasNextPage,
-		hasPrevPage,	} = useAnimes({
+		hasPrevPage,
+	} = useAnimes({
 		filters: {
 			search: searchQuery || undefined, // searchQueryを使用
 			genre: selectedGenre || undefined,
@@ -45,7 +46,8 @@ const Home = () => {
 		sorting: {
 			sortBy,
 			sortOrder,
-		},		pagination: {
+		},
+		pagination: {
 			page: currentPage,
 			limit: PAGINATION.DEFAULT_LIMIT,
 		},
@@ -74,7 +76,7 @@ const Home = () => {
 		console.log("[HomePage] Show all button clicked");
 		setShowAll(true);
 		setCurrentPage(1);
-	}, []);	// 検索実行
+	}, []); // 検索実行
 	const handleSearch = useCallback(() => {
 		console.log("[HomePage] Search button clicked with:", searchTerm);
 		setSearchQuery(searchTerm);
@@ -103,16 +105,18 @@ const Home = () => {
 	const handleRetry = useCallback(async () => {
 		clearError();
 		await refetchAnimes();
-	}, [clearError, refetchAnimes]);	// ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
-	const hasContent = animes.length > 0 || searchQuery || selectedGenre || selectedYear || showAll;
-	
+	}, [clearError, refetchAnimes]); // ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
+	const hasContent =
+		animes.length > 0 ||
+		searchQuery ||
+		selectedGenre ||
+		selectedYear ||
+		showAll;
+
 	if (animesLoading && !hasContent) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-				<LoadingState
-					type="initial"
-					message="検索中..."
-				/>
+				<LoadingState type="initial" message="検索中..." />
 			</div>
 		);
 	}
@@ -203,7 +207,8 @@ const Home = () => {
 								</button>
 							</div>
 						</div>
-					</div>					{/* 検索バー */}
+					</div>{" "}
+					{/* 検索バー */}
 					<div className="bg-slate-800/30 backdrop-blur-xl rounded-xl p-4 border border-slate-700/50">
 						<div className="flex flex-col sm:flex-row gap-4">
 							{/* 検索入力 */}
@@ -217,7 +222,10 @@ const Home = () => {
 										setSearchTerm(e.target.value);
 									}}
 									onKeyDown={(e) => {
-										if (e.key === 'Enter' && searchTerm.trim().length >= SEARCH.MIN_QUERY_LENGTH) {
+										if (
+											e.key === "Enter" &&
+											searchTerm.trim().length >= SEARCH.MIN_QUERY_LENGTH
+										) {
 											handleSearch();
 										}
 									}}
@@ -235,18 +243,24 @@ const Home = () => {
 									)}
 									<Button
 										onClick={handleSearch}
-										disabled={!searchTerm.trim() || searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH}
+										disabled={
+											!searchTerm.trim() ||
+											searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH
+										}
 										size="sm"
 										className="h-8 px-3"
 									>
-										検索									</Button>
+										検索{" "}
+									</Button>
 								</div>
 								{/* 検索ヘルプメッセージ */}
-								{searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH && (
-									<p className="absolute -bottom-6 left-0 text-xs text-yellow-400">
-										検索には{SEARCH.MIN_QUERY_LENGTH}文字以上入力してください
-									</p>
-								)}
+								{searchTerm &&
+									searchTerm.trim().length > 0 &&
+									searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH && (
+										<p className="absolute -bottom-6 left-0 text-xs text-yellow-400">
+											検索には{SEARCH.MIN_QUERY_LENGTH}文字以上入力してください
+										</p>
+									)}
 							</div>
 
 							{/* ソートとフィルター */}
@@ -288,7 +302,6 @@ const Home = () => {
 							</div>
 						</div>
 					</div>
-
 					{/* 更新統計表示 */}
 					{stats && (
 						<div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -298,15 +311,19 @@ const Home = () => {
 							</p>
 						</div>
 					)}
-
 					{/* エラー表示 */}
 					{updateError && (
 						<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
 							<p>エラー: {updateError}</p>
 						</div>
 					)}
-				</div>				{/* コンテンツ */}
-				{animes.length === 0 && !searchTerm && !selectedGenre && !selectedYear && !showAll ? (
+				</div>{" "}
+				{/* コンテンツ */}
+				{animes.length === 0 &&
+				!searchTerm &&
+				!selectedGenre &&
+				!selectedYear &&
+				!showAll ? (
 					// 初期状態 - 何も検索していない、一覧も表示していない
 					<div className="text-center py-20">
 						<div className="max-w-md mx-auto">
@@ -331,7 +348,8 @@ const Home = () => {
 									{animesLoading ? "読み込み中..." : "すべての動画を表示"}
 								</Button>
 								<p className="text-sm text-slate-500">
-									※ 4000件以上の動画がある場合、読み込みに時間がかかる場合があります
+									※
+									4000件以上の動画がある場合、読み込みに時間がかかる場合があります
 								</p>
 							</div>
 						</div>
@@ -343,7 +361,6 @@ const Home = () => {
 				) : (
 					<AnimeList animes={animes} />
 				)}
-
 				{/* ページネーション */}
 				{pagination.totalPages > 1 && (
 					<div className="flex justify-center items-center space-x-4 mt-8">
