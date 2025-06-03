@@ -276,7 +276,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
         showControls ? "opacity-100" : "opacity-0"
       )}>
         {/* 上部: 戻るボタンのみ */}
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+        {/* <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {onBack && (
               <button
@@ -294,7 +294,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
           >
             <MoreHorizontal className="h-5 w-5 text-white" />
           </button>
-        </div>
+        </div> */}
 
         {/* プログレスバー */}
         <div className="mb-3">
