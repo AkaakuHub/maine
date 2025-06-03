@@ -6,16 +6,15 @@ const judgeStatus = (status: number) => {
 		// sessionStorage.setItem('error_message', '無効なトークンです。はじめからやりなおしてください。');
 		// window.location.href = '/';
 		return false;
-	} else if (status === 500) {
+	}if (status === 500) {
 		console.log("Internal server error");
 		// sessionStorage.removeItem('temp_token');
 		// Cookies.set('error_message', 'サーバーエラーです。はじめからやりなおしてください。', { secure: true })
 		// sessionStorage.setItem('error_message', 'サーバーエラーです。はじめからやりなおしてください。');
 		// window.location.href = '/';
 		return false;
-	} else {
-		return true;
 	}
+		return true;
 };
 
 const fetch_callFFmpeg = async (filename: string) => {

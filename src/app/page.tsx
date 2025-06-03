@@ -6,7 +6,7 @@ import { useDatabaseUpdate } from "@/hooks/useDatabaseUpdate";
 import AnimeGrid from "@/components/AnimeGrid";
 import LoadingState from "@/components/LoadingState";
 import EmptyState from "@/components/EmptyState";
-import SearchAndFilterBar, { SearchFilters } from "@/components/features/SearchAndFilterBar/SearchAndFilterBar";
+import SearchAndFilterBar, { type SearchFilters } from "@/components/features/SearchAndFilterBar/SearchAndFilterBar";
 import { Button } from "@/components/ui/Button";
 
 const Home = () => {
@@ -144,7 +144,7 @@ const Home = () => {
 
         {/* コンテンツ */}
         {animes.length === 0 ? (
-          <EmptyState type="no-results" />
+          <EmptyState type="no-search-results" />
         ) : (
           <>
             {/* アニメグリッド */}

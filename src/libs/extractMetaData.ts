@@ -3,7 +3,7 @@
 
 const extractWeekdayAndTime = (str: string): string => {
 	// [20240429月2154] => 「毎週月曜日 21:54」
-	let message: string = "";
+	let message = "";
 	const weekdayAndTime = str.match(/\[(.*?)\]/);
 	if (weekdayAndTime) {
 		const weekday: string = weekdayAndTime[1].slice(8, 9);
@@ -17,7 +17,7 @@ const extractWeekdayAndTime = (str: string): string => {
 
 const extractServiceName = (str: string): string => {
 	// []側から数えて一番近くにある()の中身を取得
-	let message: string = "";
+	let message = "";
 	const serviceName = str.match(/\((.*?)\)/);
 	if (serviceName) {
 		message = serviceName[1];
