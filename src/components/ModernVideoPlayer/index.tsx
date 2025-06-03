@@ -1,14 +1,14 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  Maximize, 
-  Minimize, 
-  SkipBack, 
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Minimize,
+  SkipBack,
   SkipForward,
   Settings,
   PictureInPicture2,
@@ -16,7 +16,9 @@ import {
   MoreHorizontal,
   RotateCcw,
   RotateCw,
-  Clock
+  Clock,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 import { cn, formatDuration } from "@/libs/utils";
 
@@ -48,7 +50,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
-  
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -59,17 +61,19 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSettings, setShowSettings] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
-  
+
   // スキップ機能
   const [skipSeconds, setSkipSeconds] = useState(10); // デフォルト10秒
-  const [showSkipSettings, setShowSkipSettings] = useState(false);
-  
+
+  // 設定メニューの状態
+  const [settingsView, setSettingsView] = useState<'main' | 'playback' | 'skip'>('main');
+
   const skipOptions = [5, 10, 20, 60, 90]; // 選択可能な秒数
 
   // 再生/一時停止
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
-    
+
     if (videoRef.current.paused) {
       videoRef.current.play();
       setIsPlaying(true);
@@ -92,7 +96,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   // ミュート切り替え
   const toggleMute = useCallback(() => {
     if (!videoRef.current) return;
-    
+
     if (isMuted) {
       videoRef.current.volume = volume;
       setIsMuted(false);
@@ -131,7 +135,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   // 動画の長さに応じてシークバーのstep値を計算
   const getSeekStep = useCallback(() => {
     if (duration === 0) return 0.01;
-    
+
     // シンプルな解決策: 常に小さなstepを使用
     // 動画の長さに応じて適切な刻みを設定
     if (duration <= 10) return 0.01;     // 10秒以下: 0.01秒刻み
@@ -169,7 +173,6 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   // スキップ秒数設定
   const handleSkipSecondsChange = (seconds: number) => {
     setSkipSeconds(seconds);
-    setShowSkipSettings(false);
   };
 
   // ダブルタップ機能
@@ -185,7 +188,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
     // ダブルタップの判定（300ms以内、同じ位置付近）
     if (currentTime - lastTapTime < 300 && Math.abs(tapX - lastTapX) < 50) {
       e.stopPropagation(); // 通常の再生/一時停止を防ぐ
-      
+
       if (tapPosition > 0.6) {
         // 右側タップ: 前進
         skipForward();
@@ -193,7 +196,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
         // 左側タップ: 後退
         skipBackward();
       }
-      
+
       // ダブルタップ処理後はlastTapTimeをリセット
       setLastTapTime(0);
     } else {
@@ -205,7 +208,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   // ピクチャーインピクチャー
   const togglePictureInPicture = async () => {
     if (!videoRef.current) return;
-    
+
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
@@ -235,6 +238,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
     const handleClickOutside = (event: MouseEvent) => {
       if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
         setShowSettings(false);
+        setSettingsView('main'); // メインビューに戻す
       }
     };
 
@@ -251,7 +255,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
-      
+
       switch (e.code) {
         case "Space":
           e.preventDefault();
@@ -283,14 +287,18 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
           break;
         case "Escape":
           e.preventDefault();
-          setShowSettings(false);
+          if (settingsView !== 'main') {
+            setSettingsView('main'); // サブメニューの場合はメインに戻る
+          } else {
+            setShowSettings(false); // メインメニューの場合は閉じる
+          }
           break;
       }
     };
 
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [togglePlay, skipBackward, skipForward, toggleFullscreen, toggleMute]);
+  }, [togglePlay, skipBackward, skipForward, toggleFullscreen, toggleMute, settingsView]);
 
   // ビデオイベントハンドラー
   useEffect(() => {
@@ -300,7 +308,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
     const handleTimeUpdate = () => {
       const currentTime = video.currentTime;
       const duration = video.duration;
-      
+
       // 動画が終了に近い場合（最後の0.1秒）は終了時刻に設定
       if (duration - currentTime < 0.1) {
         setCurrentTime(duration);
@@ -308,7 +316,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
         setCurrentTime(currentTime);
       }
     };
-    
+
     const handleDurationChange = () => setDuration(video.duration);
     const handleLoadStart = () => setIsBuffering(true);
     const handleCanPlay = () => setIsBuffering(false);
@@ -348,7 +356,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   }, [resetControlsTimeout]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={cn(
         "relative bg-black rounded-lg overflow-hidden group",
@@ -394,7 +402,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
       )}
 
       {/* 再生ボタンオーバーレイ */}
-      <button 
+      <button
         className={cn(
           "absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity border-0 w-full h-full",
           !isPlaying && !isBuffering ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -459,22 +467,22 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
             <button type="button" onClick={togglePlay} className="text-white hover:text-purple-300 transition-colors">
               {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
             </button>
-            
+
             {/* カスタムスキップボタン */}
             <div className="flex items-center gap-1">
-              <button 
-                type="button" 
-                onClick={skipBackward} 
+              <button
+                type="button"
+                onClick={skipBackward}
                 className="text-white hover:text-blue-300 transition-colors flex items-center gap-1"
                 title={`${skipSeconds}秒戻す`}
               >
                 <RotateCcw className="h-4 w-4" />
                 <span className="text-xs">{skipSeconds}s</span>
               </button>
-              
-              <button 
-                type="button" 
-                onClick={skipForward} 
+
+              <button
+                type="button"
+                onClick={skipForward}
                 className="text-white hover:text-blue-300 transition-colors flex items-center gap-1"
                 title={`${skipSeconds}秒進む`}
               >
@@ -508,54 +516,130 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setShowSettings(!showSettings)}
+                onClick={() => {
+                  setShowSettings(!showSettings);
+                  if (!showSettings) {
+                    setSettingsView('main'); // 設定を開くときはメインビューに
+                  }
+                }}
                 className="text-white hover:text-yellow-300 transition-colors"
               >
                 <Settings className="h-5 w-5" />
               </button>
               {showSettings && (
-                <div 
+                <div
                   ref={settingsRef}
-                  className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-40 shadow-xl"
+                  className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-48 shadow-xl"
                 >
-                  {/* スキップ秒数設定 */}
-                  <div className="mb-4">
-                    <div className="text-orange-300 text-sm mb-2 font-semibold flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      スキップ秒数
+                  {settingsView === 'main' && (
+                    <div>
+                      <div className="text-white text-sm mb-3 font-semibold flex items-center gap-2">
+                        <Settings className="h-4 w-4" />
+                        設定
+                      </div>
+
+                      {/* メインメニュー */}
+                      <button
+                        type="button"
+                        onClick={() => setSettingsView('skip')}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-300 hover:bg-orange-500/20 hover:text-orange-300 rounded transition-colors mb-2"
+                      >
+                        <div className="flex items-center gap-2 w-30">
+                          <Clock className="h-4 w-4" />
+                          スキップ秒数
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-orange-400 w-8">{skipSeconds}秒</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSettingsView('playback')}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 rounded transition-colors"
+                      >
+                        <div className="flex items-center gap-2 w-30">
+                          <Play className="h-4 w-4" />
+                          再生速度
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-purple-400 w-8">{playbackRate}x</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      </button>
                     </div>
-                    {skipOptions.map((seconds) => (
-                      <button
-                        key={seconds}
-                        type="button"
-                        onClick={() => handleSkipSecondsChange(seconds)}
-                        className={cn(
-                          "block w-full text-left px-2 py-1 text-sm rounded transition-colors mb-1",
-                          skipSeconds === seconds ? "bg-gradient-to-r from-orange-500 to-red-500 text-white" : "text-slate-300 hover:bg-orange-500/20"
-                        )}
-                      >
-                        {seconds}秒
-                      </button>
-                    ))}
-                  </div>
-                  
-                  {/* 再生速度設定 */}
-                  <div>
-                    <div className="text-purple-300 text-sm mb-2 font-semibold">再生速度</div>
-                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                      <button
-                        key={rate}
-                        type="button"
-                        onClick={() => handlePlaybackRateChange(rate)}
-                        className={cn(
-                          "block w-full text-left px-2 py-1 text-sm rounded transition-colors",
-                          playbackRate === rate ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white" : "text-slate-300 hover:bg-purple-500/20"
-                        )}
-                      >
-                        {rate}x
-                      </button>
-                    ))}
-                  </div>
+                  )}
+
+                  {settingsView === 'skip' && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => setSettingsView('main')}
+                          className="text-slate-400 hover:text-white transition-colors"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <div className="text-orange-300 text-sm font-semibold flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          スキップ秒数
+                        </div>
+                      </div>
+
+                      {skipOptions.map((seconds) => (
+                        <button
+                          key={seconds}
+                          type="button"
+                          onClick={() => {
+                            handleSkipSecondsChange(seconds);
+                            setSettingsView('main');
+                          }}
+                          className={cn(
+                            "block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
+                            skipSeconds === seconds ? "bg-gradient-to-r from-orange-500 to-red-500 text-white" : "text-slate-300 hover:bg-orange-500/20"
+                          )}
+                        >
+                          {seconds}秒
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {settingsView === 'playback' && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => setSettingsView('main')}
+                          className="text-slate-400 hover:text-white transition-colors"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <div className="text-purple-300 text-sm font-semibold flex items-center gap-2">
+                          <Play className="h-4 w-4" />
+                          再生速度
+                        </div>
+                      </div>
+
+                      {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                        <button
+                          key={rate}
+                          type="button"
+                          onClick={() => {
+                            handlePlaybackRateChange(rate);
+                            setSettingsView('main');
+                          }}
+                          className={cn(
+                            "block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
+                            playbackRate === rate ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white" : "text-slate-300 hover:bg-purple-500/20"
+                          )}
+                        >
+                          {rate}x
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
