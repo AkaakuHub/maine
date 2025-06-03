@@ -13,7 +13,10 @@ import {
   Settings,
   PictureInPicture2,
   ArrowLeft,
-  MoreHorizontal
+  MoreHorizontal,
+  RotateCcw,
+  RotateCw,
+  Clock
 } from "lucide-react";
 import { cn, formatDuration } from "@/libs/utils";
 
@@ -44,6 +47,7 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -55,6 +59,12 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSettings, setShowSettings] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
+  
+  // スキップ機能
+  const [skipSeconds, setSkipSeconds] = useState(10); // デフォルト10秒
+  const [showSkipSettings, setShowSkipSettings] = useState(false);
+  
+  const skipOptions = [5, 10, 20, 60, 90]; // 選択可能な秒数
 
   // 再生/一時停止
   const togglePlay = useCallback(() => {
@@ -147,6 +157,51 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
     videoRef.current.currentTime = Math.max(0, Math.min(duration, currentTime + seconds));
   }, [duration, currentTime]);
 
+  // カスタムスキップ関数
+  const skipForward = useCallback(() => {
+    skip(skipSeconds);
+  }, [skip, skipSeconds]);
+
+  const skipBackward = useCallback(() => {
+    skip(-skipSeconds);
+  }, [skip, skipSeconds]);
+
+  // スキップ秒数設定
+  const handleSkipSecondsChange = (seconds: number) => {
+    setSkipSeconds(seconds);
+    setShowSkipSettings(false);
+  };
+
+  // ダブルタップ機能
+  const [lastTapTime, setLastTapTime] = useState(0);
+  const [lastTapX, setLastTapX] = useState(0);
+
+  const handleVideoTap = useCallback((e: React.MouseEvent<HTMLVideoElement>) => {
+    const currentTime = Date.now();
+    const tapX = e.clientX;
+    const videoWidth = e.currentTarget.clientWidth;
+    const tapPosition = tapX / videoWidth; // 0-1の範囲
+
+    // ダブルタップの判定（300ms以内、同じ位置付近）
+    if (currentTime - lastTapTime < 300 && Math.abs(tapX - lastTapX) < 50) {
+      e.stopPropagation(); // 通常の再生/一時停止を防ぐ
+      
+      if (tapPosition > 0.6) {
+        // 右側タップ: 前進
+        skipForward();
+      } else if (tapPosition < 0.4) {
+        // 左側タップ: 後退
+        skipBackward();
+      }
+      
+      // ダブルタップ処理後はlastTapTimeをリセット
+      setLastTapTime(0);
+    } else {
+      setLastTapTime(currentTime);
+      setLastTapX(tapX);
+    }
+  }, [lastTapTime, lastTapX, skipForward, skipBackward]);
+
   // ピクチャーインピクチャー
   const togglePictureInPicture = async () => {
     if (!videoRef.current) return;
@@ -175,6 +230,23 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
     }, 3000);
   }, [isPlaying]);
 
+  // 設定パネルの外側クリック検知
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+
+    if (showSettings) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSettings]);
+
   // キーボードショートカット
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -187,11 +259,11 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
           break;
         case "ArrowLeft":
           e.preventDefault();
-          skip(-10);
+          skipBackward();
           break;
         case "ArrowRight":
           e.preventDefault();
-          skip(10);
+          skipForward();
           break;
         case "ArrowUp":
           e.preventDefault();
@@ -209,12 +281,16 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
           e.preventDefault();
           toggleMute();
           break;
+        case "Escape":
+          e.preventDefault();
+          setShowSettings(false);
+          break;
       }
     };
 
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [togglePlay, skip, toggleFullscreen, toggleMute]);
+  }, [togglePlay, skipBackward, skipForward, toggleFullscreen, toggleMute]);
 
   // ビデオイベントハンドラー
   useEffect(() => {
@@ -290,7 +366,13 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
           "w-full h-full object-contain",
           isFullscreen && "flex-1"
         )}
-        onClick={togglePlay}
+        onClick={(e) => {
+          handleVideoTap(e);
+          // シングルタップの場合は通常の再生/一時停止
+          if (Date.now() - lastTapTime > 300) {
+            togglePlay();
+          }
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -378,13 +460,28 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
               {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
             </button>
             
-            <button type="button" onClick={() => skip(-10)} className="text-white hover:text-blue-300 transition-colors">
-              <SkipBack className="h-5 w-5" />
-            </button>
-            
-            <button type="button" onClick={() => skip(10)} className="text-white hover:text-blue-300 transition-colors">
-              <SkipForward className="h-5 w-5" />
-            </button>
+            {/* カスタムスキップボタン */}
+            <div className="flex items-center gap-1">
+              <button 
+                type="button" 
+                onClick={skipBackward} 
+                className="text-white hover:text-blue-300 transition-colors flex items-center gap-1"
+                title={`${skipSeconds}秒戻す`}
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span className="text-xs">{skipSeconds}s</span>
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={skipForward} 
+                className="text-white hover:text-blue-300 transition-colors flex items-center gap-1"
+                title={`${skipSeconds}秒進む`}
+              >
+                <RotateCw className="h-4 w-4" />
+                <span className="text-xs">{skipSeconds}s</span>
+              </button>
+            </div>
 
             <div className="flex items-center gap-2">
               <button type="button" onClick={toggleMute} className="text-white hover:text-cyan-300 transition-colors">
@@ -417,21 +514,48 @@ const ModernVideoPlayer = ({ src, title, onBack, className = "" }: ModernVideoPl
                 <Settings className="h-5 w-5" />
               </button>
               {showSettings && (
-                <div className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-32 shadow-xl">
-                  <div className="text-purple-300 text-sm mb-2 font-semibold">再生速度</div>
-                  {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                    <button
-                      key={rate}
-                      type="button"
-                      onClick={() => handlePlaybackRateChange(rate)}
-                      className={cn(
-                        "block w-full text-left px-2 py-1 text-sm rounded transition-colors",
-                        playbackRate === rate ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white" : "text-slate-300 hover:bg-purple-500/20"
-                      )}
-                    >
-                      {rate}x
-                    </button>
-                  ))}
+                <div 
+                  ref={settingsRef}
+                  className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-40 shadow-xl"
+                >
+                  {/* スキップ秒数設定 */}
+                  <div className="mb-4">
+                    <div className="text-orange-300 text-sm mb-2 font-semibold flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      スキップ秒数
+                    </div>
+                    {skipOptions.map((seconds) => (
+                      <button
+                        key={seconds}
+                        type="button"
+                        onClick={() => handleSkipSecondsChange(seconds)}
+                        className={cn(
+                          "block w-full text-left px-2 py-1 text-sm rounded transition-colors mb-1",
+                          skipSeconds === seconds ? "bg-gradient-to-r from-orange-500 to-red-500 text-white" : "text-slate-300 hover:bg-orange-500/20"
+                        )}
+                      >
+                        {seconds}秒
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* 再生速度設定 */}
+                  <div>
+                    <div className="text-purple-300 text-sm mb-2 font-semibold">再生速度</div>
+                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                      <button
+                        key={rate}
+                        type="button"
+                        onClick={() => handlePlaybackRateChange(rate)}
+                        className={cn(
+                          "block w-full text-left px-2 py-1 text-sm rounded transition-colors",
+                          playbackRate === rate ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white" : "text-slate-300 hover:bg-purple-500/20"
+                        )}
+                      >
+                        {rate}x
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
