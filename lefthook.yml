@@ -15,3 +15,9 @@ pre-commit:
       skip:
         - merge
         - rebase
+
+commit-msg:
+  skip: merge
+  commands:
+    commitlint:
+      run: pnpm commitlint --edit {1}
