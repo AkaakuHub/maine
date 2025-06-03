@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { AnimeData } from '@/type'
 import { API } from '@/utils/constants'
 
@@ -58,11 +58,34 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
     totalPages: 0
   })
 
+  // 前回のパラメータをキャッシュして無限ループを防ぐ
+  const lastParamsRef = useRef<string>('')
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 検索語句をdebounce
+  const [debouncedSearch, setDebouncedSearch] = useState(filters.search || '')
+
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(filters.search || '')
+    }, 300)
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [filters.search])
+
   // URLパラメータを構築
   const searchParams = useMemo(() => {
     const params = new URLSearchParams()
     
-    if (filters.search) params.set('search', filters.search)
+    if (debouncedSearch) params.set('search', debouncedSearch)
     if (filters.genre) params.set('genre', filters.genre)
     if (filters.year) params.set('year', filters.year)
     
@@ -71,8 +94,8 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
     params.set('page', pagination.page.toString())
     params.set('limit', pagination.limit.toString())
     
-    return params
-  }, [filters, sorting, pagination])
+    return params.toString()
+  }, [debouncedSearch, filters.genre, filters.year, sorting.sortBy, sorting.sortOrder, pagination.page, pagination.limit])
 
   // データを取得する関数
   const fetchAnimes = useCallback(async () => {
@@ -94,8 +117,8 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
       
       setAnimes(data.animes || [])
       setPaginationInfo(data.pagination || {
-        page: pagination.page,
-        limit: pagination.limit,
+        page: 1,
+        limit: 50,
         total: 0,
         totalPages: 0
       })
@@ -104,19 +127,30 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
       setError(err instanceof Error ? err.message : 'Unknown error')
       setAnimes([])
       setPaginationInfo({
-        page: pagination.page,
-        limit: pagination.limit,
+        page: 1,
+        limit: 50,
         total: 0,
         totalPages: 0
       })
     } finally {
       setLoading(false)
     }
-  }, [enabled, searchParams, pagination.page, pagination.limit])
+  }, [enabled, searchParams])
 
   // 初期化とパラメータ変更時にデータを取得
   useEffect(() => {
-    fetchAnimes()
+    // パラメータが変更された場合のみフェッチ
+    if (lastParamsRef.current !== searchParams) {
+      lastParamsRef.current = searchParams
+      fetchAnimes()
+    }
+  }, [fetchAnimes, searchParams])
+
+  // 再フェッチ用の安定した関数
+  const refetch = useCallback(async () => {
+    // 強制的に再フェッチ
+    lastParamsRef.current = ''
+    await fetchAnimes()
   }, [fetchAnimes])
 
   // ページネーション情報を計算
@@ -128,7 +162,7 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
     loading,
     error,
     pagination: paginationInfo,
-    refetch: fetchAnimes,
+    refetch,
     hasNextPage,
     hasPrevPage
   }
