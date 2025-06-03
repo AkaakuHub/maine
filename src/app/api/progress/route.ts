@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
 
 export async function PUT(request: NextRequest) {
@@ -8,7 +8,7 @@ export async function PUT(request: NextRequest) {
 
 		if (!id) {
 			return NextResponse.json(
-				{ error: "Anime ID is required" },
+				{ error: "Video ID is required" },
 				{ status: 400 },
 			);
 		}
@@ -35,7 +35,7 @@ export async function PUT(request: NextRequest) {
 		}
 
 		// データベースを更新
-		const updatedAnime = await prisma.anime.update({
+		const updatedVideo = await prisma.video.update({
 			where: { id },
 			data: updateData,
 			select: {
@@ -50,12 +50,12 @@ export async function PUT(request: NextRequest) {
 
 		return NextResponse.json({
 			success: true,
-			data: updatedAnime,
+			data: updatedVideo,
 		});
 	} catch (error) {
-		console.error("Error updating anime:", error);
+		console.error("Error updating video:", error);
 		return NextResponse.json(
-			{ error: "Failed to update anime" },
+			{ error: "Failed to update video" },
 			{ status: 500 },
 		);
 	}
@@ -68,12 +68,12 @@ export async function GET(request: NextRequest) {
 
 		if (!id) {
 			return NextResponse.json(
-				{ error: "Anime ID is required" },
+				{ error: "Video ID is required" },
 				{ status: 400 },
 			);
 		}
 
-		const anime = await prisma.anime.findUnique({
+		const video = await prisma.video.findUnique({
 			where: { id },
 			select: {
 				id: true,
@@ -85,18 +85,18 @@ export async function GET(request: NextRequest) {
 			},
 		});
 
-		if (!anime) {
-			return NextResponse.json({ error: "Anime not found" }, { status: 404 });
+		if (!video) {
+			return NextResponse.json({ error: "Video not found" }, { status: 404 });
 		}
 
 		return NextResponse.json({
 			success: true,
-			data: anime,
+			data: video,
 		});
 	} catch (error) {
-		console.error("Error fetching anime progress:", error);
+		console.error("Error fetching video progress:", error);
 		return NextResponse.json(
-			{ error: "Failed to fetch anime progress" },
+			{ error: "Failed to fetch video progress" },
 			{ status: 500 },
 		);
 	}

@@ -100,7 +100,7 @@ export const SUCCESS_MESSAGES = {
 // API関連
 export const API = {
 	ENDPOINTS: {
-		ANIMES: "/api/animes",
+		VIDEOS: "/api/videos",
 		UPDATE_DATABASE: "/api/updateDatabase",
 		GET_VIDEO: "/api/getVideo",
 		VIDEO_STREAM: "/api/video",

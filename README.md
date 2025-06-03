@@ -1,5 +1,5 @@
 
-# My Anime Storage
+# My Video Storage
 
 セルフホスト型のアニメ動画ストレージ＆ストリーミングWebアプリです。
 クロスプラットフォーム（Windows/Mac/Linux）対応、2025年最新のNext.js 15/Tailwind CSS v4/Prisma ORM構成。
@@ -25,7 +25,7 @@
 src/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API Routes (簡素化・最適化済み)
-│   │   ├── animes/        # アニメデータAPI
+│   │   ├── videos/        # アニメデータAPI
 │   │   ├── updateDatabase/ # データベース更新API
 │   │   └── video/         # 動画ストリーミングAPI
 │   ├── play/              # 動画再生ページ
@@ -36,17 +36,17 @@ src/
 │   │   └── Button/       # 統一されたボタンコンポーネント
 │   ├── features/         # 機能別コンポーネント
 │   │   └── SearchAndFilterBar/  # 検索・フィルタ機能
-│   ├── AnimeGrid/        # アニメ一覧表示
-│   ├── AnimeCard/        # アニメカード
+│   ├── VideoGrid/        # アニメ一覧表示
+│   ├── VideoCard/        # アニメカード
 │   ├── LoadingState/     # ローディング状態
 │   ├── EmptyState/       # 空状態表示
 │   └── VideoPlayer/      # 動画プレイヤー
 ├── services/             # ビジネスロジック層
-│   ├── animeService.ts   # アニメデータ関連のサービス
+│   ├── videoService.ts   # アニメデータ関連のサービス
 │   ├── videoScanService.ts # 動画スキャン関連のサービス
 │   └── index.ts          # エクスポート管理
 ├── hooks/                # カスタムフック
-│   ├── useAnimes.ts      # アニメデータ取得フック
+│   ├── useVideos.ts      # アニメデータ取得フック
 │   ├── useDatabaseUpdate.ts # データベース更新フック
 │   ├── useVideoPlayer.ts # 動画プレイヤーフック
 │   └── index.ts          # エクスポート管理
@@ -60,7 +60,7 @@ src/
 │   ├── extractMetaData.ts # メタデータ抽出
 │   └── formatTime.ts     # 時間フォーマット
 └── types/                # 型定義
-    ├── AnimeInfo.ts      # アニメ関連の型
+    ├── VideoInfo.ts      # アニメ関連の型
     └── type.d.ts         # グローバル型定義
 ```
 
@@ -104,7 +104,7 @@ src/
 ```bash
 # リポジトリをクローン
 git clone <このリポジトリのURL>
-cd my-anime-storage
+cd my-video-storage
 
 # 依存パッケージをインストール
 pnpm install
@@ -116,7 +116,7 @@ pnpm install
 `.env`ファイルを作成し、動画ディレクトリを指定：
 
 ```env
-VIDEO_DIRECTORY=/path/to/your/anime/videos
+VIDEO_DIRECTORY=/path/to/your/video/videos
 ```
 
 ### 4. **データベース初期化**
@@ -241,8 +241,8 @@ export async function GET(request: NextRequest) {
 ### データベース設計
 
 ```sql
--- Animeモデル (prisma/schema.prisma)
-model Anime {
+-- Videoモデル (prisma/schema.prisma)
+model Video {
   id          String   @id @default(cuid())
   title       String
   episode     String?
@@ -261,7 +261,7 @@ model Anime {
 
 | エンドポイント | 機能 | 実装ファイル |
 |---------------|------|-------------|
-| `/api/animes` | アニメ一覧取得・検索・フィルタ | `src/app/api/animes/route.ts` |
+| `/api/videos` | アニメ一覧取得・検索・フィルタ | `src/app/api/videos/route.ts` |
 | `/api/updateDatabase` | ディレクトリスキャン・DB同期 | `src/app/api/updateDatabase/route.ts` |
 | `/api/video/[filePath]` | 動画ストリーミング配信 | `src/app/api/video/[filePath]/route.ts` |
 
@@ -364,6 +364,6 @@ MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照
 
 ---
 
-**My Anime Storage**は、モダンなWeb技術スタックを活用して、セルフホスト型のアニメ動画管理・視聴体験を最大化することを目標としています。
+**My Video Storage**は、モダンなWeb技術スタックを活用して、セルフホスト型のアニメ動画管理・視聴体験を最大化することを目標としています。
 
 貢献・フィードバックをお待ちしています！🎬✨

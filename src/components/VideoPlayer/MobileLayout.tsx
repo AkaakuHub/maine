@@ -3,11 +3,11 @@
 import ModernVideoPlayer from "@/components/ModernVideoPlayer";
 import VideoInfo from "./VideoInfo";
 import RelatedVideos from "./RelatedVideos";
-import type { AnimeInfo } from "@/types/AnimeInfo";
+import type { VideoInfoType } from "@/types/VideoInfo";
 
 interface MobileLayoutProps {
 	videoSrc: string;
-	animeInfo: AnimeInfo;
+	videoInfo: VideoInfoType;
 	onBack: () => void;
 	isLiked: boolean;
 	isInWatchlist: boolean;
@@ -22,7 +22,7 @@ interface MobileLayoutProps {
 
 export default function MobileLayout({
 	videoSrc,
-	animeInfo,
+	videoInfo,
 	onBack,
 	isLiked,
 	isInWatchlist,
@@ -41,7 +41,7 @@ export default function MobileLayout({
 				{" "}
 				<ModernVideoPlayer
 					src={videoSrc}
-					title={animeInfo.fullTitle}
+					title={videoInfo.fullTitle}
 					onBack={onBack}
 					onTimeUpdate={onTimeUpdate}
 					initialTime={initialTime}
@@ -52,7 +52,7 @@ export default function MobileLayout({
 			<div className="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
 				{/* 動画情報セクション */}
 				<VideoInfo
-					animeInfo={animeInfo}
+					videoInfo={videoInfo}
 					isLiked={isLiked}
 					isInWatchlist={isInWatchlist}
 					showDescription={showDescription}
@@ -63,7 +63,7 @@ export default function MobileLayout({
 				/>
 
 				{/* 関連動画セクション */}
-				<RelatedVideos animeInfo={animeInfo} isMobile={true} />
+				<RelatedVideos videoInfo={videoInfo} isMobile={true} />
 			</div>
 		</div>
 	);

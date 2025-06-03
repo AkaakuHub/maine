@@ -1,11 +1,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { AnimeService } from "@/services/animeService";
+import { VideoService } from "@/services/videoService";
 import type {
-	AnimeFilters,
-	AnimeSorting,
-	AnimePagination,
-} from "@/services/animeService";
+	VideoFilters,
+	VideoSorting,
+	VideoPagination,
+} from "@/services/videoService";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 		if (!loadAll && !hasSearchFilters) {
 			console.log("[API] No search conditions - returning empty result");
 			return NextResponse.json({
-				animes: [],
+				videos: [],
 				pagination: {
 					page: 1,
 					limit: 50,
@@ -42,37 +42,37 @@ export async function GET(request: NextRequest) {
 		}
 
 		// パラメータを解析
-		const filters: AnimeFilters = {
+		const filters: VideoFilters = {
 			search: searchParams.get("search") || undefined,
 			genre: searchParams.get("genre") || undefined,
 			year: searchParams.get("year") || undefined,
 		};
 
-		const sorting: AnimeSorting = {
-			sortBy: (searchParams.get("sortBy") as AnimeSorting["sortBy"]) || "title",
+		const sorting: VideoSorting = {
+			sortBy: (searchParams.get("sortBy") as VideoSorting["sortBy"]) || "title",
 			sortOrder:
-				(searchParams.get("sortOrder") as AnimeSorting["sortOrder"]) || "asc",
+				(searchParams.get("sortOrder") as VideoSorting["sortOrder"]) || "asc",
 		};
 
-		const pagination: AnimePagination = {
+		const pagination: VideoPagination = {
 			page: Number.parseInt(searchParams.get("page") || "1", 10),
 			limit: Number.parseInt(searchParams.get("limit") || "20", 10), // デフォルトを20に削減
 		};
 
 		// サービス層を使用してデータを取得
-		const result = await AnimeService.getAnimes(filters, sorting, pagination);
+		const result = await VideoService.getVideos(filters, sorting, pagination);
 
 		console.log("[API] Returning result:", {
-			animeCount: result.animes.length,
+			videoCount: result.videos.length,
 			total: result.pagination.total,
 		});
 
 		return NextResponse.json(result);
 	} catch (error) {
-		console.error("Get animes error:", error);
+		console.error("Get videos error:", error);
 		return NextResponse.json(
 			{
-				error: "Failed to fetch animes",
+				error: "Failed to fetch videos",
 				details: error instanceof Error ? error.message : "Unknown error",
 			},
 			{ status: 500 },

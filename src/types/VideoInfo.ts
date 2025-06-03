@@ -1,4 +1,4 @@
-export interface AnimeInfo {
+export interface VideoInfoType {
 	title: string;
 	episode: string;
 	fullTitle: string;

@@ -1,5 +1,5 @@
 {
-	"name": "my-anime-storage",
+	"name": "my-video-storage",
 	"version": "0.1.0",
 	"private": true,	"scripts": {
 		"dev": "pnpm db:setup && next dev",

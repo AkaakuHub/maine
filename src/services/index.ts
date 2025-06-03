@@ -1,14 +1,14 @@
 // Service classes
-export { AnimeService } from "./animeService";
+export { VideoService } from "./videoService";
 export { VideoScanService } from "./videoScanService";
 
 // Types
 export type {
-	AnimeFilters,
-	AnimeSorting,
-	AnimePagination,
-	AnimeQueryResult,
-} from "./animeService";
+	VideoFilters,
+	VideoSorting,
+	VideoPagination,
+	VideoQueryResult,
+} from "./videoService";
 
 export type {
 	VideoFileInfo,

@@ -193,13 +193,13 @@ export class VideoScanService {
 		// 動画ファイルを処理
 		for (const video of videoFiles) {
 			try {
-				const existingAnime = await prisma.anime.findUnique({
+				const existingVideo = await prisma.video.findUnique({
 					where: { filePath: video.filePath },
 				});
 
-				if (existingAnime) {
-					await prisma.anime.update({
-						where: { id: existingAnime.id },
+				if (existingVideo) {
+					await prisma.video.update({
+						where: { id: existingVideo.id },
 						data: {
 							title: video.title,
 							fileName: video.fileName,
@@ -211,7 +211,7 @@ export class VideoScanService {
 					});
 					updatedCount++;
 				} else {
-					await prisma.anime.create({
+					await prisma.video.create({
 						data: {
 							title: video.title,
 							fileName: video.fileName,
@@ -230,7 +230,7 @@ export class VideoScanService {
 
 		// 存在しなくなったファイルを削除
 		const deletedCount = await this.cleanupMissingFiles(videoFiles);
-		const totalCount = await prisma.anime.count();
+		const totalCount = await prisma.video.count();
 
 		return {
 			total: totalCount,
@@ -247,14 +247,14 @@ export class VideoScanService {
 	private static async cleanupMissingFiles(
 		videoFiles: VideoFileInfo[],
 	): Promise<number> {
-		const allDbAnimes = await prisma.anime.findMany();
+		const allDbVideos = await prisma.video.findMany();
 		const currentFilePaths = new Set(videoFiles.map((v) => v.filePath));
 		let deletedCount = 0;
 
-		for (const dbAnime of allDbAnimes) {
-			if (!currentFilePaths.has(dbAnime.filePath)) {
-				await prisma.anime.delete({
-					where: { id: dbAnime.id },
+		for (const dbVideo of allDbVideos) {
+			if (!currentFilePaths.has(dbVideo.filePath)) {
+				await prisma.video.delete({
+					where: { id: dbVideo.id },
 				});
 				deletedCount++;
 			}

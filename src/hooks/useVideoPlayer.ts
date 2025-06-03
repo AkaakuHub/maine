@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import type { AnimeInfo } from "@/types/AnimeInfo";
-import type { AnimeData } from "@/type";
+import type { VideoInfoType } from "@/types/VideoInfo";
+import type { VideoData } from "@/type";
 import { useProgress } from "./useProgress";
 import { API } from "@/utils/constants";
 
 export function useVideoPlayer() {
 	const params = useParams();
 	const router = useRouter();
-	const [animeData, setAnimeData] = useState<AnimeData | null>(null);
-	const [animeInfo, setAnimeInfo] = useState<AnimeInfo>({
+	const [videoData, setVideoData] = useState<VideoData | null>(null);
+	const [videoInfo, setVideoInfo] = useState<VideoInfoType>({
 		title: "",
 		episode: "",
 		fullTitle: "",
@@ -32,28 +32,28 @@ export function useVideoPlayer() {
 			try {
 				// APIからアニメデータを取得
 				const response = await fetch(
-					`${API.ENDPOINTS.ANIMES}?search=${encodeURIComponent(decodedPath)}&loadAll=true`,
+					`${API.ENDPOINTS.VIDEOS}?search=${encodeURIComponent(decodedPath)}&loadAll=true`,
 				);
 				if (response.ok) {
 					const data = await response.json();
-					const anime = data.animes?.find(
-						(a: AnimeData) => a.filePath === decodedPath,
+					const video = data.videos?.find(
+						(a: VideoData) => a.filePath === decodedPath,
 					);
 
-					if (anime) {
-						setAnimeData(anime);
-						setIsLiked(anime.isLiked);
+					if (video) {
+						setVideoData(video);
+						setIsLiked(video.isLiked);
 
-						setAnimeInfo({
-							title: anime.title,
-							episode: anime.episode?.toString() || "",
-							fullTitle: anime.title,
-							description: `${anime.title}をお楽しみください。`,
-							genre: anime.genre || "アニメ",
-							year: anime.year?.toString() || "不明",
-							duration: anime.duration
-								? `${Math.floor(anime.duration / 60)}:${Math.floor(
-										anime.duration % 60,
+						setVideoInfo({
+							title: video.title,
+							episode: video.episode?.toString() || "",
+							fullTitle: video.title,
+							description: `${video.title}をお楽しみください。`,
+							genre: video.genre || "アニメ",
+							year: video.year?.toString() || "不明",
+							duration: video.duration
+								? `${Math.floor(video.duration / 60)}:${Math.floor(
+										video.duration % 60,
 									)
 										.toString()
 										.padStart(2, "0")}`
@@ -62,14 +62,14 @@ export function useVideoPlayer() {
 					} else {
 						// フォールバック: ファイルパスからタイトルを抽出
 						const pathParts = decodedPath.split("\\");
-						const animeTitle = pathParts[0];
+						const videoTitle = pathParts[0];
 						const episodeName = pathParts[1]?.replace(".mp4", "") || "";
 
-						setAnimeInfo({
-							title: animeTitle,
+						setVideoInfo({
+							title: videoTitle,
 							episode: episodeName,
-							fullTitle: `${animeTitle} - ${episodeName}`,
-							description: `${animeTitle}の${episodeName}をお楽しみください。`,
+							fullTitle: `${videoTitle} - ${episodeName}`,
+							description: `${videoTitle}の${episodeName}をお楽しみください。`,
 							genre: "アニメ",
 							year: "不明",
 							duration: "不明",
@@ -77,17 +77,17 @@ export function useVideoPlayer() {
 					}
 				}
 			} catch (error) {
-				console.error("Failed to fetch anime data:", error);
+				console.error("Failed to fetch video data:", error);
 				// フォールバック処理
 				const pathParts = decodedPath.split("\\");
-				const animeTitle = pathParts[0];
+				const videoTitle = pathParts[0];
 				const episodeName = pathParts[1]?.replace(".mp4", "") || "";
 
-				setAnimeInfo({
-					title: animeTitle,
+				setVideoInfo({
+					title: videoTitle,
 					episode: episodeName,
-					fullTitle: `${animeTitle} - ${episodeName}`,
-					description: `${animeTitle}の${episodeName}をお楽しみください。`,
+					fullTitle: `${videoTitle} - ${episodeName}`,
+					description: `${videoTitle}の${episodeName}をお楽しみください。`,
 					genre: "アニメ",
 					year: "不明",
 					duration: "不明",
@@ -113,7 +113,7 @@ export function useVideoPlayer() {
 	// 視聴進捗を保存する関数
 	const saveProgress = useCallback(
 		async (currentTime: number, duration: number) => {
-			if (!animeData || !duration) return;
+			if (!videoData || !duration) return;
 
 			const progress = Math.min(
 				100,
@@ -126,7 +126,7 @@ export function useVideoPlayer() {
 
 				try {
 					await updateProgress({
-						id: animeData.id,
+						id: videoData.id,
 						watchTime: currentTime,
 						watchProgress: progress,
 					});
@@ -135,7 +135,7 @@ export function useVideoPlayer() {
 				}
 			}
 		},
-		[animeData, updateProgress],
+		[videoData, updateProgress],
 	);
 
 	// ビデオの時間更新ハンドラー
@@ -158,7 +158,7 @@ export function useVideoPlayer() {
 		if (navigator.share) {
 			try {
 				await navigator.share({
-					title: animeInfo.fullTitle,
+					title: videoInfo.fullTitle,
 					url: window.location.href,
 				});
 			} catch (err) {
@@ -171,14 +171,14 @@ export function useVideoPlayer() {
 		}
 	};
 	const toggleLike = async () => {
-		if (!animeData) return;
+		if (!videoData) return;
 
 		const newLikeStatus = !isLiked;
 		setIsLiked(newLikeStatus); // 楽観的更新
 
 		try {
 			await updateProgress({
-				id: animeData.id,
+				id: videoData.id,
 				isLiked: newLikeStatus,
 			});
 		} catch (error) {
@@ -196,8 +196,8 @@ export function useVideoPlayer() {
 		setShowDescription(!showDescription);
 	};
 	return {
-		animeData,
-		animeInfo,
+		videoData,
+		videoInfo,
 		videoSrc,
 		isLoading,
 		showDescription,

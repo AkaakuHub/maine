@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useAnimes } from "@/hooks/useAnimes";
-import AnimeGridContainer from "@/components/AnimeGridContainer";
-import AnimeList from "@/components/AnimeList";
+import { useVideos } from "@/hooks/useVideos";
+import VideoGridContainer from "@/components/VideoGridContainer";
+import VideoList from "@/components/VideoList";
 import EmptyState from "@/components/EmptyState";
 import LoadingState from "@/components/LoadingState";
 import { Button } from "@/components/ui/Button";
@@ -13,7 +13,7 @@ export type ViewMode = "grid" | "list";
 export type SortBy = "title" | "year" | "episode" | "createdAt" | "lastWatched";
 export type SortOrder = "asc" | "desc";
 
-const AnimeGrid = () => {
+const VideoGrid = () => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [viewMode, setViewMode] = useState<ViewMode>("grid");
 	const [sortBy, setSortBy] = useState<SortBy>("title");
@@ -24,14 +24,14 @@ const AnimeGrid = () => {
 
 	// アニメデータのフック
 	const {
-		animes,
-		loading: animesLoading,
-		error: animesError,
+		videos,
+		loading: videosLoading,
+		error: videosError,
 		pagination,
-		refetch: refetchAnimes,
+		refetch: refetchVideos,
 		hasNextPage,
 		hasPrevPage,
-	} = useAnimes({
+	} = useVideos({
 		filters: {
 			search: searchTerm || undefined,
 			genre: selectedGenre || undefined,
@@ -54,11 +54,11 @@ const AnimeGrid = () => {
 
 	// エラーハンドリング
 	const handleRetry = useCallback(async () => {
-		await refetchAnimes();
-	}, [refetchAnimes]);
+		await refetchVideos();
+	}, [refetchVideos]);
 
 	// ローディング状態
-	if (animesLoading && animes.length === 0) {
+	if (videosLoading && videos.length === 0) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 				<LoadingState
@@ -70,7 +70,7 @@ const AnimeGrid = () => {
 	}
 
 	// エラー状態
-	if (animesError) {
+	if (videosError) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 				<div className="container mx-auto px-4 py-8">
@@ -116,19 +116,19 @@ const AnimeGrid = () => {
 						{/* 結果表示 */}
 						{pagination.total > 0 && (
 							<div className="text-sm text-slate-400">
-								{pagination.total}件中 {animes.length}件を表示
+								{pagination.total}件中 {videos.length}件を表示
 							</div>
 						)}
 					</div>
 				</div>
 
 				{/* コンテンツ */}
-				{animes.length === 0 ? (
+				{videos.length === 0 ? (
 					<EmptyState type="no-search-results" searchTerm={searchTerm} />
 				) : viewMode === "grid" ? (
-					<AnimeGridContainer animes={animes} />
+					<VideoGridContainer videos={videos} />
 				) : (
-					<AnimeList animes={animes} />
+					<VideoList videos={videos} />
 				)}
 
 				{/* ページネーション */}
@@ -136,7 +136,7 @@ const AnimeGrid = () => {
 					<div className="flex justify-center items-center space-x-4 mt-8">
 						<Button
 							onClick={() => handlePageChange(currentPage - 1)}
-							disabled={!hasPrevPage || animesLoading}
+							disabled={!hasPrevPage || videosLoading}
 							variant="secondary"
 							size="sm"
 						>
@@ -153,7 +153,7 @@ const AnimeGrid = () => {
 
 						<Button
 							onClick={() => handlePageChange(currentPage + 1)}
-							disabled={!hasNextPage || animesLoading}
+							disabled={!hasNextPage || videosLoading}
 							variant="secondary"
 							size="sm"
 						>
@@ -166,4 +166,4 @@ const AnimeGrid = () => {
 	);
 };
 
-export default AnimeGrid;
+export default VideoGrid;

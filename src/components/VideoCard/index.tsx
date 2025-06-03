@@ -4,26 +4,26 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Play, Clock, Calendar, HardDrive, Info, Heart } from "lucide-react";
-import type { AnimeData } from "@/type";
+import type { VideoData } from "@/type";
 import { cn, formatFileSize, truncateText } from "@/libs/utils";
 import { useProgress } from "@/hooks/useProgress";
 
-interface AnimeCardProps {
-	anime: AnimeData;
+interface VideoCardProps {
+	video: VideoData;
 	priority?: boolean;
 	className?: string;
 	onLikeUpdate?: (id: string, isLiked: boolean) => void;
 }
 
-const AnimeCard = ({
-	anime,
+const VideoCard = ({
+	video,
 	priority = false,
 	className,
 	onLikeUpdate,
-}: AnimeCardProps) => {
+}: VideoCardProps) => {
 	const [imageError, setImageError] = useState(false);
 	const [isHovered, setIsHovered] = useState(false);
-	const [isLiked, setIsLiked] = useState(anime.isLiked);
+	const [isLiked, setIsLiked] = useState(video.isLiked);
 	const { updateProgress, loading: progressLoading } = useProgress();
 
 	// ライクボタンの処理
@@ -36,10 +36,10 @@ const AnimeCard = ({
 
 		try {
 			await updateProgress({
-				id: anime.id,
+				id: video.id,
 				isLiked: newLikeStatus,
 			});
-			onLikeUpdate?.(anime.id, newLikeStatus);
+			onLikeUpdate?.(video.id, newLikeStatus);
 		} catch (error) {
 			// エラー時は元に戻す
 			setIsLiked(isLiked);
@@ -48,7 +48,7 @@ const AnimeCard = ({
 	};
 
 	// 視聴進捗の計算
-	const watchProgressPercentage = anime.watchProgress || 0;
+	const watchProgressPercentage = video.watchProgress || 0;
 
 	return (
 		<div
@@ -62,15 +62,15 @@ const AnimeCard = ({
 			onMouseLeave={() => setIsHovered(false)}
 		>
 			<Link
-				href={`/play/${encodeURIComponent(anime.filePath)}`}
+				href={`/play/${encodeURIComponent(video.filePath)}`}
 				className="block"
 			>
 				{/* サムネイル */}
 				<div className="relative aspect-video bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
-					{anime.thumbnail && !imageError ? (
+					{video.thumbnail && !imageError ? (
 						<Image
-							src={anime.thumbnail}
-							alt={anime.title}
+							src={video.thumbnail}
+							alt={video.title}
 							fill
 							priority={priority}
 							className="object-cover transition-transform duration-300 group-hover:scale-110"
@@ -100,21 +100,21 @@ const AnimeCard = ({
 						</div>
 					</div>{" "}
 					{/* エピソード番号 */}
-					{anime.episode && (
+					{video.episode && (
 						<div className="absolute top-3 left-3">
 							<div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md">
 								<span className="text-white text-xs font-medium">
-									EP. {anime.episode}
+									EP. {video.episode}
 								</span>
 							</div>
 						</div>
 					)}
 					{/* ライクボタン */}
 					<div className="absolute top-3 right-3 flex gap-2">
-						{anime.year && (
+						{video.year && (
 							<div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md">
 								<span className="text-white text-xs font-medium">
-									{anime.year}
+									{video.year}
 								</span>
 							</div>
 						)}
@@ -141,21 +141,21 @@ const AnimeCard = ({
 				{/* コンテンツ */}
 				<div className="p-4">
 					<h3 className="font-semibold text-white mb-2 line-clamp-2 leading-tight">
-						{truncateText(anime.title, 60)}
+						{truncateText(video.title, 60)}
 					</h3>
 
 					{/* メタデータ */}
 					<div className="space-y-2">
 						<div className="flex items-center gap-4 text-xs text-slate-400">
-							{anime.year && (
+							{video.year && (
 								<div className="flex items-center gap-1">
 									<Calendar className="h-3 w-3" />
-									<span>{anime.year}</span>
+									<span>{video.year}</span>
 								</div>
 							)}
 							<div className="flex items-center gap-1">
 								<HardDrive className="h-3 w-3" />
-								<span>{formatFileSize(anime.fileSize)}</span>
+								<span>{formatFileSize(video.fileSize)}</span>
 							</div>
 						</div>
 
@@ -168,7 +168,7 @@ const AnimeCard = ({
 									: "opacity-0 max-h-0 overflow-hidden",
 							)}
 						>
-							{truncateText(anime.fileName, 50)}
+							{truncateText(video.fileName, 50)}
 						</div>
 					</div>
 				</div>
@@ -206,4 +206,4 @@ const AnimeCard = ({
 	);
 };
 
-export default AnimeCard;
+export default VideoCard;

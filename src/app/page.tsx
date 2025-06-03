@@ -3,9 +3,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { Search, Grid, List, X, Filter, SortAsc, SortDesc } from "lucide-react";
 import { useDatabaseUpdate } from "@/hooks/useDatabaseUpdate";
-import { useAnimes } from "@/hooks/useAnimes";
-import AnimeGridContainer from "@/components/AnimeGridContainer";
-import AnimeList from "@/components/AnimeList";
+import { useVideos } from "@/hooks/useVideos";
+import VideoGridContainer from "@/components/VideoGridContainer";
+import VideoList from "@/components/VideoList";
 import EmptyState from "@/components/EmptyState";
 import LoadingState from "@/components/LoadingState";
 import { Button } from "@/components/ui/Button";
@@ -30,14 +30,14 @@ const Home = () => {
 
 	// アニメデータのフック
 	const {
-		animes,
-		loading: animesLoading,
-		error: animesError,
+		videos,
+		loading: videosLoading,
+		error: videosError,
 		pagination,
-		refetch: refetchAnimes,
+		refetch: refetchVideos,
 		hasNextPage,
 		hasPrevPage,
-	} = useAnimes({
+	} = useVideos({
 		filters: {
 			search: searchQuery || undefined, // searchQueryを使用
 			genre: selectedGenre || undefined,
@@ -67,10 +67,10 @@ const Home = () => {
 		if (success) {
 			// 更新成功後、現在の表示状態に応じて再フェッチ
 			if (showAll || searchQuery) {
-				await refetchAnimes();
+				await refetchVideos();
 			}
 		}
-	}, [updateDatabase, showAll, searchQuery, refetchAnimes]);
+	}, [updateDatabase, showAll, searchQuery, refetchVideos]);
 	// 一覧表示ボタンのハンドラー
 	const handleShowAll = useCallback(() => {
 		console.log("[HomePage] Show all button clicked");
@@ -104,16 +104,16 @@ const Home = () => {
 	// エラーハンドリング
 	const handleRetry = useCallback(async () => {
 		clearError();
-		await refetchAnimes();
-	}, [clearError, refetchAnimes]); // ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
+		await refetchVideos();
+	}, [clearError, refetchVideos]); // ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
 	const hasContent =
-		animes.length > 0 ||
+		videos.length > 0 ||
 		searchQuery ||
 		selectedGenre ||
 		selectedYear ||
 		showAll;
 
-	if (animesLoading && !hasContent) {
+	if (videosLoading && !hasContent) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 				<LoadingState type="initial" message="検索中..." />
@@ -121,7 +121,7 @@ const Home = () => {
 		);
 	}
 
-	if (updateError || animesError) {
+	if (updateError || videosError) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 				<div className="container mx-auto px-4 py-8">
@@ -151,17 +151,17 @@ const Home = () => {
 						<div>
 							<div className="flex items-center gap-3">
 								<h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-									My Anime Storage
+									My Video Storage
 								</h1>
 								{/* ローディングインジケーター */}
-								{animesLoading && (
+								{videosLoading && (
 									<div className="h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
 								)}
 							</div>
 							<p className="text-slate-400 mt-2">
-								{animes.length === pagination.total
+								{videos.length === pagination.total
 									? `${pagination.total} アニメ`
-									: `${animes.length} / ${pagination.total} アニメが見つかりました`}
+									: `${videos.length} / ${pagination.total} アニメが見つかりました`}
 							</p>
 						</div>
 
@@ -319,7 +319,7 @@ const Home = () => {
 					)}
 				</div>{" "}
 				{/* コンテンツ */}
-				{animes.length === 0 &&
+				{videos.length === 0 &&
 				!searchTerm &&
 				!selectedGenre &&
 				!selectedYear &&
@@ -341,11 +341,11 @@ const Home = () => {
 							<div className="space-y-4">
 								<Button
 									onClick={handleShowAll}
-									disabled={animesLoading}
+									disabled={videosLoading}
 									className="w-full"
 									size="lg"
 								>
-									{animesLoading ? "読み込み中..." : "すべての動画を表示"}
+									{videosLoading ? "読み込み中..." : "すべての動画を表示"}
 								</Button>
 								<p className="text-sm text-slate-500">
 									※
@@ -354,19 +354,19 @@ const Home = () => {
 							</div>
 						</div>
 					</div>
-				) : animes.length === 0 ? (
+				) : videos.length === 0 ? (
 					<EmptyState type="no-search-results" searchTerm={searchTerm} />
 				) : viewMode === "grid" ? (
-					<AnimeGridContainer animes={animes} />
+					<VideoGridContainer videos={videos} />
 				) : (
-					<AnimeList animes={animes} />
+					<VideoList videos={videos} />
 				)}
 				{/* ページネーション */}
 				{pagination.totalPages > 1 && (
 					<div className="flex justify-center items-center space-x-4 mt-8">
 						<Button
 							onClick={() => handlePageChange(currentPage - 1)}
-							disabled={!hasPrevPage || animesLoading}
+							disabled={!hasPrevPage || videosLoading}
 							variant="secondary"
 							size="sm"
 						>
@@ -383,7 +383,7 @@ const Home = () => {
 
 						<Button
 							onClick={() => handlePageChange(currentPage + 1)}
-							disabled={!hasNextPage || animesLoading}
+							disabled={!hasNextPage || videosLoading}
 							variant="secondary"
 							size="sm"
 						>

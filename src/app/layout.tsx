@@ -5,11 +5,11 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-	title: "My Anime Storage - セルフホストアニメプレイヤー",
+	title: "My Video Storage - セルフホストアニメプレイヤー",
 	description:
 		"ローカルに保存された動画ファイルをストリーミング再生できるセルフホストアニメプレイヤー",
 	keywords: [
-		"anime",
+		"video",
 		"video",
 		"streaming",
 		"self-hosted",

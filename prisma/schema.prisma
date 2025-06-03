@@ -10,7 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Anime {
+model Video {
   id          String   @id @default(cuid())
   title       String
   fileName    String   @unique
@@ -31,5 +31,5 @@ model Anime {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@map("animes")
+  @@map("videos")
 }

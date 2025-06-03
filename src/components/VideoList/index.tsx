@@ -11,31 +11,31 @@ import {
 	Info,
 	MoreHorizontal,
 } from "lucide-react";
-import type { AnimeData } from "@/type";
+import type { VideoData } from "@/type";
 import { cn, formatFileSize, truncateText, formatDuration } from "@/libs/utils";
 
-interface AnimeListProps {
-	animes: AnimeData[];
+interface VideoListProps {
+	videos: VideoData[];
 	className?: string;
 }
 
-const AnimeListItem = ({ anime }: { anime: AnimeData }) => {
+const VideoListItem = ({ video }: { video: VideoData }) => {
 	const [imageError, setImageError] = useState(false);
 	const [showMenu, setShowMenu] = useState(false);
 
 	return (
 		<div className="group bg-slate-800/30 hover:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 hover:border-purple-400/30 transition-all duration-300">
 			<Link
-				href={`/play/${encodeURIComponent(anime.filePath)}`}
+				href={`/play/${encodeURIComponent(video.filePath)}`}
 				className="block p-4"
 			>
 				<div className="flex items-center gap-4">
 					{/* サムネイル */}
 					<div className="relative w-28 h-16 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg overflow-hidden flex-shrink-0">
-						{anime.thumbnail && !imageError ? (
+						{video.thumbnail && !imageError ? (
 							<Image
-								src={anime.thumbnail}
-								alt={anime.title}
+								src={video.thumbnail}
+								alt={video.title}
 								fill
 								className="object-cover transition-transform duration-300 group-hover:scale-110"
 								onError={() => setImageError(true)}
@@ -58,36 +58,36 @@ const AnimeListItem = ({ anime }: { anime: AnimeData }) => {
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1 min-w-0">
 								<h3 className="font-semibold text-white mb-1 truncate text-lg">
-									{anime.title}
+									{video.title}
 								</h3>
 								<p className="text-sm text-slate-400 truncate mb-2">
-									{anime.fileName}
+									{video.fileName}
 								</p>
 
 								{/* メタデータ */}
 								<div className="flex items-center gap-4 text-xs text-slate-400">
-									{anime.episode && (
+									{video.episode && (
 										<div className="flex items-center gap-1">
 											<div className="w-2 h-2 bg-blue-400 rounded-full" />
-											<span>EP. {anime.episode}</span>
+											<span>EP. {video.episode}</span>
 										</div>
 									)}
-									{anime.year && (
+									{video.year && (
 										<div className="flex items-center gap-1">
 											<Calendar className="h-3 w-3" />
-											<span>{anime.year}</span>
+											<span>{video.year}</span>
 										</div>
 									)}
 									<div className="flex items-center gap-1">
 										<HardDrive className="h-3 w-3" />
-										<span>{formatFileSize(anime.fileSize)}</span>
+										<span>{formatFileSize(video.fileSize)}</span>
 									</div>
-									{anime.lastWatched && (
+									{video.lastWatched && (
 										<div className="flex items-center gap-1">
 											<Clock className="h-3 w-3" />
 											<span>
 												最後に視聴:{" "}
-												{new Date(anime.lastWatched).toLocaleDateString()}
+												{new Date(video.lastWatched).toLocaleDateString()}
 											</span>
 										</div>
 									)}
@@ -120,7 +120,7 @@ const AnimeListItem = ({ anime }: { anime: AnimeData }) => {
 						</div>
 
 						{/* 進行状況バー */}
-						{anime.lastWatched && (
+						{video.lastWatched && (
 							<div className="mt-3">
 								<div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden">
 									<div
@@ -144,14 +144,14 @@ const AnimeListItem = ({ anime }: { anime: AnimeData }) => {
 	);
 };
 
-const AnimeList = ({ animes, className }: AnimeListProps) => {
+const VideoList = ({ videos, className }: VideoListProps) => {
 	return (
 		<div className={cn("space-y-3", className)}>
-			{animes.map((anime, index) => (
-				<AnimeListItem key={anime.id} anime={anime} />
+			{videos.map((video, index) => (
+				<VideoListItem key={video.id} video={video} />
 			))}
 		</div>
 	);
 };
 
-export default AnimeList;
+export default VideoList;

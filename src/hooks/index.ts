@@ -1,16 +1,16 @@
 // Custom hooks
-export { useAnimes } from "./useAnimes";
+export { useVideos } from "./useVideos";
 export { useDatabaseUpdate } from "./useDatabaseUpdate";
 export { useProgress } from "./useProgress";
 
 // Types
 export type {
-	UseAnimesFilters,
-	UseAnimesSorting,
-	UseAnimesPagination,
-	UseAnimesOptions,
-	UseAnimesReturn,
-} from "./useAnimes";
+	UseVideosFilters,
+	UseVideosSorting,
+	UseVideosPagination,
+	UseVideosOptions,
+	UseVideosReturn,
+} from "./useVideos";
 
 export type {
 	DatabaseUpdateStats,

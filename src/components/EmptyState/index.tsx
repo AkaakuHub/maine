@@ -4,7 +4,7 @@ import { Film, Search, FolderOpen, RefreshCw } from "lucide-react";
 import { cn } from "@/libs/utils";
 
 interface EmptyStateProps {
-	type: "no-animes" | "no-search-results" | "loading-error";
+	type: "no-videos" | "no-search-results" | "loading-error";
 	searchTerm?: string;
 	onRetry?: () => void;
 	className?: string;
@@ -18,7 +18,7 @@ const EmptyState = ({
 }: EmptyStateProps) => {
 	const getContent = () => {
 		switch (type) {
-			case "no-animes":
+			case "no-videos":
 				return {
 					icon: <FolderOpen className="h-20 w-20 text-slate-400" />,
 					title: "アニメが見つかりません",

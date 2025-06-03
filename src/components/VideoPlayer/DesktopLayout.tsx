@@ -1,13 +1,12 @@
 "use client";
 
 import ModernVideoPlayer from "@/components/ModernVideoPlayer";
-import VideoInfo from "./VideoInfo";
 import RelatedVideos from "./RelatedVideos";
-import type { AnimeInfo } from "@/types/AnimeInfo";
+import type { VideoInfoType } from "@/types/VideoInfo";
 
 interface DesktopLayoutProps {
 	videoSrc: string;
-	animeInfo: AnimeInfo;
+	videoInfo: VideoInfoType;
 	onBack: () => void;
 	isLiked: boolean;
 	isInWatchlist: boolean;
@@ -22,7 +21,7 @@ interface DesktopLayoutProps {
 
 export default function DesktopLayout({
 	videoSrc,
-	animeInfo,
+	videoInfo,
 	onBack,
 	isLiked,
 	isInWatchlist,
@@ -43,7 +42,7 @@ export default function DesktopLayout({
 					{" "}
 					<ModernVideoPlayer
 						src={videoSrc}
-						title={animeInfo.fullTitle}
+						title={videoInfo.fullTitle}
 						onBack={onBack}
 						onTimeUpdate={onTimeUpdate}
 						initialTime={initialTime}
@@ -55,19 +54,19 @@ export default function DesktopLayout({
 					{/* 動画情報 */}
 					<div className="p-6 border-b border-purple-500/20">
 						<h2 className="text-2xl font-bold text-white mb-2">
-							{animeInfo.title}
+							{videoInfo.title}
 						</h2>
 						<p className="text-purple-300 text-base mb-3 font-medium">
-							{animeInfo.episode}
+							{videoInfo.episode}
 						</p>
 
 						<div className="flex flex-wrap items-center gap-4 text-sm text-slate-300 mb-4">
 							<span className="px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-medium">
-								{animeInfo.genre}
+								{videoInfo.genre}
 							</span>
-							<span>{animeInfo.year}</span>
+							<span>{videoInfo.year}</span>
 							<span>•</span>
-							<span>{animeInfo.duration}</span>
+							<span>{videoInfo.duration}</span>
 						</div>
 
 						{/* アクションボタン */}
@@ -127,13 +126,13 @@ export default function DesktopLayout({
 										: {}
 								}
 							>
-								{animeInfo.description}
+								{videoInfo.description}
 							</p>
 						</div>
 					</div>
 
 					{/* 関連動画 */}
-					<RelatedVideos animeInfo={animeInfo} isMobile={false} />
+					<RelatedVideos videoInfo={videoInfo} isMobile={false} />
 				</div>
 			</div>
 		</div>

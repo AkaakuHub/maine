@@ -1,33 +1,33 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type { AnimeData } from "@/type";
+import type { VideoData } from "@/type";
 import { API } from "@/utils/constants";
 
-export interface UseAnimesFilters {
+export interface UseVideosFilters {
 	search?: string;
 	genre?: string;
 	year?: string;
 }
 
-export interface UseAnimesSorting {
+export interface UseVideosSorting {
 	sortBy: "title" | "year" | "episode" | "createdAt" | "lastWatched";
 	sortOrder: "asc" | "desc";
 }
 
-export interface UseAnimesPagination {
+export interface UseVideosPagination {
 	page: number;
 	limit: number;
 }
 
-export interface UseAnimesOptions {
-	filters?: UseAnimesFilters;
-	sorting?: UseAnimesSorting;
-	pagination?: UseAnimesPagination;
+export interface UseVideosOptions {
+	filters?: UseVideosFilters;
+	sorting?: UseVideosSorting;
+	pagination?: UseVideosPagination;
 	enabled?: boolean;
 	loadAll?: boolean; // 明示的な一覧読み込みフラグ
 }
 
-export interface UseAnimesReturn {
-	animes: AnimeData[];
+export interface UseVideosReturn {
+	videos: VideoData[];
 	loading: boolean;
 	error: string | null;
 	pagination: {
@@ -41,7 +41,7 @@ export interface UseAnimesReturn {
 	hasPrevPage: boolean;
 }
 
-export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
+export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 	const {
 		filters = {},
 		sorting = { sortBy: "title", sortOrder: "asc" },
@@ -49,7 +49,7 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 		enabled = true,
 		loadAll = false,
 	} = options;
-	const [animes, setAnimes] = useState<AnimeData[]>([]);
+	const [videos, setVideos] = useState<VideoData[]>([]);
 	const [loading, setLoading] = useState(false); // 初期状態はfalseに変更
 	const [error, setError] = useState<string | null>(null);
 	const [paginationInfo, setPaginationInfo] = useState({
@@ -92,7 +92,7 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 		pagination.limit,
 	]);
 	// データを取得する関数
-	const fetchAnimes = useCallback(async () => {
+	const fetchVideos = useCallback(async () => {
 		if (!enabled) return;
 
 		// 検索条件もloadAllフラグもない場合は何もしない
@@ -103,7 +103,7 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 			loadAll;
 
 		if (!hasSearchConditions) {
-			setAnimes([]);
+			setVideos([]);
 			setPaginationInfo({
 				page: 1,
 				limit: pagination.limit,
@@ -124,10 +124,10 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 			lastParamsRef.current = searchParams;
 
 			console.log(
-				`[useAnimes] Fetching: ${API.ENDPOINTS.ANIMES}?${searchParams}`,
+				`[useVideos] Fetching: ${API.ENDPOINTS.VIDEOS}?${searchParams}`,
 			);
 
-			const response = await fetch(`${API.ENDPOINTS.ANIMES}?${searchParams}`, {
+			const response = await fetch(`${API.ENDPOINTS.VIDEOS}?${searchParams}`, {
 				signal: AbortSignal.timeout(API.TIMEOUT),
 			});
 
@@ -141,7 +141,7 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 			}
 
 			interface ApiResponse {
-				animes?: AnimeData[];
+				videos?: VideoData[];
 				pagination?: {
 					page: number;
 					limit: number;
@@ -163,12 +163,12 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 				throw new Error("Invalid JSON response from server");
 			}
 
-			console.log("[useAnimes] Response:", {
-				animeCount: data.animes?.length || 0,
+			console.log("[useVideos] Response:", {
+				videoCount: data.videos?.length || 0,
 				total: data.pagination?.total || 0,
 			});
 
-			setAnimes(data.animes || []);
+			setVideos(data.videos || []);
 			setPaginationInfo(
 				data.pagination || {
 					page: 1,
@@ -178,9 +178,9 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 				},
 			);
 		} catch (err) {
-			console.error("Failed to fetch animes:", err);
+			console.error("Failed to fetch videos:", err);
 			setError(err instanceof Error ? err.message : "Unknown error");
-			setAnimes([]);
+			setVideos([]);
 			setPaginationInfo({
 				page: 1,
 				limit: pagination.limit,
@@ -202,22 +202,22 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 
 	// 初期化とパラメータ変更時にデータを取得
 	useEffect(() => {
-		fetchAnimes();
-	}, [fetchAnimes]); // fetchAnimesを依存配列に追加
+		fetchVideos();
+	}, [fetchVideos]); // fetchVideosを依存配列に追加
 
 	// 再フェッチ用の安定した関数
 	const refetch = useCallback(async () => {
 		// 強制的に再フェッチ
 		lastParamsRef.current = "";
-		await fetchAnimes();
-	}, [fetchAnimes]);
+		await fetchVideos();
+	}, [fetchVideos]);
 
 	// ページネーション情報を計算
 	const hasNextPage = paginationInfo.page < paginationInfo.totalPages;
 	const hasPrevPage = paginationInfo.page > 1;
 
 	return {
-		animes,
+		videos,
 		loading,
 		error,
 		pagination: paginationInfo,

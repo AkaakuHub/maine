@@ -1,10 +1,10 @@
 "use client";
 
 import { Heart, List, Share2 } from "lucide-react";
-import type { AnimeInfo } from "@/types/AnimeInfo";
+import type { VideoInfoType } from "@/types/VideoInfo";
 
 interface VideoInfoProps {
-	animeInfo: AnimeInfo;
+	videoInfo: VideoInfoType;
 	isLiked: boolean;
 	isInWatchlist: boolean;
 	showDescription: boolean;
@@ -15,7 +15,7 @@ interface VideoInfoProps {
 }
 
 export default function VideoInfo({
-	animeInfo,
+	videoInfo,
 	isLiked,
 	isInWatchlist,
 	showDescription,
@@ -27,17 +27,17 @@ export default function VideoInfo({
 	return (
 		<div className="p-4 border-b border-purple-500/20">
 			<h1 className="text-xl font-bold text-white mb-2 leading-tight">
-				{animeInfo.title}
+				{videoInfo.title}
 			</h1>
-			<p className="text-purple-300 mb-3 font-medium">{animeInfo.episode}</p>
+			<p className="text-purple-300 mb-3 font-medium">{videoInfo.episode}</p>
 
 			<div className="flex flex-wrap items-center gap-3 text-sm text-slate-300 mb-4">
 				<span className="px-2 py-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-medium">
-					{animeInfo.genre}
+					{videoInfo.genre}
 				</span>
-				<span>{animeInfo.year}</span>
+				<span>{videoInfo.year}</span>
 				<span>•</span>
-				<span>{animeInfo.duration}</span>
+				<span>{videoInfo.duration}</span>
 			</div>
 
 			{/* アクションボタン */}
@@ -108,7 +108,7 @@ export default function VideoInfo({
 							: {}
 					}
 				>
-					{animeInfo.description}
+					{videoInfo.description}
 				</p>
 			</div>
 		</div>

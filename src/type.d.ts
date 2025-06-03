@@ -1,5 +1,5 @@
-// Prisma Anime model types
-export interface AnimeData {
+// Prisma Video model types
+export interface VideoData {
 	id: string;
 	title: string;
 	fileName: string;
@@ -21,8 +21,20 @@ export interface AnimeData {
 	updatedAt: Date;
 }
 
+export interface VideoResponse {
+	videos: VideoData[];
+	pagination: {
+		page: number;
+		limit: number;
+		total: number;
+		totalPages: number;
+	};
+}
+
+// Legacy types for backward compatibility - to be removed after migration
+export interface AnimeData extends VideoData {}
 export interface AnimeResponse {
-	animes: AnimeData[];
+	videos: VideoData[];
 	pagination: {
 		page: number;
 		limit: number;

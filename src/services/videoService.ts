@@ -1,8 +1,8 @@
 import { prisma } from "@/libs/prisma";
-import type { AnimeData } from "@/type";
+import type { VideoData } from "@/type";
 
 // Prisma types - define locally if @prisma/client is not available
-type PrismaAnime = {
+type PrismaVideo = {
 	id: string;
 	title: string;
 	fileName: string;
@@ -38,24 +38,24 @@ type OrderByInput = {
 	lastWatched?: "asc" | "desc";
 };
 
-export interface AnimeFilters {
+export interface VideoFilters {
 	search?: string;
 	genre?: string;
 	year?: string;
 }
 
-export interface AnimeSorting {
+export interface VideoSorting {
 	sortBy: "title" | "year" | "episode" | "createdAt" | "lastWatched";
 	sortOrder: "asc" | "desc";
 }
 
-export interface AnimePagination {
+export interface VideoPagination {
 	page: number;
 	limit: number;
 }
 
-export interface AnimeQueryResult {
-	animes: AnimeData[];
+export interface VideoQueryResult {
+	videos: VideoData[];
 	pagination: {
 		page: number;
 		limit: number;
@@ -64,15 +64,15 @@ export interface AnimeQueryResult {
 	};
 }
 
-export class AnimeService {
+export class VideoService {
 	/**
 	 * アニメデータを検索・フィルタリング・ソートして取得
 	 */
-	static async getAnimes(
-		filters: AnimeFilters,
-		sorting: AnimeSorting,
-		pagination: AnimePagination,
-	): Promise<AnimeQueryResult> {
+	static async getVideos(
+		filters: VideoFilters,
+		sorting: VideoSorting,
+		pagination: VideoPagination,
+	): Promise<VideoQueryResult> {
 		const where = this.buildWhereClause(filters);
 		const orderBy = this.buildOrderByClause(sorting);
 		// 軽量化のため、必要な最小限のフィールドのみを選択
@@ -95,24 +95,24 @@ export class AnimeService {
 			createdAt: true,
 		};
 
-		const [animes, totalCount] = await Promise.all([
-			prisma.anime.findMany({
+		const [videos, totalCount] = await Promise.all([
+			prisma.video.findMany({
 				where,
 				orderBy,
 				skip: (pagination.page - 1) * pagination.limit,
 				take: pagination.limit,
 				select: selectFields,
 			}),
-			prisma.anime.count({ where }),
+			prisma.video.count({ where }),
 		]);
 		// fileSizeを除去し、軽量化
-		const serializedAnimes = animes.map((anime: any) => ({
-			...anime,
+		const serializedVideos = videos.map((video: any) => ({
+			...video,
 			fileSize: "0", // パフォーマンス向上のため固定値
 		}));
 
 		return {
-			animes: serializedAnimes,
+			videos: serializedVideos,
 			pagination: {
 				page: pagination.page,
 				limit: pagination.limit,
@@ -125,16 +125,16 @@ export class AnimeService {
 	/**
 	 * 単一のアニメデータを取得
 	 */
-	static async getAnimeById(id: string): Promise<AnimeData | null> {
-		const anime = await prisma.anime.findUnique({
+	static async getVideoById(id: string): Promise<VideoData | null> {
+		const video = await prisma.video.findUnique({
 			where: { id },
 		});
 
-		if (!anime) return null;
+		if (!video) return null;
 
 		return {
-			...anime,
-			fileSize: anime.fileSize?.toString() || "0",
+			...video,
+			fileSize: video.fileSize?.toString() || "0",
 		};
 	}
 
@@ -142,7 +142,7 @@ export class AnimeService {
 	 * アニメの視聴時間を更新
 	 */
 	static async updateWatchTime(id: string, watchTime: number): Promise<void> {
-		await prisma.anime.update({
+		await prisma.video.update({
 			where: { id },
 			data: {
 				watchTime,
@@ -155,7 +155,7 @@ export class AnimeService {
 	 * アニメの評価を更新
 	 */
 	static async updateRating(id: string, rating: number): Promise<void> {
-		await prisma.anime.update({
+		await prisma.video.update({
 			where: { id },
 			data: { rating },
 		});
@@ -163,7 +163,7 @@ export class AnimeService {
 	/**
 	 * WHERE句を構築
 	 */
-	private static buildWhereClause(filters: AnimeFilters): WhereInput {
+	private static buildWhereClause(filters: VideoFilters): WhereInput {
 		const where: WhereInput = {};
 
 		if (filters.search) {
@@ -195,7 +195,7 @@ export class AnimeService {
 	/**
 	 * ORDER BY句を構築
 	 */
-	private static buildOrderByClause(sorting: AnimeSorting): OrderByInput {
+	private static buildOrderByClause(sorting: VideoSorting): OrderByInput {
 		const orderBy: OrderByInput = {};
 
 		switch (sorting.sortBy) {

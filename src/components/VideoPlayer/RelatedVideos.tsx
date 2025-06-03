@@ -1,15 +1,15 @@
 "use client";
 
 import { Play } from "lucide-react";
-import type { AnimeInfo } from "../../types/AnimeInfo";
+import type { VideoInfoType } from "../../types/VideoInfo";
 
 interface RelatedVideosProps {
-	animeInfo: AnimeInfo;
+	videoInfo: VideoInfoType;
 	isMobile?: boolean;
 }
 
 export default function RelatedVideos({
-	animeInfo,
+	videoInfo,
 	isMobile = false,
 }: RelatedVideosProps) {
 	const videoCount = 5;
@@ -38,7 +38,7 @@ export default function RelatedVideos({
 						</div>
 						<div className="flex-1 min-w-0">
 							<h4 className="text-white text-sm font-medium mb-1 group-hover:text-purple-200 transition-colors truncate">
-								{animeInfo.title} - エピソード {i + 1}
+								{videoInfo.title} - エピソード {i + 1}
 							</h4>
 							<p className="text-slate-400 text-xs mb-1">24:00</p>
 							<p className="text-slate-500 text-xs">1週間前</p>

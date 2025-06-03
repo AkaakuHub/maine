@@ -1,15 +1,15 @@
 "use client";
 
-import type { AnimeData } from "@/type";
-import AnimeCard from "@/components/AnimeCard";
+import type { VideoData } from "@/type";
+import VideoCard from "@/components/VideoCard";
 import { cn } from "@/libs/utils";
 
-interface AnimeGridProps {
-	animes: AnimeData[];
+interface VideoGridProps {
+	videos: VideoData[];
 	className?: string;
 }
 
-const AnimeGrid = ({ animes, className }: AnimeGridProps) => {
+const VideoGrid = ({ videos, className }: VideoGridProps) => {
 	return (
 		<div
 			className={cn(
@@ -25,10 +25,10 @@ const AnimeGrid = ({ animes, className }: AnimeGridProps) => {
 				className,
 			)}
 		>
-			{animes.map((anime, index) => (
-				<AnimeCard
-					key={anime.id}
-					anime={anime}
+			{videos.map((video, index) => (
+				<VideoCard
+					key={video.id}
+					video={video}
 					priority={index < 6} // 最初の6つの画像を優先読み込み
 				/>
 			))}
@@ -36,4 +36,4 @@ const AnimeGrid = ({ animes, className }: AnimeGridProps) => {
 	);
 };
 
-export default AnimeGrid;
+export default VideoGrid;
