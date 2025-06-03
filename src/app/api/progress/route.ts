@@ -14,7 +14,14 @@ export async function PUT(request: NextRequest) {
 		}
 
 		// 更新データを準備
-		const updateData: any = {
+		const updateData: {
+			watchTime?: number;
+			lastWatched?: Date;
+			watchProgress?: number;
+			isLiked?: boolean;
+			likedAt?: Date | null;
+			updatedAt: Date;
+		} = {
 			updatedAt: new Date(),
 		};
 
