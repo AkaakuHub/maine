@@ -25,6 +25,9 @@ model Anime {
   rating      Float?   // user rating 0-10
   lastWatched DateTime? // last time watched
   watchTime   Float?   // current watch position in seconds
+  watchProgress Float @default(0) // watch progress percentage (0-100)
+  isLiked     Boolean @default(false) // like status
+  likedAt     DateTime? // when it was liked
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

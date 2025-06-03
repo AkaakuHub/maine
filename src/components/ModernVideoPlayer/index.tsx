@@ -42,6 +42,8 @@ interface ModernVideoPlayerProps {
 	src: string;
 	title?: string;
 	onBack?: () => void;
+	onTimeUpdate?: (currentTime: number, duration: number) => void;
+	initialTime?: number;
 	className?: string;
 }
 
@@ -49,6 +51,8 @@ const ModernVideoPlayer = ({
 	src,
 	title,
 	onBack,
+	onTimeUpdate,
+	initialTime = 0,
 	className = "",
 }: ModernVideoPlayerProps) => {
 	const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
@@ -326,45 +330,50 @@ const ModernVideoPlayer = ({
 		settingsView,
 	]);
 
-	// ビデオイベントハンドラー
+	// マウス移動でコントロール表示
+	useEffect(() => {
+		resetControlsTimeout();
+	}, [resetControlsTimeout]);
+
+	// ビデオイベントリスナーの設定
 	useEffect(() => {
 		const video = videoRef.current;
 		if (!video) return;
 
 		const handleTimeUpdate = () => {
-			const currentTime = video.currentTime;
-			const duration = video.duration;
+			const current = video.currentTime;
+			setCurrentTime(current);
 
-			// 動画が終了に近い場合（最後の0.1秒）は終了時刻に設定
-			if (duration - currentTime < 0.1) {
-				setCurrentTime(duration);
-			} else {
-				setCurrentTime(currentTime);
+			// 親コンポーネントに時間更新を通知
+			if (onTimeUpdate && video.duration) {
+				onTimeUpdate(current, video.duration);
 			}
 		};
 
-		const handleDurationChange = () => setDuration(video.duration);
-		const handleLoadStart = () => setIsBuffering(true);
-		const handleCanPlay = () => setIsBuffering(false);
-		const handleEnded = () => {
-			setCurrentTime(video.duration);
-			setIsPlaying(false);
+		const handleLoadedMetadata = () => {
+			setDuration(video.duration);
+
+			// 初期時間が設定されている場合は、その位置にシーク
+			if (initialTime > 0 && initialTime < video.duration) {
+				video.currentTime = initialTime;
+			}
 		};
 
+		const handleWaiting = () => setIsBuffering(true);
+		const handleCanPlay = () => setIsBuffering(false);
+
 		video.addEventListener("timeupdate", handleTimeUpdate);
-		video.addEventListener("durationchange", handleDurationChange);
-		video.addEventListener("loadstart", handleLoadStart);
+		video.addEventListener("loadedmetadata", handleLoadedMetadata);
+		video.addEventListener("waiting", handleWaiting);
 		video.addEventListener("canplay", handleCanPlay);
-		video.addEventListener("ended", handleEnded);
 
 		return () => {
 			video.removeEventListener("timeupdate", handleTimeUpdate);
-			video.removeEventListener("durationchange", handleDurationChange);
-			video.removeEventListener("loadstart", handleLoadStart);
+			video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+			video.removeEventListener("waiting", handleWaiting);
 			video.removeEventListener("canplay", handleCanPlay);
-			video.removeEventListener("ended", handleEnded);
 		};
-	}, []);
+	}, [onTimeUpdate, initialTime]);
 
 	// フルスクリーン状態の変更を監視
 	useEffect(() => {
@@ -376,11 +385,6 @@ const ModernVideoPlayer = ({
 		return () =>
 			document.removeEventListener("fullscreenchange", handleFullscreenChange);
 	}, []);
-
-	// マウス移動でコントロール表示
-	useEffect(() => {
-		resetControlsTimeout();
-	}, [resetControlsTimeout]);
 
 	return (
 		<div

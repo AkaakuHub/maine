@@ -16,6 +16,8 @@ interface MobileLayoutProps {
 	onToggleWatchlist: () => void;
 	onShare: () => void;
 	onToggleDescription: () => void;
+	onTimeUpdate?: (currentTime: number, duration: number) => void;
+	initialTime?: number;
 }
 
 export default function MobileLayout({
@@ -29,15 +31,18 @@ export default function MobileLayout({
 	onToggleWatchlist,
 	onShare,
 	onToggleDescription,
+	onTimeUpdate,
+	initialTime,
 }: MobileLayoutProps) {
 	return (
 		<div className="lg:hidden">
 			{/* 動画プレイヤー */}
-			<div className="w-full">
-				<ModernVideoPlayer
+			<div className="w-full">				<ModernVideoPlayer
 					src={videoSrc}
 					title={animeInfo.fullTitle}
 					onBack={onBack}
+					onTimeUpdate={onTimeUpdate}
+					initialTime={initialTime}
 				/>
 			</div>
 

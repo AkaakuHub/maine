@@ -16,6 +16,8 @@ interface DesktopLayoutProps {
 	onToggleWatchlist: () => void;
 	onShare: () => void;
 	onToggleDescription: () => void;
+	onTimeUpdate?: (currentTime: number, duration: number) => void;
+	initialTime?: number;
 }
 
 export default function DesktopLayout({
@@ -29,17 +31,20 @@ export default function DesktopLayout({
 	onToggleWatchlist,
 	onShare,
 	onToggleDescription,
+	onTimeUpdate,
+	initialTime,
 }: DesktopLayoutProps) {
 	return (
 		<div className="hidden lg:block h-[calc(100vh-64px)]">
 			{/* メインコンテンツ */}
 			<div className="flex h-full">
 				{/* 動画プレイヤーセクション */}
-				<div className="flex-1">
-					<ModernVideoPlayer
+				<div className="flex-1">					<ModernVideoPlayer
 						src={videoSrc}
 						title={animeInfo.fullTitle}
 						onBack={onBack}
+						onTimeUpdate={onTimeUpdate}
+						initialTime={initialTime}
 					/>
 				</div>
 

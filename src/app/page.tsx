@@ -10,6 +10,7 @@ import EmptyState from "@/components/EmptyState";
 import LoadingState from "@/components/LoadingState";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/libs/utils";
+import { PAGINATION, SEARCH } from "@/utils/constants";
 
 export type ViewMode = "grid" | "list";
 export type SortBy = "title" | "year" | "episode" | "createdAt";
@@ -18,13 +19,14 @@ export type SortOrder = "asc" | "desc";
 const Home = () => {
 	// UI状態
 	const [searchTerm, setSearchTerm] = useState("");
+	const [searchQuery, setSearchQuery] = useState(""); // 実際の検索クエリ
 	const [viewMode, setViewMode] = useState<ViewMode>("grid");
 	const [sortBy, setSortBy] = useState<SortBy>("title");
 	const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 	const [selectedGenre, setSelectedGenre] = useState("");
 	const [selectedYear, setSelectedYear] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
-	const [hasEverLoaded, setHasEverLoaded] = useState(false); // 初回読み込み完了フラグ
+	const [showAll, setShowAll] = useState(false); // 一覧表示フラグ
 
 	// アニメデータのフック
 	const {
@@ -34,21 +36,20 @@ const Home = () => {
 		pagination,
 		refetch: refetchAnimes,
 		hasNextPage,
-		hasPrevPage,
-	} = useAnimes({
+		hasPrevPage,	} = useAnimes({
 		filters: {
-			search: searchTerm || undefined,
+			search: searchQuery || undefined, // searchQueryを使用
 			genre: selectedGenre || undefined,
 			year: selectedYear || undefined,
 		},
 		sorting: {
 			sortBy,
 			sortOrder,
-		},
-		pagination: {
+		},		pagination: {
 			page: currentPage,
-			limit: 50,
+			limit: PAGINATION.DEFAULT_LIMIT,
 		},
+		loadAll: showAll, // 明示的な一覧読み込み
 	});
 
 	// データベース更新のフック
@@ -59,42 +60,58 @@ const Home = () => {
 		updateDatabase,
 		clearError,
 	} = useDatabaseUpdate();
-
 	// 初回読み込み完了を検知
 	useEffect(() => {
-		if (!animesLoading && !hasEverLoaded) {
-			setHasEverLoaded(true);
-		}
-	}, [animesLoading, hasEverLoaded]);
+		// 削除: hasEverLoadedは不要
+	}, []);
 
 	// データベース更新
 	const handleDatabaseUpdate = useCallback(async () => {
 		await updateDatabase();
 	}, [updateDatabase]);
 
-	// ページネーション
-	const handlePageChange = useCallback((newPage: number) => {
-		setCurrentPage(newPage);
+	// 一覧表示ボタンのハンドラー
+	const handleShowAll = useCallback(() => {
+		setShowAll(true);
+		setCurrentPage(1);
 	}, []);
+	// 検索実行
+	const handleSearch = useCallback(() => {
+		setSearchQuery(searchTerm);
+		setCurrentPage(1);
+		setShowAll(false);
+	}, [searchTerm]);
 
-	// エラーハンドリング
-	const handleRetry = useCallback(async () => {
-		clearError();
-		await refetchAnimes();
-	}, [clearError, refetchAnimes]);
+	// 検索時にshowAllをリセット
+	useEffect(() => {
+		if (selectedGenre || selectedYear) {
+			setShowAll(false);
+		}
+	}, [selectedGenre, selectedYear]);
 
 	// 検索クリア
 	const clearSearch = () => {
 		setSearchTerm("");
+		setSearchQuery("");
 	};
 
-	// ローディング状態 - 完全に初回読み込み時のみフルスクリーンローディングを表示
-	if (animesLoading && animes.length === 0 && !hasEverLoaded) {
+	// ページネーション
+	const handlePageChange = useCallback((newPage: number) => {
+		setCurrentPage(newPage);
+	}, []);
+	// エラーハンドリング
+	const handleRetry = useCallback(async () => {
+		clearError();
+		await refetchAnimes();
+	}, [clearError, refetchAnimes]);	// ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
+	const hasContent = animes.length > 0 || searchQuery || selectedGenre || selectedYear || showAll;
+	
+	if (animesLoading && !hasContent) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 				<LoadingState
 					type="initial"
-					message="動画ファイルを検索しています..."
+					message="検索中..."
 				/>
 			</div>
 		);
@@ -186,9 +203,7 @@ const Home = () => {
 								</button>
 							</div>
 						</div>
-					</div>
-
-					{/* 検索バー */}
+					</div>					{/* 検索バー */}
 					<div className="bg-slate-800/30 backdrop-blur-xl rounded-xl p-4 border border-slate-700/50">
 						<div className="flex flex-col sm:flex-row gap-4">
 							{/* 検索入力 */}
@@ -196,25 +211,41 @@ const Home = () => {
 								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
 								<input
 									type="text"
-									placeholder="アニメタイトルやファイル名で検索..."
+									placeholder={`アニメタイトルやファイル名で検索... (${SEARCH.MIN_QUERY_LENGTH}文字以上)`}
 									value={searchTerm}
 									onChange={(e) => {
 										setSearchTerm(e.target.value);
-										// 検索語句が変更されたらページを1に戻す
-										if (e.target.value !== searchTerm) {
-											setCurrentPage(1);
+									}}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter' && searchTerm.trim().length >= SEARCH.MIN_QUERY_LENGTH) {
+											handleSearch();
 										}
 									}}
-									className="w-full pl-10 pr-10 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+									className="w-full pl-10 pr-20 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
 								/>
-								{searchTerm && (
-									<button
-										type="button"
-										onClick={clearSearch}
-										className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 hover:text-white transition-colors"
+								<div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+									{searchTerm && (
+										<button
+											type="button"
+											onClick={clearSearch}
+											className="h-5 w-5 text-slate-400 hover:text-white transition-colors"
+										>
+											<X className="h-5 w-5" />
+										</button>
+									)}
+									<Button
+										onClick={handleSearch}
+										disabled={!searchTerm.trim() || searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH}
+										size="sm"
+										className="h-8 px-3"
 									>
-										<X className="h-5 w-5" />
-									</button>
+										検索									</Button>
+								</div>
+								{/* 検索ヘルプメッセージ */}
+								{searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH && (
+									<p className="absolute -bottom-6 left-0 text-xs text-yellow-400">
+										検索には{SEARCH.MIN_QUERY_LENGTH}文字以上入力してください
+									</p>
 								)}
 							</div>
 
@@ -274,10 +305,38 @@ const Home = () => {
 							<p>エラー: {updateError}</p>
 						</div>
 					)}
-				</div>
-
-				{/* コンテンツ */}
-				{animes.length === 0 ? (
+				</div>				{/* コンテンツ */}
+				{animes.length === 0 && !searchTerm && !selectedGenre && !selectedYear && !showAll ? (
+					// 初期状態 - 何も検索していない、一覧も表示していない
+					<div className="text-center py-20">
+						<div className="max-w-md mx-auto">
+							<div className="mb-8">
+								<div className="w-24 h-24 mx-auto mb-6 bg-slate-800 rounded-full flex items-center justify-center">
+									<Search className="h-12 w-12 text-slate-400" />
+								</div>
+								<h2 className="text-2xl font-bold text-white mb-4">
+									アニメライブラリへようこそ
+								</h2>
+								<p className="text-slate-400 mb-8">
+									検索フィールドからアニメを検索するか、下のボタンで全ての動画を表示できます。
+								</p>
+							</div>
+							<div className="space-y-4">
+								<Button
+									onClick={handleShowAll}
+									disabled={animesLoading}
+									className="w-full"
+									size="lg"
+								>
+									{animesLoading ? "読み込み中..." : "すべての動画を表示"}
+								</Button>
+								<p className="text-sm text-slate-500">
+									※ 4000件以上の動画がある場合、読み込みに時間がかかる場合があります
+								</p>
+							</div>
+						</div>
+					</div>
+				) : animes.length === 0 ? (
 					<EmptyState type="no-search-results" searchTerm={searchTerm} />
 				) : viewMode === "grid" ? (
 					<AnimeGridContainer animes={animes} />

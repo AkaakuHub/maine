@@ -8,6 +8,7 @@ import { useVideoPlayer } from "@/hooks/useVideoPlayer";
 
 export default function PlayPage() {
 	const {
+		animeData,
 		animeInfo,
 		videoSrc,
 		isLoading,
@@ -20,6 +21,7 @@ export default function PlayPage() {
 		toggleLike,
 		toggleWatchlist,
 		toggleDescription,
+		handleTimeUpdate,
 	} = useVideoPlayer();
 
 	if (isLoading || !videoSrc) {
@@ -33,9 +35,7 @@ export default function PlayPage() {
 				onGoBack={handleGoBack}
 				onGoHome={handleGoHome}
 				onShare={handleShare}
-			/>
-
-			{/* モバイル・縦画面レイアウト */}
+			/>			{/* モバイル・縦画面レイアウト */}
 			<MobileLayout
 				videoSrc={videoSrc}
 				animeInfo={animeInfo}
@@ -47,9 +47,9 @@ export default function PlayPage() {
 				onToggleWatchlist={toggleWatchlist}
 				onShare={handleShare}
 				onToggleDescription={toggleDescription}
-			/>
-
-			{/* デスクトップレイアウト */}
+				onTimeUpdate={handleTimeUpdate}
+				initialTime={animeData?.watchTime || 0}
+			/>			{/* デスクトップレイアウト */}
 			<DesktopLayout
 				videoSrc={videoSrc}
 				animeInfo={animeInfo}
@@ -61,6 +61,8 @@ export default function PlayPage() {
 				onToggleWatchlist={toggleWatchlist}
 				onShare={handleShare}
 				onToggleDescription={toggleDescription}
+				onTimeUpdate={handleTimeUpdate}
+				initialTime={animeData?.watchTime || 0}
 			/>
 		</div>
 	);

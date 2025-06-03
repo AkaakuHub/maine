@@ -14,6 +14,9 @@ export interface AnimeData {
 	rating?: number | null;
 	lastWatched?: Date | null;
 	watchTime?: number | null;
+	watchProgress: number; // watch progress percentage (0-100)
+	isLiked: boolean; // like status
+	likedAt?: Date | null; // when it was liked
 	createdAt: Date;
 	updatedAt: Date;
 }

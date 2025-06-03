@@ -3,19 +3,47 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Play, Clock, Calendar, HardDrive, Info } from "lucide-react";
+import { Play, Clock, Calendar, HardDrive, Info, Heart } from "lucide-react";
 import type { AnimeData } from "@/type";
 import { cn, formatFileSize, truncateText } from "@/libs/utils";
+import { useProgress } from "@/hooks/useProgress";
 
 interface AnimeCardProps {
 	anime: AnimeData;
 	priority?: boolean;
 	className?: string;
+	onLikeUpdate?: (id: string, isLiked: boolean) => void;
 }
 
-const AnimeCard = ({ anime, priority = false, className }: AnimeCardProps) => {
+const AnimeCard = ({ anime, priority = false, className, onLikeUpdate }: AnimeCardProps) => {
 	const [imageError, setImageError] = useState(false);
 	const [isHovered, setIsHovered] = useState(false);
+	const [isLiked, setIsLiked] = useState(anime.isLiked);
+	const { updateProgress, loading: progressLoading } = useProgress();
+
+	// ライクボタンの処理
+	const handleLikeToggle = async (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		const newLikeStatus = !isLiked;
+		setIsLiked(newLikeStatus); // 楽観的更新
+
+		try {
+			await updateProgress({
+				id: anime.id,
+				isLiked: newLikeStatus,
+			});
+			onLikeUpdate?.(anime.id, newLikeStatus);
+		} catch (error) {
+			// エラー時は元に戻す
+			setIsLiked(isLiked);
+			console.error('Failed to update like status:', error);
+		}
+	};
+
+	// 視聴進捗の計算
+	const watchProgressPercentage = anime.watchProgress || 0;
 
 	return (
 		<div
@@ -66,9 +94,7 @@ const AnimeCard = ({ anime, priority = false, className }: AnimeCardProps) => {
 								<span className="text-white text-sm font-medium">再生</span>
 							</div>
 						</div>
-					</div>
-
-					{/* エピソード番号 */}
+					</div>					{/* エピソード番号 */}
 					{anime.episode && (
 						<div className="absolute top-3 left-3">
 							<div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md">
@@ -79,16 +105,33 @@ const AnimeCard = ({ anime, priority = false, className }: AnimeCardProps) => {
 						</div>
 					)}
 
-					{/* 年数 */}
-					{anime.year && (
-						<div className="absolute top-3 right-3">
+					{/* ライクボタン */}
+					<div className="absolute top-3 right-3 flex gap-2">
+						{anime.year && (
 							<div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md">
 								<span className="text-white text-xs font-medium">
 									{anime.year}
 								</span>
 							</div>
-						</div>
-					)}
+						)}
+						<button
+							type="button"
+							onClick={handleLikeToggle}
+							disabled={progressLoading}
+							className={cn(
+								"bg-black/70 backdrop-blur-sm p-1.5 rounded-md transition-all duration-200",
+								"hover:bg-black/90 disabled:opacity-50",
+								isLiked ? "text-red-400" : "text-white/70"
+							)}
+						>
+							<Heart 
+								className={cn(
+									"h-4 w-4 transition-all duration-200", 
+									isLiked && "fill-current"
+								)} 
+							/>
+						</button>
+					</div>
 				</div>
 
 				{/* コンテンツ */}
@@ -144,14 +187,12 @@ const AnimeCard = ({ anime, priority = false, className }: AnimeCardProps) => {
 				>
 					<Info className="h-4 w-4 text-white" />
 				</button>
-			</div>
-
-			{/* 進行状況バー（最後に見た位置があれば表示） */}
-			{anime.lastWatched && (
+			</div>			{/* 進行状況バー（視聴進捗があれば表示） */}
+			{watchProgressPercentage > 0 && (
 				<div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">
 					<div
-						className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-						style={{ width: "35%" }} // TODO: 実際の進行状況を計算
+						className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+						style={{ width: `${Math.min(100, Math.max(0, watchProgressPercentage))}%` }}
 					/>
 				</div>
 			)}

@@ -1,13 +1,17 @@
 {
 	"name": "my-anime-storage",
 	"version": "0.1.0",
-	"private": true,
-	"scripts": {
-		"dev": "next dev",
-		"build": "next build",
+	"private": true,	"scripts": {
+		"dev": "pnpm db:setup && next dev",
+		"dev:force": "next dev",
+		"build": "pnpm db:setup && next build",
 		"start": "next start",
 		"lint": "next lint",
-		"format": "pnpm biome format --write ./src"
+		"format": "pnpm biome format --write ./src",
+		"db:setup": "prisma generate && prisma migrate deploy",
+		"db:migrate": "prisma migrate dev",
+		"db:studio": "prisma studio",
+		"db:reset": "prisma migrate reset --force"
 	},
 	"dependencies": {
 		"@prisma/client": "^6.8.2",

@@ -11,6 +11,26 @@ export async function GET(request: NextRequest) {
 	try {
 		const { searchParams } = new URL(request.url);
 
+		// 明示的な検索要求をチェック
+		const loadAll = searchParams.get("loadAll") === "true";
+		const hasSearchFilters = 
+			searchParams.has("search") || 
+			searchParams.has("genre") || 
+			searchParams.has("year");
+
+		// 検索クエリもloadAllフラグもない場合は空の結果を返す
+		if (!loadAll && !hasSearchFilters) {
+			return NextResponse.json({
+				animes: [],
+				pagination: {
+					page: 1,
+					limit: 50,
+					total: 0,
+					totalPages: 0,
+				},
+			});
+		}
+
 		// パラメータを解析
 		const filters: AnimeFilters = {
 			search: searchParams.get("search") || undefined,
@@ -26,7 +46,7 @@ export async function GET(request: NextRequest) {
 
 		const pagination: AnimePagination = {
 			page: Number.parseInt(searchParams.get("page") || "1", 10),
-			limit: Number.parseInt(searchParams.get("limit") || "50", 10),
+			limit: Number.parseInt(searchParams.get("limit") || "20", 10), // デフォルトを20に削減
 		};
 
 		// サービス層を使用してデータを取得

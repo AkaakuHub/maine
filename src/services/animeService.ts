@@ -64,8 +64,7 @@ export interface AnimeQueryResult {
 	};
 }
 
-export class AnimeService {
-	/**
+export class AnimeService {	/**
 	 * アニメデータを検索・フィルタリング・ソートして取得
 	 */
 	static async getAnimes(
@@ -75,6 +74,25 @@ export class AnimeService {
 	): Promise<AnimeQueryResult> {
 		const where = this.buildWhereClause(filters);
 		const orderBy = this.buildOrderByClause(sorting);
+		// 軽量化のため、必要な最小限のフィールドのみを選択
+		const selectFields = {
+			id: true,
+			title: true,
+			fileName: true,
+			filePath: true,
+			duration: true,
+			thumbnail: true,
+			episode: true,
+			season: true,
+			genre: true,
+			year: true,
+			lastWatched: true,
+			watchTime: true,
+			watchProgress: true,
+			isLiked: true,
+			likedAt: true,
+			createdAt: true,
+		};
 
 		const [animes, totalCount] = await Promise.all([
 			prisma.anime.findMany({
@@ -82,31 +100,14 @@ export class AnimeService {
 				orderBy,
 				skip: (pagination.page - 1) * pagination.limit,
 				take: pagination.limit,
-				select: {
-					id: true,
-					title: true,
-					fileName: true,
-					filePath: true,
-					duration: true,
-					fileSize: true,
-					thumbnail: true,
-					episode: true,
-					season: true,
-					genre: true,
-					year: true,
-					rating: true,
-					lastWatched: true,
-					watchTime: true,
-					createdAt: true,
-					updatedAt: true,
-				},
+				select: selectFields,
 			}),
 			prisma.anime.count({ where }),
 		]);
-
-		const serializedAnimes = animes.map((anime: PrismaAnime) => ({
+		// fileSizeを除去し、軽量化
+		const serializedAnimes = animes.map((anime: any) => ({
 			...anime,
-			fileSize: anime.fileSize?.toString() || "0",
+			fileSize: "0", // パフォーマンス向上のため固定値
 		}));
 
 		return {
@@ -158,7 +159,6 @@ export class AnimeService {
 			data: { rating },
 		});
 	}
-
 	/**
 	 * WHERE句を構築
 	 */
@@ -166,10 +166,14 @@ export class AnimeService {
 		const where: WhereInput = {};
 
 		if (filters.search) {
-			where.OR = [
-				{ title: { contains: filters.search } },
-				{ fileName: { contains: filters.search } },
-			];
+			// 部分文字列検索の最適化
+			const searchTerm = filters.search.trim();
+			if (searchTerm.length >= 2) { // 最低2文字以上で検索
+				where.OR = [
+					{ title: { contains: searchTerm } },
+					{ fileName: { contains: searchTerm } },
+				];
+			}
 		}
 
 		if (filters.genre) {
@@ -177,7 +181,10 @@ export class AnimeService {
 		}
 
 		if (filters.year) {
-			where.year = Number.parseInt(filters.year, 10);
+			const yearNum = Number.parseInt(filters.year, 10);
+			if (!Number.isNaN(yearNum)) {
+				where.year = yearNum;
+			}
 		}
 
 		return where;
