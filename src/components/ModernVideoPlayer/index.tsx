@@ -344,6 +344,12 @@ const ModernVideoPlayer = ({
 			const current = video.currentTime;
 			setCurrentTime(current);
 
+			// 現在位置が最後まで到達したら自動的に一時停止
+			if (current >= video.duration) {
+				setIsPlaying(false);
+				video.pause();
+			}
+
 			// 親コンポーネントに時間更新を通知
 			if (onTimeUpdate && video.duration) {
 				onTimeUpdate(current, video.duration);
