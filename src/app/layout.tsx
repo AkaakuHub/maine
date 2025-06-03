@@ -5,27 +5,34 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "My Anime Storage - セルフホストアニメプレイヤー",
-  description: "ローカルに保存された動画ファイルをストリーミング再生できるセルフホストアニメプレイヤー",
-  keywords: ["anime", "video", "streaming", "self-hosted", "アニメ", "動画", "ストリーミング"],
-  authors: [{ name: "Akaaku" }],
+	title: "My Anime Storage - セルフホストアニメプレイヤー",
+	description:
+		"ローカルに保存された動画ファイルをストリーミング再生できるセルフホストアニメプレイヤー",
+	keywords: [
+		"anime",
+		"video",
+		"streaming",
+		"self-hosted",
+		"アニメ",
+		"動画",
+		"ストリーミング",
+	],
+	authors: [{ name: "Akaaku" }],
 };
 
 export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
+	width: "device-width",
+	initialScale: 1,
 };
 
 export default function RootLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return (
-    <html lang="ja" className="dark">
-      <body className={`${inter.className} antialiased`}>
-        {children}
-      </body>
-    </html>
-  );
+	return (
+		<html lang="ja" className="dark">
+			<body className={`${inter.className} antialiased`}>{children}</body>
+		</html>
+	);
 }

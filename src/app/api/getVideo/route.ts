@@ -29,15 +29,15 @@ export async function GET(req: NextRequest) {
 
 		// Range requestsのサポート（動画の途中再生など）
 		const range = req.headers.get("range");
-		
+
 		if (range) {
 			const parts = range.replace(/bytes=/, "").split("-");
 			const start = Number.parseInt(parts[0], 10);
 			const end = parts[1] ? Number.parseInt(parts[1], 10) : stat.size - 1;
-			const chunksize = (end - start) + 1;
-			
+			const chunksize = end - start + 1;
+
 			const stream = createReadStream(validation.fullPath, { start, end });
-			
+
 			return new NextResponse(stream as unknown as ReadableStream, {
 				status: 206,
 				headers: {

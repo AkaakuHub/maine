@@ -11,7 +11,8 @@ const formatTime = (time: number): string => {
 	if (hours) {
 		//if video have hours
 		return `${hours}:${minutes.toString().padStart(2, "0")} `;
-	}return `${minutes}:${seconds}`;
+	}
+	return `${minutes}:${seconds}`;
 };
 
 export default formatTime;

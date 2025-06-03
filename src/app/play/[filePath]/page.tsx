@@ -7,61 +7,61 @@ import DesktopLayout from "@/components/VideoPlayer/DesktopLayout";
 import { useVideoPlayer } from "@/hooks/useVideoPlayer";
 
 export default function PlayPage() {
-  const {
-    animeInfo,
-    videoSrc,
-    isLoading,
-    showDescription,
-    isLiked,
-    isInWatchlist,
-    handleGoBack,
-    handleGoHome,
-    handleShare,
-    toggleLike,
-    toggleWatchlist,
-    toggleDescription,
-  } = useVideoPlayer();
+	const {
+		animeInfo,
+		videoSrc,
+		isLoading,
+		showDescription,
+		isLiked,
+		isInWatchlist,
+		handleGoBack,
+		handleGoHome,
+		handleShare,
+		toggleLike,
+		toggleWatchlist,
+		toggleDescription,
+	} = useVideoPlayer();
 
-  if (isLoading || !videoSrc) {
-    return <LoadingScreen />;
-  }
+	if (isLoading || !videoSrc) {
+		return <LoadingScreen />;
+	}
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-blue-900/20">
-      {/* ナビゲーションバー - 全画面で表示 */}
-      <Navigation
-        onGoBack={handleGoBack}
-        onGoHome={handleGoHome}
-        onShare={handleShare}
-      />
+	return (
+		<div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-blue-900/20">
+			{/* ナビゲーションバー - 全画面で表示 */}
+			<Navigation
+				onGoBack={handleGoBack}
+				onGoHome={handleGoHome}
+				onShare={handleShare}
+			/>
 
-      {/* モバイル・縦画面レイアウト */}
-      <MobileLayout
-        videoSrc={videoSrc}
-        animeInfo={animeInfo}
-        onBack={handleGoBack}
-        isLiked={isLiked}
-        isInWatchlist={isInWatchlist}
-        showDescription={showDescription}
-        onToggleLike={toggleLike}
-        onToggleWatchlist={toggleWatchlist}
-        onShare={handleShare}
-        onToggleDescription={toggleDescription}
-      />
+			{/* モバイル・縦画面レイアウト */}
+			<MobileLayout
+				videoSrc={videoSrc}
+				animeInfo={animeInfo}
+				onBack={handleGoBack}
+				isLiked={isLiked}
+				isInWatchlist={isInWatchlist}
+				showDescription={showDescription}
+				onToggleLike={toggleLike}
+				onToggleWatchlist={toggleWatchlist}
+				onShare={handleShare}
+				onToggleDescription={toggleDescription}
+			/>
 
-      {/* デスクトップレイアウト */}
-      <DesktopLayout
-        videoSrc={videoSrc}
-        animeInfo={animeInfo}
-        onBack={handleGoBack}
-        isLiked={isLiked}
-        isInWatchlist={isInWatchlist}
-        showDescription={showDescription}
-        onToggleLike={toggleLike}
-        onToggleWatchlist={toggleWatchlist}
-        onShare={handleShare}
-        onToggleDescription={toggleDescription}
-      />
-    </div>
-  );
+			{/* デスクトップレイアウト */}
+			<DesktopLayout
+				videoSrc={videoSrc}
+				animeInfo={animeInfo}
+				onBack={handleGoBack}
+				isLiked={isLiked}
+				isInWatchlist={isInWatchlist}
+				showDescription={showDescription}
+				onToggleLike={toggleLike}
+				onToggleWatchlist={toggleWatchlist}
+				onShare={handleShare}
+				onToggleDescription={toggleDescription}
+			/>
+		</div>
+	);
 }
