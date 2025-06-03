@@ -33,13 +33,13 @@ const LoadingSpinner = ({
 				{/* 背景リング */}
 				<div className="absolute inset-0 border-4 border-slate-800/40 rounded-full" />
 
-				{/* アニメーションリング1 */}
+				{/* 動画ーションリング1 */}
 				<div
 					className="absolute inset-0 border-4 border-transparent border-t-blue-500 border-r-blue-400 rounded-full animate-spin"
 					style={{ animationDuration: "1s" }}
 				/>
 
-				{/* アニメーションリング2 */}
+				{/* 動画ーションリング2 */}
 				<div
 					className="absolute inset-2 border-2 border-transparent border-t-purple-500 border-l-purple-400 rounded-full animate-spin"
 					style={{ animationDuration: "1.5s", animationDirection: "reverse" }}
@@ -120,7 +120,7 @@ const LoadingState = ({
 							</h2>
 							<p className="text-slate-400 text-lg max-w-md">
 								{message ||
-									"動画ファイルを検索してアニメライブラリを構築しています..."}
+									"動画ファイルを検索して動画ライブラリを構築しています..."}
 							</p>
 							<div className="mt-6 flex space-x-2">
 								{Array.from({ length: 3 }, (_, i) => (
@@ -146,7 +146,7 @@ const LoadingState = ({
 									検索中...
 								</h3>
 								<p className="text-slate-400">
-									{message || "アニメを検索しています"}
+									{message || "動画を検索しています"}
 								</p>
 							</div>
 						</div>
@@ -163,7 +163,7 @@ const LoadingState = ({
 								更新中...
 							</h2>
 							<p className="text-slate-400">
-								{message || "新しいアニメを検索しています"}
+								{message || "新しい動画を検索しています"}
 							</p>
 						</div>
 					),

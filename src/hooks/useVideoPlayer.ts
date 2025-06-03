@@ -30,7 +30,7 @@ export function useVideoPlayer() {
 			const decodedPath = decodeURIComponent(params.filePath as string);
 
 			try {
-				// APIからアニメデータを取得
+				// APIから動画データを取得
 				const response = await fetch(
 					`${API.ENDPOINTS.VIDEOS}?search=${encodeURIComponent(decodedPath)}&loadAll=true`,
 				);
@@ -49,7 +49,7 @@ export function useVideoPlayer() {
 							episode: video.episode?.toString() || "",
 							fullTitle: video.title,
 							description: `${video.title}をお楽しみください。`,
-							genre: video.genre || "アニメ",
+							genre: video.genre || "動画",
 							year: video.year?.toString() || "不明",
 							duration: video.duration
 								? `${Math.floor(video.duration / 60)}:${Math.floor(
@@ -70,7 +70,7 @@ export function useVideoPlayer() {
 							episode: episodeName,
 							fullTitle: `${videoTitle} - ${episodeName}`,
 							description: `${videoTitle}の${episodeName}をお楽しみください。`,
-							genre: "アニメ",
+							genre: "動画",
 							year: "不明",
 							duration: "不明",
 						});
@@ -88,7 +88,7 @@ export function useVideoPlayer() {
 					episode: episodeName,
 					fullTitle: `${videoTitle} - ${episodeName}`,
 					description: `${videoTitle}の${episodeName}をお楽しみください。`,
-					genre: "アニメ",
+					genre: "動画",
 					year: "不明",
 					duration: "不明",
 				});

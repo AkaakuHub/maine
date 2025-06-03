@@ -28,7 +28,7 @@ const Home = () => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [showAll, setShowAll] = useState(false); // 一覧表示フラグ
 
-	// アニメデータのフック
+	// 動画データのフック
 	const {
 		videos,
 		loading: videosLoading,
@@ -160,8 +160,8 @@ const Home = () => {
 							</div>
 							<p className="text-slate-400 mt-2">
 								{videos.length === pagination.total
-									? `${pagination.total} アニメ`
-									: `${videos.length} / ${pagination.total} アニメが見つかりました`}
+									? `${pagination.total} 動画`
+									: `${videos.length} / ${pagination.total} 動画が見つかりました`}
 							</p>
 						</div>
 
@@ -216,7 +216,7 @@ const Home = () => {
 								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
 								<input
 									type="text"
-									placeholder={`アニメタイトルやファイル名で検索... (${SEARCH.MIN_QUERY_LENGTH}文字以上)`}
+									placeholder={`動画タイトルやファイル名で検索... (${SEARCH.MIN_QUERY_LENGTH}文字以上)`}
 									value={searchTerm}
 									onChange={(e) => {
 										setSearchTerm(e.target.value);
@@ -332,10 +332,10 @@ const Home = () => {
 									<Search className="h-12 w-12 text-slate-400" />
 								</div>
 								<h2 className="text-2xl font-bold text-white mb-4">
-									アニメライブラリへようこそ
+									動画ライブラリへようこそ
 								</h2>
 								<p className="text-slate-400 mb-8">
-									検索フィールドからアニメを検索するか、下のボタンで全ての動画を表示できます。
+									検索フィールドから動画を検索するか、下のボタンで全ての動画を表示できます。
 								</p>
 							</div>
 							<div className="space-y-4">

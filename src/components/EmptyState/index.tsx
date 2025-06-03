@@ -21,10 +21,10 @@ const EmptyState = ({
 			case "no-videos":
 				return {
 					icon: <FolderOpen className="h-20 w-20 text-slate-400" />,
-					title: "アニメが見つかりません",
+					title: "動画が見つかりません",
 					description: (
 						<div className="space-y-2">
-							<p>動画フォルダにアニメファイルがありません。</p>
+							<p>動画フォルダに動画ファイルがありません。</p>
 							<p className="text-sm">対応形式: .mp4, .mkv, .avi, .mov</p>
 						</div>
 					),
@@ -48,7 +48,7 @@ const EmptyState = ({
 						<div className="space-y-2">
 							<p>
 								「<span className="font-semibold text-white">{searchTerm}</span>
-								」に一致するアニメはありません。
+								」に一致する動画はありません。
 							</p>
 							<p className="text-sm">別のキーワードで検索してみてください。</p>
 						</div>
@@ -62,7 +62,7 @@ const EmptyState = ({
 					title: "読み込みエラー",
 					description: (
 						<div className="space-y-2">
-							<p>アニメデータの読み込み中にエラーが発生しました。</p>
+							<p>動画データの読み込み中にエラーが発生しました。</p>
 							<p className="text-sm">
 								ネットワーク接続を確認して、再試行してください。
 							</p>

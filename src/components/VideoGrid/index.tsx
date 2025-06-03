@@ -22,7 +22,7 @@ const VideoGrid = () => {
 	const [selectedYear, setSelectedYear] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 
-	// アニメデータのフック
+	// 動画データのフック
 	const {
 		videos,
 		loading: videosLoading,
@@ -90,7 +90,7 @@ const VideoGrid = () => {
 						<div className="flex gap-4">
 							<input
 								type="text"
-								placeholder="アニメを検索..."
+								placeholder="動画を検索..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								className="flex-1 px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-purple-500"

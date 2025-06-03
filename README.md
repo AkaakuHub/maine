@@ -1,7 +1,7 @@
 
 # My Video Storage
 
-セルフホスト型のアニメ動画ストレージ＆ストリーミングWebアプリです。
+セルフホスト型の動画動画ストレージ＆ストリーミングWebアプリです。
 クロスプラットフォーム（Windows/Mac/Linux）対応、2025年最新のNext.js 15/Tailwind CSS v4/Prisma ORM構成。
 
 このプロジェクトは適切なアーキテクチャに基づいて設計され、保守性と拡張性を重視したモダンなコードベースとなっています。
@@ -25,7 +25,7 @@
 src/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API Routes (簡素化・最適化済み)
-│   │   ├── videos/        # アニメデータAPI
+│   │   ├── videos/        # 動画データAPI
 │   │   ├── updateDatabase/ # データベース更新API
 │   │   └── video/         # 動画ストリーミングAPI
 │   ├── play/              # 動画再生ページ
@@ -36,17 +36,17 @@ src/
 │   │   └── Button/       # 統一されたボタンコンポーネント
 │   ├── features/         # 機能別コンポーネント
 │   │   └── SearchAndFilterBar/  # 検索・フィルタ機能
-│   ├── VideoGrid/        # アニメ一覧表示
-│   ├── VideoCard/        # アニメカード
+│   ├── VideoGrid/        # 動画一覧表示
+│   ├── VideoCard/        # 動画カード
 │   ├── LoadingState/     # ローディング状態
 │   ├── EmptyState/       # 空状態表示
 │   └── VideoPlayer/      # 動画プレイヤー
 ├── services/             # ビジネスロジック層
-│   ├── videoService.ts   # アニメデータ関連のサービス
+│   ├── videoService.ts   # 動画データ関連のサービス
 │   ├── videoScanService.ts # 動画スキャン関連のサービス
 │   └── index.ts          # エクスポート管理
 ├── hooks/                # カスタムフック
-│   ├── useVideos.ts      # アニメデータ取得フック
+│   ├── useVideos.ts      # 動画データ取得フック
 │   ├── useDatabaseUpdate.ts # データベース更新フック
 │   ├── useVideoPlayer.ts # 動画プレイヤーフック
 │   └── index.ts          # エクスポート管理
@@ -60,7 +60,7 @@ src/
 │   ├── extractMetaData.ts # メタデータ抽出
 │   └── formatTime.ts     # 時間フォーマット
 └── types/                # 型定義
-    ├── VideoInfo.ts      # アニメ関連の型
+    ├── VideoInfo.ts      # 動画関連の型
     └── type.d.ts         # グローバル型定義
 ```
 
@@ -261,7 +261,7 @@ model Video {
 
 | エンドポイント | 機能 | 実装ファイル |
 |---------------|------|-------------|
-| `/api/videos` | アニメ一覧取得・検索・フィルタ | `src/app/api/videos/route.ts` |
+| `/api/videos` | 動画一覧取得・検索・フィルタ | `src/app/api/videos/route.ts` |
 | `/api/updateDatabase` | ディレクトリスキャン・DB同期 | `src/app/api/updateDatabase/route.ts` |
 | `/api/video/[filePath]` | 動画ストリーミング配信 | `src/app/api/video/[filePath]/route.ts` |
 
@@ -364,6 +364,6 @@ MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照
 
 ---
 
-**My Video Storage**は、モダンなWeb技術スタックを活用して、セルフホスト型のアニメ動画管理・視聴体験を最大化することを目標としています。
+**My Video Storage**は、モダンなWeb技術スタックを活用して、セルフホスト型の動画動画管理・視聴体験を最大化することを目標としています。
 
 貢献・フィードバックをお待ちしています！🎬✨

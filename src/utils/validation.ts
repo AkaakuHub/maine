@@ -88,7 +88,7 @@ export function validateYearParam(year?: string | null): number | undefined {
 }
 
 /**
- * アニメIDの形式をバリデーション（UUIDなど）
+ * 動画IDの形式をバリデーション（UUIDなど）
  */
 export function validateVideoId(id?: string | null): string | null {
 	if (!id || typeof id !== "string") return null;
