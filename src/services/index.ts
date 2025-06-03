@@ -1,14 +1,14 @@
 // Service classes
-export { VideoService } from "./videoService";
+export { RealtimeVideoService } from "./realtimeVideoService";
 export { VideoScanService } from "./videoScanService";
 
 // Types
 export type {
-	VideoFilters,
-	VideoSorting,
-	VideoPagination,
-	VideoQueryResult,
-} from "./videoService";
+	VideoSearchFilters,
+	VideoSearchSorting,
+	VideoSearchPagination,
+	VideoSearchResult,
+} from "./realtimeVideoService";
 
 export type {
 	VideoFileInfo,

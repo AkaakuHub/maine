@@ -10,26 +10,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Video {
-  id          String   @id @default(cuid())
-  title       String
-  fileName    String   @unique
-  filePath    String   @unique
-  duration    Float?   // in seconds
-  fileSize    BigInt?  // in bytes
-  thumbnail   String?  // base64 encoded thumbnail
-  episode     Int?     // episode number if applicable
-  season      String?  // season identifier
-  genre       String?  // comma-separated genres
-  year        Int?     // release year
-  rating      Float?   // user rating 0-10
-  lastWatched DateTime? // last time watched
-  watchTime   Float?   // current watch position in seconds
-  watchProgress Float @default(0) // watch progress percentage (0-100)
-  isLiked     Boolean @default(false) // like status
-  likedAt     DateTime? // when it was liked
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// 動画の再生進捗とお気に入り情報のみを保存
+model VideoProgress {
+  id            String   @id @default(cuid())
+  filePath      String   @unique // 動画ファイルのパス（ユニークキー）
+  watchProgress Float    @default(0) // 再生進捗率 (0-100)
+  watchTime     Float?   // 現在の再生時間（秒）
+  isLiked       Boolean  @default(false) // お気に入り状態
+  likedAt       DateTime? // お気に入りに追加した日時
+  lastWatched   DateTime? // 最後に視聴した日時
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  @@map("videos")
+  @@map("video_progress")
 }

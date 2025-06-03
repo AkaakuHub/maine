@@ -4,11 +4,11 @@ import { prisma } from "@/libs/prisma";
 export async function PUT(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { id, watchTime, watchProgress, isLiked } = body;
+		const { filePath, watchTime, watchProgress, isLiked } = body;
 
-		if (!id) {
+		if (!filePath) {
 			return NextResponse.json(
-				{ error: "Video ID is required" },
+				{ error: "File path is required" },
 				{ status: 400 },
 			);
 		}
@@ -41,12 +41,16 @@ export async function PUT(request: NextRequest) {
 			updateData.likedAt = isLiked ? new Date() : null;
 		}
 
-		// データベースを更新
-		const updatedVideo = await prisma.video.update({
-			where: { id },
-			data: updateData,
+		// データベースを更新（upsert使用）
+		const updatedVideo = await prisma.videoProgress.upsert({
+			where: { filePath },
+			update: updateData,
+			create: {
+				filePath,
+				...updateData,
+			},
 			select: {
-				id: true,
+				filePath: true,
 				watchTime: true,
 				watchProgress: true,
 				isLiked: true,
@@ -71,19 +75,19 @@ export async function PUT(request: NextRequest) {
 export async function GET(request: NextRequest) {
 	try {
 		const { searchParams } = new URL(request.url);
-		const id = searchParams.get("id");
+		const filePath = searchParams.get("filePath");
 
-		if (!id) {
+		if (!filePath) {
 			return NextResponse.json(
-				{ error: "Video ID is required" },
+				{ error: "File path is required" },
 				{ status: 400 },
 			);
 		}
 
-		const video = await prisma.video.findUnique({
-			where: { id },
+		const videoProgress = await prisma.videoProgress.findUnique({
+			where: { filePath },
 			select: {
-				id: true,
+				filePath: true,
 				watchTime: true,
 				watchProgress: true,
 				isLiked: true,
@@ -92,13 +96,24 @@ export async function GET(request: NextRequest) {
 			},
 		});
 
-		if (!video) {
-			return NextResponse.json({ error: "Video not found" }, { status: 404 });
+		if (!videoProgress) {
+			// 進捗データが存在しない場合はデフォルト値を返す
+			return NextResponse.json({
+				success: true,
+				data: {
+					filePath,
+					watchTime: 0,
+					watchProgress: 0,
+					isLiked: false,
+					likedAt: null,
+					lastWatched: null,
+				},
+			});
 		}
 
 		return NextResponse.json({
 			success: true,
-			data: video,
+			data: videoProgress,
 		});
 	} catch (error) {
 		console.error("Error fetching video progress:", error);

@@ -1,11 +1,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { VideoService } from "@/services/videoService";
+import { RealtimeVideoService } from "@/services/realtimeVideoService";
 import type {
-	VideoFilters,
-	VideoSorting,
-	VideoPagination,
-} from "@/services/videoService";
+	VideoSearchFilters,
+	VideoSearchSorting,
+	VideoSearchPagination,
+} from "@/services/realtimeVideoService";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 				videos: [],
 				pagination: {
 					page: 1,
-					limit: 50,
+					limit: 20,
 					total: 0,
 					totalPages: 0,
 				},
@@ -42,25 +42,25 @@ export async function GET(request: NextRequest) {
 		}
 
 		// パラメータを解析
-		const filters: VideoFilters = {
+		const filters: VideoSearchFilters = {
 			search: searchParams.get("search") || undefined,
 			genre: searchParams.get("genre") || undefined,
 			year: searchParams.get("year") || undefined,
 		};
 
-		const sorting: VideoSorting = {
-			sortBy: (searchParams.get("sortBy") as VideoSorting["sortBy"]) || "title",
+		const sorting: VideoSearchSorting = {
+			sortBy: (searchParams.get("sortBy") as VideoSearchSorting["sortBy"]) || "title",
 			sortOrder:
-				(searchParams.get("sortOrder") as VideoSorting["sortOrder"]) || "asc",
+				(searchParams.get("sortOrder") as VideoSearchSorting["sortOrder"]) || "asc",
 		};
 
-		const pagination: VideoPagination = {
-			page: Number.parseInt(searchParams.get("page") || "1", 10),
-			limit: Number.parseInt(searchParams.get("limit") || "20", 10), // デフォルトを20に削減
+		const pagination: VideoSearchPagination = {
+			page: parseInt(searchParams.get("page") || "1", 10),
+			limit: parseInt(searchParams.get("limit") || "20", 10),
 		};
 
-		// サービス層を使用してデータを取得
-		const result = await VideoService.getVideos(filters, sorting, pagination);
+		// リアルタイム検索サービスを使用してデータを取得
+		const result = await RealtimeVideoService.searchVideos(filters, sorting, pagination);
 
 		console.log("[API] Returning result:", {
 			videoCount: result.videos.length,

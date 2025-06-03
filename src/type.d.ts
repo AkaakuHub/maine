@@ -32,8 +32,8 @@ export interface VideoResponse {
 }
 
 // Legacy types for backward compatibility - to be removed after migration
-export interface AnimeData extends VideoData {}
-export interface AnimeResponse {
+export interface VideoData extends VideoData {}
+export interface VideoResponse {
 	videos: VideoData[];
 	pagination: {
 		page: number;
@@ -67,7 +67,7 @@ export type VideoFile = {
 	thumbnail?: string;
 };
 
-export type AnimeCollection = {
+export type VideoCollection = {
 	title: string;
 	episodes: VideoFile[];
 	thumbnail?: string;
