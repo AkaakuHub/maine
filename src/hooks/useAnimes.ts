@@ -91,7 +91,6 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 		pagination.page,
 		pagination.limit,
 	]);
-
 	// データを取得する関数
 	const fetchAnimes = useCallback(async () => {
 		if (!enabled) return;
@@ -115,9 +114,16 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 			return;
 		}
 
+		// パラメータが変更されていない場合はスキップ
+		if (lastParamsRef.current === searchParams) {
+			return;
+		}
 		try {
 			setLoading(true);
 			setError(null);
+			lastParamsRef.current = searchParams;
+
+			console.log(`[useAnimes] Fetching: ${API.ENDPOINTS.ANIMES}?${searchParams}`);
 
 			const response = await fetch(`${API.ENDPOINTS.ANIMES}?${searchParams}`, {
 				signal: AbortSignal.timeout(API.TIMEOUT),
@@ -127,7 +133,23 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
-			const data = await response.json();
+			const responseText = await response.text();
+			if (!responseText) {
+				throw new Error("Empty response from server");
+			}
+
+			let data;
+			try {
+				data = JSON.parse(responseText);
+			} catch (parseError) {
+				console.error("JSON parse error:", parseError, "Response:", responseText);
+				throw new Error("Invalid JSON response from server");
+			}
+
+			console.log(`[useAnimes] Response:`, { 
+				animeCount: data.animes?.length || 0, 
+				total: data.pagination?.total || 0 
+			});
 
 			setAnimes(data.animes || []);
 			setPaginationInfo(
@@ -147,19 +169,15 @@ export function useAnimes(options: UseAnimesOptions = {}): UseAnimesReturn {
 				limit: pagination.limit,
 				total: 0,
 				totalPages: 0,
-			});		} finally {
+			});} finally {
 			setLoading(false);
 		}
 	}, [enabled, searchParams, filters.search, filters.genre, filters.year, loadAll, pagination.limit]);
 
 	// 初期化とパラメータ変更時にデータを取得
 	useEffect(() => {
-		// パラメータが変更された場合のみフェッチ
-		if (lastParamsRef.current !== searchParams) {
-			lastParamsRef.current = searchParams;
-			fetchAnimes();
-		}
-	}, [fetchAnimes, searchParams]);
+		fetchAnimes();
+	}, [searchParams]); // fetchAnimesは依存配列から除外
 
 	// 再フェッチ用の安定した関数
 	const refetch = useCallback(async () => {

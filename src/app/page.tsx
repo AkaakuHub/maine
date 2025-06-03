@@ -51,7 +51,6 @@ const Home = () => {
 		},
 		loadAll: showAll, // 明示的な一覧読み込み
 	});
-
 	// データベース更新のフック
 	const {
 		updating,
@@ -60,23 +59,24 @@ const Home = () => {
 		updateDatabase,
 		clearError,
 	} = useDatabaseUpdate();
-	// 初回読み込み完了を検知
-	useEffect(() => {
-		// 削除: hasEverLoadedは不要
-	}, []);
-
 	// データベース更新
 	const handleDatabaseUpdate = useCallback(async () => {
-		await updateDatabase();
-	}, [updateDatabase]);
-
+		const success = await updateDatabase();
+		if (success) {
+			// 更新成功後、現在の表示状態に応じて再フェッチ
+			if (showAll || searchQuery) {
+				await refetchAnimes();
+			}
+		}
+	}, [updateDatabase, showAll, searchQuery, refetchAnimes]);
 	// 一覧表示ボタンのハンドラー
 	const handleShowAll = useCallback(() => {
+		console.log("[HomePage] Show all button clicked");
 		setShowAll(true);
 		setCurrentPage(1);
-	}, []);
-	// 検索実行
+	}, []);	// 検索実行
 	const handleSearch = useCallback(() => {
+		console.log("[HomePage] Search button clicked with:", searchTerm);
 		setSearchQuery(searchTerm);
 		setCurrentPage(1);
 		setShowAll(false);

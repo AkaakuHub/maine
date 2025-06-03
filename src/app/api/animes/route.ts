@@ -18,8 +18,18 @@ export async function GET(request: NextRequest) {
 			searchParams.has("genre") || 
 			searchParams.has("year");
 
+		// デバッグログ
+		console.log("[API] Request params:", {
+			loadAll,
+			hasSearchFilters,
+			search: searchParams.get("search"),
+			genre: searchParams.get("genre"),
+			year: searchParams.get("year"),
+		});
+
 		// 検索クエリもloadAllフラグもない場合は空の結果を返す
 		if (!loadAll && !hasSearchFilters) {
+			console.log("[API] No search conditions - returning empty result");
 			return NextResponse.json({
 				animes: [],
 				pagination: {
@@ -51,6 +61,11 @@ export async function GET(request: NextRequest) {
 
 		// サービス層を使用してデータを取得
 		const result = await AnimeService.getAnimes(filters, sorting, pagination);
+
+		console.log("[API] Returning result:", { 
+			animeCount: result.animes.length, 
+			total: result.pagination.total 
+		});
 
 		return NextResponse.json(result);
 	} catch (error) {

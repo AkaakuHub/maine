@@ -21,12 +21,13 @@ export function useDatabaseUpdate(): UseDatabaseUpdateReturn {
 	const [updating, setUpdating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [stats, setStats] = useState<DatabaseUpdateStats | null>(null);
-
 	const updateDatabase = useCallback(async (): Promise<boolean> => {
 		try {
 			setUpdating(true);
 			setError(null);
 			setStats(null);
+
+			console.log("[useDatabaseUpdate] Starting database update...");
 
 			const response = await fetch(API.ENDPOINTS.UPDATE_DATABASE, {
 				method: "GET",
@@ -34,13 +35,32 @@ export function useDatabaseUpdate(): UseDatabaseUpdateReturn {
 			});
 
 			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
+				const errorText = await response.text();
+				let errorData;
+				try {
+					errorData = JSON.parse(errorText);
+				} catch {
+					errorData = { error: `HTTP error! status: ${response.status}` };
+				}
 				throw new Error(
 					errorData.error || `HTTP error! status: ${response.status}`,
 				);
 			}
 
-			const data = await response.json();
+			const responseText = await response.text();
+			if (!responseText) {
+				throw new Error("Empty response from server");
+			}
+
+			let data;
+			try {
+				data = JSON.parse(responseText);
+			} catch (parseError) {
+				console.error("JSON parse error:", parseError, "Response:", responseText);
+				throw new Error("Invalid JSON response from server");
+			}
+
+			console.log("[useDatabaseUpdate] Update completed:", data);
 
 			if (data.stats) {
 				setStats(data.stats);
