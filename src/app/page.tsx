@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Search, Grid, List, X, Filter, SortAsc, SortDesc } from "lucide-react";
 import { useDatabaseUpdate } from "@/hooks/useDatabaseUpdate";
 import { useAnimes } from "@/hooks/useAnimes";
@@ -24,6 +24,7 @@ const Home = () => {
   const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [hasEverLoaded, setHasEverLoaded] = useState(false); // 初回読み込み完了フラグ
 
   // アニメデータのフック
   const {
@@ -59,6 +60,13 @@ const Home = () => {
     clearError
   } = useDatabaseUpdate();
 
+  // 初回読み込み完了を検知
+  useEffect(() => {
+    if (!animesLoading && !hasEverLoaded) {
+      setHasEverLoaded(true);
+    }
+  }, [animesLoading, hasEverLoaded]);
+
   // データベース更新
   const handleDatabaseUpdate = useCallback(async () => {
     await updateDatabase();
@@ -80,8 +88,8 @@ const Home = () => {
     setSearchTerm("");
   };
 
-  // ローディング状態 - 初回読み込み時のみフルスクリーンローディングを表示
-  if (animesLoading && animes.length === 0 && !searchTerm) {
+  // ローディング状態 - 完全に初回読み込み時のみフルスクリーンローディングを表示
+  if (animesLoading && animes.length === 0 && !hasEverLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <LoadingState type="initial" message="動画ファイルを検索しています..." />
