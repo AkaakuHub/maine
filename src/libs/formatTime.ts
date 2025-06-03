@@ -1,6 +1,6 @@
 const formatTime = (time: number): string => {
 	//formarting duration of video
-	if (isNaN(time)) {
+	if (Number.isNaN(time)) {
 		return "00:00";
 	}
 
@@ -11,7 +11,7 @@ const formatTime = (time: number): string => {
 	if (hours) {
 		//if video have hours
 		return `${hours}:${minutes.toString().padStart(2, "0")} `;
-	} else return `${minutes}:${seconds}`;
+	}return `${minutes}:${seconds}`;
 };
 
 export default formatTime;
