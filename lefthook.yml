@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: true
+  commands:
+    prettier:
+      glob: "**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: pnpm run format
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+    lslint:
+      glob: "**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: pnpm run lint
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
