@@ -9,6 +9,7 @@ interface VideoGridProps {
 	className?: string;
 	isOfflineMode?: boolean;
 	onDelete?: (filePath: string) => void;
+	onShowStreamingWarning?: (video: VideoFileData) => void;
 }
 
 const VideoGrid = ({
@@ -16,6 +17,7 @@ const VideoGrid = ({
 	className,
 	isOfflineMode = false,
 	onDelete,
+	onShowStreamingWarning,
 }: VideoGridProps) => {
 	return (
 		<div
@@ -39,6 +41,7 @@ const VideoGrid = ({
 					priority={index < 6} // 最初の6つの画像を優先読み込み
 					isOfflineMode={isOfflineMode}
 					onDelete={onDelete}
+					onShowStreamingWarning={onShowStreamingWarning}
 				/>
 			))}
 		</div>

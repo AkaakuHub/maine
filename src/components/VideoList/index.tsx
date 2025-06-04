@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
 	Play,
 	Calendar,
@@ -21,17 +22,21 @@ interface VideoListProps {
 	className?: string;
 	isOfflineMode?: boolean;
 	onDelete?: (filePath: string) => void;
+	onShowStreamingWarning?: (video: VideoFileData) => void;
 }
 
 const VideoListItem = ({
 	video,
 	isOfflineMode = false,
 	onDelete,
+	onShowStreamingWarning,
 }: {
 	video: VideoFileData;
 	isOfflineMode?: boolean;
 	onDelete?: (filePath: string) => void;
+	onShowStreamingWarning?: (video: VideoFileData) => void;
 }) => {
+	const router = useRouter();
 	const [showMenu, setShowMenu] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
@@ -72,6 +77,24 @@ const VideoListItem = ({
 		setShowMenu(!showMenu);
 	};
 
+	// 再生ボタンのクリック処理
+	const handlePlayClick = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		if (isOfflineMode) {
+			// オフラインモードでは直接オフライン再生
+			router.push(`/play/${encodeURIComponent(video.filePath)}?offline=true`);
+		} else {
+			// ストリーミングモードでは警告チェック
+			if (isVideoCached && onShowStreamingWarning) {
+				onShowStreamingWarning(video);
+			} else {
+				router.push(`/play/${encodeURIComponent(video.filePath)}`);
+			}
+		}
+	};
+
 	// ダウンロード処理
 	const handleDownload = async (e: React.MouseEvent) => {
 		e.preventDefault();
@@ -109,10 +132,7 @@ const VideoListItem = ({
 				isDeleting && "opacity-50 pointer-events-none",
 			)}
 		>
-			<Link
-				href={`/play/${encodeURIComponent(video.filePath)}`}
-				className="block p-4"
-			>
+			<div className="block p-4" onClick={handlePlayClick}>
 				<div className="flex items-center gap-4">
 					{/* サムネイル */}
 					<div className="relative w-28 h-16 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg overflow-hidden flex-shrink-0">
@@ -260,7 +280,7 @@ const VideoListItem = ({
 						)}
 					</div>
 				</div>
-			</Link>
+			</div>
 		</div>
 	);
 };
@@ -270,6 +290,7 @@ const VideoList = ({
 	className,
 	isOfflineMode = false,
 	onDelete,
+	onShowStreamingWarning,
 }: VideoListProps) => {
 	return (
 		<div className={cn("space-y-3", className)}>
@@ -279,6 +300,7 @@ const VideoList = ({
 					video={video}
 					isOfflineMode={isOfflineMode}
 					onDelete={onDelete}
+					onShowStreamingWarning={onShowStreamingWarning}
 				/>
 			))}
 		</div>

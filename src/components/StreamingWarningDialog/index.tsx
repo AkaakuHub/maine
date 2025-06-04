@@ -61,6 +61,7 @@ const StreamingWarningDialog = ({
 				<div className="space-y-3">
 					{/* オフライン再生（推奨） */}
 					<button
+						type="button"
 						onClick={onUseOffline}
 						className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-600 hover:to-teal-600 transition-colors"
 					>
@@ -73,6 +74,7 @@ const StreamingWarningDialog = ({
 
 					{/* ストリーミング再生 */}
 					<button
+						type="button"
 						onClick={onContinueStreaming}
 						className="w-full flex items-center gap-3 p-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
 					>
@@ -85,6 +87,7 @@ const StreamingWarningDialog = ({
 
 					{/* キャンセル */}
 					<button
+						type="button"
 						onClick={onClose}
 						className="w-full p-2 text-slate-400 hover:text-white transition-colors text-center"
 					>

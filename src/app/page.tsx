@@ -20,6 +20,7 @@ import VideoList from "@/components/VideoList";
 import OfflineVideoCard from "@/components/OfflineVideoCard";
 import EmptyState from "@/components/EmptyState";
 import LoadingState from "@/components/LoadingState";
+import StreamingWarningDialog from "@/components/StreamingWarningDialog";
 import { Button } from "@/components/ui/Button";
 import { cn, formatFileSize } from "@/libs/utils";
 import { PAGINATION, SEARCH } from "@/utils/constants";
@@ -43,6 +44,11 @@ const Home = () => {
 	const [currentPage, setCurrentPage] = useState(1); // IME状態管理
 	const [isComposing, setIsComposing] = useState(false);
 	const [showAll, setShowAll] = useState(false); // 一覧表示フラグ
+
+	// 警告ダイアログの状態
+	const [showStreamingWarning, setShowStreamingWarning] = useState(false);
+	const [warningVideoData, setWarningVideoData] =
+		useState<VideoFileData | null>(null);
 	// 動画データのフック
 	const {
 		videos,
@@ -111,6 +117,40 @@ const Home = () => {
 		},
 		[refreshCachedVideos],
 	);
+
+	// 警告ダイアログを表示する
+	const handleShowStreamingWarning = useCallback((video: VideoFileData) => {
+		setWarningVideoData(video);
+		setShowStreamingWarning(true);
+	}, []);
+
+	// 警告ダイアログを閉じる
+	const handleCloseStreamingWarning = useCallback(() => {
+		setShowStreamingWarning(false);
+		setWarningVideoData(null);
+	}, []);
+
+	// 警告ダイアログからストリーミングを続行
+	const handleContinueStreaming = useCallback(() => {
+		if (warningVideoData) {
+			handleCloseStreamingWarning();
+			// 次のフレームでナビゲーションを実行
+			setTimeout(() => {
+				window.location.href = `/play/${encodeURIComponent(warningVideoData.filePath)}`;
+			}, 0);
+		}
+	}, [warningVideoData, handleCloseStreamingWarning]);
+
+	// 警告ダイアログからオフライン再生を選択
+	const handleUseOfflineFromWarning = useCallback(() => {
+		if (warningVideoData) {
+			handleCloseStreamingWarning();
+			// 次のフレームでナビゲーションを実行
+			setTimeout(() => {
+				window.location.href = `/play/${encodeURIComponent(warningVideoData.filePath)}?offline=true`;
+			}, 0);
+		}
+	}, [warningVideoData, handleCloseStreamingWarning]);
 
 	// 全てのオフライン動画を削除
 	const handleClearAllOffline = useCallback(async () => {
@@ -505,9 +545,15 @@ const Home = () => {
 						// 検索結果やフィルタ結果がない場合
 						<EmptyState type="no-search-results" searchTerm={searchQuery} />
 					) : viewMode === "grid" ? (
-						<VideoGridContainer videos={videos} />
+						<VideoGridContainer
+							videos={videos}
+							onShowStreamingWarning={handleShowStreamingWarning}
+						/>
 					) : (
-						<VideoList videos={videos} />
+						<VideoList
+							videos={videos}
+							onShowStreamingWarning={handleShowStreamingWarning}
+						/>
 					)
 				) : // オフラインタブの内容
 				offlineVideos.length === 0 ? (
@@ -557,6 +603,16 @@ const Home = () => {
 					</div>
 				)}
 			</div>
+			{/* グローバル警告ダイアログ */}
+			{warningVideoData && (
+				<StreamingWarningDialog
+					isOpen={showStreamingWarning}
+					onClose={handleCloseStreamingWarning}
+					onContinueStreaming={handleContinueStreaming}
+					onUseOffline={handleUseOfflineFromWarning}
+					videoTitle={warningVideoData.title}
+				/>
+			)}
 		</main>
 	);
 };
