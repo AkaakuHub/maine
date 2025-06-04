@@ -636,9 +636,9 @@ const ModernVideoPlayer = ({
 												<button
 													type="button"
 													onClick={() => setSettingsView("main")}
-													className="text-slate-400 hover:text-white transition-colors"
+													className="text-slate-400 hover:text-white transition-colors w-8"
 												>
-													<ChevronLeft className="h-4 w-4" />
+													<ChevronLeft className="h-6 w-6" />
 												</button>
 												<div className="text-orange-300 text-sm font-semibold flex items-center gap-2">
 													<Clock className="h-4 w-4" />
@@ -673,9 +673,9 @@ const ModernVideoPlayer = ({
 												<button
 													type="button"
 													onClick={() => setSettingsView("main")}
-													className="text-slate-400 hover:text-white transition-colors"
+													className="text-slate-400 hover:text-white transition-colors w-8"
 												>
-													<ChevronLeft className="h-4 w-4" />
+													<ChevronLeft className="h-6 w-6" />
 												</button>
 												<div className="text-purple-300 text-sm font-semibold flex items-center gap-2">
 													<Play className="h-4 w-4" />
