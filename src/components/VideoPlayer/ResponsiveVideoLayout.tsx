@@ -5,7 +5,7 @@ import VideoInfo from "./VideoInfo";
 import RelatedVideos from "./RelatedVideos";
 import type { VideoInfoType } from "@/types/VideoInfo";
 
-interface DesktopLayoutProps {
+interface ResponsiveVideoLayoutProps {
 	videoSrc: string;
 	videoInfo: VideoInfoType;
 	onBack: () => void;
@@ -20,7 +20,7 @@ interface DesktopLayoutProps {
 	initialTime?: number;
 }
 
-export default function DesktopLayout({
+export default function ResponsiveVideoLayout({
 	videoSrc,
 	videoInfo,
 	onBack,
@@ -33,25 +33,27 @@ export default function DesktopLayout({
 	onToggleDescription,
 	onTimeUpdate,
 	initialTime,
-}: DesktopLayoutProps) {
+}: ResponsiveVideoLayoutProps) {
 	return (
-		<div className="hidden lg:block h-[calc(100vh-64px)]">
-			{/* メインコンテンツ */}
-			<div className="flex h-full">
-				{/* 動画プレイヤーセクション */}
-				<div className="flex-1">
-					{" "}
-					<ModernVideoPlayer
-						src={videoSrc}
-						title={videoInfo.fullTitle}
-						onBack={onBack}
-						onTimeUpdate={onTimeUpdate}
-						initialTime={initialTime}
-					/>
+		<div className="h-[calc(100vh-64px)]">
+			{/* レスポンシブなメインコンテンツ */}
+			<div className="flex flex-col lg:flex-row h-full">
+				{/* 動画プレイヤーセクション - モバイル: full width, デスクトップ: flex-1 */}
+				<div className="w-full lg:flex-1 flex flex-col min-h-0">
+					<div className="flex-1 min-h-0 lg:max-h-full">
+						<ModernVideoPlayer
+							src={videoSrc}
+							title={videoInfo.fullTitle}
+							onBack={onBack}
+							onTimeUpdate={onTimeUpdate}
+							initialTime={initialTime}
+							className="h-full w-full"
+						/>
+					</div>
 				</div>
 
-				{/* サイドバー */}
-				<div className="w-96 border-l border-purple-500/20 bg-gradient-to-b from-slate-900/80 to-slate-800/80 backdrop-blur-sm overflow-y-auto">
+				{/* コンテンツセクション - モバイル: 縦スタック, デスクトップ: サイドバー */}
+				<div className="flex-1 lg:w-96 lg:flex-initial lg:border-l lg:border-purple-500/20 bg-gradient-to-b from-slate-900/80 to-slate-800/80 lg:backdrop-blur-sm overflow-y-auto lg:max-h-full">
 					{/* 動画情報 */}
 					<VideoInfo
 						videoInfo={videoInfo}
@@ -62,7 +64,7 @@ export default function DesktopLayout({
 						onToggleWatchlist={onToggleWatchlist}
 						onShare={onShare}
 						onToggleDescription={onToggleDescription}
-						variant="desktop"
+						variant="responsive" // 新しいvariantを追加
 					/>
 
 					{/* 関連動画 */}

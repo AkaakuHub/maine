@@ -2,8 +2,7 @@
 
 import Navigation from "@/components/VideoPlayer/Navigation";
 import LoadingScreen from "@/components/VideoPlayer/LoadingScreen";
-import MobileLayout from "@/components/VideoPlayer/MobileLayout";
-import DesktopLayout from "@/components/VideoPlayer/DesktopLayout";
+import ResponsiveVideoLayout from "@/components/VideoPlayer/ResponsiveVideoLayout";
 import { useVideoPlayer } from "@/hooks/useVideoPlayer";
 
 export default function PlayPage() {
@@ -35,24 +34,10 @@ export default function PlayPage() {
 				onGoBack={handleGoBack}
 				onGoHome={handleGoHome}
 				onShare={handleShare}
-			/>{" "}
-			{/* モバイル・縦画面レイアウト */}
-			<MobileLayout
-				videoSrc={videoSrc}
-				videoInfo={videoInfo}
-				onBack={handleGoBack}
-				isLiked={isLiked}
-				isInWatchlist={isInWatchlist}
-				showDescription={showDescription}
-				onToggleLike={toggleLike}
-				onToggleWatchlist={toggleWatchlist}
-				onShare={handleShare}
-				onToggleDescription={toggleDescription}
-				onTimeUpdate={handleTimeUpdate}
-				initialTime={videoData?.watchTime || 0}
-			/>{" "}
-			{/* デスクトップレイアウト */}
-			<DesktopLayout
+			/>
+
+			{/* レスポンシブレイアウト */}
+			<ResponsiveVideoLayout
 				videoSrc={videoSrc}
 				videoInfo={videoInfo}
 				onBack={handleGoBack}
