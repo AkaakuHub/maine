@@ -29,6 +29,12 @@ interface HTMLVideoElementWithFullscreen extends HTMLVideoElement {
 	msRequestFullscreen?: () => Promise<void>;
 }
 
+interface HTMLElementWithFullscreen extends HTMLElement {
+	webkitRequestFullscreen?: () => Promise<void>;
+	mozRequestFullScreen?: () => Promise<void>;
+	msRequestFullscreen?: () => Promise<void>;
+}
+
 interface DocumentWithFullscreen extends Document {
 	webkitFullscreenElement?: Element | null;
 	mozFullScreenElement?: Element | null;
@@ -116,20 +122,50 @@ const ModernVideoPlayer = ({
 			videoRef.current.volume = 0;
 			setIsMuted(true);
 		}
-	}, [isMuted, volume]);
-
-	// フルスクリーン切り替え - 新しいアプローチ
+	}, [isMuted, volume]); // フルスクリーン切り替え - ブラウザ間互換性を考慮
 	const toggleFullscreen = useCallback(async () => {
 		if (!containerRef.current) return;
 
+		const doc = document as DocumentWithFullscreen;
+		const container = containerRef.current as HTMLElementWithFullscreen;
+
 		try {
-			if (document.fullscreenElement) {
-				await document.exitFullscreen();
-				setIsFullscreen(false);
+			// フルスクリーン状態の確認（ベンダープレフィックス対応）
+			const fullscreenElement =
+				doc.fullscreenElement ||
+				doc.webkitFullscreenElement ||
+				doc.mozFullScreenElement ||
+				doc.msFullscreenElement;
+
+			console.log(
+				"Fullscreen toggle called, current state:",
+				!!fullscreenElement,
+			);
+
+			if (fullscreenElement) {
+				// フルスクリーン解除
+				console.log("Exiting fullscreen...");
+				if (doc.exitFullscreen) {
+					await doc.exitFullscreen();
+				} else if (doc.webkitExitFullscreen) {
+					await doc.webkitExitFullscreen();
+				} else if (doc.mozCancelFullScreen) {
+					await doc.mozCancelFullScreen();
+				} else if (doc.msExitFullscreen) {
+					await doc.msExitFullscreen();
+				}
 			} else {
-				// コンテナをフルスクリーンにして、CSSでレイアウトを制御
-				await containerRef.current.requestFullscreen();
-				setIsFullscreen(true);
+				// フルスクリーン開始
+				console.log("Entering fullscreen...");
+				if (container.requestFullscreen) {
+					await container.requestFullscreen();
+				} else if (container.webkitRequestFullscreen) {
+					await container.webkitRequestFullscreen();
+				} else if (container.mozRequestFullScreen) {
+					await container.mozRequestFullScreen();
+				} else if (container.msRequestFullscreen) {
+					await container.msRequestFullscreen();
+				}
 			}
 		} catch (error) {
 			console.error("Fullscreen error:", error);
@@ -311,7 +347,10 @@ const ModernVideoPlayer = ({
 					break;
 				case "Escape":
 					e.preventDefault();
-					if (settingsView !== "main") {
+					if (isFullscreen) {
+						// フルスクリーン時はフルスクリーンを解除
+						toggleFullscreen();
+					} else if (settingsView !== "main") {
 						setSettingsView("main"); // サブメニューの場合はメインに戻る
 					} else {
 						setShowSettings(false); // メインメニューの場合は閉じる
@@ -329,6 +368,7 @@ const ModernVideoPlayer = ({
 		toggleFullscreen,
 		toggleMute,
 		settingsView,
+		isFullscreen,
 	]);
 
 	// マウス移動でコントロール表示
@@ -391,16 +431,40 @@ const ModernVideoPlayer = ({
 			video.removeEventListener("canplay", handleCanPlay);
 		};
 	}, [onTimeUpdate, initialTime]);
-
 	// フルスクリーン状態の変更を監視
 	useEffect(() => {
 		const handleFullscreenChange = () => {
-			setIsFullscreen(!!document.fullscreenElement);
+			const doc = document as DocumentWithFullscreen;
+			const fullscreenElement =
+				doc.fullscreenElement ||
+				doc.webkitFullscreenElement ||
+				doc.mozFullScreenElement ||
+				doc.msFullscreenElement;
+
+			setIsFullscreen(!!fullscreenElement);
 		};
 
+		// 標準とベンダープレフィックス付きイベントリスナーを追加
 		document.addEventListener("fullscreenchange", handleFullscreenChange);
-		return () =>
+		document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+		document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+		document.addEventListener("msfullscreenchange", handleFullscreenChange);
+
+		return () => {
 			document.removeEventListener("fullscreenchange", handleFullscreenChange);
+			document.removeEventListener(
+				"webkitfullscreenchange",
+				handleFullscreenChange,
+			);
+			document.removeEventListener(
+				"mozfullscreenchange",
+				handleFullscreenChange,
+			);
+			document.removeEventListener(
+				"msfullscreenchange",
+				handleFullscreenChange,
+			);
+		};
 	}, []);
 
 	return (
@@ -735,18 +799,20 @@ const ModernVideoPlayer = ({
 								</div>
 							)}
 						</div>
-
 						<button
 							type="button"
 							onClick={togglePictureInPicture}
 							className="text-white hover:text-green-300 transition-colors"
 						>
 							<PictureInPicture2 className="h-5 w-5" />
-						</button>
-
+						</button>{" "}
 						<button
 							type="button"
-							onClick={toggleFullscreen}
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								toggleFullscreen();
+							}}
 							className="text-white hover:text-pink-300 transition-colors"
 						>
 							{isFullscreen ? (
