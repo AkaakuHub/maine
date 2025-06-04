@@ -6,6 +6,7 @@ import { Play, Calendar, HardDrive, Download, Wifi } from "lucide-react";
 import type { VideoFileData } from "@/type";
 import { cn, formatFileSize, truncateText } from "@/libs/utils";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface VideoCardProps {
 	video: VideoFileData;
@@ -14,6 +15,7 @@ interface VideoCardProps {
 	isOfflineMode?: boolean;
 	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
+	enableDownload?: boolean; // ダウンロード機能を有効にするかどうか
 }
 
 const VideoCard = ({
@@ -23,10 +25,12 @@ const VideoCard = ({
 	isOfflineMode = false,
 	onDelete,
 	onShowStreamingWarning,
+	enableDownload = false,
 }: VideoCardProps) => {
 	const router = useRouter();
 	const [isHovered, setIsHovered] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
 	const {
 		isCached,
 		deleteVideo,
@@ -39,6 +43,16 @@ const VideoCard = ({
 	const isVideoCached = isCached(video.filePath);
 	const currentDownloadProgress = downloadProgress[video.filePath];
 	const isCurrentlyDownloading = isDownloading[video.filePath];
+
+	// ダウンロード処理
+	const handleDownload = async () => {
+		try {
+			await downloadVideo(video.filePath, video.title);
+			setShowDownloadConfirm(false);
+		} catch (error) {
+			console.error("ダウンロードエラー:", error);
+		}
+	};
 
 	// 再生処理（直接再生）
 	const handlePlayClick = (e: React.MouseEvent) => {
@@ -110,23 +124,42 @@ const VideoCard = ({
 						)}
 					>
 						<div className="absolute bottom-4 left-4 right-4">
-							<div className="flex items-center gap-2 mb-2">
-								<div
-									className={cn(
-										"backdrop-blur-sm px-3 py-1 rounded-full",
-										isOfflineMode ? "bg-green-500/20" : "bg-white/20",
-									)}
-								>
-									<Play
+							<div className="flex items-center justify-between mb-2">
+								<div className="flex items-center gap-2">
+									<div
 										className={cn(
-											"h-4 w-4",
-											isOfflineMode ? "text-green-400" : "text-white",
+											"backdrop-blur-sm px-3 py-1 rounded-full",
+											isOfflineMode ? "bg-green-500/20" : "bg-white/20",
 										)}
-									/>
+									>
+										<Play
+											className={cn(
+												"h-4 w-4",
+												isOfflineMode ? "text-green-400" : "text-white",
+											)}
+										/>
+									</div>
+									<span className="text-white text-sm font-medium">
+										{isOfflineMode ? "オフライン再生" : "再生"}
+									</span>
 								</div>
-								<span className="text-white text-sm font-medium">
-									{isOfflineMode ? "オフライン再生" : "再生"}
-								</span>
+								{/* ダウンロードボタン */}
+								{enableDownload &&
+									!isOfflineMode &&
+									!isVideoCached &&
+									!isCurrentlyDownloading && (
+										<button
+											type="button"
+											onClick={(e) => {
+												e.preventDefault();
+												e.stopPropagation();
+												setShowDownloadConfirm(true);
+											}}
+											className="backdrop-blur-sm bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition-colors"
+										>
+											<Download className="h-4 w-4 text-white" />
+										</button>
+									)}
 							</div>
 						</div>
 					</div>
@@ -199,6 +232,37 @@ const VideoCard = ({
 					/>
 				</div>
 			)}
+
+			{/* ダウンロード確認ダイアログ */}
+			<ConfirmDialog
+				isOpen={showDownloadConfirm}
+				onClose={() => setShowDownloadConfirm(false)}
+				title="動画をダウンロード"
+				message={
+					<div>
+						<p className="text-slate-300 mb-2">
+							この動画をオフライン視聴用にダウンロードしますか？
+						</p>
+						<p className="text-sm text-slate-400">
+							ファイル名: {video.fileName}
+						</p>
+						<p className="text-sm text-slate-400">
+							サイズ: {formatFileSize(video.fileSize)}
+						</p>
+					</div>
+				}
+				icon={Download}
+				iconColor="text-blue-400"
+				actions={[
+					{
+						label: "ダウンロード",
+						onClick: handleDownload,
+						variant: "primary",
+						icon: Download,
+						description: "オフライン視聴できるようになります",
+					},
+				]}
+			/>
 		</div>
 	);
 };
