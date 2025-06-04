@@ -6,6 +6,8 @@ import {
 	isVideoFile,
 	getFileName,
 	getFileSize,
+	getVideoDirectories,
+	directoryExists,
 } from "@/libs/fileUtils";
 import type { VideoFileData } from "@/type";
 
@@ -143,9 +145,9 @@ async function mergeWithProgressData(
  */
 async function searchVideos(searchQuery = ""): Promise<SearchResult> {
 	try {
-		const videoDirectory = process.env.VIDEO_DIRECTORY;
+		const videoDirectories = getVideoDirectories();
 
-		if (!videoDirectory) {
+		if (videoDirectories.length === 0) {
 			return {
 				success: false,
 				videos: [],
@@ -155,27 +157,34 @@ async function searchVideos(searchQuery = ""): Promise<SearchResult> {
 			};
 		}
 
-		// ディレクトリの存在確認
-		try {
-			await fs.access(videoDirectory);
-		} catch {
-			return {
-				success: false,
-				videos: [],
-				totalFound: 0,
-				message: `Video directory not found: ${videoDirectory}`,
-				error: "Directory not found",
-			};
+		console.log("Scanning directories:", videoDirectories);
+
+		// 全ディレクトリからビデオファイルを収集
+		const allVideoFiles: VideoFileInfo[] = [];
+
+		for (const videoDirectory of videoDirectories) {
+			// ディレクトリの存在確認
+			const dirExists = await directoryExists(videoDirectory);
+
+			if (!dirExists) {
+				console.warn(`Video directory not found: ${videoDirectory}`);
+				continue;
+			}
+
+			try {
+				const videoFiles = await scanDirectory(videoDirectory);
+				allVideoFiles.push(...videoFiles);
+			} catch (error) {
+				console.error(`Failed to scan directory ${videoDirectory}:`, error);
+				// 一つのディレクトリでエラーが出ても他のディレクトリは続行
+			}
 		}
 
-		console.log("Scanning directory:", videoDirectory);
-		const videoFiles = await scanDirectory(videoDirectory);
-
 		// 検索フィルタリング
-		let filteredVideos = videoFiles;
+		let filteredVideos = allVideoFiles;
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase();
-			filteredVideos = videoFiles.filter(
+			filteredVideos = allVideoFiles.filter(
 				(video) =>
 					video.title.toLowerCase().includes(query) ||
 					video.fileName.toLowerCase().includes(query),
@@ -189,7 +198,7 @@ async function searchVideos(searchQuery = ""): Promise<SearchResult> {
 			success: true,
 			videos: videosWithProgress,
 			totalFound: videosWithProgress.length,
-			message: `Found ${videosWithProgress.length} video(s)`,
+			message: `Found ${videosWithProgress.length} video(s) from ${videoDirectories.length} directory(ies)`,
 		};
 	} catch (error) {
 		console.error("Video search error:", error);

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createReadStream, statSync } from "node:fs";
-import { validateSecureFilePath } from "@/libs/fileUtils";
+import { findFileInVideoDirectories } from "@/libs/fileUtils";
 
 export async function GET(req: NextRequest) {
 	try {
@@ -12,11 +12,14 @@ export async function GET(req: NextRequest) {
 			return new NextResponse("File path is required", { status: 400 });
 		}
 
-		// セキュアなファイルパス検証
-		const validation = await validateSecureFilePath(filePath);
+		// セキュアなファイルパス検証（複数ディレクトリ対応）
+		const validation = await findFileInVideoDirectories(filePath);
 		if (!validation.isValid) {
 			console.error("Invalid file path:", validation.error);
-			return new NextResponse("Invalid file path", { status: 403 });
+			return new NextResponse(validation.error || "Invalid file path", {
+				status:
+					validation.error === "No video directories configured" ? 500 : 403,
+			});
 		}
 
 		// ファイルが存在するか確認

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { statSync, createReadStream } from "node:fs";
-import { sanitizePath, fileExists } from "@/libs/fileUtils";
+import { findFileInVideoDirectories } from "@/libs/fileUtils";
 
 export async function GET(
 	request: NextRequest,
@@ -10,35 +10,29 @@ export async function GET(
 	try {
 		const { filePath } = await params;
 		const decodedPath = decodeURIComponent(filePath);
-		const videoDirectory = process.env.VIDEO_DIRECTORY || "";
 
 		// ダウンロードモードかどうかを確認
 		const isDownload = request.nextUrl.searchParams.get("download") === "true";
 		console.log("API called with download mode:", isDownload);
 		console.log("File path:", decodedPath);
 
-		if (!videoDirectory) {
-			return new NextResponse("Video directory not configured", {
-				status: 500,
-			});
-		}
+		// 複数のビデオディレクトリからファイルを検索
+		const fileValidation = await findFileInVideoDirectories(decodedPath);
 
-		// セキュリティチェック: パストラバーサル攻撃を防ぐ
-		const fullPath = sanitizePath(decodedPath, videoDirectory);
-
-		if (!fullPath) {
-			console.error("Security violation: Invalid path", {
+		if (!fileValidation.isValid || !fileValidation.exists) {
+			console.error("File not found or invalid:", {
 				filePath: decodedPath,
-				videoDirectory,
+				error: fileValidation.error,
 			});
-			return new NextResponse("Forbidden", { status: 403 });
+			return new NextResponse(fileValidation.error || "File not found", {
+				status:
+					fileValidation.error === "No video directories configured"
+						? 500
+						: 404,
+			});
 		}
 
-		// ファイルの存在確認
-		if (!(await fileExists(fullPath))) {
-			console.error("File not found:", fullPath);
-			return new NextResponse("File not found", { status: 404 });
-		}
+		const fullPath = fileValidation.fullPath;
 
 		const stat = statSync(fullPath);
 		const fileSize = stat.size;

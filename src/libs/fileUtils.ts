@@ -104,41 +104,64 @@ export interface FilePathValidation {
 }
 
 /**
- * セキュアなファイルパス検証
+ * 環境変数からビデオディレクトリのリストを取得
  */
-export async function validateSecureFilePath(
+export function getVideoDirectories(): string[] {
+	const videoDirectories = process.env.VIDEO_DIRECTORY || "";
+
+	if (!videoDirectories) {
+		return [];
+	}
+
+	// カンマ区切りで分割し、空白をトリム
+	return videoDirectories
+		.split(",")
+		.map((dir) => dir.trim())
+		.filter((dir) => dir.length > 0);
+}
+
+/**
+ * 複数のビデオディレクトリから指定されたファイルパスを検索
+ */
+export async function findFileInVideoDirectories(
 	filePath: string,
 ): Promise<FilePathValidation> {
-	const videoDirectory = process.env.VIDEO_DIRECTORY || "";
+	const videoDirectories = getVideoDirectories();
 
-	if (!videoDirectory) {
+	if (videoDirectories.length === 0) {
 		return {
 			isValid: false,
 			fullPath: "",
 			exists: false,
-			error: "Video directory not configured",
+			error: "No video directories configured",
 		};
 	}
 
-	// セキュリティチェック: パストラバーサル攻撃を防ぐ
-	const fullPath = sanitizePath(filePath, videoDirectory);
+	// 各ディレクトリでファイルを検索
+	for (const videoDirectory of videoDirectories) {
+		// セキュリティチェック: パストラバーサル攻撃を防ぐ
+		const fullPath = sanitizePath(filePath, videoDirectory);
 
-	if (!fullPath) {
-		return {
-			isValid: false,
-			fullPath: "",
-			exists: false,
-			error: "Invalid path: security violation detected",
-		};
+		if (!fullPath) {
+			continue; // 無効なパスはスキップ
+		}
+
+		// ファイルの存在確認
+		const exists = await fileExists(fullPath);
+
+		if (exists) {
+			return {
+				isValid: true,
+				fullPath,
+				exists: true,
+			};
+		}
 	}
-
-	// ファイルの存在確認
-	const exists = await fileExists(fullPath);
 
 	return {
-		isValid: true,
-		fullPath,
-		exists,
-		error: exists ? undefined : "File not found",
+		isValid: false,
+		fullPath: "",
+		exists: false,
+		error: "File not found in any configured video directory",
 	};
 }
