@@ -21,6 +21,8 @@ interface VideoListProps {
 const VideoListItem = ({ video }: { video: VideoFileData }) => {
 	const [showMenu, setShowMenu] = useState(false);
 
+	const watchProgressPercentage = video.watchProgress || 0;
+
 	return (
 		<div className="group bg-slate-800/30 hover:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 hover:border-purple-400/30 transition-all duration-300">
 			<Link
@@ -112,7 +114,9 @@ const VideoListItem = ({ video }: { video: VideoFileData }) => {
 								<div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden">
 									<div
 										className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-										style={{ width: "35%" }} // TODO: 実際の進行状況を計算
+										style={{
+											width: `${Math.min(100, Math.max(0, watchProgressPercentage))}%`,
+										}}
 									/>
 								</div>
 							</div>
