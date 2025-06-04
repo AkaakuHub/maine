@@ -88,6 +88,9 @@ const ModernVideoPlayer = ({
 
 	const skipOptions = [5, 10, 20, 60, 90]; // 選択可能な秒数
 
+	// サムネイル用の状態
+	const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+
 	// 再生/一時停止
 	const togglePlay = useCallback(() => {
 		if (!videoRef.current) return;
@@ -533,27 +536,29 @@ const ModernVideoPlayer = ({
 		};
 	}, [isPlaying, resetControlsTimeout]);
 
-	// Media Session API でメタデータを設定（iPhone の動画再生センター用）
+	// Media Session API でアクションハンドラーと位置情報を設定
 	useEffect(() => {
 		if ("mediaSession" in navigator) {
 			try {
-				// 動画のタイトルを決定（propsのtitleが優先、なければsrcファイル名から抽出）
-				const videoTitle =
-					title || src.split("/").pop()?.split(".")[0] || "無題の動画";
+				// サムネイルが未生成の場合のみ基本メタデータを設定
+				if (!thumbnailUrl) {
+					const videoTitle =
+						title || src.split("/").pop()?.split(".")[0] || "無題の動画";
 
-				// @ts-ignore - MediaMetadata は実行時に利用可能
-				navigator.mediaSession.metadata = new MediaMetadata({
-					title: videoTitle, // 実際に再生している動画のタイトル
-					artist: "My Anime Storage",
-					album: "アニメ動画",
-					artwork: [
-						{
-							src: "/favicon.ico",
-							sizes: "96x96",
-							type: "image/x-icon",
-						},
-					],
-				});
+					// @ts-ignore - MediaMetadata は実行時に利用可能
+					navigator.mediaSession.metadata = new MediaMetadata({
+						title: videoTitle,
+						artist: "My Anime Storage",
+						album: "アニメ動画",
+						artwork: [
+							{
+								src: "/favicon.ico",
+								sizes: "96x96",
+								type: "image/x-icon",
+							},
+						],
+					});
+				}
 
 				// プレイヤーのアクションハンドラーを設定
 				navigator.mediaSession.setActionHandler("play", () => {
@@ -605,15 +610,163 @@ const ModernVideoPlayer = ({
 			}
 		};
 	}, [
-		title,
-		src,
 		duration,
 		currentTime,
 		playbackRate,
 		togglePlay,
 		skipBackward,
 		skipForward,
+		thumbnailUrl, // サムネイル状態も依存関係に追加
 	]);
+
+	// 動画の特定位置のフレームをキャプチャしてサムネイルを生成
+	const generateVideoThumbnail = useCallback(
+		(timePosition: number = 0.01): Promise<string | null> => {
+			return new Promise((resolve) => {
+				if (!videoRef.current || videoRef.current.readyState < 2) {
+					console.warn("Video not ready for thumbnail capture");
+					resolve(null);
+					return;
+				}
+
+				const video = videoRef.current;
+				const canvas = document.createElement("canvas");
+				const ctx = canvas.getContext("2d");
+
+				if (!ctx) {
+					console.error("Canvas context not available");
+					resolve(null);
+					return;
+				}
+
+				// キャンバスのサイズを動画に合わせる
+				canvas.width = video.videoWidth || 640;
+				canvas.height = video.videoHeight || 360;
+
+				// 現在の再生位置を保存
+				const originalTime = video.currentTime;
+				const originalPaused = video.paused;
+
+				// サムネイル用の時間位置に移動（デフォルトは動画の1%の位置）
+				// 無駄なフェッチを減らす
+				const targetTime = Math.min(
+					video.duration * timePosition,
+					video.duration - 0.1, // 最後から0.1秒前まで
+				);
+
+				const onSeeked = () => {
+					try {
+						// フレームをキャンバスに描画
+						ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+						// DataURLとして画像を取得
+						const thumbnailDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+						console.log(
+							"Generated thumbnail for video at",
+							targetTime,
+							"seconds",
+						);
+
+						// 元の位置に戻す
+						video.currentTime = originalTime;
+						if (!originalPaused) {
+							video.play().catch(() => {
+								// エラーを無視
+							});
+						}
+
+						resolve(thumbnailDataUrl);
+					} catch (error) {
+						console.error("Error generating thumbnail:", error);
+						// 元の位置に戻す
+						video.currentTime = originalTime;
+						if (!originalPaused) {
+							video.play().catch(() => {
+								// エラーを無視
+							});
+						}
+						resolve(null);
+					} finally {
+						video.removeEventListener("seeked", onSeeked);
+					}
+				};
+
+				// seekedイベントをリスニング
+				video.addEventListener("seeked", onSeeked, { once: true });
+
+				// 指定位置にシーク
+				video.currentTime = targetTime;
+			});
+		},
+		[],
+	);
+
+	// 動画のメタデータが読み込まれた際にサムネイルを生成
+	useEffect(() => {
+		const video = videoRef.current;
+		if (!video) return;
+
+		const handleLoadedMetadata = async () => {
+			// サムネイルを生成（動画の1%の位置）
+			const thumbnail = await generateVideoThumbnail(0.01);
+			if (thumbnail) {
+				setThumbnailUrl(thumbnail);
+				console.log("Thumbnail generated successfully");
+			}
+		};
+
+		// メタデータが既に読み込まれている場合は即座に実行
+		if (video.readyState >= 1) {
+			handleLoadedMetadata();
+		} else {
+			video.addEventListener("loadedmetadata", handleLoadedMetadata);
+		}
+
+		return () => {
+			video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+		};
+	}, [src, generateVideoThumbnail]);
+
+	// サムネイルが生成されたらメタデータを更新
+	useEffect(() => {
+		if (!thumbnailUrl) return;
+
+		const updateMediaSessionWithThumbnail = () => {
+			if ("mediaSession" in navigator) {
+				try {
+					const videoTitle =
+						title || src.split("/").pop()?.split(".")[0] || "無題の動画";
+
+					// @ts-ignore - MediaMetadata は実行時に利用可能
+					navigator.mediaSession.metadata = new MediaMetadata({
+						title: videoTitle,
+						artist: "My Anime Storage",
+						album: "アニメ動画",
+						artwork: [
+							// 生成されたサムネイルを優先的に使用
+							{
+								src: thumbnailUrl,
+								sizes: "640x360",
+								type: "image/jpeg",
+							},
+							// フォールバック用のアイコン
+							{
+								src: "/favicon.ico",
+								sizes: "96x96",
+								type: "image/x-icon",
+							},
+						],
+					});
+
+					console.log("Media Session metadata updated with video thumbnail");
+				} catch (error) {
+					console.log("Error updating Media Session with thumbnail:", error);
+				}
+			}
+		};
+
+		updateMediaSessionWithThumbnail();
+	}, [thumbnailUrl, title, src]);
 
 	return (
 		<div
