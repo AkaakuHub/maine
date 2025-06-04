@@ -63,6 +63,7 @@ const ModernVideoPlayer = ({
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
+	const [isShowRestTime, setIsShowRestTime] = useState(false);
 	const [volume, setVolume] = useState(1);
 	const [isMuted, setIsMuted] = useState(false);
 	const [isFullscreen, setIsFullscreen] = useState(false);
@@ -560,9 +561,27 @@ const ModernVideoPlayer = ({
 								className="w-16 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer slider volume-slider"
 							/>
 						</div>
-
-						<span className="text-white text-sm font-mono">
-							{formatDuration(currentTime)} / {formatDuration(duration)}
+						<span className="text-white text-sm font-mono flex gap-1">
+							<button
+								type="button"
+								onClick={() => {
+									setIsShowRestTime((c) => !c);
+								}}
+								className="cursor-pointer hover:text-yellow-300 transition-colors"
+							>
+								{isShowRestTime ? (
+									<>
+										<span>-</span>
+										<span>{formatDuration(duration - currentTime)}</span>
+									</>
+								) : (
+									<>
+										<span>{formatDuration(currentTime)}</span>
+										<span>/</span>
+										<span>{formatDuration(duration)}</span>
+									</>
+								)}
+							</button>
 						</span>
 					</div>
 
