@@ -166,13 +166,16 @@ async function searchVideos(searchQuery = ""): Promise<SearchResult> {
 				error: "Configuration error",
 			};
 		}
-
 		console.log("Scanning directories:", videoDirectories);
+		console.log("Platform:", process.platform);
 
 		// 全ディレクトリからビデオファイルを収集
 		const allVideoFiles: VideoFileInfo[] = [];
 
 		for (const videoDirectory of videoDirectories) {
+			console.log(`[DEBUG] Checking directory: "${videoDirectory}"`);
+			console.log(`[DEBUG] Directory length: ${videoDirectory.length}`);
+
 			// ディレクトリの存在確認
 			const dirExists = await directoryExists(videoDirectory);
 

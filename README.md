@@ -124,6 +124,9 @@ VIDEO_DIRECTORY=/path/to/your/videos
 # 複数ディレクトリの場合（カンマ区切り）
 VIDEO_DIRECTORY=/Users/user/Movies,/Users/user/Downloads/Videos,/Volumes/ExternalDrive/Videos
 
+# Windowsの場合
+VIDEO_DIRECTORY=C:\\Users\\user\\Videos,C:\\Users\\user\\Downloads\\Videos,D:\\ExternalDrive\\Videos
+
 # データベース設定
 DATABASE_URL="file:./dev.db"
 NODE_ENV=development

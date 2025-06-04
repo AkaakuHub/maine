@@ -114,9 +114,10 @@ export function getVideoDirectories(): string[] {
 	}
 
 	// カンマ区切りで分割し、空白をトリム
+	// 引用符も削除する（Windowsパス対応）
 	return videoDirectories
 		.split(",")
-		.map((dir) => dir.trim())
+		.map((dir) => dir.trim().replace(/^["']|["']$/g, "")) // 先頭と末尾の引用符を削除
 		.filter((dir) => dir.length > 0);
 }
 
