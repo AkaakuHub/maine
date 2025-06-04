@@ -187,16 +187,30 @@ export function useOfflineStorage(): UseOfflineStorageReturn {
 
 	// 初期化
 	useEffect(() => {
-		refreshCachedVideos();
-		refreshStorageEstimate();
-	}, [refreshCachedVideos, refreshStorageEstimate]);
+		const initializeCache = async () => {
+			try {
+				const videos = await offlineStorageService.getAllCachedVideos();
+				setCachedVideos(videos);
+
+				const size = await offlineStorageService.getCacheSize();
+				setCacheSize(size);
+
+				const estimate = await offlineStorageService.getStorageEstimate();
+				setStorageEstimate(estimate);
+			} catch (error) {
+				console.error("Failed to initialize offline storage:", error);
+			}
+		};
+
+		initializeCache();
+	}, []); // 依存配列を空にして、マウント時のみ実行
 
 	// クリーンアップ（ダウンロード中断）
 	useEffect(() => {
 		return () => {
-			Object.values(abortControllers).forEach((controller) => {
+			for (const controller of Object.values(abortControllers)) {
 				controller.abort();
-			});
+			}
 		};
 	}, [abortControllers]);
 

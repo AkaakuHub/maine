@@ -10,21 +10,26 @@ import {
 	SortDesc,
 	Download,
 	Wifi,
+	WifiOff,
 	Trash2,
 	RefreshCw,
 } from "lucide-react";
 import { useVideos } from "@/hooks/useVideos";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import VideoGridContainer from "@/components/VideoGridContainer";
 import VideoList from "@/components/VideoList";
 import OfflineVideoCard from "@/components/OfflineVideoCard";
 import EmptyState from "@/components/EmptyState";
 import LoadingState from "@/components/LoadingState";
 import StreamingWarningDialog from "@/components/StreamingWarningDialog";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import PWADebugInfo from "@/components/PWADebugInfo";
 import { Button } from "@/components/ui/Button";
 import { cn, formatFileSize } from "@/libs/utils";
 import { PAGINATION, SEARCH } from "@/utils/constants";
 import type { VideoFileData } from "@/type";
+import { createAPIClient } from "@/libs/apiClient";
 
 export type ViewMode = "grid" | "list";
 export type SortBy = "title" | "year" | "episode" | "createdAt";
@@ -32,6 +37,10 @@ export type SortOrder = "asc" | "desc";
 export type TabType = "streaming" | "offline";
 
 const Home = () => {
+	// ネットワーク状態
+	const { isOnline, isOffline, isOfflineMode, toggleOfflineMode } =
+		useNetworkStatus();
+
 	// UI状態
 	const [activeTab, setActiveTab] = useState<TabType>("streaming");
 	const [searchTerm, setSearchTerm] = useState("");
@@ -49,7 +58,41 @@ const Home = () => {
 	const [showStreamingWarning, setShowStreamingWarning] = useState(false);
 	const [warningVideoData, setWarningVideoData] =
 		useState<VideoFileData | null>(null);
-	// 動画データのフック
+
+	// オフライン時は自動的にオフラインタブに切り替え
+	useEffect(() => {
+		if (isOffline && activeTab === "streaming") {
+			setActiveTab("offline");
+		}
+	}, [isOffline, activeTab]);
+
+	// オフライン動画データの状態管理
+	const [offlineVideos, setOfflineVideos] = useState<VideoFileData[]>([]);
+	const [offlineLoading, setOfflineLoading] = useState(false);
+
+	// オフライン動画の取得
+	const loadOfflineVideos = useCallback(async () => {
+		if (activeTab !== "offline") return;
+
+		setOfflineLoading(true);
+		try {
+			const apiClient = createAPIClient(true);
+			const videos = await apiClient.getVideos();
+			setOfflineVideos(videos);
+		} catch (error) {
+			console.error("オフライン動画の取得に失敗:", error);
+		} finally {
+			setOfflineLoading(false);
+		}
+	}, [activeTab]);
+
+	useEffect(() => {
+		if (activeTab === "offline") {
+			loadOfflineVideos();
+		}
+	}, [activeTab, loadOfflineVideos]);
+
+	// 動画データのフック（オンライン時のみ）
 	const {
 		videos,
 		loading: videosLoading,
@@ -73,6 +116,7 @@ const Home = () => {
 			limit: PAGINATION.DEFAULT_LIMIT,
 		},
 		loadAll: showAll,
+		enabled: !isOffline, // オフライン時は無効化
 	});
 
 	// オフラインストレージのフック
@@ -84,23 +128,14 @@ const Home = () => {
 		refreshCachedVideos,
 		deleteVideo: deleteOfflineVideo,
 	} = useOfflineStorage();
-	// オフラインビデオをVideoFileData形式に変換
-	const offlineVideos: VideoFileData[] = cachedVideos.map((cached, index) => ({
-		id: `offline-${index}`,
-		filePath: cached.filePath,
-		title: cached.title,
-		fileName: cached.title,
-		fileSize: cached.size,
-		year: undefined,
-		episode: undefined,
-		isLiked: false,
-		watchProgress: 0,
-		watchTime: 0,
-		duration: cached.duration,
-		lastWatched: undefined,
-	}));
 	// タブ切り替え時にページをリセット
 	const handleTabChange = (tab: TabType) => {
+		// オフライン時はストリーミングタブに切り替えを禁止
+		if (isOffline && tab === "streaming") {
+			console.log("オフライン時はストリーミングタブに切り替えできません");
+			return;
+		}
+
 		setActiveTab(tab);
 		setCurrentPage(1);
 		setSearchTerm("");
@@ -271,6 +306,9 @@ const Home = () => {
 								)}
 							</p>
 						</div>
+
+						{/* PWAインストールプロンプト */}
+						<PWAInstallPrompt className="mb-2" />
 
 						{/* 表示モード切り替え */}
 						<div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-1 border border-slate-700">
@@ -603,6 +641,12 @@ const Home = () => {
 					</div>
 				)}
 			</div>
+			{/* PWA デバッグ情報 */}
+			{process.env.NODE_ENV === "development" && (
+				<div className="mt-8">
+					<PWADebugInfo />
+				</div>
+			)}
 			{/* グローバル警告ダイアログ */}
 			{warningVideoData && (
 				<StreamingWarningDialog

@@ -6,14 +6,23 @@ import type { VideoInfoType } from "@/types/VideoInfo";
 import type { VideoFileData } from "@/type";
 import { useProgress } from "./useProgress";
 import { useOfflineStorage } from "./useOfflineStorage";
+import { useNetworkStatus } from "./useNetworkStatus";
 import { API } from "@/utils/constants";
+import {
+	offlineStorageService,
+	type CachedVideo,
+} from "@/services/offlineStorageService";
 
 export function useVideoPlayer() {
 	const params = useParams();
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const isOfflineMode = searchParams.get("offline") === "true";
-	const { getCachedVideoUrl, cachedVideos } = useOfflineStorage();
+	const explicitOfflineMode = searchParams.get("offline") === "true";
+	const { isOnline } = useNetworkStatus();
+	const { getCachedVideoUrl } = useOfflineStorage();
+
+	// オフラインモードの判定: 明示的なオフラインモード or ネットワーク切断時
+	const isOfflineMode = explicitOfflineMode || !isOnline;
 
 	const [videoData, setVideoData] = useState<VideoFileData | null>(null);
 	const [videoInfo, setVideoInfo] = useState<VideoInfoType>({
@@ -42,13 +51,17 @@ export function useVideoPlayer() {
 						"オフラインモード: キャッシュされた動画を検索中:",
 						decodedPath,
 					);
+
+					// 最新のキャッシュされた動画リストを取得
+					const currentCachedVideos: CachedVideo[] =
+						await offlineStorageService.getAllCachedVideos();
 					console.log(
 						"利用可能なキャッシュされた動画:",
-						cachedVideos.map((v) => v.filePath),
+						currentCachedVideos.map((v: CachedVideo) => v.filePath),
 					);
 
-					const cachedVideo = cachedVideos.find(
-						(video) => video.filePath === decodedPath,
+					const cachedVideo = currentCachedVideos.find(
+						(video: CachedVideo) => video.filePath === decodedPath,
 					);
 
 					if (cachedVideo) {
@@ -108,13 +121,55 @@ export function useVideoPlayer() {
 						);
 						console.error(
 							"利用可能なキャッシュされた動画:",
-							cachedVideos.map((v) => ({
+							currentCachedVideos.map((v: CachedVideo) => ({
 								filePath: v.filePath,
 								title: v.title,
 							})),
 						);
-						// キャッシュされた動画が見つからない場合、ストリーミングモードに切り替え
-						router.push(`/play/${encodeURIComponent(decodedPath)}`);
+
+						// オフライン時でキャッシュされた動画が見つからない場合のフォールバック
+						if (!isOnline) {
+							// ファイルパスから基本情報を推測してフォールバック表示
+							const pathParts = decodedPath.split(/[/\\]/);
+							const videoTitle =
+								pathParts[pathParts.length - 1]?.replace(
+									/\.(mp4|mkv|avi|mov)$/i,
+									"",
+								) || "不明な動画";
+
+							const fallbackVideoData: VideoFileData = {
+								id: `fallback-${decodedPath}`,
+								filePath: decodedPath,
+								title: videoTitle,
+								fileName: videoTitle,
+								fileSize: 0,
+								episode: undefined,
+								duration: undefined,
+								year: undefined,
+								genre: undefined,
+								isLiked: false,
+								watchTime: 0,
+								watchProgress: 0,
+							};
+
+							setVideoData(fallbackVideoData);
+							setVideoInfo({
+								title: videoTitle,
+								episode: "",
+								fullTitle: videoTitle,
+								filePath: decodedPath,
+								description: "オフライン時のため、詳細情報は利用できません。",
+								genre: "動画",
+								year: "不明",
+								duration: "不明",
+							});
+
+							// オフライン時はvideoSrcを設定しない（再生不可状態）
+							setVideoSrc("");
+						} else {
+							// オンライン時はストリーミングモードに切り替え
+							router.push(`/play/${encodeURIComponent(decodedPath)}`);
+						}
 						return;
 					}
 				} else {
@@ -246,14 +301,17 @@ export function useVideoPlayer() {
 
 			setIsLoading(false);
 		}
-	}, [params.filePath, isOfflineMode, cachedVideos, getCachedVideoUrl, router]);
+	}, [params.filePath, isOfflineMode, getCachedVideoUrl, router, isOnline]);
 	useEffect(() => {
 		initializePlayer();
 
+		// エフェクト開始時点でのrefの値をコピー
+		const currentInterval = progressSaveIntervalRef.current;
+
 		// クリーンアップ
 		return () => {
-			if (progressSaveIntervalRef.current) {
-				clearInterval(progressSaveIntervalRef.current);
+			if (currentInterval) {
+				clearInterval(currentInterval);
 			}
 		};
 	}, [initializePlayer]);
