@@ -81,6 +81,10 @@ const ModernVideoPlayer = ({
 	// スキップ機能
 	const [skipSeconds, setSkipSeconds] = useState(10); // デフォルト10秒
 
+	// 連続スキップの閾値管理
+	const skipThrottleRef = useRef<NodeJS.Timeout | null>(null);
+	const skipQueueRef = useRef<number>(0);
+
 	// 設定メニューの状態
 	const [settingsView, setSettingsView] = useState<
 		"main" | "playback" | "skip"
@@ -206,14 +210,31 @@ const ModernVideoPlayer = ({
 		setShowSettings(false);
 	};
 
-	// スキップ
+	// スキップ - 連続処理に対応
 	const skip = useCallback(
 		(seconds: number) => {
 			if (!videoRef.current) return;
-			videoRef.current.currentTime = Math.max(
-				0,
-				Math.min(duration, currentTime + seconds),
-			);
+
+			// 現在のキューに追加
+			skipQueueRef.current += seconds;
+
+			// 既存のタイマーをクリア
+			if (skipThrottleRef.current) {
+				clearTimeout(skipThrottleRef.current);
+			}
+
+			// 500ms後に実際のスキップを実行
+			skipThrottleRef.current = setTimeout(() => {
+				if (!videoRef.current) return;
+
+				const totalSkip = skipQueueRef.current;
+				skipQueueRef.current = 0; // キューをリセット
+
+				videoRef.current.currentTime = Math.max(
+					0,
+					Math.min(duration, currentTime + totalSkip),
+				);
+			}, 500);
 		},
 		[duration, currentTime],
 	);
@@ -768,6 +789,32 @@ const ModernVideoPlayer = ({
 		updateMediaSessionWithThumbnail();
 	}, [thumbnailUrl, title, src]);
 
+	// クリーンアップ処理
+	useEffect(() => {
+		return () => {
+			// タイマーのクリーンアップ
+			if (controlsTimeoutRef.current) {
+				clearTimeout(controlsTimeoutRef.current);
+			}
+			if (skipThrottleRef.current) {
+				clearTimeout(skipThrottleRef.current);
+			}
+
+			// Media Session API のクリーンアップ
+			try {
+				if ("mediaSession" in navigator) {
+					navigator.mediaSession.metadata = null;
+					navigator.mediaSession.setActionHandler("play", null);
+					navigator.mediaSession.setActionHandler("pause", null);
+					navigator.mediaSession.setActionHandler("seekbackward", null);
+					navigator.mediaSession.setActionHandler("seekforward", null);
+				}
+			} catch (error) {
+				// エラーを無視
+			}
+		};
+	}, []);
+
 	return (
 		<div
 			ref={containerRef}
@@ -996,7 +1043,7 @@ const ModernVideoPlayer = ({
 							{showSettings && (
 								<div
 									ref={settingsRef}
-									className="absolute top-8 right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-48 shadow-xl"
+									className="absolute md:top-8 bottom-8 md:bottom-auto right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-48 shadow-xl z-50"
 								>
 									{settingsView === "main" && (
 										<div>

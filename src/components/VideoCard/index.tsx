@@ -52,7 +52,7 @@ const VideoCard = ({
 		<div
 			className={cn(
 				"group relative bg-slate-800/40 rounded-xl overflow-hidden transition-all duration-300 ease-out",
-				"hover:scale-105 hover:z-10 hover:shadow-2xl hover:shadow-purple-500/20",
+				"hover:scale-[1.02] hover:z-10 hover:shadow-2xl hover:shadow-purple-500/20",
 				"border border-slate-700/50 hover:border-purple-400/50",
 				className,
 			)}
@@ -128,8 +128,7 @@ const VideoCard = ({
 				<div className="p-4">
 					<h3 className="font-semibold text-white mb-2 line-clamp-2 leading-tight">
 						{truncateText(video.title, 60)}
-					</h3>
-
+					</h3>{" "}
 					{/* メタデータ */}
 					<div className="space-y-2">
 						<div className="flex items-center gap-4 text-xs text-slate-400">
@@ -145,37 +144,41 @@ const VideoCard = ({
 							</div>
 						</div>
 
-						{/* ファイル名（ホバー時に表示） */}
-						<div
-							className={cn(
-								"text-xs text-slate-500 transition-all duration-300",
-								isHovered
-									? "opacity-100 max-h-8"
-									: "opacity-0 max-h-0 overflow-hidden",
-							)}
-						>
-							{truncateText(video.fileName, 50)}
+						{/* ファイル名（ホバー時に表示） - 高さを固定 */}
+						<div className="h-8 overflow-hidden">
+							<div
+								className={cn(
+									"text-xs text-slate-500 transition-all duration-300",
+									isHovered
+										? "opacity-100 translate-y-0"
+										: "opacity-0 translate-y-2",
+								)}
+							>
+								{truncateText(video.fileName, 50)}
+							</div>
 						</div>
 					</div>
 				</div>
-			</Link>
-			{/* 詳細ボタン（ホバー時に表示） */}
-			<div
-				className={cn(
-					"absolute top-4 right-4 transition-all duration-300",
-					isHovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4",
-				)}
-			>
-				<button
-					type="button"
-					className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-full transition-colors"
-					onClick={(e) => {
-						e.preventDefault();
-						// TODO: 詳細モーダルを実装
-					}}
+			</Link>{" "}
+			{/* 詳細ボタン（ホバー時に表示） - 位置を固定 */}
+			<div className="absolute top-4 right-16 w-10 h-10 flex items-center justify-center">
+				<div
+					className={cn(
+						"transition-all duration-300",
+						isHovered ? "opacity-100 scale-100" : "opacity-0 scale-75",
+					)}
 				>
-					<Info className="h-4 w-4 text-white" />
-				</button>
+					<button
+						type="button"
+						className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-full transition-colors"
+						onClick={(e) => {
+							e.preventDefault();
+							// TODO: 詳細モーダルを実装
+						}}
+					>
+						<Info className="h-4 w-4 text-white" />
+					</button>
+				</div>
 			</div>{" "}
 			{/* 進行状況バー（視聴進捗があれば表示） */}
 			{watchProgressPercentage > 0 && (

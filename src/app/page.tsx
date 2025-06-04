@@ -24,7 +24,8 @@ const Home = () => {
 	const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 	const [selectedGenre, setSelectedGenre] = useState("");
 	const [selectedYear, setSelectedYear] = useState("");
-	const [currentPage, setCurrentPage] = useState(1);
+	const [currentPage, setCurrentPage] = useState(1); // IME状態管理
+	const [isComposing, setIsComposing] = useState(false);
 	const [showAll, setShowAll] = useState(false); // 一覧表示フラグ
 
 	// 動画データのフック
@@ -195,9 +196,13 @@ const Home = () => {
 									onChange={(e) => {
 										setSearchTerm(e.target.value);
 									}}
+									onCompositionStart={() => setIsComposing(true)}
+									onCompositionEnd={() => setIsComposing(false)}
 									onKeyDown={(e) => {
+										// IMEの変換確定時のEnterキーを除外
 										if (
 											e.key === "Enter" &&
+											!isComposing &&
 											searchTerm.trim().length >= SEARCH.MIN_QUERY_LENGTH
 										) {
 											handleSearch();
