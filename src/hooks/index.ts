@@ -1,6 +1,7 @@
 // Custom hooks
 export { useVideos } from "./useVideos";
 export { useProgress } from "./useProgress";
+export { useOfflineStorage } from "./useOfflineStorage";
 
 // Types
 export type {

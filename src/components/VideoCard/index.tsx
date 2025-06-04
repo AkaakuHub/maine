@@ -2,10 +2,22 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Play, Clock, Calendar, HardDrive, Info, Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+	Play,
+	Clock,
+	Calendar,
+	HardDrive,
+	Info,
+	Heart,
+	Download,
+	Wifi,
+} from "lucide-react";
 import type { VideoFileData } from "@/type";
 import { cn, formatFileSize, truncateText } from "@/libs/utils";
 import { useProgress } from "@/hooks/useProgress";
+import { useOfflineStorage } from "@/hooks/useOfflineStorage";
+import StreamingWarningDialog from "@/components/StreamingWarningDialog";
 
 interface VideoCardProps {
 	video: VideoFileData;
@@ -20,9 +32,13 @@ const VideoCard = ({
 	className,
 	onLikeUpdate,
 }: VideoCardProps) => {
+	const router = useRouter();
 	const [isHovered, setIsHovered] = useState(false);
 	const [isLiked, setIsLiked] = useState(video.isLiked || false);
+	const [showPlayOptions, setShowPlayOptions] = useState(false);
+	const [showStreamingWarning, setShowStreamingWarning] = useState(false);
 	const { updateProgress, loading: progressLoading } = useProgress();
+	const { isCached } = useOfflineStorage();
 
 	// ライクボタンの処理
 	const handleLikeToggle = async (e: React.MouseEvent) => {
@@ -44,9 +60,46 @@ const VideoCard = ({
 			console.error("Failed to update like status:", error);
 		}
 	};
-
 	// 視聴進捗の計算
 	const watchProgressPercentage = video.watchProgress || 0;
+
+	// オフライン保存状態をチェック
+	const isVideoCached = isCached(video.filePath);
+	// 再生オプションを表示する関数
+	const handlePlayClick = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setShowPlayOptions(true);
+	};
+
+	// ストリーミング再生の処理
+	const handleStreamingPlay = () => {
+		if (isVideoCached) {
+			// オフライン版が利用可能な場合は警告を表示
+			setShowPlayOptions(false);
+			setShowStreamingWarning(true);
+		} else {
+			// オフライン版がない場合は直接ストリーミング再生
+			router.push(`/play/${encodeURIComponent(video.filePath)}`);
+		}
+	};
+
+	// オフライン再生の処理
+	const handleOfflinePlay = () => {
+		router.push(`/play/${encodeURIComponent(video.filePath)}?offline=true`);
+	};
+
+	// 警告ダイアログからストリーミングを続行
+	const handleContinueStreaming = () => {
+		setShowStreamingWarning(false);
+		router.push(`/play/${encodeURIComponent(video.filePath)}`);
+	};
+
+	// 警告ダイアログからオフライン再生を選択
+	const handleUseOfflineFromWarning = () => {
+		setShowStreamingWarning(false);
+		handleOfflinePlay();
+	};
 
 	return (
 		<div
@@ -59,10 +112,75 @@ const VideoCard = ({
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
 		>
-			<Link
-				href={`/play/${encodeURIComponent(video.filePath)}`}
-				className="block"
-			>
+			{" "}
+			{/* 再生オプションのモーダル */}
+			{showPlayOptions && (
+				<div
+					className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+					onClick={() => setShowPlayOptions(false)}
+				>
+					<div
+						className="bg-slate-800 rounded-xl p-6 max-w-sm w-full mx-4 border border-slate-700"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<h3 className="text-lg font-bold text-white mb-4">{video.title}</h3>
+						<div className="space-y-3">
+							{/* ストリーミング再生 */}
+							<button
+								onClick={handleStreamingPlay}
+								className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-colors"
+							>
+								<Wifi className="h-5 w-5" />
+								<div>
+									<div className="font-medium">ストリーミング再生</div>
+									<div className="text-xs opacity-80">
+										インターネット接続が必要
+									</div>
+								</div>
+							</button>
+
+							{/* オフライン再生 */}
+							{isVideoCached ? (
+								<button
+									onClick={handleOfflinePlay}
+									className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-600 hover:to-teal-600 transition-colors"
+								>
+									<Download className="h-5 w-5" />
+									<div>
+										<div className="font-medium">オフライン再生</div>
+										<div className="text-xs opacity-80">
+											保存済みの動画を再生
+										</div>
+									</div>
+								</button>
+							) : (
+								<div className="w-full flex items-center gap-3 p-3 bg-slate-700 text-slate-400 rounded-lg cursor-not-allowed">
+									<Download className="h-5 w-5" />
+									<div>
+										<div className="font-medium">オフライン再生</div>
+										<div className="text-xs">動画が保存されていません</div>
+									</div>
+								</div>
+							)}
+						</div>
+						<button
+							onClick={() => setShowPlayOptions(false)}
+							className="w-full mt-4 p-2 text-slate-400 hover:text-white transition-colors"
+						>
+							キャンセル
+						</button>
+					</div>
+				</div>
+			)}
+			{/* 警告ダイアログ */}
+			<StreamingWarningDialog
+				isOpen={showStreamingWarning}
+				onClose={() => setShowStreamingWarning(false)}
+				onContinueStreaming={handleContinueStreaming}
+				onUseOffline={handleUseOfflineFromWarning}
+				videoTitle={video.title}
+			/>
+			<div onClick={handlePlayClick} className="block cursor-pointer">
 				{/* サムネイル */}
 				<div className="relative aspect-video bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
 					<div className="w-full h-full flex items-center justify-center">
@@ -155,11 +273,11 @@ const VideoCard = ({
 								)}
 							>
 								{truncateText(video.fileName, 50)}
-							</div>
+							</div>{" "}
 						</div>
 					</div>
 				</div>
-			</Link>{" "}
+			</div>
 			{/* 詳細ボタン（ホバー時に表示） - 位置を固定 */}
 			<div className="absolute top-4 right-16 w-10 h-10 flex items-center justify-center" />
 			{/* 進行状況バー（視聴進捗があれば表示） */}

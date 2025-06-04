@@ -84,15 +84,11 @@ const ModernVideoPlayer = ({
 	// 連続スキップの閾値管理
 	const skipThrottleRef = useRef<NodeJS.Timeout | null>(null);
 	const skipQueueRef = useRef<number>(0);
-	const [predictedTime, setPredictedTime] = useState<number | null>(null);
-
-	// 設定メニューの状態
+	const [predictedTime, setPredictedTime] = useState<number | null>(null); // 設定メニューの状態
 	const [settingsView, setSettingsView] = useState<
 		"main" | "playback" | "skip"
 	>("main");
-
 	const skipOptions = [5, 10, 20, 60, 90]; // 選択可能な秒数
-
 	// サムネイル用の状態
 	const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
@@ -1070,7 +1066,6 @@ const ModernVideoPlayer = ({
 												<Settings className="h-4 w-4" />
 												設定
 											</div>
-
 											{/* メインメニュー */}
 											<button
 												type="button"
@@ -1087,12 +1082,11 @@ const ModernVideoPlayer = ({
 													</span>
 													<ChevronRight className="h-4 w-4" />
 												</div>
-											</button>
-
+											</button>{" "}
 											<button
 												type="button"
 												onClick={() => setSettingsView("playback")}
-												className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 rounded transition-colors"
+												className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 rounded transition-colors mb-2"
 											>
 												<div className="flex items-center gap-2 w-30">
 													<Play className="h-4 w-4" />
@@ -1103,11 +1097,10 @@ const ModernVideoPlayer = ({
 														{playbackRate}x
 													</span>
 													<ChevronRight className="h-4 w-4" />
-												</div>
+												</div>{" "}
 											</button>
 										</div>
 									)}
-
 									{settingsView === "skip" && (
 										<div>
 											<div className="flex items-center gap-2 mb-3">
@@ -1142,8 +1135,7 @@ const ModernVideoPlayer = ({
 												</button>
 											))}
 										</div>
-									)}
-
+									)}{" "}
 									{settingsView === "playback" && (
 										<div>
 											<div className="flex items-center gap-2 mb-3">

@@ -15,6 +15,7 @@ export function useVideoPlayer() {
 		title: "",
 		episode: "",
 		fullTitle: "",
+		filePath: "",
 	});
 	const [videoSrc, setVideoSrc] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -43,15 +44,14 @@ export function useVideoPlayer() {
 					const video = data.videos?.find(
 						(a: VideoFileData) => a.filePath === decodedPath,
 					);
-
 					if (video) {
 						setVideoData(video);
 						setIsLiked(video.isLiked);
-
 						setVideoInfo({
 							title: video.title,
 							episode: video.episode?.toString() || "",
 							fullTitle: video.title,
+							filePath: decodedPath,
 							description: `${video.title}をお楽しみください。`,
 							genre: video.genre || "動画",
 							year: video.year?.toString() || "不明",
@@ -97,6 +97,7 @@ export function useVideoPlayer() {
 							title: videoTitle,
 							episode: episodeName,
 							fullTitle: `${videoTitle} - ${episodeName}`,
+							filePath: decodedPath,
 							description: `${videoTitle}の${episodeName}をお楽しみください。`,
 							genre: "動画",
 							year: "不明",
@@ -131,7 +132,6 @@ export function useVideoPlayer() {
 					watchTime: 0, // エラー時は0から開始
 					watchProgress: 0,
 				};
-
 				setVideoData(fallbackVideoData);
 				setIsLiked(false);
 
@@ -139,6 +139,7 @@ export function useVideoPlayer() {
 					title: videoTitle,
 					episode: episodeName,
 					fullTitle: `${videoTitle} - ${episodeName}`,
+					filePath: decodedPath,
 					description: `${videoTitle}の${episodeName}をお楽しみください。`,
 					genre: "動画",
 					year: "不明",
