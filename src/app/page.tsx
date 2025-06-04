@@ -288,7 +288,8 @@ const Home = () => {
 				!searchQuery &&
 				!selectedGenre &&
 				!selectedYear &&
-				!showAll ? (
+				!showAll &&
+				!videosLoading ? (
 					// 初期状態 - 何も検索していない、一覧も表示していない
 					<div className="text-center py-20">
 						<div className="max-w-md mx-auto">
@@ -319,7 +320,11 @@ const Home = () => {
 							</div>
 						</div>
 					</div>
+				) : videosLoading && videos.length === 0 ? (
+					// 読み込み中で動画がまだない場合
+					<LoadingState type="search" message="動画を検索中..." />
 				) : videos.length === 0 ? (
+					// 検索結果やフィルタ結果がない場合
 					<EmptyState type="no-search-results" searchTerm={searchQuery} />
 				) : viewMode === "grid" ? (
 					<VideoGridContainer videos={videos} />

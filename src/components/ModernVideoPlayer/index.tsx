@@ -84,6 +84,7 @@ const ModernVideoPlayer = ({
 	// 連続スキップの閾値管理
 	const skipThrottleRef = useRef<NodeJS.Timeout | null>(null);
 	const skipQueueRef = useRef<number>(0);
+	const [predictedTime, setPredictedTime] = useState<number | null>(null);
 
 	// 設定メニューの状態
 	const [settingsView, setSettingsView] = useState<
@@ -209,7 +210,6 @@ const ModernVideoPlayer = ({
 		setPlaybackRate(rate);
 		setShowSettings(false);
 	};
-
 	// スキップ - 連続処理に対応
 	const skip = useCallback(
 		(seconds: number) => {
@@ -217,6 +217,13 @@ const ModernVideoPlayer = ({
 
 			// 現在のキューに追加
 			skipQueueRef.current += seconds;
+
+			// 予測時間を更新
+			const newPredictedTime = Math.max(
+				0,
+				Math.min(duration, currentTime + skipQueueRef.current),
+			);
+			setPredictedTime(newPredictedTime);
 
 			// 既存のタイマーをクリア
 			if (skipThrottleRef.current) {
@@ -229,6 +236,7 @@ const ModernVideoPlayer = ({
 
 				const totalSkip = skipQueueRef.current;
 				skipQueueRef.current = 0; // キューをリセット
+				setPredictedTime(null); // 予測時間をリセット
 
 				videoRef.current.currentTime = Math.max(
 					0,
@@ -557,31 +565,14 @@ const ModernVideoPlayer = ({
 		};
 	}, [isPlaying, resetControlsTimeout]);
 
-	// Media Session API でアクションハンドラーと位置情報を設定
+	// Media Session API のメタデータとアクションハンドラーを設定（初回のみ）
 	useEffect(() => {
 		if ("mediaSession" in navigator) {
 			try {
-				// サムネイルが未生成の場合のみ基本メタデータを設定
-				if (!thumbnailUrl) {
-					const videoTitle =
-						title || src.split("/").pop()?.split(".")[0] || "無題の動画";
+				const videoTitle =
+					title || src.split("/").pop()?.split(".")[0] || "無題の動画";
 
-					// @ts-ignore - MediaMetadata は実行時に利用可能
-					navigator.mediaSession.metadata = new MediaMetadata({
-						title: videoTitle,
-						artist: "My Anime Storage",
-						album: "アニメ動画",
-						artwork: [
-							{
-								src: "/favicon.ico",
-								sizes: "96x96",
-								type: "image/x-icon",
-							},
-						],
-					});
-				}
-
-				// プレイヤーのアクションハンドラーを設定
+				// アクションハンドラーを設定（一度だけ）
 				navigator.mediaSession.setActionHandler("play", () => {
 					if (videoRef.current?.paused) {
 						togglePlay();
@@ -602,43 +593,80 @@ const ModernVideoPlayer = ({
 					skipForward();
 				});
 
-				// 位置情報の更新
-				if (duration > 0) {
-					navigator.mediaSession.setPositionState({
-						duration: duration,
-						playbackRate: playbackRate,
-						position: currentTime,
-					});
-				}
+				// HTMLのタイトルを更新（一度だけ）
+				document.title = `${videoTitle} - My Video Storage`;
 			} catch (error) {
 				console.log("Media Session API not supported:", error);
 			}
 		}
-
-		// HTMLのタイトルも実際の動画タイトルで更新
-		const videoTitle =
-			title || src.split("/").pop()?.split(".")[0] || "無題の動画";
-		document.title = `${videoTitle} - My Anime Storage`;
 
 		return () => {
 			// クリーンアップ
 			try {
 				if ("mediaSession" in navigator) {
 					navigator.mediaSession.metadata = null;
+					navigator.mediaSession.setActionHandler("play", null);
+					navigator.mediaSession.setActionHandler("pause", null);
+					navigator.mediaSession.setActionHandler("seekbackward", null);
+					navigator.mediaSession.setActionHandler("seekforward", null);
 				}
 			} catch (error) {
 				// エラーを無視
 			}
 		};
-	}, [
-		duration,
-		currentTime,
-		playbackRate,
-		togglePlay,
-		skipBackward,
-		skipForward,
-		thumbnailUrl, // サムネイル状態も依存関係に追加
-	]);
+	}, [title, src, togglePlay, skipBackward, skipForward]);
+
+	// Media Session API のメタデータを設定（サムネイル含む）
+	useEffect(() => {
+		if ("mediaSession" in navigator) {
+			try {
+				const videoTitle =
+					title || src.split("/").pop()?.split(".")[0] || "無題の動画";
+
+				// サムネイルの有無に応じてartworkを設定
+				const artwork = thumbnailUrl
+					? [
+							{
+								src: thumbnailUrl,
+								sizes: "640x360",
+								type: "image/jpeg",
+							},
+						]
+					: [
+							{
+								src: "/favicon.ico",
+								sizes: "96x96",
+								type: "image/x-icon",
+							},
+						];
+
+				// @ts-ignore - MediaMetadata は実行時に利用可能
+				navigator.mediaSession.metadata = new MediaMetadata({
+					title: videoTitle,
+					artist: "My Video Storage",
+					album: "ビデオ動画",
+					artwork,
+				});
+			} catch (error) {
+				console.log("Media Session metadata update failed:", error);
+			}
+		}
+	}, [thumbnailUrl, title, src]);
+
+	// Media Session API の位置情報を更新
+	useEffect(() => {
+		if ("mediaSession" in navigator && duration > 0) {
+			try {
+				navigator.mediaSession.setPositionState({
+					duration: duration,
+					playbackRate: playbackRate,
+					position: currentTime,
+				});
+			} catch (error) {
+				console.log("Media Session position update failed:", error);
+			}
+		}
+	}, [duration, currentTime, playbackRate]);
 
 	// 動画の特定位置のフレームをキャプチャしてサムネイルを生成
 	const generateVideoThumbnail = useCallback(
@@ -748,47 +776,6 @@ const ModernVideoPlayer = ({
 		};
 	}, [src, generateVideoThumbnail]);
 
-	// サムネイルが生成されたらメタデータを更新
-	useEffect(() => {
-		if (!thumbnailUrl) return;
-
-		const updateMediaSessionWithThumbnail = () => {
-			if ("mediaSession" in navigator) {
-				try {
-					const videoTitle =
-						title || src.split("/").pop()?.split(".")[0] || "無題の動画";
-
-					// @ts-ignore - MediaMetadata は実行時に利用可能
-					navigator.mediaSession.metadata = new MediaMetadata({
-						title: videoTitle,
-						artist: "My Anime Storage",
-						album: "アニメ動画",
-						artwork: [
-							// 生成されたサムネイルを優先的に使用
-							{
-								src: thumbnailUrl,
-								sizes: "640x360",
-								type: "image/jpeg",
-							},
-							// フォールバック用のアイコン
-							{
-								src: "/favicon.ico",
-								sizes: "96x96",
-								type: "image/x-icon",
-							},
-						],
-					});
-
-					console.log("Media Session metadata updated with video thumbnail");
-				} catch (error) {
-					console.log("Error updating Media Session with thumbnail:", error);
-				}
-			}
-		};
-
-		updateMediaSessionWithThumbnail();
-	}, [thumbnailUrl, title, src]);
-
 	// クリーンアップ処理
 	useEffect(() => {
 		return () => {
@@ -799,6 +786,10 @@ const ModernVideoPlayer = ({
 			if (skipThrottleRef.current) {
 				clearTimeout(skipThrottleRef.current);
 			}
+
+			// 予測時間をリセット
+			setPredictedTime(null);
+			skipQueueRef.current = 0;
 
 			// Media Session API のクリーンアップ
 			try {
@@ -869,6 +860,43 @@ const ModernVideoPlayer = ({
 			>
 				<track kind="captions" srcLang="ja" label="日本語字幕" />
 			</video>
+
+			{/* スキップ予測オーバーレイ */}
+			{predictedTime !== null && skipQueueRef.current !== 0 && (
+				<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+					<div className="bg-black/50 backdrop-blur-sm rounded-2xl px-6 py-4 flex items-center gap-4 border border-pink-500/30">
+						{/* YouTube風の半円アイコン */}
+						<div className="relative">
+							<div className="w-12 h-12 flex items-center justify-center">
+								{/* 半円の背景 */}
+								<div className="absolute w-12 h-12 border-4 border-pink-500/30 rounded-full" />
+								{/* ビデオーションする半円 */}
+								<div
+									className="absolute w-12 h-12 border-4 border-transparent border-t-pink-500 rounded-full animate-spin"
+									style={{ animationDuration: "0.8s" }}
+								/>
+								{/* 中央のアイコン */}
+								{skipQueueRef.current > 0 ? (
+									<SkipForward className="h-5 w-5 text-pink-400" />
+								) : (
+									<SkipBack className="h-5 w-5 text-pink-400" />
+								)}
+							</div>
+						</div>
+
+						{/* スキップ秒数とプレビュー時間 */}
+						<div className="text-white">
+							<div className="text-lg font-bold text-pink-400">
+								{skipQueueRef.current > 0 ? "+" : ""}
+								{skipQueueRef.current}秒
+							</div>
+							<div className="text-sm text-slate-300 font-mono">
+								{formatDuration(predictedTime)}
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 
 			{/* バッファリング表示 */}
 			{isBuffering && (
@@ -1012,11 +1040,21 @@ const ModernVideoPlayer = ({
 								{isShowRestTime ? (
 									<>
 										<span>-</span>
-										<span>{formatDuration(duration - currentTime)}</span>
+										<span
+											className={predictedTime !== null ? "text-pink-400" : ""}
+										>
+											{formatDuration(
+												duration - (predictedTime ?? currentTime),
+											)}
+										</span>
 									</>
 								) : (
 									<>
-										<span>{formatDuration(currentTime)}</span>
+										<span
+											className={predictedTime !== null ? "text-pink-400" : ""}
+										>
+											{formatDuration(predictedTime ?? currentTime)}
+										</span>
 										<span>/</span>
 										<span>{formatDuration(duration)}</span>
 									</>
@@ -1043,7 +1081,7 @@ const ModernVideoPlayer = ({
 							{showSettings && (
 								<div
 									ref={settingsRef}
-									className="absolute md:top-8 bottom-8 md:bottom-auto right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-48 shadow-xl z-50"
+									className="absolute bottom-8 lg:top-8 lg:bottom-auto right-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-purple-500/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
 								>
 									{settingsView === "main" && (
 										<div>
