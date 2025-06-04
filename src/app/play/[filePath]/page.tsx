@@ -24,6 +24,14 @@ export default function PlayPage() {
 		handleTimeUpdate,
 	} = useVideoPlayer();
 
+	// 進捗情報のデバッグログ
+	const initialTime = videoData?.watchTime || 0;
+	console.log("PlayPage - videoData:", videoData);
+	console.log("PlayPage - videoData.watchTime:", videoData?.watchTime);
+	console.log("PlayPage - videoData.watchProgress:", videoData?.watchProgress);
+	console.log("PlayPage - initialTime:", initialTime);
+	console.log("PlayPage - typeof initialTime:", typeof initialTime);
+
 	if (isLoading || !videoSrc) {
 		return <LoadingScreen />;
 	}
@@ -51,7 +59,7 @@ export default function PlayPage() {
 				onDownload={handleDownload}
 				onToggleDescription={toggleDescription}
 				onTimeUpdate={handleTimeUpdate}
-				initialTime={videoData?.watchTime || 0}
+				initialTime={initialTime}
 			/>
 		</div>
 	);

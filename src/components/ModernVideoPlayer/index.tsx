@@ -361,8 +361,18 @@ const ModernVideoPlayer = ({
 			setDuration(video.duration);
 
 			// 初期時間が設定されている場合は、その位置にシーク
+			console.log("ModernVideoPlayer - initialTime:", initialTime);
+			console.log("ModernVideoPlayer - video.duration:", video.duration);
 			if (initialTime > 0 && initialTime < video.duration) {
+				console.log("Setting video currentTime to:", initialTime);
 				video.currentTime = initialTime;
+			} else {
+				console.log(
+					"Not setting initial time - initialTime:",
+					initialTime,
+					"duration:",
+					video.duration,
+				);
 			}
 		};
 

@@ -22,10 +22,10 @@ export interface VideoFileData {
 	season?: string;
 	genre?: string;
 	year?: number;
-	// 再生進捗情報（DBから取得）
-	watchProgress?: number;
-	watchTime?: number;
-	isLiked?: boolean;
+	// 再生進捗情報（DBから取得、デフォルト値0）
+	watchProgress: number;
+	watchTime: number;
+	isLiked: boolean;
 	lastWatched?: Date | null;
 }
 

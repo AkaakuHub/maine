@@ -121,23 +121,33 @@ async function mergeWithProgressData(
 	const allProgress = await prisma.videoProgress.findMany();
 	const progressMap = new Map(allProgress.map((p) => [p.filePath, p]));
 
-	return videos.map((video) => ({
-		id: video.id,
-		title: video.title,
-		fileName: video.fileName,
-		filePath: video.filePath,
-		duration: video.duration,
-		fileSize: video.fileSize,
-		episode: video.episode,
-		season: video.season,
-		genre: video.genre,
-		year: video.year,
-		// 再生進捗情報をマージ
-		watchProgress: progressMap.get(video.filePath)?.watchProgress || 0,
-		watchTime: progressMap.get(video.filePath)?.watchTime || 0,
-		isLiked: progressMap.get(video.filePath)?.isLiked || false,
-		lastWatched: progressMap.get(video.filePath)?.lastWatched || null,
-	}));
+	return videos
+		.map((video) => ({
+			id: video.id,
+			title: video.title,
+			fileName: video.fileName,
+			filePath: video.filePath,
+			duration: video.duration,
+			fileSize: video.fileSize,
+			episode: video.episode,
+			season: video.season,
+			genre: video.genre,
+			year: video.year,
+			// 再生進捗情報をマージ
+			watchProgress: progressMap.get(video.filePath)?.watchProgress || 0,
+			watchTime: progressMap.get(video.filePath)?.watchTime || 0,
+			isLiked: progressMap.get(video.filePath)?.isLiked || false,
+			lastWatched: progressMap.get(video.filePath)?.lastWatched || null,
+		}))
+		.map((video) => {
+			// デバッグ用: 進捗情報があるvideoのみログ出力
+			if (video.watchTime > 0 || video.watchProgress > 0) {
+				console.log(
+					`[VideoScan] Video with progress: ${video.filePath}, watchTime: ${video.watchTime}, watchProgress: ${video.watchProgress}`,
+				);
+			}
+			return video;
+		});
 }
 
 /**

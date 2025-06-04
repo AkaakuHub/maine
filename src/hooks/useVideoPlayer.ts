@@ -31,17 +31,26 @@ export function useVideoPlayer() {
 			console.log("Initializing player for:", decodedPath);
 
 			try {
-				// APIから動画データを取得
+				// APIから動画データを取得（完全マッチで検索）
 				const response = await fetch(
 					`${API.ENDPOINTS.VIDEOS}?search=${encodeURIComponent(
 						decodedPath,
-					)}&loadAll=true`,
+					)}&exactMatch=true`,
 				);
 				console.log("API response status:", response.status);
 
 				if (response.ok) {
 					const data = await response.json();
 					console.log("API response data:", data);
+					console.log("Looking for video with filePath:", decodedPath);
+					console.log(
+						"Available videos:",
+						data.videos?.map((v: VideoFileData) => ({
+							filePath: v.filePath,
+							watchTime: v.watchTime,
+							watchProgress: v.watchProgress,
+						})),
+					);
 
 					const video = data.videos?.find(
 						(a: VideoFileData) => a.filePath === decodedPath,
@@ -51,6 +60,8 @@ export function useVideoPlayer() {
 					if (video) {
 						setVideoData(video);
 						console.log("VideoData set from API:", video);
+						console.log("Watch time from API:", video.watchTime);
+						console.log("Watch progress from API:", video.watchProgress);
 						setIsLiked(video.isLiked);
 
 						setVideoInfo({
@@ -79,6 +90,7 @@ export function useVideoPlayer() {
 							) || "";
 
 						// フォールバック用のvideoDataオブジェクトを作成
+						// 注意: フォールバック時はwatchTimeは0に設定（進捗データが取得できない場合）
 						const fallbackVideoData: VideoFileData = {
 							id: "fallback",
 							filePath: decodedPath,
@@ -90,7 +102,8 @@ export function useVideoPlayer() {
 							year: undefined,
 							genre: undefined,
 							isLiked: false,
-							watchTime: 0,
+							watchTime: 0, // フォールバック時は0から開始
+							watchProgress: 0,
 						};
 
 						setVideoData(fallbackVideoData);
@@ -123,6 +136,7 @@ export function useVideoPlayer() {
 					) || "";
 
 				// フォールバック用のvideoDataオブジェクトを作成
+				// 注意: エラー時はwatchTimeは0に設定（進捗データが取得できない場合）
 				const fallbackVideoData: VideoFileData = {
 					id: "fallback-error",
 					filePath: decodedPath,
@@ -134,7 +148,8 @@ export function useVideoPlayer() {
 					year: undefined,
 					genre: undefined,
 					isLiked: false,
-					watchTime: 0,
+					watchTime: 0, // エラー時は0から開始
+					watchProgress: 0,
 				};
 
 				setVideoData(fallbackVideoData);
