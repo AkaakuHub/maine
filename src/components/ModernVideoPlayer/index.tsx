@@ -414,6 +414,18 @@ const ModernVideoPlayer = ({
 					video.duration,
 				);
 			}
+
+			// 動画が読み込まれたら自動で再生を開始
+			video
+				.play()
+				.then(() => {
+					setIsPlaying(true);
+					console.log("Auto-play started successfully");
+				})
+				.catch((error) => {
+					console.log("Auto-play failed:", error);
+					// ブラウザの自動再生ポリシーにより失敗する場合があります
+				});
 		};
 
 		const handleWaiting = () => setIsBuffering(true);
@@ -467,6 +479,59 @@ const ModernVideoPlayer = ({
 		};
 	}, []);
 
+	// 別のアプリにフォーカスがあってもマウスホバーを検出するための強化されたマウス検出
+	useEffect(() => {
+		if (!containerRef.current) return;
+
+		const container = containerRef.current;
+		let isMouseInside = false;
+
+		const handleMouseEnterCapture = (e: MouseEvent) => {
+			if (!isMouseInside) {
+				isMouseInside = true;
+				setShowControls(true);
+				resetControlsTimeout();
+			}
+		};
+
+		const handleMouseLeaveCapture = (e: MouseEvent) => {
+			isMouseInside = false;
+			if (isPlaying) {
+				setShowControls(false);
+			}
+		};
+
+		const handleMouseMoveCapture = (e: MouseEvent) => {
+			if (isMouseInside) {
+				setShowControls(true);
+				resetControlsTimeout();
+			}
+		};
+
+		// Capture phaseでイベントを検出してウィンドウフォーカスに関係なくホバーを検出
+		container.addEventListener("mouseenter", handleMouseEnterCapture, {
+			capture: true,
+		});
+		container.addEventListener("mouseleave", handleMouseLeaveCapture, {
+			capture: true,
+		});
+		container.addEventListener("mousemove", handleMouseMoveCapture, {
+			capture: true,
+		});
+
+		return () => {
+			container.removeEventListener("mouseenter", handleMouseEnterCapture, {
+				capture: true,
+			});
+			container.removeEventListener("mouseleave", handleMouseLeaveCapture, {
+				capture: true,
+			});
+			container.removeEventListener("mousemove", handleMouseMoveCapture, {
+				capture: true,
+			});
+		};
+	}, [isPlaying, resetControlsTimeout]);
+
 	return (
 		<div
 			ref={containerRef}
@@ -477,7 +542,17 @@ const ModernVideoPlayer = ({
 				className,
 			)}
 			onMouseMove={resetControlsTimeout}
-			onMouseLeave={() => isPlaying && setShowControls(false)}
+			onMouseEnter={() => {
+				// ウィンドウフォーカスに関係なくホバー時にコントロールを表示
+				setShowControls(true);
+				resetControlsTimeout();
+			}}
+			onMouseLeave={() => {
+				// マウスが離れたらコントロールを非表示（再生中の場合のみ）
+				if (isPlaying) {
+					setShowControls(false);
+				}
+			}}
 		>
 			{/* ビデオ要素 */}
 			<video
@@ -498,6 +573,8 @@ const ModernVideoPlayer = ({
 					}
 				}}
 				preload="metadata"
+				autoPlay
+				playsInline
 				tabIndex={0}
 				aria-label={`動画: ${title || "無題"}`}
 			>
