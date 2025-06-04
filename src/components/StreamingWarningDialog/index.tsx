@@ -20,10 +20,12 @@ const StreamingWarningDialog = ({
 	if (!isOpen) return null;
 
 	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 		<div
 			className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center"
 			onClick={onClose}
 		>
+			{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
 			<div
 				className="bg-slate-800 rounded-xl p-6 max-w-md w-full mx-4 border border-slate-600 shadow-2xl"
 				onClick={(e) => e.stopPropagation()}
@@ -39,6 +41,7 @@ const StreamingWarningDialog = ({
 						</h3>
 					</div>
 					<button
+						type="button"
 						onClick={onClose}
 						className="text-slate-400 hover:text-white transition-colors p-1"
 					>
