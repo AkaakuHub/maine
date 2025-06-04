@@ -1,10 +1,14 @@
 "use client";
 
-import { Film, Search, FolderOpen, RefreshCw } from "lucide-react";
+import { Film, Search, FolderOpen, RefreshCw, Download } from "lucide-react";
 import { cn } from "@/libs/utils";
 
 interface EmptyStateProps {
-	type: "no-videos" | "no-search-results" | "loading-error";
+	type:
+		| "no-videos"
+		| "no-search-results"
+		| "loading-error"
+		| "no-offline-videos";
 	searchTerm?: string;
 	onRetry?: () => void;
 	className?: string;
@@ -78,6 +82,21 @@ const EmptyState = ({
 							再試行
 						</button>
 					) : null,
+				};
+
+			case "no-offline-videos":
+				return {
+					icon: <Download className="h-20 w-20 text-slate-400" />,
+					title: "オフライン動画がありません",
+					description: (
+						<div className="space-y-2">
+							<p>まだオフライン用に保存された動画がありません。</p>
+							<p className="text-sm">
+								ストリーミングタブから動画をダウンロードしてオフラインで楽しめます。
+							</p>
+						</div>
+					),
+					action: null,
 				};
 
 			default:

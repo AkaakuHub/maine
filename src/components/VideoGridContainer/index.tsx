@@ -7,9 +7,16 @@ import { cn } from "@/libs/utils";
 interface VideoGridProps {
 	videos: VideoFileData[];
 	className?: string;
+	isOfflineMode?: boolean;
+	onDelete?: (filePath: string) => void;
 }
 
-const VideoGrid = ({ videos, className }: VideoGridProps) => {
+const VideoGrid = ({
+	videos,
+	className,
+	isOfflineMode = false,
+	onDelete,
+}: VideoGridProps) => {
 	return (
 		<div
 			className={cn(
@@ -30,6 +37,8 @@ const VideoGrid = ({ videos, className }: VideoGridProps) => {
 					key={video.id}
 					video={video}
 					priority={index < 6} // 最初の6つの画像を優先読み込み
+					isOfflineMode={isOfflineMode}
+					onDelete={onDelete}
 				/>
 			))}
 		</div>

@@ -28,11 +28,11 @@ import type { VideoFileData } from "@/type";
 export type ViewMode = "grid" | "list";
 export type SortBy = "title" | "year" | "episode" | "createdAt";
 export type SortOrder = "asc" | "desc";
-export type TabType = "all" | "offline";
+export type TabType = "streaming" | "offline";
 
 const Home = () => {
 	// UI状態
-	const [activeTab, setActiveTab] = useState<TabType>("all");
+	const [activeTab, setActiveTab] = useState<TabType>("streaming");
 	const [searchTerm, setSearchTerm] = useState("");
 	const [searchQuery, setSearchQuery] = useState(""); // 実際の検索クエリ
 	const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -210,14 +210,14 @@ const Home = () => {
 							<div className="flex items-center gap-3">
 								<h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
 									My Video Storage
-								</h1>
+								</h1>{" "}
 								{/* ローディングインジケーター */}
-								{videosLoading && activeTab === "all" && (
+								{videosLoading && activeTab === "streaming" && (
 									<div className="h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
 								)}
 							</div>
 							<p className="text-slate-400 mt-2">
-								{activeTab === "all" ? (
+								{activeTab === "streaming" ? (
 									videos.length === pagination.total ? (
 										`${pagination.total} 動画`
 									) : (
@@ -266,18 +266,20 @@ const Home = () => {
 					<div className="bg-slate-800/30 backdrop-blur-xl rounded-xl border border-slate-700/50 overflow-hidden">
 						<div className="flex">
 							<button
-								onClick={() => handleTabChange("all")}
+								type="button"
+								onClick={() => handleTabChange("streaming")}
 								className={cn(
 									"flex-1 flex items-center justify-center gap-2 px-6 py-4 transition-all duration-200",
-									activeTab === "all"
+									activeTab === "streaming"
 										? "bg-blue-500 text-white"
 										: "text-slate-400 hover:text-white hover:bg-slate-700/50",
 								)}
 							>
 								<Wifi className="h-5 w-5" />
-								<span className="font-medium">すべての動画</span>
+								<span className="font-medium">ストリーミング</span>
 							</button>
 							<button
+								type="button"
 								onClick={() => handleTabChange("offline")}
 								className={cn(
 									"flex-1 flex items-center justify-center gap-2 px-6 py-4 transition-all duration-200 relative",
@@ -303,8 +305,8 @@ const Home = () => {
 							</button>
 						</div>
 					</div>{" "}
-					{/* 検索バー（すべての動画タブのみ） */}
-					{activeTab === "all" && (
+					{/* 検索バー（ストリーミングタブのみ） */}
+					{activeTab === "streaming" && (
 						<div className="bg-slate-800/30 backdrop-blur-xl rounded-xl p-4 border border-slate-700/50">
 							<div className="flex flex-col sm:flex-row gap-4">
 								{/* 検索入力 */}
@@ -458,52 +460,70 @@ const Home = () => {
 				</div>
 
 				{/* コンテンツ */}
-				{videos.length === 0 &&
-				!searchQuery &&
-				!selectedGenre &&
-				!selectedYear &&
-				!showAll &&
-				!videosLoading ? (
-					// 初期状態 - 何も検索していない、一覧も表示していない
-					<div className="text-center py-20">
-						<div className="max-w-md mx-auto">
-							<div className="mb-8">
-								<div className="w-24 h-24 mx-auto mb-6 bg-slate-800 rounded-full flex items-center justify-center">
-									<Search className="h-12 w-12 text-slate-400" />
+				{activeTab === "streaming" ? (
+					// ストリーミングタブの内容
+					videos.length === 0 &&
+					!searchQuery &&
+					!selectedGenre &&
+					!selectedYear &&
+					!showAll &&
+					!videosLoading ? (
+						// 初期状態 - 何も検索していない、一覧も表示していない
+						<div className="text-center py-20">
+							<div className="max-w-md mx-auto">
+								<div className="mb-8">
+									<div className="w-24 h-24 mx-auto mb-6 bg-slate-800 rounded-full flex items-center justify-center">
+										<Search className="h-12 w-12 text-slate-400" />
+									</div>
+									<h2 className="text-2xl font-bold text-white mb-4">
+										動画ライブラリへようこそ
+									</h2>
+									<p className="text-slate-400 mb-8">
+										検索フィールドから動画を検索するか、下のボタンで全ての動画を表示できます。
+									</p>
 								</div>
-								<h2 className="text-2xl font-bold text-white mb-4">
-									動画ライブラリへようこそ
-								</h2>
-								<p className="text-slate-400 mb-8">
-									検索フィールドから動画を検索するか、下のボタンで全ての動画を表示できます。
-								</p>
-							</div>
-							<div className="space-y-4">
-								<Button
-									onClick={handleShowAll}
-									disabled={videosLoading}
-									className="w-full"
-									size="lg"
-								>
-									{videosLoading ? "読み込み中..." : "すべての動画を表示"}
-								</Button>
-								<p className="text-sm text-slate-500">
-									※
-									4000件以上の動画がある場合、読み込みに時間がかかる場合があります
-								</p>
+								<div className="space-y-4">
+									<Button
+										onClick={handleShowAll}
+										disabled={videosLoading}
+										className="w-full"
+										size="lg"
+									>
+										{videosLoading ? "読み込み中..." : "すべての動画を表示"}
+									</Button>
+									<p className="text-sm text-slate-500">
+										※
+										4000件以上の動画がある場合、読み込みに時間がかかる場合があります
+									</p>
+								</div>
 							</div>
 						</div>
-					</div>
-				) : videosLoading && videos.length === 0 ? (
-					// 読み込み中で動画がまだない場合
-					<LoadingState type="search" message="動画を検索中..." />
-				) : videos.length === 0 ? (
-					// 検索結果やフィルタ結果がない場合
-					<EmptyState type="no-search-results" searchTerm={searchQuery} />
+					) : videosLoading && videos.length === 0 ? (
+						// 読み込み中で動画がまだない場合
+						<LoadingState type="search" message="動画を検索中..." />
+					) : videos.length === 0 ? (
+						// 検索結果やフィルタ結果がない場合
+						<EmptyState type="no-search-results" searchTerm={searchQuery} />
+					) : viewMode === "grid" ? (
+						<VideoGridContainer videos={videos} />
+					) : (
+						<VideoList videos={videos} />
+					)
+				) : // オフラインタブの内容
+				offlineVideos.length === 0 ? (
+					<EmptyState type="no-offline-videos" />
 				) : viewMode === "grid" ? (
-					<VideoGridContainer videos={videos} />
+					<VideoGridContainer
+						videos={offlineVideos}
+						isOfflineMode={true}
+						onDelete={handleOfflineVideoDelete}
+					/>
 				) : (
-					<VideoList videos={videos} />
+					<VideoList
+						videos={offlineVideos}
+						isOfflineMode={true}
+						onDelete={handleOfflineVideoDelete}
+					/>
 				)}
 
 				{/* ページネーション */}

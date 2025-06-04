@@ -647,7 +647,7 @@ const ModernVideoPlayer = ({
 
 	// 動画の特定位置のフレームをキャプチャしてサムネイルを生成
 	const generateVideoThumbnail = useCallback(
-		(timePosition: number = 0.01): Promise<string | null> => {
+		(timePosition = 0.01): Promise<string | null> => {
 			return new Promise((resolve) => {
 				if (!videoRef.current || videoRef.current.readyState < 2) {
 					console.warn("Video not ready for thumbnail capture");

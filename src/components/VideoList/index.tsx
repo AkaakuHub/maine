@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
 	Play,
@@ -9,22 +9,106 @@ import {
 	Clock,
 	Info,
 	MoreHorizontal,
+	Download,
+	Trash2,
 } from "lucide-react";
 import type { VideoFileData } from "@/type";
 import { cn, formatFileSize, truncateText, formatDuration } from "@/libs/utils";
+import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 
 interface VideoListProps {
 	videos: VideoFileData[];
 	className?: string;
+	isOfflineMode?: boolean;
+	onDelete?: (filePath: string) => void;
 }
 
-const VideoListItem = ({ video }: { video: VideoFileData }) => {
+const VideoListItem = ({
+	video,
+	isOfflineMode = false,
+	onDelete,
+}: {
+	video: VideoFileData;
+	isOfflineMode?: boolean;
+	onDelete?: (filePath: string) => void;
+}) => {
 	const [showMenu, setShowMenu] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
+	const {
+		downloadVideo,
+		deleteVideo,
+		isDownloading,
+		downloadProgress,
+		isCached,
+	} = useOfflineStorage();
 
 	const watchProgressPercentage = video.watchProgress || 0;
+	const isVideoCached = isCached(video.filePath);
+	const currentDownloadProgress = downloadProgress[video.filePath];
+	const isCurrentlyDownloading = isDownloading[video.filePath];
+
+	// メニューの外側クリックでメニューを閉じる
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+				setShowMenu(false);
+			}
+		};
+
+		if (showMenu) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [showMenu]);
+
+	// メニューボタンのクリック
+	const handleMenuClick = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setShowMenu(!showMenu);
+	};
+
+	// ダウンロード処理
+	const handleDownload = async (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setShowMenu(false);
+
+		try {
+			await downloadVideo(video.filePath, video.title);
+		} catch (error) {
+			console.error("ダウンロードエラー:", error);
+		}
+	};
+
+	// 削除処理
+	const handleDelete = async (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setShowMenu(false);
+		setIsDeleting(true);
+
+		try {
+			await deleteVideo(video.filePath);
+			onDelete?.(video.filePath);
+		} catch (error) {
+			console.error("削除エラー:", error);
+		} finally {
+			setIsDeleting(false);
+		}
+	};
 
 	return (
-		<div className="group bg-slate-800/30 hover:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 hover:border-purple-400/30 transition-all duration-300">
+		<div
+			className={cn(
+				"group bg-slate-800/30 hover:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 hover:border-purple-400/30 transition-all duration-300",
+				isDeleting && "opacity-50 pointer-events-none",
+			)}
+		>
 			<Link
 				href={`/play/${encodeURIComponent(video.filePath)}`}
 				className="block p-4"
@@ -36,10 +120,25 @@ const VideoListItem = ({ video }: { video: VideoFileData }) => {
 							<Play className="h-6 w-6 text-slate-400 group-hover:text-white transition-colors" />
 						</div>
 
+						{/* ダウンロード進行状況オーバーレイ */}
+						{isCurrentlyDownloading &&
+							currentDownloadProgress !== undefined && (
+								<div className="absolute inset-0 bg-black/75 flex items-center justify-center">
+									<div className="text-center">
+										<div className="w-6 h-6 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-1" />
+										<div className="text-white text-xs">
+											{Math.round(currentDownloadProgress.percentage || 0)}%
+										</div>
+									</div>
+								</div>
+							)}
+
 						{/* 再生ボタンオーバーレイ */}
-						<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-							<Play className="h-8 w-8 text-white" />
-						</div>
+						{!isCurrentlyDownloading && (
+							<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+								<Play className="h-8 w-8 text-white" />
+							</div>
+						)}
 					</div>
 
 					{/* メインコンテンツ */}
@@ -84,7 +183,7 @@ const VideoListItem = ({ video }: { video: VideoFileData }) => {
 							</div>
 
 							{/* アクションボタン */}
-							<div className="flex items-center gap-2">
+							<div className="flex items-center gap-2 relative" ref={menuRef}>
 								<button
 									type="button"
 									className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
@@ -98,13 +197,51 @@ const VideoListItem = ({ video }: { video: VideoFileData }) => {
 								<button
 									type="button"
 									className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-									onClick={(e) => {
-										e.preventDefault();
-										setShowMenu(!showMenu);
-									}}
+									onClick={handleMenuClick}
 								>
 									<MoreHorizontal className="h-4 w-4" />
 								</button>
+
+								{/* コンテキストメニュー */}
+								{showMenu && (
+									<div className="absolute right-0 top-full mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-20 min-w-[160px]">
+										{isOfflineMode ? (
+											<button
+												type="button"
+												onClick={handleDelete}
+												disabled={isDeleting}
+												className="w-full px-4 py-2 text-left text-red-400 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+											>
+												<Trash2 className="h-4 w-4" />
+												削除
+											</button>
+										) : (
+											<>
+												{!isVideoCached && !isCurrentlyDownloading && (
+													<button
+														type="button"
+														onClick={handleDownload}
+														className="w-full px-4 py-2 text-left text-blue-400 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2"
+													>
+														<Download className="h-4 w-4" />
+														ダウンロード
+													</button>
+												)}
+												{isVideoCached && (
+													<button
+														type="button"
+														onClick={handleDelete}
+														disabled={isDeleting}
+														className="w-full px-4 py-2 text-left text-red-400 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+													>
+														<Trash2 className="h-4 w-4" />
+														削除
+													</button>
+												)}
+											</>
+										)}
+									</div>
+								)}
 							</div>
 						</div>
 
@@ -124,22 +261,25 @@ const VideoListItem = ({ video }: { video: VideoFileData }) => {
 					</div>
 				</div>
 			</Link>
-
-			{/* コンテキストメニュー（TODO: 実装） */}
-			{showMenu && (
-				<div className="absolute right-4 top-16 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10">
-					{/* メニューアイテムを実装 */}
-				</div>
-			)}
 		</div>
 	);
 };
 
-const VideoList = ({ videos, className }: VideoListProps) => {
+const VideoList = ({
+	videos,
+	className,
+	isOfflineMode = false,
+	onDelete,
+}: VideoListProps) => {
 	return (
 		<div className={cn("space-y-3", className)}>
 			{videos.map((video, index) => (
-				<VideoListItem key={video.id} video={video} />
+				<VideoListItem
+					key={video.id}
+					video={video}
+					isOfflineMode={isOfflineMode}
+					onDelete={onDelete}
+				/>
 			))}
 		</div>
 	);
