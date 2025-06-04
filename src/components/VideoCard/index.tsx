@@ -161,7 +161,7 @@ const VideoCard = ({
 				</div>
 			</Link>{" "}
 			{/* 詳細ボタン（ホバー時に表示） - 位置を固定 */}
-			<div className="absolute top-4 right-16 w-10 h-10 flex items-center justify-center"></div>
+			<div className="absolute top-4 right-16 w-10 h-10 flex items-center justify-center" />
 			{/* 進行状況バー（視聴進捗があれば表示） */}
 			{watchProgressPercentage > 0 && (
 				<div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">

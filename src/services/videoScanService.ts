@@ -140,12 +140,12 @@ async function mergeWithProgressData(
 			lastWatched: progressMap.get(video.filePath)?.lastWatched || null,
 		}))
 		.map((video) => {
-			// デバッグ用: 進捗情報があるvideoのみログ出力
-			if (video.watchTime > 0 || video.watchProgress > 0) {
-				console.log(
-					`[VideoScan] Video with progress: ${video.filePath}, watchTime: ${video.watchTime}, watchProgress: ${video.watchProgress}`,
-				);
-			}
+			// デバッグ用: 進捗情報があるvideoのみログ出力（開発時のみ）
+			// if (video.watchTime > 0 || video.watchProgress > 0) {
+			// 	console.log(
+			// 		`[VideoScan] Video with progress: ${video.filePath}, watchTime: ${video.watchTime}, watchProgress: ${video.watchProgress}`,
+			// 	);
+			// }
 			return video;
 		});
 }
@@ -166,15 +166,16 @@ async function searchVideos(searchQuery = ""): Promise<SearchResult> {
 				error: "Configuration error",
 			};
 		}
-		console.log("Scanning directories:", videoDirectories);
-		console.log("Platform:", process.platform);
+		// 開発時のみのログは抑制
+		// console.log("Scanning directories:", videoDirectories);
+		// console.log("Platform:", process.platform);
 
 		// 全ディレクトリからビデオファイルを収集
 		const allVideoFiles: VideoFileInfo[] = [];
 
 		for (const videoDirectory of videoDirectories) {
-			console.log(`[DEBUG] Checking directory: "${videoDirectory}"`);
-			console.log(`[DEBUG] Directory length: ${videoDirectory.length}`);
+			// console.log(`[DEBUG] Checking directory: "${videoDirectory}"`);
+			// console.log(`[DEBUG] Directory length: ${videoDirectory.length}`);
 
 			// ディレクトリの存在確認
 			const dirExists = await directoryExists(videoDirectory);

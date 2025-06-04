@@ -60,7 +60,6 @@ export default function ActionButtons({
 				<button
 					type="button"
 					onClick={() => {
-						console.log("Download button clicked in ActionButtons");
 						onDownload();
 					}}
 					className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 bg-slate-700/50 text-slate-300 hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-indigo-500/20 hover:text-purple-300 border border-slate-600"

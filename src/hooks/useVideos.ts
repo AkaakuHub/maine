@@ -123,10 +123,6 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 			setError(null);
 			lastParamsRef.current = searchParams;
 
-			console.log(
-				`[useVideos] Fetching: ${API.ENDPOINTS.VIDEOS}?${searchParams}`,
-			);
-
 			const response = await fetch(`${API.ENDPOINTS.VIDEOS}?${searchParams}`, {
 				signal: AbortSignal.timeout(API.TIMEOUT),
 			});

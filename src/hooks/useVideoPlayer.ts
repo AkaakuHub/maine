@@ -28,7 +28,6 @@ export function useVideoPlayer() {
 		if (params.filePath) {
 			setIsLoading(true);
 			const decodedPath = decodeURIComponent(params.filePath as string);
-			console.log("Initializing player for:", decodedPath);
 
 			try {
 				// APIから動画データを取得（完全マッチで検索）
@@ -37,31 +36,16 @@ export function useVideoPlayer() {
 						decodedPath,
 					)}&exactMatch=true`,
 				);
-				console.log("API response status:", response.status);
 
 				if (response.ok) {
 					const data = await response.json();
-					console.log("API response data:", data);
-					console.log("Looking for video with filePath:", decodedPath);
-					console.log(
-						"Available videos:",
-						data.videos?.map((v: VideoFileData) => ({
-							filePath: v.filePath,
-							watchTime: v.watchTime,
-							watchProgress: v.watchProgress,
-						})),
-					);
 
 					const video = data.videos?.find(
 						(a: VideoFileData) => a.filePath === decodedPath,
 					);
-					console.log("Found video:", video);
 
 					if (video) {
 						setVideoData(video);
-						console.log("VideoData set from API:", video);
-						console.log("Watch time from API:", video.watchTime);
-						console.log("Watch progress from API:", video.watchProgress);
 						setIsLiked(video.isLiked);
 
 						setVideoInfo({
@@ -107,10 +91,6 @@ export function useVideoPlayer() {
 						};
 
 						setVideoData(fallbackVideoData);
-						console.log(
-							"VideoData set from fallback (no video found):",
-							fallbackVideoData,
-						);
 						setIsLiked(false);
 
 						setVideoInfo({
@@ -153,10 +133,6 @@ export function useVideoPlayer() {
 				};
 
 				setVideoData(fallbackVideoData);
-				console.log(
-					"VideoData set from fallback (API error):",
-					fallbackVideoData,
-				);
 				setIsLiked(false);
 
 				setVideoInfo({
@@ -238,7 +214,7 @@ export function useVideoPlayer() {
 					url: window.location.href,
 				});
 			} catch (err) {
-				console.log("共有がキャンセルされました");
+				// 共有がキャンセルされました
 			}
 		} else {
 			// フォールバック: クリップボードにコピー
@@ -273,9 +249,6 @@ export function useVideoPlayer() {
 	};
 
 	const handleDownload = useCallback(async () => {
-		console.log("Download button clicked");
-		console.log("videoData:", videoData);
-
 		if (!videoData?.filePath) {
 			console.error("No video data or file path available");
 			return;

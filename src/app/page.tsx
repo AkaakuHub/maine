@@ -56,14 +56,12 @@ const Home = () => {
 
 	// 一覧表示ボタンのハンドラー
 	const handleShowAll = useCallback(() => {
-		console.log("[HomePage] Show all button clicked");
 		setShowAll(true);
 		setCurrentPage(1);
 	}, []);
 
 	// 検索実行
 	const handleSearch = useCallback(() => {
-		console.log("[HomePage] Search button clicked with:", searchTerm);
 		setSearchQuery(searchTerm);
 		setCurrentPage(1);
 		setShowAll(false);

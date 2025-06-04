@@ -145,14 +145,8 @@ const ModernVideoPlayer = ({
 				doc.mozFullScreenElement ||
 				doc.msFullscreenElement;
 
-			console.log(
-				"Fullscreen toggle called, current state:",
-				!!fullscreenElement,
-			);
-
 			if (fullscreenElement) {
 				// フルスクリーン解除
-				console.log("Exiting fullscreen...");
 				if (doc.exitFullscreen) {
 					await doc.exitFullscreen();
 				} else if (doc.webkitExitFullscreen) {
@@ -164,7 +158,6 @@ const ModernVideoPlayer = ({
 				}
 			} else {
 				// フルスクリーン開始
-				console.log("Entering fullscreen...");
 				if (container.requestFullscreen) {
 					await container.requestFullscreen();
 				} else if (container.webkitRequestFullscreen) {
@@ -434,18 +427,8 @@ const ModernVideoPlayer = ({
 			setDuration(video.duration);
 
 			// 初期時間が設定されている場合は、その位置にシーク
-			console.log("ModernVideoPlayer - initialTime:", initialTime);
-			console.log("ModernVideoPlayer - video.duration:", video.duration);
 			if (initialTime > 0 && initialTime < video.duration) {
-				console.log("Setting video currentTime to:", initialTime);
 				video.currentTime = initialTime;
-			} else {
-				console.log(
-					"Not setting initial time - initialTime:",
-					initialTime,
-					"duration:",
-					video.duration,
-				);
 			}
 
 			// 動画が読み込まれたら自動で再生を開始
@@ -453,10 +436,8 @@ const ModernVideoPlayer = ({
 				.play()
 				.then(() => {
 					setIsPlaying(true);
-					console.log("Auto-play started successfully");
 				})
-				.catch((error) => {
-					console.log("Auto-play failed:", error);
+				.catch(() => {
 					// ブラウザの自動再生ポリシーにより失敗する場合があります
 				});
 		};
@@ -595,8 +576,8 @@ const ModernVideoPlayer = ({
 
 				// HTMLのタイトルを更新（一度だけ）
 				document.title = `${videoTitle} - My Video Storage`;
-			} catch (error) {
-				console.log("Media Session API not supported:", error);
+			} catch {
+				// Media Session API not supported
 			}
 		}
 
@@ -647,8 +628,8 @@ const ModernVideoPlayer = ({
 					album: "ビデオ動画",
 					artwork,
 				});
-			} catch (error) {
-				console.log("Media Session metadata update failed:", error);
+			} catch {
+				// Media Session metadata update failed
 			}
 		}
 	}, [thumbnailUrl, title, src]);
@@ -662,8 +643,8 @@ const ModernVideoPlayer = ({
 					playbackRate: playbackRate,
 					position: currentTime,
 				});
-			} catch (error) {
-				console.log("Media Session position update failed:", error);
+			} catch {
+				// Media Session position update failed
 			}
 		}
 	}, [duration, currentTime, playbackRate]);
@@ -710,11 +691,6 @@ const ModernVideoPlayer = ({
 
 						// DataURLとして画像を取得
 						const thumbnailDataUrl = canvas.toDataURL("image/jpeg", 0.8);
-						console.log(
-							"Generated thumbnail for video at",
-							targetTime,
-							"seconds",
-						);
 
 						// 元の位置に戻す
 						video.currentTime = originalTime;
@@ -760,7 +736,6 @@ const ModernVideoPlayer = ({
 			const thumbnail = await generateVideoThumbnail(0.01);
 			if (thumbnail) {
 				setThumbnailUrl(thumbnail);
-				console.log("Thumbnail generated successfully");
 			}
 		};
 
@@ -886,11 +861,17 @@ const ModernVideoPlayer = ({
 
 						{/* スキップ秒数とプレビュー時間 */}
 						<div className="text-white">
-							<div className="text-lg font-bold text-pink-400">
-								{skipQueueRef.current > 0 ? "+" : ""}
-								{skipQueueRef.current}秒
+							{/* 数字部分を固定幅にして「秒」の位置を安定させる */}
+							<div className="text-lg font-bold text-pink-400 flex items-center justify-center">
+								<div className="flex items-baseline">
+									<span className="font-mono text-right w-12 tabular-nums">
+										{skipQueueRef.current > 0 ? "+" : ""}
+										{skipQueueRef.current}
+									</span>
+									<span className="text-base ml-1">秒</span>
+								</div>
 							</div>
-							<div className="text-sm text-slate-300 font-mono">
+							<div className="text-sm text-slate-300 font-mono text-center">
 								{formatDuration(predictedTime)}
 							</div>
 						</div>
@@ -1074,7 +1055,7 @@ const ModernVideoPlayer = ({
 										setSettingsView("main"); // 設定を開くときはメインビューに
 									}
 								}}
-								className="text-white hover:text-yellow-300 transition-colors"
+								className="text-white hover:text-yellow-300 transition-colors relative top-[2.5px]"
 							>
 								<Settings className="h-5 w-5" />
 							</button>
