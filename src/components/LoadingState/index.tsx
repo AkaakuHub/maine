@@ -29,26 +29,19 @@ const LoadingSpinner = ({
 	return (
 		<div className={cn("relative flex items-center justify-center", className)}>
 			{/* メインリング */}
-			<div className={cn("relative", sizeClasses[size])}>
-				{/* 背景リング */}
-				<div className="absolute inset-0 border-4 border-slate-800/40 rounded-full" />
-
-				{/* 動画ーションリング1 */}
-				<div
-					className="absolute inset-0 border-4 border-transparent border-t-blue-500 border-r-blue-400 rounded-full animate-spin"
-					style={{ animationDuration: "1s" }}
-				/>
-
-				{/* 動画ーションリング2 */}
-				<div
-					className="absolute inset-2 border-2 border-transparent border-t-purple-500 border-l-purple-400 rounded-full animate-spin"
-					style={{ animationDuration: "1.5s", animationDirection: "reverse" }}
-				/>
-
+			<div
+				className={cn(
+					"relative",
+					sizeClasses[size],
+					"flex",
+					"items-center",
+					"justify-center",
+				)}
+			>
 				{/* 中心のパルス */}
 				<div
 					className={cn(
-						"absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full animate-pulse bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400",
+						"relative left-[3px] top-[2px] rounded-full animate-pulse bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400",
 						dotSizeClasses[size],
 					)}
 				/>
@@ -184,7 +177,7 @@ const LoadingState = ({
 	const content = getContent();
 
 	return (
-		<div className={cn("min-h-screen bg-slate-900", className)}>
+		<div className={cn("min-h-screen", className)}>
 			<div className="container mx-auto px-4">
 				{content.centerContent}
 				{content.showGrid && (
