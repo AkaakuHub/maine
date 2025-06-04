@@ -524,7 +524,7 @@ const ModernVideoPlayer = ({
 								title={`${skipSeconds}秒戻す`}
 							>
 								<RotateCcw className="h-4 w-4" />
-								<span className="text-xs">{skipSeconds}s</span>
+								<span className="text-xs w-6">{skipSeconds}s</span>
 							</button>
 
 							<button
@@ -534,7 +534,7 @@ const ModernVideoPlayer = ({
 								title={`${skipSeconds}秒進む`}
 							>
 								<RotateCw className="h-4 w-4" />
-								<span className="text-xs">{skipSeconds}s</span>
+								<span className="text-xs w-6">{skipSeconds}s</span>
 							</button>
 						</div>
 
