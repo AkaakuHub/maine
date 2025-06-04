@@ -227,6 +227,7 @@ const ModernVideoPlayer = ({
 	// スキップ秒数設定
 	const handleSkipSecondsChange = (seconds: number) => {
 		setSkipSeconds(seconds);
+		setShowSettings(false); // 設定ダイアログを閉じる
 	};
 
 	// ダブルタップ機能
@@ -532,6 +533,88 @@ const ModernVideoPlayer = ({
 		};
 	}, [isPlaying, resetControlsTimeout]);
 
+	// Media Session API でメタデータを設定（iPhone の動画再生センター用）
+	useEffect(() => {
+		if ("mediaSession" in navigator) {
+			try {
+				// 動画のタイトルを決定（propsのtitleが優先、なければsrcファイル名から抽出）
+				const videoTitle =
+					title || src.split("/").pop()?.split(".")[0] || "無題の動画";
+
+				// @ts-ignore - MediaMetadata は実行時に利用可能
+				navigator.mediaSession.metadata = new MediaMetadata({
+					title: videoTitle, // 実際に再生している動画のタイトル
+					artist: "My Anime Storage",
+					album: "アニメ動画",
+					artwork: [
+						{
+							src: "/favicon.ico",
+							sizes: "96x96",
+							type: "image/x-icon",
+						},
+					],
+				});
+
+				// プレイヤーのアクションハンドラーを設定
+				navigator.mediaSession.setActionHandler("play", () => {
+					if (videoRef.current?.paused) {
+						togglePlay();
+					}
+				});
+
+				navigator.mediaSession.setActionHandler("pause", () => {
+					if (!videoRef.current?.paused) {
+						togglePlay();
+					}
+				});
+
+				navigator.mediaSession.setActionHandler("seekbackward", () => {
+					skipBackward();
+				});
+
+				navigator.mediaSession.setActionHandler("seekforward", () => {
+					skipForward();
+				});
+
+				// 位置情報の更新
+				if (duration > 0) {
+					navigator.mediaSession.setPositionState({
+						duration: duration,
+						playbackRate: playbackRate,
+						position: currentTime,
+					});
+				}
+			} catch (error) {
+				console.log("Media Session API not supported:", error);
+			}
+		}
+
+		// HTMLのタイトルも実際の動画タイトルで更新
+		const videoTitle =
+			title || src.split("/").pop()?.split(".")[0] || "無題の動画";
+		document.title = `${videoTitle} - My Anime Storage`;
+
+		return () => {
+			// クリーンアップ
+			try {
+				if ("mediaSession" in navigator) {
+					navigator.mediaSession.metadata = null;
+				}
+			} catch (error) {
+				// エラーを無視
+			}
+		};
+	}, [
+		title,
+		src,
+		duration,
+		currentTime,
+		playbackRate,
+		togglePlay,
+		skipBackward,
+		skipForward,
+	]);
+
 	return (
 		<div
 			ref={containerRef}
@@ -576,7 +659,13 @@ const ModernVideoPlayer = ({
 				autoPlay
 				playsInline
 				tabIndex={0}
-				aria-label={`動画: ${title || "無題"}`}
+				aria-label={`動画: ${title || src.split("/").pop()?.split(".")[0] || "無題の動画"}`}
+				title={title || src.split("/").pop()?.split(".")[0] || "無題の動画"}
+				data-title={
+					title || src.split("/").pop()?.split(".")[0] || "無題の動画"
+				}
+				x-webkit-airplay="allow"
+				webkit-playsinline="true"
 			>
 				<track kind="captions" srcLang="ja" label="日本語字幕" />
 			</video>
@@ -754,7 +843,7 @@ const ModernVideoPlayer = ({
 							{showSettings && (
 								<div
 									ref={settingsRef}
-									className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-48 shadow-xl"
+									className="absolute top-8 right-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 backdrop-blur-sm rounded-lg p-3 min-w-48 shadow-xl"
 								>
 									{settingsView === "main" && (
 										<div>
@@ -822,7 +911,6 @@ const ModernVideoPlayer = ({
 													type="button"
 													onClick={() => {
 														handleSkipSecondsChange(seconds);
-														setSettingsView("main");
 													}}
 													className={cn(
 														"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
