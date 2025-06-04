@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, List, Share2 } from "lucide-react";
+import { Heart, List, Share2, Download } from "lucide-react";
 
 interface ActionButtonsProps {
 	isLiked: boolean;
@@ -8,6 +8,7 @@ interface ActionButtonsProps {
 	onToggleLike: () => void;
 	onToggleWatchlist: () => void;
 	onShare: () => void;
+	onDownload?: () => void;
 }
 
 export default function ActionButtons({
@@ -16,9 +17,10 @@ export default function ActionButtons({
 	onToggleLike,
 	onToggleWatchlist,
 	onShare,
+	onDownload,
 }: ActionButtonsProps) {
 	return (
-		<div className="flex items-center gap-3 mb-4">
+		<div className="flex items-center gap-3 mb-4 flex-wrap">
 			<button
 				type="button"
 				onClick={onToggleLike}
@@ -53,6 +55,20 @@ export default function ActionButtons({
 				<Share2 size={16} />
 				<span className="text-sm">共有</span>
 			</button>
+
+			{onDownload && (
+				<button
+					type="button"
+					onClick={() => {
+						console.log("Download button clicked in ActionButtons");
+						onDownload();
+					}}
+					className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 bg-slate-700/50 text-slate-300 hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-indigo-500/20 hover:text-purple-300 border border-slate-600"
+				>
+					<Download size={16} />
+					<span className="text-sm">ダウンロード</span>
+				</button>
+			)}
 		</div>
 	);
 }

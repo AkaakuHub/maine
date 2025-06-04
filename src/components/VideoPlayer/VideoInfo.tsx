@@ -13,6 +13,7 @@ interface VideoInfoProps {
 	onToggleWatchlist: () => void;
 	onShare: () => void;
 	onToggleDescription: () => void;
+	onDownload?: () => void;
 	variant?: "mobile" | "desktop" | "responsive";
 }
 
@@ -25,6 +26,7 @@ export default function VideoInfo({
 	onToggleWatchlist,
 	onShare,
 	onToggleDescription,
+	onDownload,
 	variant = "mobile",
 }: VideoInfoProps) {
 	const isDesktop = variant === "desktop";
@@ -96,6 +98,7 @@ export default function VideoInfo({
 				onToggleLike={onToggleLike}
 				onToggleWatchlist={onToggleWatchlist}
 				onShare={onShare}
+				onDownload={onDownload}
 			/>
 
 			{/* 概要 */}

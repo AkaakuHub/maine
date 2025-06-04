@@ -17,6 +17,7 @@ export default function PlayPage() {
 		handleGoBack,
 		handleGoHome,
 		handleShare,
+		handleDownload,
 		toggleLike,
 		toggleWatchlist,
 		toggleDescription,
@@ -47,6 +48,7 @@ export default function PlayPage() {
 				onToggleLike={toggleLike}
 				onToggleWatchlist={toggleWatchlist}
 				onShare={handleShare}
+				onDownload={handleDownload}
 				onToggleDescription={toggleDescription}
 				onTimeUpdate={handleTimeUpdate}
 				initialTime={videoData?.watchTime || 0}

@@ -12,6 +12,11 @@ export async function GET(
 		const decodedPath = decodeURIComponent(filePath);
 		const videoDirectory = process.env.VIDEO_DIRECTORY || "";
 
+		// ダウンロードモードかどうかを確認
+		const isDownload = request.nextUrl.searchParams.get("download") === "true";
+		console.log("API called with download mode:", isDownload);
+		console.log("File path:", decodedPath);
+
 		if (!videoDirectory) {
 			return new NextResponse("Video directory not configured", {
 				status: 500,
@@ -59,6 +64,21 @@ export async function GET(
 				"Access-Control-Allow-Origin": "*",
 			});
 
+			// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
+			if (isDownload) {
+				const fileName = decodedPath.split(/[/\\]/).pop() || "video.mp4";
+				// RFC 5987に準拠したファイル名エンコード（新しいブラウザ用）
+				const encodedFileName = encodeURIComponent(fileName);
+				// ASCII文字のみの場合はシンプルな形式も併記（古いブラウザ用）
+				const containsNonAscii = fileName
+					.split("")
+					.some((char) => char.charCodeAt(0) > 127);
+				const dispositionValue = containsNonAscii
+					? `attachment; filename="video.mp4"; filename*=UTF-8''${encodedFileName}`
+					: `attachment; filename="${fileName}"`;
+				headers.set("Content-Disposition", dispositionValue);
+			}
+
 			return new NextResponse(file as unknown as ReadableStream, {
 				status: 206,
 				headers,
@@ -74,7 +94,20 @@ export async function GET(
 			"Accept-Ranges": "bytes",
 			"Cache-Control": "public, max-age=31536000",
 			"Access-Control-Allow-Origin": "*",
-		});
+		}); // ダウンロードモードの場合はContent-Dispositionヘッダーを追加
+		if (isDownload) {
+			const fileName = decodedPath.split(/[/\\]/).pop() || "video.mp4";
+			// RFC 5987に準拠したファイル名エンコード（新しいブラウザ用）
+			const encodedFileName = encodeURIComponent(fileName);
+			// ASCII文字のみの場合はシンプルな形式も併記（古いブラウザ用）
+			const containsNonAscii = fileName
+				.split("")
+				.some((char) => char.charCodeAt(0) > 127);
+			const dispositionValue = containsNonAscii
+				? `attachment; filename="video.mp4"; filename*=UTF-8''${encodedFileName}`
+				: `attachment; filename="${fileName}"`;
+			headers.set("Content-Disposition", dispositionValue);
+		}
 
 		return new NextResponse(file as unknown as ReadableStream, {
 			status: 200,

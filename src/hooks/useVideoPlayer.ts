@@ -28,20 +28,29 @@ export function useVideoPlayer() {
 		if (params.filePath) {
 			setIsLoading(true);
 			const decodedPath = decodeURIComponent(params.filePath as string);
+			console.log("Initializing player for:", decodedPath);
 
 			try {
 				// APIから動画データを取得
 				const response = await fetch(
-					`${API.ENDPOINTS.VIDEOS}?search=${encodeURIComponent(decodedPath)}&loadAll=true`,
+					`${API.ENDPOINTS.VIDEOS}?search=${encodeURIComponent(
+						decodedPath,
+					)}&loadAll=true`,
 				);
+				console.log("API response status:", response.status);
+
 				if (response.ok) {
 					const data = await response.json();
+					console.log("API response data:", data);
+
 					const video = data.videos?.find(
 						(a: VideoFileData) => a.filePath === decodedPath,
 					);
+					console.log("Found video:", video);
 
 					if (video) {
 						setVideoData(video);
+						console.log("VideoData set from API:", video);
 						setIsLiked(video.isLiked);
 
 						setVideoInfo({
@@ -61,9 +70,35 @@ export function useVideoPlayer() {
 						});
 					} else {
 						// フォールバック: ファイルパスからタイトルを抽出
-						const pathParts = decodedPath.split("\\");
-						const videoTitle = pathParts[0];
-						const episodeName = pathParts[1]?.replace(".mp4", "") || "";
+						const pathParts = decodedPath.split(/[/\\]/);
+						const videoTitle = pathParts[pathParts.length - 2] || pathParts[0];
+						const episodeName =
+							pathParts[pathParts.length - 1]?.replace(
+								/\.(mp4|mkv|avi|mov)$/i,
+								"",
+							) || "";
+
+						// フォールバック用のvideoDataオブジェクトを作成
+						const fallbackVideoData: VideoFileData = {
+							id: "fallback",
+							filePath: decodedPath,
+							title: videoTitle,
+							fileName: episodeName,
+							fileSize: 0,
+							episode: undefined,
+							duration: undefined,
+							year: undefined,
+							genre: undefined,
+							isLiked: false,
+							watchTime: 0,
+						};
+
+						setVideoData(fallbackVideoData);
+						console.log(
+							"VideoData set from fallback (no video found):",
+							fallbackVideoData,
+						);
+						setIsLiked(false);
 
 						setVideoInfo({
 							title: videoTitle,
@@ -79,9 +114,35 @@ export function useVideoPlayer() {
 			} catch (error) {
 				console.error("Failed to fetch video data:", error);
 				// フォールバック処理
-				const pathParts = decodedPath.split("\\");
-				const videoTitle = pathParts[0];
-				const episodeName = pathParts[1]?.replace(".mp4", "") || "";
+				const pathParts = decodedPath.split(/[/\\]/);
+				const videoTitle = pathParts[pathParts.length - 2] || pathParts[0];
+				const episodeName =
+					pathParts[pathParts.length - 1]?.replace(
+						/\.(mp4|mkv|avi|mov)$/i,
+						"",
+					) || "";
+
+				// フォールバック用のvideoDataオブジェクトを作成
+				const fallbackVideoData: VideoFileData = {
+					id: "fallback-error",
+					filePath: decodedPath,
+					title: videoTitle,
+					fileName: episodeName,
+					fileSize: 0,
+					episode: undefined,
+					duration: undefined,
+					year: undefined,
+					genre: undefined,
+					isLiked: false,
+					watchTime: 0,
+				};
+
+				setVideoData(fallbackVideoData);
+				console.log(
+					"VideoData set from fallback (API error):",
+					fallbackVideoData,
+				);
+				setIsLiked(false);
 
 				setVideoInfo({
 					title: videoTitle,
@@ -195,6 +256,34 @@ export function useVideoPlayer() {
 	const toggleDescription = () => {
 		setShowDescription(!showDescription);
 	};
+
+	const handleDownload = useCallback(async () => {
+		console.log("Download button clicked");
+		console.log("videoData:", videoData);
+
+		if (!videoData?.filePath) {
+			console.error("No video data or file path available");
+			return;
+		}
+
+		try {
+			// ダウンロードリンクを作成
+			const downloadUrl = `/api/video/${encodeURIComponent(
+				videoData.filePath,
+			)}?download=true`;
+			const link = document.createElement("a");
+			link.href = downloadUrl;
+			link.download = videoData.filePath.split(/[/\\]/).pop() || "video.mp4";
+			link.target = "_blank";
+
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		} catch (error) {
+			console.error("Failed to download video:", error);
+		}
+	}, [videoData]);
+
 	return {
 		videoData,
 		videoInfo,
@@ -206,6 +295,7 @@ export function useVideoPlayer() {
 		handleGoBack,
 		handleGoHome,
 		handleShare,
+		handleDownload,
 		toggleLike,
 		toggleWatchlist,
 		toggleDescription,

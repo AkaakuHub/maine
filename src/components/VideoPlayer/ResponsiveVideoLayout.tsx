@@ -16,6 +16,7 @@ interface ResponsiveVideoLayoutProps {
 	onToggleWatchlist: () => void;
 	onShare: () => void;
 	onToggleDescription: () => void;
+	onDownload?: () => void;
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
 	initialTime?: number;
 }
@@ -31,6 +32,7 @@ export default function ResponsiveVideoLayout({
 	onToggleWatchlist,
 	onShare,
 	onToggleDescription,
+	onDownload,
 	onTimeUpdate,
 	initialTime,
 }: ResponsiveVideoLayoutProps) {
@@ -64,6 +66,7 @@ export default function ResponsiveVideoLayout({
 						onToggleWatchlist={onToggleWatchlist}
 						onShare={onShare}
 						onToggleDescription={onToggleDescription}
+						onDownload={onDownload}
 						variant="responsive" // 新しいvariantを追加
 					/>
 
