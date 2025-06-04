@@ -161,25 +161,7 @@ const VideoCard = ({
 				</div>
 			</Link>{" "}
 			{/* 詳細ボタン（ホバー時に表示） - 位置を固定 */}
-			<div className="absolute top-4 right-16 w-10 h-10 flex items-center justify-center">
-				<div
-					className={cn(
-						"transition-all duration-300",
-						isHovered ? "opacity-100 scale-100" : "opacity-0 scale-75",
-					)}
-				>
-					<button
-						type="button"
-						className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-full transition-colors"
-						onClick={(e) => {
-							e.preventDefault();
-							// TODO: 詳細モーダルを実装
-						}}
-					>
-						<Info className="h-4 w-4 text-white" />
-					</button>
-				</div>
-			</div>{" "}
+			<div className="absolute top-4 right-16 w-10 h-10 flex items-center justify-center"></div>
 			{/* 進行状況バー（視聴進捗があれば表示） */}
 			{watchProgressPercentage > 0 && (
 				<div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">
