@@ -6,18 +6,18 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-	title: "My Anime Storage - オフライン対応動画プレイヤー",
+	title: "My Video Storage - オフライン対応動画プレイヤー",
 	description:
 		"ローカルに保存された動画ファイルをストリーミング再生・オフライン視聴できるPWA対応動画プレイヤー",
 	keywords: [
 		"video",
-		"anime",
+		"video",
 		"streaming",
 		"self-hosted",
 		"PWA",
 		"offline",
 		"動画",
-		"アニメ",
+		"ビデオ",
 		"ストリーミング",
 		"オフライン",
 	],
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 	appleWebApp: {
 		capable: true,
 		statusBarStyle: "default",
-		title: "My Anime Storage",
+		title: "My Video Storage",
 	},
 	formatDetection: {
 		telephone: false,

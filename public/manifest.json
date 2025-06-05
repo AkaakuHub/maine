@@ -1,7 +1,7 @@
 {
-  "name": "My Anime Storage",
-  "short_name": "AnimeStorage",
-  "description": "オフライン対応のアニメ動画管理アプリ",
+  "name": "My Video Storage",
+  "short_name": "VideoStorage",
+  "description": "オフライン対応のビデオ動画管理アプリ",
   "theme_color": "#1e293b",
   "background_color": "#0f172a",
   "display": "standalone",
