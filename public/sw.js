@@ -1,9 +1,18 @@
-// カスタム Service Worker for オフライン動画再生
+// カスタム Service Worker for My Video Storage PWA with advanced caching
 
-const CACHE_NAME = 'my-video-storage-custom-v3';
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
+
+const CACHE_NAME = 'my-video-storage-custom-v4';
 const OFFLINE_URL = '/offline';
 
-// プリキャッシュするリソース
+// Workboxプリキャッシュのセットアップ
+precacheAndRoute(self.__WB_MANIFEST || []);
+cleanupOutdatedCaches();
+
+// プリキャッシュするリソース（フォールバック用）
 const PRECACHE_URLS = [
   '/',
   '/offline',
@@ -32,7 +41,12 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && 
+              !cacheName.startsWith('workbox-') &&
+              !cacheName.includes('play-pages-v1') &&
+              !cacheName.includes('api-cache-v1') &&
+              !cacheName.includes('static-assets-v1') &&
+              !cacheName.includes('video-cache-v1')) {
             console.log('古いキャッシュを削除:', cacheName);
             return caches.delete(cacheName);
           }
@@ -43,7 +57,75 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// フェッチイベント
+// Workbox戦略的キャッシュルートの設定
+
+// 動画再生ページの戦略的キャッシュ
+registerRoute(
+  ({ request, url }) => {
+    return url.pathname.startsWith('/play/');
+  },
+  new StaleWhileRevalidate({
+    cacheName: 'play-pages-v1',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+      }),
+    ],
+  })
+);
+
+// API キャッシュ戦略
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/api/'),
+  new NetworkFirst({
+    cacheName: 'api-cache-v1',
+    networkTimeoutSeconds: 3,
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 100,
+        maxAgeSeconds: 60 * 60, // 1 hour
+      }),
+    ],
+  })
+);
+
+// 静的アセットのキャッシュ
+registerRoute(
+  ({ request }) => 
+    request.destination === 'script' ||
+    request.destination === 'style' ||
+    request.destination === 'image',
+  new CacheFirst({
+    cacheName: 'static-assets-v1',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 200,
+        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+      }),
+    ],
+  })
+);
+
+// 動画ファイルの専用キャッシュ戦略
+registerRoute(
+  ({ request, url }) => {
+    return url.pathname.startsWith('/api/video/') || 
+           request.destination === 'video';
+  },
+  new CacheFirst({
+    cacheName: 'video-cache-v1',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+        purgeOnQuotaError: true, // ストレージ不足時に古いファイルを削除
+      }),
+    ],
+  })
+);
+
+// フォールバック用のフェッチイベント（Workboxでカバーされない場合）
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -60,127 +142,42 @@ self.addEventListener('fetch', (event) => {
     return; // 通常のフェッチを実行
   }
 
-  // HTMLページのリクエスト（ナビゲーション）
-  if (request.mode === 'navigate') {
-    console.log('ナビゲーションリクエスト:', url.pathname);
-    
+  // Workboxルートにマッチしないナビゲーションのフォールバック
+  if (request.mode === 'navigate' && !url.pathname.startsWith('/play/')) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // オンライン時: レスポンスをキャッシュして返す
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-              console.log('ページをキャッシュしました:', url.pathname);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // オフライン時: キャッシュから返す
-          console.log('オフライン時のキャッシュ検索:', url.pathname);
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              console.log('キャッシュからページを返します:', url.pathname);
-              return cachedResponse;
-            }
-            // play/ページの場合は特別処理
-            if (url.pathname.startsWith('/play/')) {
-              console.log('オフライン時の動画ページ:', url.pathname);
-              // オフライン専用のplay/ページを返す
-              return fetch('/play/offline-fallback').catch(() => {
-                return caches.match('/offline') || 
-                       new Response('オフライン動画ページを準備中...', { 
-                         status: 200, 
-                         headers: { 'Content-Type': 'text/html; charset=utf-8' } 
-                       });
-              });
-            }
-            // その他の場合はオフラインページを返す
-            console.log('オフラインページにリダイレクト');
-            return caches.match(OFFLINE_URL) || 
-                   new Response('オフラインです', { 
-                     status: 200, 
-                     headers: { 'Content-Type': 'text/html; charset=utf-8' } 
-                   });
-          });
-        })
-    );
-    return;
-  }
-
-  // API リクエストの処理
-  if (url.pathname.startsWith('/api/')) {
-    console.log('API リクエスト:', url.pathname);
-    
-    // videos API - オフライン時はIndexedDBから取得
-    if (url.pathname === '/api/videos') {
-      event.respondWith(
-        fetch(request).catch(() => {
-          console.log('オフライン時: IndexedDBから動画リストを取得');
-          // IndexedDBからオフライン動画リストを取得するレスポンスを返す
-          return new Response(JSON.stringify([]), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        })
-      );
-      return;
-    }
-
-    // 動画API - キャッシュ優先
-    if (url.pathname.startsWith('/api/video/')) {
-      event.respondWith(
-        caches.open(CACHE_NAME).then((cache) => {
-          return cache.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              console.log('動画APIキャッシュヒット:', url.pathname);
-              return cachedResponse;
-            }
-            return fetch(request).then((response) => {
-              if (response.status === 200) {
-                const responseClone = response.clone();
-                cache.put(request, responseClone);
-                console.log('動画APIをキャッシュしました:', url.pathname);
-              }
-              return response;
-            }).catch(() => {
-              console.log('動画API オフラインエラー:', url.pathname);
-              return new Response('オフラインです', { status: 503 });
-            });
-          });
-        })
-      );
-      return;
-    }
-  }
-
-  // 静的リソースのキャッシュ戦略
-  if (url.pathname.startsWith('/favicon') ||
-      url.pathname.startsWith('/icons/') ||
-      url.pathname.startsWith('/manifest.json') ||
-      url.pathname.startsWith('/_next/static/')) {
-    event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        return fetch(request).then((response) => {
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        }).catch(() => {
-          // 静的リソースが見つからない場合
-          return new Response('リソースが見つかりません', { status: 404 });
-        });
+      fetch(request).catch(() => {
+        console.log('オフライン時のフォールバック:', url.pathname);
+        return caches.match(OFFLINE_URL) || 
+               new Response('オフラインです', { 
+                 status: 200, 
+                 headers: { 'Content-Type': 'text/html; charset=utf-8' } 
+               });
       })
     );
   }
 });
 
-console.log('カスタム Service Worker loaded');
+// Service Worker更新時の処理
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// プッシュ通知（将来の拡張用）
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/android-chrome-192x192.png',
+      badge: '/favicon-32x32.png',
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  }
+});
+
+console.log('Custom Service Worker with Workbox loaded for My Video Storage PWA');
