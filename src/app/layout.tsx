@@ -33,8 +33,12 @@ export const metadata: Metadata = {
 	},
 	icons: {
 		shortcut: "/favicon.ico",
+		icon: [
+			{ url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+			{ url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+		],
 		apple: [
-			{ url: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+			{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
 		],
 	},
 };
@@ -54,6 +58,27 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="ja" className="dark">
+			<head>
+				<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+				<link
+					rel="icon"
+					type="image/png"
+					sizes="16x16"
+					href="/favicon-16x16.png"
+				/>
+				<link
+					rel="icon"
+					type="image/png"
+					sizes="32x32"
+					href="/favicon-32x32.png"
+				/>
+				<link
+					rel="apple-touch-icon"
+					sizes="180x180"
+					href="/apple-touch-icon.png"
+				/>
+				<link rel="manifest" href="/manifest.json" />
+			</head>
 			<body className={`${inter.className} antialiased`}>
 				<ServiceWorkerRegistration />
 				{children}
