@@ -8,6 +8,7 @@
 		"build": "pnpm db:setup && next build",
 		"start": "next start",
 		"lint": "pnpm biome lint ./src",
+		"knip": "knip --no-exit-code --fix --files",
 		"format": "pnpm biome format --write ./src",
 		"db:setup": "prisma generate && prisma migrate deploy",
 		"db:migrate": "prisma migrate dev",
