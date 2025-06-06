@@ -83,6 +83,7 @@ export default function OfflineManager({
 							</div>
 						</div>
 						<button
+							type="button"
 							onClick={onClose}
 							className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
 						>
@@ -173,6 +174,7 @@ export default function OfflineManager({
 										</div>
 										<div className="flex items-center gap-2">
 											<button
+												type="button"
 												onClick={() => {
 													// 動画プレイヤーで開く
 													const encodedPath = encodeURIComponent(
@@ -186,6 +188,7 @@ export default function OfflineManager({
 												<Play className="h-4 w-4" />
 											</button>
 											<button
+												type="button"
 												onClick={() => handleDeleteVideo(video.filePath)}
 												className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
 												title="削除"
@@ -218,6 +221,7 @@ export default function OfflineManager({
 												{filePath.split(/[/\\]/).pop()}
 											</span>
 											<button
+												type="button"
 												onClick={() => cancelDownload(filePath)}
 												className="p-1 text-red-400 hover:bg-red-500/20 rounded transition-colors"
 												title="キャンセル"
@@ -260,6 +264,7 @@ export default function OfflineManager({
 						</div>
 						{cachedVideos.length > 0 && (
 							<button
+								type="button"
 								onClick={() => setShowConfirmClear(true)}
 								className="px-4 py-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
 							>
@@ -282,12 +287,14 @@ export default function OfflineManager({
 						</p>
 						<div className="flex gap-3 justify-end">
 							<button
+								type="button"
 								onClick={() => setShowConfirmClear(false)}
 								className="px-4 py-2 text-slate-400 hover:bg-slate-700 rounded-lg transition-colors"
 							>
 								キャンセル
 							</button>
 							<button
+								type="button"
 								onClick={handleClearCache}
 								className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
 							>

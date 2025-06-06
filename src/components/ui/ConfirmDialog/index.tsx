@@ -63,7 +63,6 @@ const ConfirmDialog = ({
 			className="fixed top-0 left-0 right-0 bottom-0 bg-black/60 backdrop-blur-sm z-50"
 			onClick={handleBackdropClick}
 			onKeyDown={handleKeyDown}
-			role="dialog"
 			aria-modal="true"
 			aria-labelledby="dialog-title"
 			style={{

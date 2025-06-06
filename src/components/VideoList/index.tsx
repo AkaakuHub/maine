@@ -78,7 +78,7 @@ const VideoListItem = ({
 	};
 
 	// 再生ボタンのクリック処理
-	const handlePlayClick = (e: React.MouseEvent) => {
+	const handlePlayClick = (e: React.MouseEvent | React.KeyboardEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 
@@ -132,7 +132,15 @@ const VideoListItem = ({
 				isDeleting && "opacity-50 pointer-events-none",
 			)}
 		>
-			<div className="block p-4" onClick={handlePlayClick}>
+			<div
+				className="block p-4"
+				onClick={handlePlayClick}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						handlePlayClick(e);
+					}
+				}}
+			>
 				<div className="flex items-center gap-4">
 					{/* サムネイル */}
 					<div className="relative w-28 h-16 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg overflow-hidden flex-shrink-0">

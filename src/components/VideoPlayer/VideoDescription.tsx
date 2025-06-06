@@ -113,6 +113,7 @@ export default function VideoDescription({
 										</p>
 									</div>
 									<button
+										type="button"
 										onClick={handleDownload}
 										className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
 									>
@@ -133,6 +134,7 @@ export default function VideoDescription({
 										</span>
 									</div>
 									<button
+										type="button"
 										onClick={handleCancelDownload}
 										className="text-slate-400 hover:text-white transition-colors"
 									>
@@ -174,6 +176,7 @@ export default function VideoDescription({
 										</div>
 									</div>
 									<button
+										type="button"
 										onClick={handleDelete}
 										className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors text-sm"
 									>

@@ -745,7 +745,7 @@ const ModernVideoPlayer = ({
 		return () => {
 			video.removeEventListener("loadedmetadata", handleLoadedMetadata);
 		};
-	}, [src, generateVideoThumbnail]);
+	}, [generateVideoThumbnail]);
 
 	// クリーンアップ処理
 	useEffect(() => {

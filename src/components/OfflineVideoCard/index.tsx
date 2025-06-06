@@ -130,7 +130,15 @@ const OfflineVideoCard = ({
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
 		>
-			<div onClick={handlePlay} className="block cursor-pointer">
+			<div
+				onClick={handlePlay}
+				className="block cursor-pointer"
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						handlePlay();
+					}
+				}}
+			>
 				{/* サムネイル */}
 				<div className="relative aspect-video bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
 					<div className="w-full h-full flex items-center justify-center">
@@ -216,6 +224,7 @@ const OfflineVideoCard = ({
 						{/* メニューボタン */}
 						<div className="relative" ref={menuRef}>
 							<button
+								type="button"
 								onClick={handleMenuClick}
 								className="bg-black/70 backdrop-blur-sm p-1.5 rounded-md transition-all duration-200 hover:bg-black/90 text-white/70 hover:text-white"
 							>
@@ -226,6 +235,7 @@ const OfflineVideoCard = ({
 							{showMenu && (
 								<div className="absolute right-0 top-full mt-2 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-10 min-w-[160px]">
 									<button
+										type="button"
 										onClick={handleRedownload}
 										disabled={isCurrentlyDownloading}
 										className="w-full px-4 py-2 text-left text-sm text-white hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -234,6 +244,7 @@ const OfflineVideoCard = ({
 										再ダウンロード
 									</button>
 									<button
+										type="button"
 										onClick={handleDelete}
 										disabled={isDeleting}
 										className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
