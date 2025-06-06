@@ -13,7 +13,7 @@ import {
 	AlertCircle,
 } from "lucide-react";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
-import { formatFileSize, formatDuration, cn } from "@/libs/utils";
+import { formatFileSize } from "@/libs/utils";
 
 interface OfflineManagerProps {
 	isOpen: boolean;

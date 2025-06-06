@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play, Calendar, HardDrive, Download, Wifi } from "lucide-react";
+import { Play, Calendar, HardDrive, Download } from "lucide-react";
 import type { VideoFileData } from "@/type";
 import { cn, formatFileSize, truncateText } from "@/libs/utils";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
@@ -20,20 +20,18 @@ interface VideoCardProps {
 
 const VideoCard = ({
 	video,
-	priority = false,
 	className,
 	isOfflineMode = false,
-	onDelete,
 	onShowStreamingWarning,
 	enableDownload = false,
 }: VideoCardProps) => {
 	const router = useRouter();
 	const [isHovered, setIsHovered] = useState(false);
-	const [isDeleting, setIsDeleting] = useState(false);
+	// const [isDeleting, setIsDeleting] = useState(false);
 	const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
 	const {
 		isCached,
-		deleteVideo,
+		// deleteVideo,
 		downloadVideo,
 		isDownloading,
 		downloadProgress,
@@ -79,7 +77,7 @@ const VideoCard = ({
 				"group relative bg-slate-800/40 rounded-xl overflow-hidden transition-all duration-300 ease-out",
 				"hover:scale-[1.02] hover:z-10 hover:shadow-2xl hover:shadow-purple-500/20",
 				"border border-slate-700/50 hover:border-purple-400/50",
-				isDeleting && "opacity-50 pointer-events-none",
+				// isDeleting && "opacity-50 pointer-events-none",
 				className,
 			)}
 			onMouseEnter={() => setIsHovered(true)}

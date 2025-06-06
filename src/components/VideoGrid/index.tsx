@@ -16,10 +16,8 @@ export type SortOrder = "asc" | "desc";
 const VideoGrid = () => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [viewMode, setViewMode] = useState<ViewMode>("grid");
-	const [sortBy, setSortBy] = useState<SortBy>("title");
-	const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
-	const [selectedGenre, setSelectedGenre] = useState("");
-	const [selectedYear, setSelectedYear] = useState("");
+	// const [sortBy, setSortBy] = useState<SortBy>("title");
+	// const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 	const [currentPage, setCurrentPage] = useState(1);
 
 	// 動画データのフック
@@ -34,12 +32,6 @@ const VideoGrid = () => {
 	} = useVideos({
 		filters: {
 			search: searchTerm || undefined,
-			genre: selectedGenre || undefined,
-			year: selectedYear || undefined,
-		},
-		sorting: {
-			sortBy,
-			sortOrder,
 		},
 		pagination: {
 			page: currentPage,

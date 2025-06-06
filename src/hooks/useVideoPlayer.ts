@@ -368,7 +368,7 @@ export function useVideoPlayer() {
 					title: videoInfo.fullTitle,
 					url: window.location.href,
 				});
-			} catch (err) {
+			} catch {
 				// 共有がキャンセルされました
 			}
 		} else {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { WifiOff, AlertTriangle } from "lucide-react";
+import { WifiOff } from "lucide-react";
 import Navigation from "@/components/VideoPlayer/Navigation";
 import LoadingScreen from "@/components/VideoPlayer/LoadingScreen";
 import ResponsiveVideoLayout from "@/components/VideoPlayer/ResponsiveVideoLayout";
@@ -11,7 +11,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 export default function PlayPage() {
 	const router = useRouter();
-	const { isOnline, isOfflineMode } = useNetworkStatus();
+	const { isOnline } = useNetworkStatus();
 	const [showNetworkWarning, setShowNetworkWarning] = useState(false);
 	const [isPageReady, setIsPageReady] = useState(false);
 

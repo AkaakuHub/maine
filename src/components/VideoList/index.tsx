@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
 	Play,
@@ -14,7 +13,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import type { VideoFileData } from "@/type";
-import { cn, formatFileSize, truncateText, formatDuration } from "@/libs/utils";
+import { cn, formatFileSize } from "@/libs/utils";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 
 interface VideoListProps {
@@ -302,7 +301,7 @@ const VideoList = ({
 }: VideoListProps) => {
 	return (
 		<div className={cn("space-y-3", className)}>
-			{videos.map((video, index) => (
+			{videos.map((video) => (
 				<VideoListItem
 					key={video.id}
 					video={video}

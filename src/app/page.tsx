@@ -10,7 +10,6 @@ import {
 	SortDesc,
 	Download,
 	Wifi,
-	WifiOff,
 	Trash2,
 	RefreshCw,
 } from "lucide-react";
@@ -19,7 +18,6 @@ import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import VideoGridContainer from "@/components/VideoGridContainer";
 import VideoList from "@/components/VideoList";
-import OfflineVideoCard from "@/components/OfflineVideoCard";
 import EmptyState from "@/components/EmptyState";
 import LoadingState from "@/components/LoadingState";
 import StreamingWarningDialog from "@/components/StreamingWarningDialog";
@@ -38,8 +36,7 @@ export type TabType = "streaming" | "offline";
 
 const Home = () => {
 	// ネットワーク状態
-	const { isOnline, isOffline, isOfflineMode, toggleOfflineMode } =
-		useNetworkStatus();
+	const { isOffline } = useNetworkStatus();
 
 	// UI状態
 	const [activeTab, setActiveTab] = useState<TabType>("streaming");
@@ -48,8 +45,6 @@ const Home = () => {
 	const [viewMode, setViewMode] = useState<ViewMode>("grid");
 	const [sortBy, setSortBy] = useState<SortBy>("title");
 	const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
-	const [selectedGenre, setSelectedGenre] = useState("");
-	const [selectedYear, setSelectedYear] = useState("");
 	const [currentPage, setCurrentPage] = useState(1); // IME状態管理
 	const [isComposing, setIsComposing] = useState(false);
 	const [showAll, setShowAll] = useState(false); // 一覧表示フラグ
@@ -68,13 +63,13 @@ const Home = () => {
 
 	// オフライン動画データの状態管理
 	const [offlineVideos, setOfflineVideos] = useState<VideoFileData[]>([]);
-	const [offlineLoading, setOfflineLoading] = useState(false);
+	// const [offlineLoading, setOfflineLoading] = useState(false);
 
 	// オフライン動画の取得
 	const loadOfflineVideos = useCallback(async () => {
 		if (activeTab !== "offline") return;
 
-		setOfflineLoading(true);
+		// setOfflineLoading(true);
 		try {
 			const apiClient = createAPIClient(true);
 			const videos = await apiClient.getVideos();
@@ -82,7 +77,7 @@ const Home = () => {
 		} catch (error) {
 			console.error("オフライン動画の取得に失敗:", error);
 		} finally {
-			setOfflineLoading(false);
+			// setOfflineLoading(false);
 		}
 	}, [activeTab]);
 
@@ -104,8 +99,6 @@ const Home = () => {
 	} = useVideos({
 		filters: {
 			search: searchQuery || undefined,
-			genre: selectedGenre || undefined,
-			year: selectedYear || undefined,
 		},
 		sorting: {
 			sortBy,
@@ -120,14 +113,8 @@ const Home = () => {
 	});
 
 	// オフラインストレージのフック
-	const {
-		cachedVideos,
-		cacheSize,
-		storageEstimate,
-		clearCache,
-		refreshCachedVideos,
-		deleteVideo: deleteOfflineVideo,
-	} = useOfflineStorage();
+	const { cacheSize, storageEstimate, clearCache, refreshCachedVideos } =
+		useOfflineStorage();
 	// タブ切り替え時にページをリセット
 	const handleTabChange = (tab: TabType) => {
 		// オフライン時はストリーミングタブに切り替えを禁止
@@ -146,12 +133,9 @@ const Home = () => {
 	};
 
 	// オフライン動画の削除処理
-	const handleOfflineVideoDelete = useCallback(
-		async (filePath: string) => {
-			await refreshCachedVideos();
-		},
-		[refreshCachedVideos],
-	);
+	const handleOfflineVideoDelete = useCallback(async () => {
+		await refreshCachedVideos();
+	}, [refreshCachedVideos]);
 
 	// 警告ダイアログを表示する
 	const handleShowStreamingWarning = useCallback((video: VideoFileData) => {
@@ -217,11 +201,11 @@ const Home = () => {
 	}, [searchTerm]);
 
 	// 検索時にshowAllをリセット
-	useEffect(() => {
-		if (selectedGenre || selectedYear) {
-			setShowAll(false);
-		}
-	}, [selectedGenre, selectedYear]);
+	// useEffect(() => {
+	// 	if (selectedGenre || selectedYear) {
+	// 		setShowAll(false);
+	// 	}
+	// }, [selectedGenre, selectedYear]);
 
 	// 検索クリア
 	const clearSearch = () => {
@@ -243,8 +227,8 @@ const Home = () => {
 	const hasContent =
 		videos.length > 0 ||
 		searchQuery ||
-		selectedGenre ||
-		selectedYear ||
+		// selectedGenre ||
+		// selectedYear ||
 		showAll;
 
 	if (videosLoading && !hasContent) {
@@ -542,8 +526,8 @@ const Home = () => {
 					// ストリーミングタブの内容
 					videos.length === 0 &&
 					!searchQuery &&
-					!selectedGenre &&
-					!selectedYear &&
+					// !selectedGenre &&
+					// !selectedYear &&
 					!showAll &&
 					!videosLoading ? (
 						// 初期状態 - 何も検索していない、一覧も表示していない

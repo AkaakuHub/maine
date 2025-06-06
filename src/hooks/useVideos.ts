@@ -4,8 +4,6 @@ import { API } from "@/utils/constants";
 
 export interface UseVideosFilters {
 	search?: string;
-	genre?: string;
-	year?: string;
 }
 
 export interface UseVideosSorting {
@@ -73,8 +71,6 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 		if (filters.search && filters.search.trim().length >= 2) {
 			params.set("search", filters.search.trim());
 		}
-		if (filters.genre) params.set("genre", filters.genre);
-		if (filters.year) params.set("year", filters.year);
 
 		params.set("sortBy", sorting.sortBy);
 		params.set("sortOrder", sorting.sortOrder);
@@ -84,8 +80,6 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 	}, [
 		loadAll,
 		filters.search,
-		filters.genre,
-		filters.year,
 		sorting.sortBy,
 		sorting.sortOrder,
 		pagination.page,
@@ -97,10 +91,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 
 		// 検索条件もloadAllフラグもない場合は何もしない
 		const hasSearchConditions =
-			(filters.search && filters.search.trim().length >= 2) ||
-			filters.genre ||
-			filters.year ||
-			loadAll;
+			(filters.search && filters.search.trim().length >= 2) || loadAll;
 
 		if (!hasSearchConditions) {
 			setVideos([]);
@@ -186,15 +177,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 		} finally {
 			setLoading(false);
 		}
-	}, [
-		enabled,
-		searchParams,
-		filters.search,
-		filters.genre,
-		filters.year,
-		loadAll,
-		pagination.limit,
-	]);
+	}, [enabled, searchParams, filters.search, loadAll, pagination.limit]);
 
 	// 初期化とパラメータ変更時にデータを取得
 	useEffect(() => {

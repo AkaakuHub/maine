@@ -12,8 +12,6 @@ import {
 	SkipForward,
 	Settings,
 	PictureInPicture2,
-	ArrowLeft,
-	MoreHorizontal,
 	RotateCcw,
 	RotateCw,
 	Clock,
@@ -56,7 +54,6 @@ interface ModernVideoPlayerProps {
 const ModernVideoPlayer = ({
 	src,
 	title,
-	onBack,
 	onTimeUpdate,
 	initialTime = 0,
 	className = "",
@@ -496,7 +493,7 @@ const ModernVideoPlayer = ({
 		const container = containerRef.current;
 		let isMouseInside = false;
 
-		const handleMouseEnterCapture = (e: MouseEvent) => {
+		const handleMouseEnterCapture = () => {
 			if (!isMouseInside) {
 				isMouseInside = true;
 				setShowControls(true);
@@ -504,14 +501,14 @@ const ModernVideoPlayer = ({
 			}
 		};
 
-		const handleMouseLeaveCapture = (e: MouseEvent) => {
+		const handleMouseLeaveCapture = () => {
 			isMouseInside = false;
 			if (isPlaying) {
 				setShowControls(false);
 			}
 		};
 
-		const handleMouseMoveCapture = (e: MouseEvent) => {
+		const handleMouseMoveCapture = () => {
 			if (isMouseInside) {
 				setShowControls(true);
 				resetControlsTimeout();
@@ -587,7 +584,7 @@ const ModernVideoPlayer = ({
 					navigator.mediaSession.setActionHandler("seekbackward", null);
 					navigator.mediaSession.setActionHandler("seekforward", null);
 				}
-			} catch (error) {
+			} catch {
 				// エラーを無視
 			}
 		};
@@ -771,7 +768,7 @@ const ModernVideoPlayer = ({
 					navigator.mediaSession.setActionHandler("seekbackward", null);
 					navigator.mediaSession.setActionHandler("seekforward", null);
 				}
-			} catch (error) {
+			} catch {
 				// エラーを無視
 			}
 		};
