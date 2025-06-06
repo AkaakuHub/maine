@@ -11,7 +11,7 @@ import {
 } from "@/libs/fileUtils";
 import type { VideoFileData } from "@/type";
 
-export interface VideoFileInfo {
+interface VideoFileInfo {
 	id: string;
 	title: string;
 	fileName: string;
@@ -24,7 +24,7 @@ export interface VideoFileInfo {
 	year?: number;
 }
 
-export interface SearchResult {
+interface SearchResult {
 	success: boolean;
 	videos: VideoFileData[];
 	totalFound: number;

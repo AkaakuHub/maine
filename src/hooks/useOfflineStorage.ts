@@ -7,7 +7,7 @@ import {
 	type DownloadProgress,
 } from "@/services/offlineStorageService";
 
-export interface UseOfflineStorageReturn {
+interface UseOfflineStorageReturn {
 	cachedVideos: CachedVideo[];
 	isDownloading: Record<string, boolean>;
 	downloadProgress: Record<string, DownloadProgress>;

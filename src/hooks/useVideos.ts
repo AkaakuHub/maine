@@ -2,21 +2,21 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { VideoFileData } from "@/type";
 import { API } from "@/utils/constants";
 
-export interface UseVideosFilters {
+interface UseVideosFilters {
 	search?: string;
 }
 
-export interface UseVideosSorting {
+interface UseVideosSorting {
 	sortBy: "title" | "year" | "episode" | "createdAt" | "lastWatched";
 	sortOrder: "asc" | "desc";
 }
 
-export interface UseVideosPagination {
+interface UseVideosPagination {
 	page: number;
 	limit: number;
 }
 
-export interface UseVideosOptions {
+interface UseVideosOptions {
 	filters?: UseVideosFilters;
 	sorting?: UseVideosSorting;
 	pagination?: UseVideosPagination;
@@ -24,7 +24,7 @@ export interface UseVideosOptions {
 	loadAll?: boolean; // 明示的な一覧読み込みフラグ
 }
 
-export interface UseVideosReturn {
+interface UseVideosReturn {
 	videos: VideoFileData[];
 	loading: boolean;
 	error: string | null;

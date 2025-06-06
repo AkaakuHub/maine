@@ -18,7 +18,7 @@ export function getFileName(filePath: string): string {
 /**
  * ファイルパスから拡張子を取得
  */
-export function getFileExtension(filePath: string): string {
+function getFileExtension(filePath: string): string {
 	return path.extname(filePath).toLowerCase();
 }
 
@@ -54,7 +54,7 @@ export async function directoryExists(dirPath: string): Promise<boolean> {
 /**
  * ファイルの存在確認
  */
-export async function fileExists(filePath: string): Promise<boolean> {
+async function fileExists(filePath: string): Promise<boolean> {
 	try {
 		const stats = await fs.stat(filePath);
 		return stats.isFile();
@@ -78,10 +78,7 @@ export async function getFileSize(filePath: string): Promise<number> {
 /**
  * 相対パスを安全に処理（ディレクトリトラバーサル攻撃防止）
  */
-export function sanitizePath(
-	userPath: string,
-	basePath: string,
-): string | null {
+function sanitizePath(userPath: string, basePath: string): string | null {
 	const resolvedPath = path.resolve(basePath, userPath);
 	const normalizedBasePath = path.resolve(basePath);
 
@@ -96,7 +93,7 @@ export function sanitizePath(
 /**
  * セキュアなファイルパス検証結果の型
  */
-export interface FilePathValidation {
+interface FilePathValidation {
 	isValid: boolean;
 	fullPath: string;
 	exists: boolean;

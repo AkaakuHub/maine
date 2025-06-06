@@ -92,5 +92,3 @@ class APIClient {
 export const createAPIClient = (isOffline: boolean) => {
 	return new APIClient({ isOffline });
 };
-
-export type { APIClient };

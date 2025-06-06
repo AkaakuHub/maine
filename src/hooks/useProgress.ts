@@ -1,14 +1,14 @@
 import { useState, useCallback } from "react";
 import { API } from "@/utils/constants";
 
-export interface UpdateProgressParams {
+interface UpdateProgressParams {
 	filePath: string;
 	watchTime?: number;
 	watchProgress?: number;
 	isLiked?: boolean;
 }
 
-export interface ProgressData {
+interface ProgressData {
 	filePath: string;
 	watchTime?: number | null;
 	watchProgress: number;
@@ -17,7 +17,7 @@ export interface ProgressData {
 	lastWatched?: Date | null;
 }
 
-export interface UseProgressReturn {
+interface UseProgressReturn {
 	updateProgress: (
 		params: UpdateProgressParams,
 	) => Promise<ProgressData | null>;
