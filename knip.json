@@ -1,4 +1,5 @@
 {
+  "entry": ["src/app/globals.css"],
   "project": ["src/**/*.ts*"],
   "ignore": ["**/*.d.ts", "**/fixtures"]
 }
