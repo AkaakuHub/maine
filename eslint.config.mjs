@@ -21,9 +21,8 @@ export default defineConfig([
             "no-unused-vars": ["error"], // 未使用の変数をエラーとして検出
             "no-undef": ["error"], // 未定義の変数をエラーとして検出
             eqeqeq: ["error", "always"], // 厳密な等価演算子を強制
-            "no-console": ["warn"], // console.log の使用を警告
-            indent: ["error", 4], // インデントを4スペースで強制
-            quotes: ["error", "single"], // シングルクォートを強制
+            indent: ["error", 2], // インデントを2スペースで強制
+            quotes: ["error", "double"], // ダブルクォートを強制
             semi: ["error", "always"], // セミコロンを必須に
             "brace-style": ["error", "1tbs"], // ブレースのスタイルを "1tbs" に強制
             camelcase: ["error", { properties: "always" }], // キャメルケースを強制
