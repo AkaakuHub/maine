@@ -24,6 +24,7 @@ export const API = {
 		GET_VIDEO: "/api/getVideo",
 		VIDEO_STREAM: "/api/video",
 		PROGRESS: "/api/progress",
+		PROGRAM_INFO: "/api/programInfo",
 	},
 	TIMEOUT: 30000,
 } as const;

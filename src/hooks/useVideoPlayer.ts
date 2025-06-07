@@ -36,9 +36,41 @@ export function useVideoPlayer() {
 	const [showDescription, setShowDescription] = useState<boolean>(false);
 	const [isLiked, setIsLiked] = useState<boolean>(false);
 	const [isInWatchlist, setIsInWatchlist] = useState<boolean>(false);
+	const [programInfo, setProgramInfo] = useState<string>("");
 	const { updateProgress } = useProgress();
 	const lastProgressSaveRef = useRef<number>(0);
 	const progressSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+	// 番組情報を取得する関数
+	const fetchProgramInfo = useCallback(
+		async (filePath: string) => {
+			if (isOfflineMode) return; // オフラインモードでは番組情報を取得しない
+
+			try {
+				const response = await fetch(
+					`${API.ENDPOINTS.PROGRAM_INFO}?filePath=${encodeURIComponent(filePath)}`,
+				);
+
+				if (response.ok) {
+					const data = await response.json();
+					if (data.success && data.programInfo) {
+						setProgramInfo(data.programInfo);
+						// 番組情報が取得できた場合、videoInfoのdescriptionを更新
+						setVideoInfo((prev) => ({
+							...prev,
+							description: data.programInfo,
+						}));
+						console.log("番組情報を取得しました:", data.filePath);
+					}
+				}
+			} catch (error) {
+				console.log("番組情報の取得に失敗しました:", error);
+				// エラーは無視（番組情報がない場合もあるため）
+			}
+		},
+		[isOfflineMode],
+	);
+
 	const initializePlayer = useCallback(async () => {
 		if (params.filePath) {
 			setIsLoading(true);
@@ -247,7 +279,12 @@ export function useVideoPlayer() {
 					}
 
 					// ストリーミング用のビデオソースを設定
-					setVideoSrc(`/api/video/${encodeURIComponent(decodedPath)}`);
+					setVideoSrc(
+						`${API.ENDPOINTS.VIDEO_STREAM}/${encodeURIComponent(decodedPath)}`,
+					);
+
+					// 番組情報を取得
+					await fetchProgramInfo(decodedPath);
 				}
 			} catch (error) {
 				console.error("Failed to initialize player:", error);
@@ -296,12 +333,24 @@ export function useVideoPlayer() {
 					duration: "不明",
 				});
 
-				setVideoSrc(`/api/video/${encodeURIComponent(decodedPath)}`);
+				setVideoSrc(
+					`${API.ENDPOINTS.VIDEO_STREAM}/${encodeURIComponent(decodedPath)}`,
+				);
+
+				// 番組情報を取得
+				await fetchProgramInfo(decodedPath);
 			}
 
 			setIsLoading(false);
 		}
-	}, [params.filePath, isOfflineMode, getCachedVideoUrl, router, isOnline]);
+	}, [
+		params.filePath,
+		isOfflineMode,
+		getCachedVideoUrl,
+		router,
+		isOnline,
+		fetchProgramInfo,
+	]);
 	useEffect(() => {
 		initializePlayer();
 
@@ -412,7 +461,7 @@ export function useVideoPlayer() {
 
 		try {
 			// ダウンロードリンクを作成
-			const downloadUrl = `/api/video/${encodeURIComponent(
+			const downloadUrl = `${API.ENDPOINTS.VIDEO_STREAM}/${encodeURIComponent(
 				videoData.filePath,
 			)}?download=true`;
 			const link = document.createElement("a");
@@ -436,6 +485,7 @@ export function useVideoPlayer() {
 		showDescription,
 		isLiked,
 		isInWatchlist,
+		programInfo,
 		handleGoBack,
 		handleGoHome,
 		handleShare,
