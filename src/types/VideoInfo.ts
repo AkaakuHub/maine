@@ -7,4 +7,10 @@ export interface VideoInfoType {
 	genre?: string;
 	year?: string;
 	duration?: string;
+	// 番組情報
+	broadcastDate?: Date;
+	broadcastStation?: string;
+	dayOfWeek?: string;
+	timeSlot?: string;
+	weeklySchedule?: string;
 }

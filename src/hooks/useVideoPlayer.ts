@@ -8,6 +8,7 @@ import { useProgress } from "./useProgress";
 import { useOfflineStorage } from "./useOfflineStorage";
 import { useNetworkStatus } from "./useNetworkStatus";
 import { API } from "@/utils/constants";
+import { parseVideoFileName } from "@/utils/videoFileNameParser";
 import {
 	offlineStorageService,
 	type CachedVideo,
@@ -40,6 +41,32 @@ export function useVideoPlayer() {
 	const { updateProgress } = useProgress();
 	const lastProgressSaveRef = useRef<number>(0);
 	const progressSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+	// ファイル名から VideoInfo を生成するヘルパー関数
+	const createVideoInfoFromFileName = useCallback(
+		(filePath: string, title: string, episode?: string): VideoInfoType => {
+			// ファイル名の最後の部分（実際のファイル名）を取得
+			const fileName = filePath.split(/[/\\]/).pop() || filePath;
+			const parsedInfo = parseVideoFileName(fileName);
+
+			return {
+				title: parsedInfo.cleanTitle || title,
+				episode: episode || "",
+				fullTitle: parsedInfo.cleanTitle || title,
+				filePath,
+				description: `${parsedInfo.cleanTitle || title}をお楽しみください。`,
+				genre: "動画",
+				year: parsedInfo.broadcastDate?.getFullYear().toString() || "不明",
+				duration: "不明",
+				broadcastDate: parsedInfo.broadcastDate,
+				broadcastStation: parsedInfo.broadcastStation,
+				dayOfWeek: parsedInfo.dayOfWeek,
+				timeSlot: parsedInfo.timeSlot,
+				weeklySchedule: parsedInfo.weeklySchedule,
+			};
+		},
+		[],
+	);
 
 	// 番組情報を取得する関数
 	const fetchProgramInfo = useCallback(
@@ -138,22 +165,20 @@ export function useVideoPlayer() {
 
 						setVideoData(offlineVideoData);
 						setIsLiked(false);
-						setVideoInfo({
-							title: cachedVideo.title,
-							episode: "",
-							fullTitle: cachedVideo.title,
-							filePath: decodedPath,
-							description: `${cachedVideo.title}をお楽しみください。`,
-							genre: "動画",
-							year: "不明",
-							duration: cachedVideo.duration
-								? `${Math.floor(cachedVideo.duration / 60)}:${Math.floor(
-										cachedVideo.duration % 60,
-									)
-										.toString()
-										.padStart(2, "0")}`
-								: "不明",
-						});
+
+						// ファイル名から情報をパースして設定
+						const videoInfo = createVideoInfoFromFileName(
+							decodedPath,
+							cachedVideo.title,
+						);
+						videoInfo.duration = cachedVideo.duration
+							? `${Math.floor(cachedVideo.duration / 60)}:${Math.floor(
+									cachedVideo.duration % 60,
+								)
+									.toString()
+									.padStart(2, "0")}`
+							: "不明";
+						setVideoInfo(videoInfo);
 
 						setVideoSrc(offlineUrl);
 					} else {
@@ -195,16 +220,15 @@ export function useVideoPlayer() {
 							};
 
 							setVideoData(fallbackVideoData);
-							setVideoInfo({
-								title: videoTitle,
-								episode: "",
-								fullTitle: videoTitle,
-								filePath: decodedPath,
-								description: "オフライン時のため、詳細情報は利用できません。",
-								genre: "動画",
-								year: "不明",
-								duration: "不明",
-							});
+
+							// ファイル名から情報をパースして設定
+							const videoInfo = createVideoInfoFromFileName(
+								decodedPath,
+								videoTitle,
+							);
+							videoInfo.description =
+								"オフライン時のため、詳細情報は利用できません。";
+							setVideoInfo(videoInfo);
 
 							// オフライン時はvideoSrcを設定しない（再生不可状態）
 							setVideoSrc("");
@@ -231,22 +255,23 @@ export function useVideoPlayer() {
 						if (video) {
 							setVideoData(video);
 							setIsLiked(video.isLiked);
-							setVideoInfo({
-								title: video.title,
-								episode: video.episode?.toString() || "",
-								fullTitle: video.title,
-								filePath: decodedPath,
-								description: `${video.title}をお楽しみください。`,
-								genre: video.genre || "動画",
-								year: video.year?.toString() || "不明",
-								duration: video.duration
-									? `${Math.floor(video.duration / 60)}:${Math.floor(
-											video.duration % 60,
-										)
-											.toString()
-											.padStart(2, "0")}`
-									: "不明",
-							});
+
+							// ファイル名から情報をパースして設定
+							const videoInfo = createVideoInfoFromFileName(
+								decodedPath,
+								video.title,
+								video.episode?.toString(),
+							);
+							videoInfo.genre = video.genre || "動画";
+							videoInfo.year = video.year?.toString() || "不明";
+							videoInfo.duration = video.duration
+								? `${Math.floor(video.duration / 60)}:${Math.floor(
+										video.duration % 60,
+									)
+										.toString()
+										.padStart(2, "0")}`
+								: "不明";
+							setVideoInfo(videoInfo);
 						} else {
 							// フォールバック: ファイルパスからタイトルを抽出
 							const pathParts = decodedPath.split(/[/\\]/);
@@ -275,16 +300,14 @@ export function useVideoPlayer() {
 
 							setVideoData(fallbackVideoData);
 							setIsLiked(false);
-							setVideoInfo({
-								title: videoTitle,
-								episode: episodeName,
-								fullTitle: `${videoTitle} - ${episodeName}`,
-								filePath: decodedPath,
-								description: `${videoTitle}の${episodeName}をお楽しみください。`,
-								genre: "動画",
-								year: "不明",
-								duration: "不明",
-							});
+
+							// ファイル名から情報をパースして設定
+							const videoInfo = createVideoInfoFromFileName(
+								decodedPath,
+								videoTitle,
+								episodeName,
+							);
+							setVideoInfo(videoInfo);
 						}
 					}
 
@@ -360,6 +383,7 @@ export function useVideoPlayer() {
 		router,
 		isOnline,
 		fetchProgramInfo,
+		createVideoInfoFromFileName,
 	]);
 	useEffect(() => {
 		initializePlayer();

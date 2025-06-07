@@ -58,7 +58,7 @@ PWA関連のログとエラーを確認
 // ・放送局は？
 
 const extractWeekdayAndTime = (str: string): string => {
-	// [20240429月2154] => 「毎週月曜日 21:54」
+	// [202404292154] => 「毎週月曜日 21:54」曜日はカレンダー情報から計算, Dateオブジェクトとかを使って。
 	let message = "";
 	const weekdayAndTime = str.match(/\[(.*?)\]/);
 	if (weekdayAndTime) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
 	Play,
@@ -11,10 +11,12 @@ import {
 	MoreHorizontal,
 	Download,
 	Trash2,
+	Radio,
 } from "lucide-react";
 import type { VideoFileData } from "@/type";
 import { cn, formatFileSize } from "@/libs/utils";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
+import { parseVideoFileName } from "@/utils/videoFileNameParser";
 
 interface VideoListProps {
 	videos: VideoFileData[];
@@ -46,6 +48,12 @@ const VideoListItem = ({
 		downloadProgress,
 		isCached,
 	} = useOfflineStorage();
+
+	// ファイル名から番組情報をパース
+	const parsedInfo = useMemo(() => {
+		const fileName = video.filePath.split(/[/\\]/).pop() || video.filePath;
+		return parseVideoFileName(fileName);
+	}, [video.filePath]);
 
 	const watchProgressPercentage = video.watchProgress || 0;
 	const isVideoCached = isCached(video.filePath);
@@ -173,11 +181,29 @@ const VideoListItem = ({
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1 min-w-0">
 								<h3 className="font-semibold text-white mb-1 truncate text-lg">
-									{video.title}
+									{parsedInfo.cleanTitle || video.title}
 								</h3>
 								<p className="text-sm text-slate-400 truncate mb-2">
 									{video.fileName}
 								</p>
+
+								{/* 番組情報 */}
+								{(parsedInfo.broadcastStation || parsedInfo.weeklySchedule) && (
+									<div className="flex flex-wrap gap-2 mb-2">
+										{parsedInfo.broadcastStation && (
+											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-green-600 to-teal-600 text-white px-2 py-1 rounded-full">
+												<Radio className="h-3 w-3" />
+												{parsedInfo.broadcastStation}
+											</span>
+										)}
+										{parsedInfo.weeklySchedule && (
+											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white px-2 py-1 rounded-full">
+												<Clock className="h-3 w-3" />
+												{parsedInfo.weeklySchedule}
+											</span>
+										)}
+									</div>
+								)}
 
 								{/* メタデータ */}
 								<div className="flex items-center gap-4 text-xs text-slate-400">

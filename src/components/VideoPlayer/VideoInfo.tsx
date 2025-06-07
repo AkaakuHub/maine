@@ -68,6 +68,28 @@ export default function VideoInfo({
 				</p>
 			)}
 
+			{/* 放送日時情報 */}
+			{videoInfo.broadcastDate && (
+				<div
+					className={`mb-3 ${
+						isDesktop
+							? "text-base"
+							: isResponsive
+								? "text-sm lg:text-base"
+								: "text-sm"
+					}`}
+				>
+					<p className="text-slate-400">
+						放送日時: {videoInfo.broadcastDate.getFullYear()}/
+						{(videoInfo.broadcastDate.getMonth() + 1)
+							.toString()
+							.padStart(2, "0")}
+						/{videoInfo.broadcastDate.getDate().toString().padStart(2, "0")}(
+						{videoInfo.dayOfWeek}) {videoInfo.timeSlot}
+					</p>
+				</div>
+			)}
+
 			<div
 				className={`flex flex-wrap items-center gap-3 text-sm text-slate-300 mb-4 ${
 					isDesktop ? "gap-4" : isResponsive ? "gap-3 lg:gap-4" : "gap-3"
@@ -84,6 +106,32 @@ export default function VideoInfo({
 						}`}
 					>
 						{videoInfo.genre}
+					</span>
+				)}
+				{videoInfo.broadcastStation && (
+					<span
+						className={`bg-gradient-to-r from-green-600 to-teal-600 rounded-full text-white font-medium ${
+							isDesktop
+								? "px-3 py-1"
+								: isResponsive
+									? "px-2 py-1 lg:px-3"
+									: "px-2 py-1"
+						}`}
+					>
+						{videoInfo.broadcastStation}
+					</span>
+				)}
+				{videoInfo.weeklySchedule && (
+					<span
+						className={`bg-gradient-to-r from-orange-600 to-red-600 rounded-full text-white font-medium ${
+							isDesktop
+								? "px-3 py-1"
+								: isResponsive
+									? "px-2 py-1 lg:px-3"
+									: "px-2 py-1"
+						}`}
+					>
+						{videoInfo.weeklySchedule}
 					</span>
 				)}
 				{videoInfo.year && <span>{videoInfo.year}</span>}

@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Play, Calendar, HardDrive, Download } from "lucide-react";
+import {
+	Play,
+	Calendar,
+	HardDrive,
+	Download,
+	Radio,
+	Clock,
+} from "lucide-react";
 import type { VideoFileData } from "@/type";
 import { cn, formatFileSize, truncateText } from "@/libs/utils";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { parseVideoFileName } from "@/utils/videoFileNameParser";
 
 interface VideoCardProps {
 	video: VideoFileData;
@@ -36,6 +44,12 @@ const VideoCard = ({
 		isDownloading,
 		downloadProgress,
 	} = useOfflineStorage();
+
+	// ファイル名から番組情報をパース
+	const parsedInfo = useMemo(() => {
+		const fileName = video.filePath.split(/[/\\]/).pop() || video.filePath;
+		return parseVideoFileName(fileName);
+	}, [video.filePath]);
 
 	// オフライン保存状態をチェック
 	const isVideoCached = isCached(video.filePath);
@@ -186,8 +200,26 @@ const VideoCard = ({
 				{/* コンテンツ */}
 				<div className="p-4">
 					<h3 className="font-semibold text-white mb-2 line-clamp-2 leading-tight">
-						{truncateText(video.title, 60)}
-					</h3>{" "}
+						{truncateText(parsedInfo.cleanTitle || video.title, 60)}
+					</h3>
+
+					{/* 番組情報 */}
+					{(parsedInfo.broadcastStation || parsedInfo.weeklySchedule) && (
+						<div className="flex flex-wrap gap-2 mb-2">
+							{parsedInfo.broadcastStation && (
+								<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-green-600 to-teal-600 text-white px-2 py-1 rounded-full">
+									<Radio className="h-3 w-3" />
+									{parsedInfo.broadcastStation}
+								</span>
+							)}
+							{parsedInfo.weeklySchedule && (
+								<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white px-2 py-1 rounded-full">
+									<Clock className="h-3 w-3" />
+									{parsedInfo.weeklySchedule}
+								</span>
+							)}
+						</div>
+					)}
 					{/* メタデータ */}
 					<div className="space-y-2">
 						<div className="flex items-center gap-4 text-xs text-slate-400">
