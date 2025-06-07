@@ -186,7 +186,7 @@ const VideoCard = ({
 						</div>
 					)}
 					{/* 年 */}
-					{video.year && (
+					{/* {video.year && (
 						<div className="absolute top-3 right-3">
 							<div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md">
 								<span className="text-white text-xs font-medium">
@@ -194,7 +194,7 @@ const VideoCard = ({
 								</span>
 							</div>
 						</div>
-					)}
+					)} */}
 				</div>
 
 				{/* コンテンツ */}
@@ -222,11 +222,22 @@ const VideoCard = ({
 					)}
 					{/* メタデータ */}
 					<div className="space-y-2">
-						<div className="flex items-center gap-4 text-xs text-slate-400">
-							{video.year && (
+						<div className="flex items-start gap-2 text-xs text-slate-400 flex-col">
+							{parsedInfo.broadcastDate && (
 								<div className="flex items-center gap-1">
 									<Calendar className="h-3 w-3" />
-									<span>{video.year}</span>
+									<span>
+										{parsedInfo.broadcastDate.getFullYear()}/
+										{(parsedInfo.broadcastDate.getMonth() + 1)
+											.toString()
+											.padStart(2, "0")}
+										/
+										{parsedInfo.broadcastDate
+											.getDate()
+											.toString()
+											.padStart(2, "0")}{" "}
+										{parsedInfo.timeSlot}
+									</span>
 								</div>
 							)}
 							<div className="flex items-center gap-1">

@@ -188,7 +188,9 @@ const VideoListItem = ({
 								</p>
 
 								{/* 番組情報 */}
-								{(parsedInfo.broadcastStation || parsedInfo.weeklySchedule) && (
+								{(parsedInfo.broadcastStation ||
+									parsedInfo.weeklySchedule ||
+									parsedInfo.broadcastDate) && (
 									<div className="flex flex-wrap gap-2 mb-2">
 										{parsedInfo.broadcastStation && (
 											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-green-600 to-teal-600 text-white px-2 py-1 rounded-full">
@@ -213,10 +215,21 @@ const VideoListItem = ({
 											<span>EP. {video.episode}</span>
 										</div>
 									)}
-									{video.year && (
+									{parsedInfo.broadcastDate && (
 										<div className="flex items-center gap-1">
 											<Calendar className="h-3 w-3" />
-											<span>{video.year}</span>
+											<span>
+												{parsedInfo.broadcastDate.getFullYear()}/
+												{(parsedInfo.broadcastDate.getMonth() + 1)
+													.toString()
+													.padStart(2, "0")}
+												/
+												{parsedInfo.broadcastDate
+													.getDate()
+													.toString()
+													.padStart(2, "0")}{" "}
+												{parsedInfo.timeSlot}
+											</span>
 										</div>
 									)}
 									<div className="flex items-center gap-1">
