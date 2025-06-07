@@ -54,13 +54,23 @@ export function useVideoPlayer() {
 				if (response.ok) {
 					const data = await response.json();
 					if (data.success && data.programInfo) {
-						setProgramInfo(data.programInfo);
-						// 番組情報が取得できた場合、videoInfoのdescriptionを更新
-						setVideoInfo((prev) => ({
-							...prev,
-							description: data.programInfo,
-						}));
-						console.log("番組情報を取得しました:", data.filePath);
+						// 番組情報が空文字列でないかチェック
+						const trimmedProgramInfo = data.programInfo.trim();
+						if (trimmedProgramInfo.length > 0) {
+							setProgramInfo(data.programInfo);
+							// 番組情報が取得できた場合、videoInfoのdescriptionを更新
+							// 改行を保持するため、trimは行わずそのまま使用
+							setVideoInfo((prev) => ({
+								...prev,
+								description: data.programInfo,
+							}));
+							console.log("番組情報を取得しました:", data.filePath);
+						} else {
+							console.log(
+								"番組情報は空文字列のため、デフォルトメッセージを使用",
+							);
+							// 空文字列の場合は何もしない（デフォルトの説明文を保持）
+						}
 					}
 				}
 			} catch (error) {

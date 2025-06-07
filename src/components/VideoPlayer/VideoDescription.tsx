@@ -74,7 +74,7 @@ export default function VideoDescription({
 				</button>
 
 				<p
-					className={`text-slate-300 text-sm leading-relaxed transition-all duration-300 ${
+					className={`text-slate-300 text-sm leading-relaxed transition-all duration-300 whitespace-pre-wrap ${
 						showDescription ? "" : "overflow-hidden text-ellipsis"
 					}`}
 					style={
