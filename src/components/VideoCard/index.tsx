@@ -220,16 +220,14 @@ const VideoCard = ({
 				</div>
 			</button>
 			{/* 進行状況バー（視聴進捗があれば表示） */}
-			{video.watchProgress && video.watchProgress > 0 && (
-				<div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">
-					<div
-						className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-						style={{
-							width: `${Math.min(100, Math.max(0, video.watchProgress))}%`,
-						}}
-					/>
-				</div>
-			)}
+			<div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">
+				<div
+					className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+					style={{
+						width: `${video.watchProgress ? Math.min(100, Math.max(0, video.watchProgress)) : 0}%`,
+					}}
+				/>
+			</div>
 
 			{/* ダウンロード確認ダイアログ */}
 			<ConfirmDialog
