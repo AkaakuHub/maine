@@ -9,12 +9,40 @@ const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-// SSL証明書のパス
-const keyPath = path.join(__dirname, 'localhost-key.pem');
-const certPath = path.join(__dirname, 'localhost.pem');
+// SSL証明書のパス（複数のファイル名パターンに対応）
+const possibleKeyFiles = [
+  'localhost-key.pem',
+  'localhost+2-key.pem',
+  'localhost+1-key.pem'
+];
+const possibleCertFiles = [
+  'localhost.pem',
+  'localhost+2.pem', 
+  'localhost+1.pem'
+];
+
+let keyPath = null;
+let certPath = null;
+
+// 存在する証明書ファイルを検索
+for (const keyFile of possibleKeyFiles) {
+  const fullKeyPath = path.join(__dirname, keyFile);
+  if (fs.existsSync(fullKeyPath)) {
+    keyPath = fullKeyPath;
+    break;
+  }
+}
+
+for (const certFile of possibleCertFiles) {
+  const fullCertPath = path.join(__dirname, certFile);
+  if (fs.existsSync(fullCertPath)) {
+    certPath = fullCertPath;
+    break;
+  }
+}
 
 // 証明書ファイルの存在確認
-if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
+if (!keyPath || !certPath) {
   console.error('❌ SSL証明書が見つかりません！');
   console.error('📋 以下の手順で証明書を生成してください：');
   console.error('');
