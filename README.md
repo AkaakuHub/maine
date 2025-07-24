@@ -27,6 +27,70 @@
 - **Lefthook** - Git hooks
 - **Commitlint** - コミットメッセージ規約
 
+## セットアップ
+
+### 前提条件
+- Node.js 18以上
+- pnpm
+
+### 基本セットアップ
+```bash
+# 依存関係インストール
+pnpm install
+
+# 開発サーバー起動
+pnpm dev
+
+# 本番ビルド
+pnpm build
+
+# 本番サーバー起動
+pnpm start
+```
+
+### HTTPS対応（クリップボードAPI使用のため）
+
+クリップボードAPI（スクリーンショット機能）を使用するには、HTTPS環境が必要です。
+
+#### macOS / Linux
+```bash
+# mkcertインストール
+brew install mkcert
+
+# ローカル認証局設定
+mkcert -install
+
+# 証明書生成
+mkcert localhost 127.0.0.1 ::1
+```
+
+#### Windows
+```bash
+# Chocolateyでmkcertインストール
+choco install mkcert
+
+# または Scoopでインストール
+scoop bucket add extras
+scoop install mkcert
+
+# ローカル認証局設定
+mkcert -install
+
+# 証明書生成
+mkcert localhost 127.0.0.1 ::1
+```
+
+#### 証明書生成後
+```bash
+# 本番ビルド
+pnpm build
+
+# HTTPS本番サーバー起動
+pnpm start
+```
+
+`https://localhost:3000` でアクセス可能になります。
+
 ## PWAデバッグ方法
 PWAデバッグ方法
 Service Worker確認:

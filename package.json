@@ -7,7 +7,7 @@
 		"dev": "pnpm db:setup && next dev",
 		"dev:force": "next dev",
 		"build": "pnpm db:setup && next build",
-		"start": "next start",
+		"start": "node server.js",
 		"lint": "pnpm biome lint ./src",
 		"knip": "knip --no-exit-code --fix --files",
 		"format": "pnpm biome format --write ./src",
