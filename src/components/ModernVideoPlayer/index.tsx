@@ -17,6 +17,8 @@ import {
 	Clock,
 	ChevronRight,
 	ChevronLeft,
+	Camera,
+	Download,
 } from "lucide-react";
 import { cn, formatDuration } from "@/libs/utils";
 
@@ -83,11 +85,21 @@ const ModernVideoPlayer = ({
 	const skipQueueRef = useRef<number>(0);
 	const [predictedTime, setPredictedTime] = useState<number | null>(null); // 設定メニューの状態
 	const [settingsView, setSettingsView] = useState<
-		"main" | "playback" | "skip"
+		"main" | "playback" | "skip" | "screenshot"
 	>("main");
 	const skipOptions = [5, 10, 20, 60, 90]; // 選択可能な秒数
 	// サムネイル用の状態
 	const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+
+	// スクリーンショット設定の状態
+	const [autoDownloadScreenshot, setAutoDownloadScreenshot] = useState(() => {
+		// LocalStorageから設定を読み込み
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem("screenshot-auto-download");
+			return saved === "true";
+		}
+		return false;
+	});
 
 	// 再生/一時停止
 	const togglePlay = useCallback(() => {
@@ -719,6 +731,76 @@ const ModernVideoPlayer = ({
 		[],
 	);
 
+	// スクリーンショット取得機能（現在のフレーム）
+	const takeScreenshot = useCallback(async () => {
+		if (!videoRef.current || videoRef.current.readyState < 2) {
+			console.warn("Video not ready for screenshot");
+			return;
+		}
+
+		const video = videoRef.current;
+		const canvas = document.createElement("canvas");
+		const ctx = canvas.getContext("2d");
+
+		if (!ctx) {
+			console.error("Canvas context not available");
+			return;
+		}
+
+		// キャンバスのサイズを動画に合わせる
+		canvas.width = video.videoWidth || 640;
+		canvas.height = video.videoHeight || 360;
+
+		try {
+			// 現在のフレームをキャンバスに描画
+			ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+			// Canvas から Blob を作成
+			canvas.toBlob(async (blob) => {
+				if (!blob) return;
+
+				try {
+					// クリップボードにコピー
+					await navigator.clipboard.write([
+						new ClipboardItem({ "image/png": blob }),
+					]);
+
+					console.log("スクリーンショットをクリップボードにコピーしました");
+
+					// 自動ダウンロードが有効な場合はダウンロードも実行
+					if (autoDownloadScreenshot) {
+						const url = URL.createObjectURL(blob);
+						const a = document.createElement("a");
+						a.href = url;
+
+						// ファイル名を生成（動画タイトル + 時間）
+						const videoTitle = title || "screenshot";
+						const timeStr = formatDuration(currentTime).replace(/:/g, "-");
+						a.download = `${videoTitle}_${timeStr}.png`;
+
+						document.body.appendChild(a);
+						a.click();
+						document.body.removeChild(a);
+						URL.revokeObjectURL(url);
+
+						console.log("スクリーンショットをダウンロードしました");
+					}
+				} catch (error) {
+					console.error("クリップボードへのコピーに失敗:", error);
+				}
+			}, "image/png");
+		} catch (error) {
+			console.error("スクリーンショット取得エラー:", error);
+		}
+	}, [autoDownloadScreenshot, title, currentTime]);
+
+	// スクリーンショット設定の変更
+	const handleScreenshotSettingChange = useCallback((enabled: boolean) => {
+		setAutoDownloadScreenshot(enabled);
+		localStorage.setItem("screenshot-auto-download", enabled.toString());
+		setShowSettings(false);
+	}, []);
+
 	// 動画のメタデータが読み込まれた際にサムネイルを生成
 	useEffect(() => {
 		const video = videoRef.current;
@@ -783,6 +865,9 @@ const ModernVideoPlayer = ({
 					"!fixed !inset-0 !w-screen !h-screen !rounded-none !z-50 flex flex-col",
 				className,
 			)}
+			style={{
+				cursor: showControls ? "default" : "none",
+			}}
 			onMouseMove={resetControlsTimeout}
 			onMouseEnter={() => {
 				// ウィンドウフォーカスに関係なくホバー時にコントロールを表示
@@ -819,7 +904,6 @@ const ModernVideoPlayer = ({
 				playsInline
 				tabIndex={0}
 				aria-label={`動画: ${title || src.split("/").pop()?.split(".")[0] || "無題の動画"}`}
-				title={title || src.split("/").pop()?.split(".")[0] || "無題の動画"}
 				data-title={
 					title || src.split("/").pop()?.split(".")[0] || "無題の動画"
 				}
@@ -1043,8 +1127,10 @@ const ModernVideoPlayer = ({
 							<button
 								type="button"
 								onClick={() => {
-									setShowSettings(!showSettings);
-									if (!showSettings) {
+									if (showSettings) {
+										setShowSettings(false);
+									} else {
+										setShowSettings(true);
 										setSettingsView("main"); // 設定を開くときはメインビューに
 									}
 								}}
@@ -1055,7 +1141,7 @@ const ModernVideoPlayer = ({
 							{showSettings && (
 								<div
 									ref={settingsRef}
-									className="absolute bottom-8 lg:top-8 lg:bottom-auto right-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-purple-500/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
+									className="absolute bottom-8 lg:top-8 lg:bottom-auto right-0 lg:right-auto lg:left-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-purple-500/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
 								>
 									{settingsView === "main" && (
 										<div>
@@ -1095,6 +1181,22 @@ const ModernVideoPlayer = ({
 													</span>
 													<ChevronRight className="h-4 w-4" />
 												</div>{" "}
+											</button>
+											<button
+												type="button"
+												onClick={() => setSettingsView("screenshot")}
+												className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-300 hover:bg-cyan-500/20 hover:text-cyan-300 rounded transition-colors mb-2"
+											>
+												<div className="flex items-center gap-2 w-30">
+													<Camera className="h-4 w-4" />
+													スクリーンショット
+												</div>
+												<div className="flex items-center gap-1">
+													<span className="text-xs text-cyan-400 w-16">
+														{autoDownloadScreenshot ? "自動DL" : "コピーのみ"}
+													</span>
+													<ChevronRight className="h-4 w-4" />
+												</div>
 											</button>
 										</div>
 									)}
@@ -1169,9 +1271,62 @@ const ModernVideoPlayer = ({
 											))}
 										</div>
 									)}
+									{settingsView === "screenshot" && (
+										<div>
+											<div className="flex items-center gap-2 mb-3">
+												<button
+													type="button"
+													onClick={() => setSettingsView("main")}
+													className="text-slate-400 hover:text-white transition-colors w-8"
+												>
+													<ChevronLeft className="h-6 w-6" />
+												</button>
+												<div className="text-cyan-300 text-sm font-semibold flex items-center gap-2">
+													<Camera className="h-4 w-4" />
+													スクリーンショット設定
+												</div>
+											</div>
+
+											<button
+												type="button"
+												onClick={() => handleScreenshotSettingChange(false)}
+												className={cn(
+													"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
+													!autoDownloadScreenshot
+														? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white"
+														: "text-slate-300 hover:bg-cyan-500/20",
+												)}
+											>
+												クリップボードにコピーのみ
+											</button>
+											<button
+												type="button"
+												onClick={() => handleScreenshotSettingChange(true)}
+												className={cn(
+													"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
+													autoDownloadScreenshot
+														? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white"
+														: "text-slate-300 hover:bg-cyan-500/20",
+												)}
+											>
+												<div className="flex items-center gap-2">
+													<Download className="h-4 w-4" />
+													クリップボード + 自動ダウンロード
+												</div>
+											</button>
+										</div>
+									)}
 								</div>
 							)}
 						</div>
+						<button
+							type="button"
+							onClick={takeScreenshot}
+							className="text-white hover:text-cyan-300 transition-colors"
+							title="スクリーンショットを撮る"
+						>
+							<Camera className="h-5 w-5" />
+						</button>
 						<button
 							type="button"
 							onClick={togglePictureInPicture}
