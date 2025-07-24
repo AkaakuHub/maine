@@ -773,10 +773,11 @@ const ModernVideoPlayer = ({
 						const a = document.createElement("a");
 						a.href = url;
 
-						// ファイル名を生成（動画タイトル + 時間）
+						// ファイル名を生成（動画タイトル + 時間 + ランダム英数字）
 						const videoTitle = title || "screenshot";
 						const timeStr = formatDuration(currentTime).replace(/:/g, "-");
-						a.download = `${videoTitle}_${timeStr}.png`;
+						const randomId = Math.random().toString(36).substring(2, 8);
+						a.download = `${videoTitle}_${timeStr}_${randomId}.png`;
 
 						document.body.appendChild(a);
 						a.click();
