@@ -456,8 +456,15 @@ export function useVideoPlayer() {
 			}
 		} else {
 			// フォールバック: クリップボードにコピー
-			navigator.clipboard.writeText(window.location.href);
-			alert("URLがクリップボードにコピーされました！");
+			if (navigator.clipboard?.writeText && window.isSecureContext) {
+				navigator.clipboard.writeText(window.location.href);
+				alert("URLがクリップボードにコピーされました！");
+			} else {
+				console.warn(
+					"クリップボードAPIが使用できません（HTTPS接続またはlocalhostでのみ利用可能）",
+				);
+				alert("クリップボード機能はHTTPS接続またはlocalhostでのみ利用可能です");
+			}
 		}
 	};
 	const toggleLike = async () => {

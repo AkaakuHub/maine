@@ -66,6 +66,7 @@ const ModernVideoPlayer = ({
 	const containerRef = useRef<HTMLDivElement>(null);
 	const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const settingsRef = useRef<HTMLDivElement>(null);
+	const settingsButtonRef = useRef<HTMLButtonElement>(null);
 
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(0);
@@ -328,7 +329,9 @@ const ModernVideoPlayer = ({
 		const handleClickOutside = (event: MouseEvent) => {
 			if (
 				settingsRef.current &&
-				!settingsRef.current.contains(event.target as Node)
+				!settingsRef.current.contains(event.target as Node) &&
+				settingsButtonRef.current &&
+				!settingsButtonRef.current.contains(event.target as Node)
 			) {
 				setShowSettings(false);
 				setSettingsView("main"); // メインビューに戻す
@@ -774,12 +777,17 @@ const ModernVideoPlayer = ({
 				if (!blob) return;
 
 				try {
-					// クリップボードにコピー
-					await navigator.clipboard.write([
-						new ClipboardItem({ "image/png": blob }),
-					]);
-
-					console.log("スクリーンショットをクリップボードにコピーしました");
+					// クリップボードAPIが使用可能かチェック
+					if (navigator.clipboard?.write && window.isSecureContext) {
+						await navigator.clipboard.write([
+							new ClipboardItem({ "image/png": blob }),
+						]);
+						console.log("スクリーンショットをクリップボードにコピーしました");
+					} else {
+						console.warn(
+							"クリップボードAPIが使用できません（HTTPS接続またはlocalhostでのみ利用可能）",
+						);
+					}
 
 					// 自動ダウンロードが有効な場合はダウンロードも実行
 					if (autoDownloadScreenshot) {
@@ -1142,10 +1150,12 @@ const ModernVideoPlayer = ({
 						{/* 設定メニュー */}
 						<div className="relative">
 							<button
+								ref={settingsButtonRef}
 								type="button"
 								onClick={() => {
 									if (showSettings) {
 										setShowSettings(false);
+										setSettingsView("main"); // 閉じるときもメインビューにリセット
 									} else {
 										setShowSettings(true);
 										setSettingsView("main"); // 設定を開くときはメインビューに
@@ -1158,7 +1168,7 @@ const ModernVideoPlayer = ({
 							{showSettings && (
 								<div
 									ref={settingsRef}
-									className="absolute bottom-8 lg:top-8 lg:bottom-auto right-0 lg:right-auto lg:left-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-primary/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
+									className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-primary/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
 								>
 									{settingsView === "main" && (
 										<div>
@@ -1174,7 +1184,7 @@ const ModernVideoPlayer = ({
 											>
 												<div className="flex items-center gap-2 w-30">
 													<Clock className="h-4 w-4" />
-													スキップ秒数
+													<span className="text-start">スキップ秒数</span>
 												</div>
 												<div className="flex items-center gap-1">
 													<span className="text-xs text-warning w-8">
@@ -1190,7 +1200,7 @@ const ModernVideoPlayer = ({
 											>
 												<div className="flex items-center gap-2 w-30">
 													<Play className="h-4 w-4" />
-													再生速度
+													<span className="text-start">再生速度</span>
 												</div>
 												<div className="flex items-center gap-1">
 													<span className="text-xs text-primary w-8">
@@ -1204,9 +1214,9 @@ const ModernVideoPlayer = ({
 												onClick={() => setSettingsView("screenshot")}
 												className="w-full flex items-center justify-between px-3 py-2 text-sm text-text-secondary hover:bg-primary/20 hover:text-primary rounded transition-colors mb-2"
 											>
-												<div className="flex items-center gap-2 w-30">
+												<div className="flex items-center gap-2 min-w-32">
 													<Camera className="h-4 w-4" />
-													スクリーンショット
+													<span className="text-start">スクリーンショット</span>
 												</div>
 												<div className="flex items-center gap-1">
 													<span className="text-xs text-primary w-16">
@@ -1300,7 +1310,7 @@ const ModernVideoPlayer = ({
 												</button>
 												<div className="text-primary text-sm font-semibold flex items-center gap-2">
 													<Camera className="h-4 w-4" />
-													スクリーンショット設定
+													<span>スクリーンショット設定</span>
 												</div>
 											</div>
 
@@ -1308,27 +1318,33 @@ const ModernVideoPlayer = ({
 												type="button"
 												onClick={() => handleScreenshotSettingChange(false)}
 												className={cn(
-													"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
+													"flex w-full px-3 py-2 text-sm rounded transition-colors mb-1 justify-start items-center",
 													!autoDownloadScreenshot
 														? "bg-primary text-text-inverse"
 														: "text-text-secondary hover:bg-primary/20",
 												)}
+												style={{ textAlign: "left" }}
 											>
-												クリップボードにコピーのみ
+												<span className="text-left">
+													クリップボードにコピーのみ
+												</span>
 											</button>
 											<button
 												type="button"
 												onClick={() => handleScreenshotSettingChange(true)}
 												className={cn(
-													"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
+													"flex w-full px-3 py-2 text-sm rounded transition-colors mb-1 justify-start items-center",
 													autoDownloadScreenshot
 														? "bg-primary text-text-inverse"
 														: "text-text-secondary hover:bg-primary/20",
 												)}
+												style={{ textAlign: "left" }}
 											>
-												<div className="flex items-center gap-2">
+												<div className="flex items-center gap-2 text-left">
 													<Download className="h-4 w-4" />
-													クリップボード + 自動ダウンロード
+													<span className="text-left">
+														クリップボード + 自動ダウンロード
+													</span>
 												</div>
 											</button>
 										</div>
