@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import ModernVideoPlayer from "@/components/ModernVideoPlayer";
 import VideoInfo from "./VideoInfo";
 import RelatedVideos from "./RelatedVideos";
+import HelpModal from "@/components/HelpModal";
 import type { VideoInfoType } from "@/types/VideoInfo";
 
 interface ResponsiveVideoLayoutProps {
@@ -36,6 +38,25 @@ export default function ResponsiveVideoLayout({
 	onTimeUpdate,
 	initialTime,
 }: ResponsiveVideoLayoutProps) {
+	const [showHelpModal, setShowHelpModal] = useState(false);
+
+	// Escキーでヘルプモーダルを閉じる
+	useEffect(() => {
+		const handleKeyPress = (e: KeyboardEvent) => {
+			if (e.code === "Escape" && showHelpModal) {
+				e.preventDefault();
+				setShowHelpModal(false);
+			}
+		};
+
+		if (showHelpModal) {
+			document.addEventListener("keydown", handleKeyPress);
+		}
+
+		return () => {
+			document.removeEventListener("keydown", handleKeyPress);
+		};
+	}, [showHelpModal]);
 	return (
 		<div className="h-[calc(100vh-64px)]">
 			{/* レスポンシブなメインコンテンツ */}
@@ -49,6 +70,7 @@ export default function ResponsiveVideoLayout({
 							onBack={onBack}
 							onTimeUpdate={onTimeUpdate}
 							initialTime={initialTime}
+							onShowHelp={() => setShowHelpModal(true)}
 							className="h-full w-full"
 						/>
 					</div>
@@ -74,6 +96,12 @@ export default function ResponsiveVideoLayout({
 					<RelatedVideos videoInfo={videoInfo} isMobile={false} />
 				</div>
 			</div>
+
+			{/* ヘルプモーダル */}
+			<HelpModal
+				isOpen={showHelpModal}
+				onClose={() => setShowHelpModal(false)}
+			/>
 		</div>
 	);
 }

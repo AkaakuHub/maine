@@ -51,6 +51,7 @@ interface ModernVideoPlayerProps {
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
 	initialTime?: number;
 	className?: string;
+	onShowHelp?: () => void;
 }
 
 const ModernVideoPlayer = ({
@@ -59,6 +60,7 @@ const ModernVideoPlayer = ({
 	onTimeUpdate,
 	initialTime = 0,
 	className = "",
+	onShowHelp,
 }: ModernVideoPlayerProps) => {
 	const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -376,6 +378,17 @@ const ModernVideoPlayer = ({
 					e.preventDefault();
 					toggleMute();
 					break;
+				case "KeyS":
+					e.preventDefault();
+					takeScreenshot();
+					break;
+				case "Slash":
+					if (e.shiftKey) {
+						// ? キー（Shift + /）
+						e.preventDefault();
+						onShowHelp?.();
+					}
+					break;
 				case "Escape":
 					e.preventDefault();
 					if (isFullscreen) {
@@ -398,6 +411,7 @@ const ModernVideoPlayer = ({
 		skipForward,
 		toggleFullscreen,
 		toggleMute,
+		onShowHelp,
 		settingsView,
 		isFullscreen,
 	]);
@@ -893,6 +907,8 @@ const ModernVideoPlayer = ({
 					if (Date.now() - lastTapTime > 300) {
 						togglePlay();
 					}
+					// クリック後もキーボードショートカットが効くようにフォーカスを維持
+					e.currentTarget.blur();
 				}}
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
