@@ -21,7 +21,7 @@ export default function Navigation({
 						<button
 							type="button"
 							onClick={onGoBack}
-							className="flex items-center gap-2 text-white hover:text-purple-300 transition-all duration-200 p-2 rounded-lg hover:bg-purple-500/10 active:scale-95"
+							className="flex items-center gap-2 text-text hover:text-primary transition-all duration-200 p-2 rounded-lg hover:bg-primary/10 active:scale-95"
 						>
 							<ArrowLeft size={18} />
 							<span className="hidden sm:inline">戻る</span>
@@ -30,7 +30,7 @@ export default function Navigation({
 						<button
 							type="button"
 							onClick={onGoHome}
-							className="flex items-center gap-2 text-white hover:text-blue-300 transition-all duration-200 p-2 rounded-lg hover:bg-blue-500/10 active:scale-95"
+							className="flex items-center gap-2 text-text hover:text-primary transition-all duration-200 p-2 rounded-lg hover:bg-primary/10 active:scale-95"
 						>
 							<Home size={18} />
 							<span className="hidden sm:inline">ホーム</span>
@@ -41,14 +41,14 @@ export default function Navigation({
 						<button
 							type="button"
 							onClick={onShare}
-							className="p-2 text-white hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all duration-200 active:scale-95"
+							className="p-2 text-text hover:text-success hover:bg-success/10 rounded-lg transition-all duration-200 active:scale-95"
 							aria-label="共有"
 						>
 							<Share2 size={18} />
 						</button>
 						<button
 							type="button"
-							className="p-2 text-white hover:text-slate-300 hover:bg-white/10 rounded-lg transition-all duration-200 active:scale-95"
+							className="p-2 text-text hover:text-text-secondary hover:bg-surface-hover rounded-lg transition-all duration-200 active:scale-95"
 							aria-label="その他のオプション"
 						>
 							<MoreVertical size={18} />

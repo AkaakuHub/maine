@@ -88,9 +88,9 @@ const VideoCard = ({
 	return (
 		<div
 			className={cn(
-				"group relative bg-slate-800/40 rounded-xl overflow-hidden transition-all duration-300 ease-out",
+				"group relative bg-surface/40 rounded-xl overflow-hidden transition-all duration-300 ease-out",
 				"hover:scale-[1.02] hover:z-10 hover:shadow-2xl hover:shadow-purple-500/20",
-				"border border-slate-700/50 hover:border-purple-400/50",
+				"border border-border-muted/50 hover:border-purple-400/50",
 				// isDeleting && "opacity-50 pointer-events-none",
 				className,
 			)}
@@ -111,17 +111,17 @@ const VideoCard = ({
 				{/* サムネイル */}
 				<div className="relative aspect-video bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
 					<div className="w-full h-full flex items-center justify-center">
-						<Play className="h-12 w-12 text-slate-400 transition-colors group-hover:text-white" />
+						<Play className="h-12 w-12 text-text-secondary transition-colors group-hover:text-text" />
 					</div>
 					{/* ダウンロード進行状況オーバーレイ */}
 					{isCurrentlyDownloading && currentDownloadProgress && (
-						<div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-							<div className="text-center text-white">
+						<div className="absolute inset-0 bg-overlay flex items-center justify-center">
+							<div className="text-center text-text">
 								<Download className="h-8 w-8 mx-auto mb-2 animate-pulse" />
 								<div className="text-sm font-medium">
 									{Math.round(currentDownloadProgress.percentage)}%
 								</div>
-								<div className="text-xs text-slate-300 mt-1">
+								<div className="text-xs text-text-secondary mt-1">
 									ダウンロード中...
 								</div>
 							</div>
@@ -141,17 +141,17 @@ const VideoCard = ({
 									<div
 										className={cn(
 											"backdrop-blur-sm px-3 py-1 rounded-full",
-											isOfflineMode ? "bg-green-500/20" : "bg-white/20",
+											isOfflineMode ? "bg-success/20" : "bg-surface-hover",
 										)}
 									>
 										<Play
 											className={cn(
 												"h-4 w-4",
-												isOfflineMode ? "text-green-400" : "text-white",
+												isOfflineMode ? "text-success" : "text-text",
 											)}
 										/>
 									</div>
-									<span className="text-white text-sm font-medium">
+									<span className="text-text text-sm font-medium">
 										{isOfflineMode ? "オフライン再生" : "再生"}
 									</span>
 								</div>
@@ -167,9 +167,9 @@ const VideoCard = ({
 												e.stopPropagation();
 												setShowDownloadConfirm(true);
 											}}
-											className="backdrop-blur-sm bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition-colors"
+											className="backdrop-blur-sm bg-surface-hover hover:bg-surface-hover px-3 py-1 rounded-full transition-colors"
 										>
-											<Download className="h-4 w-4 text-white" />
+											<Download className="h-4 w-4 text-text" />
 										</button>
 									)}
 							</div>
@@ -178,8 +178,8 @@ const VideoCard = ({
 					{/* エピソード番号 */}
 					{video.episode && (
 						<div className="absolute top-3 left-3">
-							<div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md">
-								<span className="text-white text-xs font-medium">
+							<div className="bg-overlay backdrop-blur-sm px-2 py-1 rounded-md">
+								<span className="text-text text-xs font-medium">
 									EP. {video.episode}
 								</span>
 							</div>
@@ -188,8 +188,8 @@ const VideoCard = ({
 					{/* 年 */}
 					{/* {video.year && (
 						<div className="absolute top-3 right-3">
-							<div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md">
-								<span className="text-white text-xs font-medium">
+							<div className="bg-overlay backdrop-blur-sm px-2 py-1 rounded-md">
+								<span className="text-text text-xs font-medium">
 									{video.year}
 								</span>
 							</div>
@@ -199,7 +199,7 @@ const VideoCard = ({
 
 				{/* コンテンツ */}
 				<div className="p-4">
-					<h3 className="font-semibold text-white mb-2 line-clamp-2 leading-tight">
+					<h3 className="font-semibold text-text mb-2 line-clamp-2 leading-tight">
 						{truncateText(parsedInfo.cleanTitle || video.title, 60)}
 					</h3>
 
@@ -207,13 +207,13 @@ const VideoCard = ({
 					{(parsedInfo.broadcastStation || parsedInfo.weeklySchedule) && (
 						<div className="flex flex-wrap gap-2 mb-2">
 							{parsedInfo.broadcastStation && (
-								<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-green-600 to-teal-600 text-white px-2 py-1 rounded-full">
+								<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-green-600 to-teal-600 text-text px-2 py-1 rounded-full">
 									<Radio className="h-3 w-3" />
 									{parsedInfo.broadcastStation}
 								</span>
 							)}
 							{parsedInfo.weeklySchedule && (
-								<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white px-2 py-1 rounded-full">
+								<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-text px-2 py-1 rounded-full">
 									<Clock className="h-3 w-3" />
 									{parsedInfo.weeklySchedule}
 								</span>
@@ -222,7 +222,7 @@ const VideoCard = ({
 					)}
 					{/* メタデータ */}
 					<div className="space-y-2">
-						<div className="flex items-start gap-2 text-xs text-slate-400 flex-col">
+						<div className="flex items-start gap-2 text-xs text-text-secondary flex-col">
 							{parsedInfo.broadcastDate && (
 								<div className="flex items-center gap-1">
 									<Calendar className="h-3 w-3" />
@@ -250,7 +250,7 @@ const VideoCard = ({
 						<div className="h-8 overflow-hidden">
 							<div
 								className={cn(
-									"text-xs text-slate-500 transition-all duration-300",
+									"text-xs text-text-muted transition-all duration-300",
 									isHovered
 										? "opacity-100 translate-y-0"
 										: "opacity-0 translate-y-2",
@@ -263,7 +263,7 @@ const VideoCard = ({
 				</div>
 			</button>
 			{/* 進行状況バー（視聴進捗があれば表示） */}
-			<div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">
+			<div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated">
 				<div
 					className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
 					style={{
@@ -279,19 +279,19 @@ const VideoCard = ({
 				title="動画をダウンロード"
 				message={
 					<div>
-						<p className="text-slate-300 mb-2">
+						<p className="text-text-secondary mb-2">
 							この動画をオフライン視聴用にダウンロードしますか？
 						</p>
-						<p className="text-sm text-slate-400">
+						<p className="text-sm text-text-secondary">
 							ファイル名: {video.fileName}
 						</p>
-						<p className="text-sm text-slate-400">
+						<p className="text-sm text-text-secondary">
 							サイズ: {formatFileSize(video.fileSize)}
 						</p>
 					</div>
 				}
 				icon={Download}
-				iconColor="text-blue-400"
+				iconColor="text-primary"
 				actions={[
 					{
 						label: "ダウンロード",

@@ -74,15 +74,15 @@ const LoadingSpinner = ({
 const LoadingCard = ({ className }: { className?: string }) => (
 	<div
 		className={cn(
-			"bg-slate-800/40 rounded-xl overflow-hidden border border-slate-700/50 animate-pulse",
+			"bg-surface/40 rounded-xl overflow-hidden border border-border-muted/50 animate-pulse",
 			className,
 		)}
 	>
-		<div className="aspect-video bg-slate-700/50" />
+		<div className="aspect-video bg-surface-elevated/50" />
 		<div className="p-4 space-y-3">
-			<div className="h-4 bg-slate-700/50 rounded w-3/4" />
-			<div className="h-3 bg-slate-700/50 rounded w-1/2" />
-			<div className="h-3 bg-slate-700/50 rounded w-1/3" />
+			<div className="h-4 bg-surface-elevated/50 rounded w-3/4" />
+			<div className="h-3 bg-surface-elevated/50 rounded w-1/2" />
+			<div className="h-3 bg-surface-elevated/50 rounded w-1/3" />
 		</div>
 	</div>
 );
@@ -111,7 +111,7 @@ const LoadingState = ({
 							<h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
 								データベースを読み込み中
 							</h2>
-							<p className="text-slate-400 text-lg max-w-md">
+							<p className="text-text-secondary text-lg max-w-md">
 								{message ||
 									"動画ファイルを検索して動画ライブラリを構築しています..."}
 							</p>
@@ -119,7 +119,7 @@ const LoadingState = ({
 								{Array.from({ length: 3 }, (_, i) => (
 									<div
 										key={`progress-dot-${Date.now()}-${i}`}
-										className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+										className="w-2 h-2 bg-primary rounded-full animate-bounce"
 										style={{ animationDelay: `${i * 0.2}s` }}
 									/>
 								))}
@@ -135,10 +135,10 @@ const LoadingState = ({
 						<div className="flex items-center justify-center py-20">
 							<LoadingSpinner size="lg" className="mr-6" />
 							<div>
-								<h3 className="text-xl font-semibold text-white mb-2">
+								<h3 className="text-xl font-semibold text-text mb-2">
 									検索中...
 								</h3>
-								<p className="text-slate-400">
+								<p className="text-text-secondary">
 									{message || "動画を検索しています"}
 								</p>
 							</div>
@@ -152,10 +152,10 @@ const LoadingState = ({
 					centerContent: (
 						<div className="flex flex-col items-center justify-center min-h-[40vh] text-center">
 							<LoadingSpinner size="lg" className="mb-6" />
-							<h2 className="text-2xl font-semibold text-white mb-2">
+							<h2 className="text-2xl font-semibold text-text mb-2">
 								更新中...
 							</h2>
-							<p className="text-slate-400">
+							<p className="text-text-secondary">
 								{message || "新しい動画を検索しています"}
 							</p>
 						</div>

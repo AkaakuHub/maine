@@ -135,7 +135,7 @@ const VideoListItem = ({
 	return (
 		<div
 			className={cn(
-				"group bg-slate-800/30 hover:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 hover:border-purple-400/30 transition-all duration-300",
+				"group bg-surface/30 hover:bg-surface/50 backdrop-blur-sm rounded-xl border border-border-muted/50 hover:border-purple-400/30 transition-all duration-300",
 				isDeleting && "opacity-50 pointer-events-none",
 			)}
 		>
@@ -152,16 +152,16 @@ const VideoListItem = ({
 					{/* サムネイル */}
 					<div className="relative w-28 h-16 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg overflow-hidden flex-shrink-0">
 						<div className="w-full h-full flex items-center justify-center">
-							<Play className="h-6 w-6 text-slate-400 group-hover:text-white transition-colors" />
+							<Play className="h-6 w-6 text-text-secondary group-hover:text-text transition-colors" />
 						</div>
 
 						{/* ダウンロード進行状況オーバーレイ */}
 						{isCurrentlyDownloading &&
 							currentDownloadProgress !== undefined && (
-								<div className="absolute inset-0 bg-black/75 flex items-center justify-center">
+								<div className="absolute inset-0 bg-overlay flex items-center justify-center">
 									<div className="text-center">
-										<div className="w-6 h-6 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-1" />
-										<div className="text-white text-xs">
+										<div className="w-6 h-6 border-2 border-primary border-t-blue-500 rounded-full animate-spin mb-1" />
+										<div className="text-text text-xs">
 											{Math.round(currentDownloadProgress.percentage || 0)}%
 										</div>
 									</div>
@@ -170,8 +170,8 @@ const VideoListItem = ({
 
 						{/* 再生ボタンオーバーレイ */}
 						{!isCurrentlyDownloading && (
-							<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-								<Play className="h-8 w-8 text-white" />
+							<div className="absolute inset-0 bg-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+								<Play className="h-8 w-8 text-text" />
 							</div>
 						)}
 					</div>
@@ -180,10 +180,10 @@ const VideoListItem = ({
 					<div className="flex-1 min-w-0">
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1 min-w-0">
-								<h3 className="font-semibold text-white mb-1 truncate text-lg">
+								<h3 className="font-semibold text-text mb-1 truncate text-lg">
 									{parsedInfo.cleanTitle || video.title}
 								</h3>
-								<p className="text-sm text-slate-400 truncate mb-2">
+								<p className="text-sm text-text-secondary truncate mb-2">
 									{video.fileName}
 								</p>
 
@@ -193,13 +193,13 @@ const VideoListItem = ({
 									parsedInfo.broadcastDate) && (
 									<div className="flex flex-wrap gap-2 mb-2">
 										{parsedInfo.broadcastStation && (
-											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-green-600 to-teal-600 text-white px-2 py-1 rounded-full">
+											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-green-600 to-teal-600 text-text px-2 py-1 rounded-full">
 												<Radio className="h-3 w-3" />
 												{parsedInfo.broadcastStation}
 											</span>
 										)}
 										{parsedInfo.weeklySchedule && (
-											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white px-2 py-1 rounded-full">
+											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-text px-2 py-1 rounded-full">
 												<Clock className="h-3 w-3" />
 												{parsedInfo.weeklySchedule}
 											</span>
@@ -208,10 +208,10 @@ const VideoListItem = ({
 								)}
 
 								{/* メタデータ */}
-								<div className="flex items-center gap-4 text-xs text-slate-400">
+								<div className="flex items-center gap-4 text-xs text-text-secondary">
 									{video.episode && (
 										<div className="flex items-center gap-1">
-											<div className="w-2 h-2 bg-blue-400 rounded-full" />
+											<div className="w-2 h-2 bg-primary rounded-full" />
 											<span>EP. {video.episode}</span>
 										</div>
 									)}
@@ -252,7 +252,7 @@ const VideoListItem = ({
 							<div className="flex items-center gap-2 relative" ref={menuRef}>
 								<button
 									type="button"
-									className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+									className="p-2 text-text-secondary hover:text-text hover:bg-surface-elevated/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
 									onClick={(e) => {
 										e.preventDefault();
 										// TODO: 詳細モーダルを実装
@@ -262,7 +262,7 @@ const VideoListItem = ({
 								</button>
 								<button
 									type="button"
-									className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+									className="p-2 text-text-secondary hover:text-text hover:bg-surface-elevated/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
 									onClick={handleMenuClick}
 								>
 									<MoreHorizontal className="h-4 w-4" />
@@ -270,13 +270,13 @@ const VideoListItem = ({
 
 								{/* コンテキストメニュー */}
 								{showMenu && (
-									<div className="absolute right-0 top-full mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-20 min-w-[160px]">
+									<div className="absolute right-0 top-full mt-2 bg-surface border border-border-muted rounded-lg shadow-xl z-20 min-w-[160px]">
 										{isOfflineMode ? (
 											<button
 												type="button"
 												onClick={handleDelete}
 												disabled={isDeleting}
-												className="w-full px-4 py-2 text-left text-red-400 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+												className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 											>
 												<Trash2 className="h-4 w-4" />
 												削除
@@ -287,7 +287,7 @@ const VideoListItem = ({
 													<button
 														type="button"
 														onClick={handleDownload}
-														className="w-full px-4 py-2 text-left text-blue-400 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2"
+														className="w-full px-4 py-2 text-left text-primary hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2"
 													>
 														<Download className="h-4 w-4" />
 														ダウンロード
@@ -298,7 +298,7 @@ const VideoListItem = ({
 														type="button"
 														onClick={handleDelete}
 														disabled={isDeleting}
-														className="w-full px-4 py-2 text-left text-red-400 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+														className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 													>
 														<Trash2 className="h-4 w-4" />
 														削除
@@ -314,7 +314,7 @@ const VideoListItem = ({
 						{/* 進行状況バー */}
 						{video.lastWatched && (
 							<div className="mt-3">
-								<div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden">
+								<div className="w-full h-1 bg-surface-elevated rounded-full overflow-hidden">
 									<div
 										className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
 										style={{

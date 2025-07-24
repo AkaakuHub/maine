@@ -233,7 +233,7 @@ const Home = () => {
 
 	if (videosLoading && !hasContent) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+			<div className="min-h-screen bg-surface-variant">
 				<LoadingState type="initial" message="検索中..." />
 			</div>
 		);
@@ -241,7 +241,7 @@ const Home = () => {
 
 	if (videosError) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+			<div className="min-h-screen bg-surface-variant">
 				<div className="container mx-auto px-4 py-8">
 					<EmptyState type="loading-error" onRetry={handleRetry} />
 				</div>
@@ -250,141 +250,142 @@ const Home = () => {
 	}
 
 	return (
-		<main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-			{/* 背景装飾 */}
-			<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-slate-900/50 to-slate-900" />
-			<div
-				className="absolute inset-0 opacity-30"
-				style={{
-					backgroundImage:
-						"url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KPHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMDMpIiBmaWxsPSJub25lIj4KPC9zdmc+')",
-				}}
-			/>{" "}
-			<div className="relative container mx-auto px-4 py-8">
-				{/* 統合ヘッダー */}
-				<div className="mb-8 space-y-4">
+		<main className="min-h-screen bg-surface-variant">
+			{/* モダンなヘッダーセクション */}
+			<div className="bg-surface border-b border-border">
+				<div className="container mx-auto px-6 py-6">
 					{/* メインヘッダー */}
-					<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-						<div>
-							<div className="flex items-center gap-3">
-								<h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-									My Video Storage
-								</h1>{" "}
-								{/* ローディングインジケーター */}
-								{videosLoading && activeTab === "streaming" && (
-									<div className="h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-								)}
+					<div className="flex items-center justify-between mb-6">
+						<div className="flex items-center gap-4">
+							<div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+								<svg
+									className="w-6 h-6 text-text-inverse"
+									fill="currentColor"
+									viewBox="0 0 20 20"
+									aria-label="Video Storage Icon"
+								>
+									<title>Video Storage</title>
+									<path d="M2 3a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 3v10h14V6H3z" />
+									<path d="M8 8l4 2.5L8 13V8z" />
+								</svg>
 							</div>
-							<p className="text-slate-400 mt-2">
-								{activeTab === "streaming" ? (
-									videos.length === pagination.total ? (
-										`${pagination.total} 動画`
+							<div>
+								<h1 className="text-2xl font-bold text-text flex items-center gap-3">
+									My Video Storage
+									{videosLoading && activeTab === "streaming" && (
+										<div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+									)}
+								</h1>
+								<p className="text-sm text-text-secondary mt-1">
+									{activeTab === "streaming" ? (
+										videos.length === pagination.total ? (
+											`${pagination.total} 動画`
+										) : (
+											`${videos.length} / ${pagination.total} 動画が見つかりました`
+										)
 									) : (
-										`${videos.length} / ${pagination.total} 動画が見つかりました`
-									)
-								) : (
-									<>
-										{offlineVideos.length} 動画がオフラインで利用可能
-										{cacheSize > 0 && ` (${formatFileSize(cacheSize)})`}
-									</>
-								)}
-							</p>
+										<>
+											{offlineVideos.length} 動画がオフラインで利用可能
+											{cacheSize > 0 && ` (${formatFileSize(cacheSize)})`}
+										</>
+									)}
+								</p>
+							</div>
 						</div>
 
-						{/* PWAインストールプロンプト */}
-						<PWAInstallPrompt className="mb-2" />
+						<div className="flex items-center gap-4">
+							{/* PWAインストールプロンプト */}
+							<PWAInstallPrompt />
 
-						{/* 表示モード切り替え */}
-						<div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-1 border border-slate-700">
-							<button
-								type="button"
-								onClick={() => setViewMode("grid")}
-								className={cn(
-									"flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
-									viewMode === "grid"
-										? "bg-blue-500 text-white shadow-lg"
-										: "text-slate-400 hover:text-white hover:bg-slate-700/50",
-								)}
-							>
-								<Grid className="h-4 w-4" />
-								<span className="hidden sm:inline">グリッド</span>
-							</button>
-							<button
-								type="button"
-								onClick={() => setViewMode("list")}
-								className={cn(
-									"flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
-									viewMode === "list"
-										? "bg-blue-500 text-white shadow-lg"
-										: "text-slate-400 hover:text-white hover:bg-slate-700/50",
-								)}
-							>
-								<List className="h-4 w-4" />
-								<span className="hidden sm:inline">リスト</span>
-							</button>
+							{/* 表示モード切り替え */}
+							<div className="flex bg-surface-elevated rounded-lg p-1">
+								<button
+									type="button"
+									onClick={() => setViewMode("grid")}
+									className={cn(
+										"flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium",
+										viewMode === "grid"
+											? "bg-primary text-text-inverse shadow-sm"
+											: "text-text-secondary hover:text-text hover:bg-surface",
+									)}
+								>
+									<Grid className="h-4 w-4" />
+									<span className="hidden sm:inline">グリッド</span>
+								</button>
+								<button
+									type="button"
+									onClick={() => setViewMode("list")}
+									className={cn(
+										"flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium",
+										viewMode === "list"
+											? "bg-primary text-text-inverse shadow-sm"
+											: "text-text-secondary hover:text-text hover:bg-surface",
+									)}
+								>
+									<List className="h-4 w-4" />
+									<span className="hidden sm:inline">リスト</span>
+								</button>
+							</div>
 						</div>
 					</div>
+
 					{/* タブナビゲーション */}
-					<div className="bg-slate-800/30 backdrop-blur-xl rounded-xl border border-slate-700/50 overflow-hidden">
-						<div className="flex">
-							<button
-								type="button"
-								onClick={() => handleTabChange("streaming")}
-								className={cn(
-									"flex-1 flex items-center justify-center gap-2 px-6 py-4 transition-all duration-200",
-									activeTab === "streaming"
-										? "bg-blue-500 text-white"
-										: "text-slate-400 hover:text-white hover:bg-slate-700/50",
-								)}
-							>
-								<Wifi className="h-5 w-5" />
-								<span className="font-medium">ストリーミング</span>
-							</button>
-							<button
-								type="button"
-								onClick={() => handleTabChange("offline")}
-								className={cn(
-									"flex-1 flex items-center justify-center gap-2 px-6 py-4 transition-all duration-200 relative",
-									activeTab === "offline"
-										? "bg-green-500 text-white"
-										: "text-slate-400 hover:text-white hover:bg-slate-700/50",
-								)}
-							>
-								<Download className="h-5 w-5" />
-								<span className="font-medium">オフライン動画</span>
-								{offlineVideos.length > 0 && (
-									<span
-										className={cn(
-											"absolute -top-1 -right-1 px-2 py-1 text-xs rounded-full",
-											activeTab === "offline"
-												? "bg-white text-green-500"
-												: "bg-green-500 text-white",
-										)}
-									>
-										{offlineVideos.length}
-									</span>
-								)}
-							</button>
-						</div>
-					</div>{" "}
-					{/* 検索バー（ストリーミングタブのみ） */}
+					<div className="flex bg-surface-elevated rounded-lg p-1 mb-6">
+						<button
+							type="button"
+							onClick={() => handleTabChange("streaming")}
+							className={cn(
+								"flex-1 flex items-center justify-center gap-3 px-6 py-3 rounded-md transition-all duration-200 font-medium",
+								activeTab === "streaming"
+									? "bg-primary text-text-inverse shadow-sm"
+									: "text-text-secondary hover:text-text hover:bg-surface",
+							)}
+						>
+							<Wifi className="h-5 w-5" />
+							<span>ストリーミング</span>
+						</button>
+						<button
+							type="button"
+							onClick={() => handleTabChange("offline")}
+							className={cn(
+								"flex-1 flex items-center justify-center gap-3 px-6 py-3 rounded-md transition-all duration-200 font-medium relative",
+								activeTab === "offline"
+									? "bg-primary text-text-inverse shadow-sm"
+									: "text-text-secondary hover:text-text hover:bg-surface",
+							)}
+						>
+							<Download className="h-5 w-5" />
+							<span>オフライン動画</span>
+							{offlineVideos.length > 0 && (
+								<span
+									className={cn(
+										"absolute -top-1 -right-1 px-2 py-0.5 text-xs rounded-full font-semibold",
+										activeTab === "offline"
+											? "bg-surface text-primary"
+											: "bg-primary text-text-inverse",
+									)}
+								>
+									{offlineVideos.length}
+								</span>
+							)}
+						</button>
+					</div>
+
+					{/* 検索・フィルターセクション（ストリーミングタブのみ） */}
 					{activeTab === "streaming" && (
-						<div className="bg-slate-800/30 backdrop-blur-xl rounded-xl p-4 border border-slate-700/50">
-							<div className="flex flex-col sm:flex-row gap-4">
+						<div className="bg-surface-elevated rounded-lg p-4">
+							<div className="flex flex-col lg:flex-row gap-4">
 								{/* 検索入力 */}
 								<div className="relative flex-1">
-									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-secondary" />
 									<input
 										type="text"
 										placeholder={`動画タイトルやファイル名で検索... (${SEARCH.MIN_QUERY_LENGTH}文字以上)`}
 										value={searchTerm}
-										onChange={(e) => {
-											setSearchTerm(e.target.value);
-										}}
+										onChange={(e) => setSearchTerm(e.target.value)}
 										onCompositionStart={() => setIsComposing(true)}
 										onCompositionEnd={() => setIsComposing(false)}
 										onKeyDown={(e) => {
-											// IMEの変換確定時のEnterキーを除外
 											if (
 												e.key === "Enter" &&
 												!isComposing &&
@@ -393,16 +394,16 @@ const Home = () => {
 												handleSearch();
 											}
 										}}
-										className="w-full pl-10 pr-20 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+										className="w-full pl-10 pr-24 py-3 bg-surface border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
 									/>
 									<div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
 										{searchTerm && (
 											<button
 												type="button"
 												onClick={clearSearch}
-												className="h-5 w-5 text-slate-400 hover:text-white transition-colors"
+												className="p-1 text-text-secondary hover:text-text transition-colors rounded-md hover:bg-surface-elevated"
 											>
-												<X className="h-5 w-5" />
+												<X className="h-4 w-4" />
 											</button>
 										)}
 										<Button
@@ -412,32 +413,22 @@ const Home = () => {
 												searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH
 											}
 											size="sm"
-											className="h-8 px-3"
+											className="h-8"
 										>
 											検索
 										</Button>
 									</div>
-									{/* 検索ヘルプメッセージ */}
-									{searchTerm &&
-										searchTerm.trim().length > 0 &&
-										searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH && (
-											<p className="absolute -bottom-6 left-0 text-xs text-yellow-400">
-												検索には{SEARCH.MIN_QUERY_LENGTH}
-												文字以上入力してください
-											</p>
-										)}
 								</div>
 
-								{/* ソートとフィルター */}
-								<div className="flex gap-2">
-									{/* ソート選択 */}
+								{/* フィルター・ソートコントロール */}
+								<div className="flex gap-3">
 									<select
 										value={sortBy}
 										onChange={(e) => {
 											setSortBy(e.target.value as SortBy);
 											setCurrentPage(1);
 										}}
-										className="px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+										className="px-3 py-2 bg-surface border border-border rounded-lg text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
 									>
 										<option value="title">タイトル順</option>
 										<option value="year">年度順</option>
@@ -445,17 +436,13 @@ const Home = () => {
 										<option value="createdAt">作成日順</option>
 									</select>
 
-									{/* ソート順切り替え */}
 									<button
 										type="button"
 										onClick={() => {
 											setSortOrder(sortOrder === "asc" ? "desc" : "asc");
 											setCurrentPage(1);
 										}}
-										className={cn(
-											"flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200",
-											"bg-slate-900/50 border border-slate-600 text-white hover:bg-slate-700/50",
-										)}
+										className="flex items-center justify-center px-3 py-2 bg-surface border border-border rounded-lg text-text hover:bg-surface-elevated transition-all duration-200"
 										title={sortOrder === "asc" ? "昇順" : "降順"}
 									>
 										{sortOrder === "asc" ? (
@@ -466,25 +453,36 @@ const Home = () => {
 									</button>
 								</div>
 							</div>
+
+							{/* 検索ヘルプメッセージ */}
+							{searchTerm &&
+								searchTerm.trim().length > 0 &&
+								searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH && (
+									<p className="mt-2 text-xs text-warning flex items-center gap-2">
+										<span className="w-1 h-1 bg-warning rounded-full" />
+										検索には{SEARCH.MIN_QUERY_LENGTH}文字以上入力してください
+									</p>
+								)}
 						</div>
 					)}
+
 					{/* オフライン管理パネル */}
 					{activeTab === "offline" && (
-						<div className="bg-slate-800/30 backdrop-blur-xl rounded-xl p-4 border border-slate-700/50">
+						<div className="bg-surface-elevated rounded-lg p-4">
 							<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-								<div className="flex items-center gap-4">
-									<div className="text-green-400">
-										<Download className="h-5 w-5" />
+								<div className="flex items-center gap-3">
+									<div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+										<Download className="h-5 w-5 text-primary" />
 									</div>
 									<div>
-										<h3 className="text-white font-medium">
+										<h3 className="text-text font-semibold">
 											オフライン動画管理
 										</h3>
-										<p className="text-sm text-slate-400">
+										<p className="text-sm text-text-secondary">
 											{storageEstimate && (
 												<>
 													使用容量: {formatFileSize(storageEstimate.usage)} /{" "}
-													{formatFileSize(storageEstimate.quota)}(
+													{formatFileSize(storageEstimate.quota)} (
 													{Math.round(
 														(storageEstimate.usage / storageEstimate.quota) *
 															100,
@@ -496,7 +494,6 @@ const Home = () => {
 									</div>
 								</div>
 								<div className="flex gap-2">
-									{" "}
 									<Button
 										onClick={refreshCachedVideos}
 										variant="secondary"
@@ -520,7 +517,10 @@ const Home = () => {
 						</div>
 					)}
 				</div>
+			</div>
 
+			{/* コンテンツエリア */}
+			<div className="container mx-auto px-6 py-6">
 				{/* コンテンツ */}
 				{activeTab === "streaming" ? (
 					// ストリーミングタブの内容
@@ -534,13 +534,13 @@ const Home = () => {
 						<div className="text-center py-20">
 							<div className="max-w-md mx-auto">
 								<div className="mb-8">
-									<div className="w-24 h-24 mx-auto mb-6 bg-slate-800 rounded-full flex items-center justify-center">
-										<Search className="h-12 w-12 text-slate-400" />
+									<div className="w-24 h-24 mx-auto mb-6 bg-surface rounded-full flex items-center justify-center">
+										<Search className="h-12 w-12 text-text-secondary" />
 									</div>
-									<h2 className="text-2xl font-bold text-white mb-4">
+									<h2 className="text-2xl font-bold text-text mb-4">
 										動画ライブラリへようこそ
 									</h2>
-									<p className="text-slate-400 mb-8">
+									<p className="text-text-secondary mb-8">
 										検索フィールドから動画を検索するか、下のボタンで全ての動画を表示できます。
 									</p>
 								</div>
@@ -553,7 +553,7 @@ const Home = () => {
 									>
 										{videosLoading ? "読み込み中..." : "すべての動画を表示"}
 									</Button>
-									<p className="text-sm text-slate-500">
+									<p className="text-sm text-text-muted">
 										※
 										4000件以上の動画がある場合、読み込みに時間がかかる場合があります
 									</p>
@@ -606,7 +606,7 @@ const Home = () => {
 							前のページ
 						</Button>
 
-						<span className="text-white">
+						<span className="text-text">
 							{pagination.page} / {pagination.totalPages} ページ (
 							{pagination.total}件中{" "}
 							{(pagination.page - 1) * pagination.limit + 1}-

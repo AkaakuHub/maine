@@ -69,25 +69,25 @@ export default function PlayPage() {
 	// ネットワーク警告の表示
 	if (showNetworkWarning) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+			<div className="min-h-screen bg-surface-variant flex items-center justify-center">
 				<div className="max-w-md mx-auto p-8 text-center">
-					<WifiOff className="h-16 w-16 mx-auto text-red-400 mb-4" />
-					<h2 className="text-2xl font-bold text-white mb-4">オフラインです</h2>
-					<p className="text-slate-400 mb-6">
+					<WifiOff className="h-16 w-16 mx-auto text-error mb-4" />
+					<h2 className="text-2xl font-bold text-text mb-4">オフラインです</h2>
+					<p className="text-text-secondary mb-6">
 						この動画はオフラインで利用できません。インターネット接続を確認するか、ダウンロード済みの動画から選択してください。
 					</p>
 					<div className="flex gap-3">
 						<button
 							type="button"
 							onClick={() => router.push("/")}
-							className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+							className="flex-1 px-4 py-2 bg-primary text-text rounded-lg hover:bg-primary-hover transition-colors"
 						>
 							ホームに戻る
 						</button>
 						<button
 							type="button"
 							onClick={() => window.location.reload()}
-							className="flex-1 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
+							className="flex-1 px-4 py-2 bg-surface-elevated text-text rounded-lg hover:bg-surface-elevated transition-colors"
 						>
 							再試行
 						</button>
@@ -102,7 +102,7 @@ export default function PlayPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-blue-900/20">
+		<div className="min-h-screen bg-surface-variant">
 			{/* ナビゲーションバー - 全画面で表示 */}
 			<Navigation
 				onGoBack={handleGoBack}

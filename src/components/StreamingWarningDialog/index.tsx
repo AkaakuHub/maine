@@ -20,11 +20,11 @@ const StreamingWarningDialog = ({
 }: StreamingWarningDialogProps) => {
 	const message = (
 		<div>
-			<p className="text-slate-300 mb-3">
-				<span className="font-medium text-white">「{videoTitle}」</span>
+			<p className="text-text-secondary mb-3">
+				<span className="font-medium text-text">「{videoTitle}」</span>
 				は既にオフラインで保存されています。
 			</p>
-			<p className="text-sm text-slate-400">
+			<p className="text-sm text-text-secondary">
 				ストリーミング再生よりもオフライン再生の方が高速で、インターネット接続も不要です。
 			</p>
 		</div>
@@ -55,7 +55,7 @@ const StreamingWarningDialog = ({
 			message={message}
 			actions={actions}
 			icon={AlertTriangle}
-			iconColor="text-amber-400"
+			iconColor="text-warning"
 		/>
 	);
 };

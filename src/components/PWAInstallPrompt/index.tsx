@@ -69,7 +69,7 @@ export default function PWAInstallPrompt({ className }: PWAInstallPromptProps) {
 
 	if (isInstalled) {
 		return (
-			<div className={`text-sm text-green-600 ${className}`}>
+			<div className={`text-sm text-success ${className}`}>
 				✓ PWAとしてインストール済み
 			</div>
 		);
@@ -84,11 +84,11 @@ export default function PWAInstallPrompt({ className }: PWAInstallPromptProps) {
 			<button
 				type="button"
 				onClick={handleInstallClick}
-				className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+				className="px-3 py-1 text-sm bg-primary text-text rounded hover:bg-primary-hover transition-colors"
 			>
 				アプリをインストール
 			</button>
-			<span className="text-xs text-gray-500">
+			<span className="text-xs text-text-muted">
 				ホーム画面に追加してオフラインでも利用可能
 			</span>
 		</div>

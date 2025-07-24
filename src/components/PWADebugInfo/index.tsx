@@ -97,47 +97,43 @@ export default function PWADebugInfo({ className }: PWADebugInfoProps) {
 
 	return (
 		<div
-			className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-4 border border-slate-700 ${className}`}
+			className={`bg-surface/50 backdrop-blur-sm rounded-lg p-4 border border-border-muted ${className}`}
 		>
-			<h3 className="text-lg font-semibold mb-3 text-white">
-				PWA デバッグ情報
-			</h3>
+			<h3 className="text-lg font-semibold mb-3 text-text">PWA デバッグ情報</h3>
 			<div className="space-y-2 text-sm">
 				<div className="flex justify-between">
-					<span className="text-slate-400">ネットワーク状態:</span>
-					<span className={isOnline ? "text-green-400" : "text-red-400"}>
+					<span className="text-text-secondary">ネットワーク状態:</span>
+					<span className={isOnline ? "text-success" : "text-error"}>
 						{isOnline ? "オンライン" : "オフライン"}
 					</span>
 				</div>
 				<div className="flex justify-between">
-					<span className="text-slate-400">オフラインモード:</span>
-					<span
-						className={isOfflineMode ? "text-yellow-400" : "text-green-400"}
-					>
+					<span className="text-text-secondary">オフラインモード:</span>
+					<span className={isOfflineMode ? "text-warning" : "text-success"}>
 						{isOfflineMode ? "有効" : "無効"}
 					</span>
 				</div>
 				<div className="flex justify-between">
-					<span className="text-slate-400">Service Worker:</span>
+					<span className="text-text-secondary">Service Worker:</span>
 					<span
 						className={
-							serviceWorkerStatus === "有効" ? "text-green-400" : "text-red-400"
+							serviceWorkerStatus === "有効" ? "text-success" : "text-error"
 						}
 					>
 						{serviceWorkerStatus}
 					</span>
 				</div>
 				<div className="flex justify-between">
-					<span className="text-slate-400">Cache API:</span>
-					<span className="text-white">{cacheStatus}</span>
+					<span className="text-text-secondary">Cache API:</span>
+					<span className="text-text">{cacheStatus}</span>
 				</div>
 				<div className="flex justify-between">
-					<span className="text-slate-400">ストレージ使用量:</span>
-					<span className="text-white">{storageQuota}</span>
+					<span className="text-text-secondary">ストレージ使用量:</span>
+					<span className="text-text">{storageQuota}</span>
 				</div>
 			</div>
-			<div className="mt-3 pt-3 border-t border-slate-600">
-				<p className="text-xs text-slate-500">
+			<div className="mt-3 pt-3 border-t border-border">
+				<p className="text-xs text-text-muted">
 					デバッグ情報:
 					ブラウザのDevToolsのConsoleタブでより詳細な情報を確認できます
 				</p>

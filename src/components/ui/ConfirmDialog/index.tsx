@@ -30,7 +30,7 @@ const ConfirmDialog = ({
 	message,
 	actions,
 	icon: Icon,
-	iconColor = "text-amber-400",
+	iconColor = "text-warning",
 	showCancel = true,
 }: ConfirmDialogProps) => {
 	if (!isOpen) return null;
@@ -38,11 +38,11 @@ const ConfirmDialog = ({
 	const getActionClasses = (variant = "secondary") => {
 		switch (variant) {
 			case "primary":
-				return "bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600";
+				return "bg-gradient-to-r from-green-500 to-teal-500 text-text hover:from-green-600 hover:to-teal-600";
 			case "danger":
-				return "bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600";
+				return "bg-gradient-to-r from-red-500 to-pink-500 text-text hover:from-red-600 hover:to-pink-600";
 			default:
-				return "bg-slate-700 text-white hover:bg-slate-600";
+				return "bg-surface-elevated text-text hover:bg-surface-elevated";
 		}
 	};
 
@@ -60,7 +60,7 @@ const ConfirmDialog = ({
 
 	return (
 		<div
-			className="fixed top-0 left-0 right-0 bottom-0 bg-black/60 backdrop-blur-sm z-50"
+			className="fixed top-0 left-0 right-0 bottom-0 bg-overlay backdrop-blur-sm z-50"
 			onClick={handleBackdropClick}
 			onKeyDown={handleKeyDown}
 			aria-modal="true"
@@ -73,7 +73,7 @@ const ConfirmDialog = ({
 			}}
 		>
 			<div
-				className="bg-slate-800 rounded-xl p-6 w-full border border-slate-600 shadow-2xl relative"
+				className="bg-surface rounded-xl p-6 w-full border border-border shadow-2xl relative"
 				style={{ maxWidth: "28rem" }}
 				onClick={(e) => e.stopPropagation()}
 				onKeyDown={(e) => e.stopPropagation()}
@@ -88,14 +88,14 @@ const ConfirmDialog = ({
 								<Icon className={`h-5 w-5 ${iconColor}`} />
 							</div>
 						)}
-						<h3 id="dialog-title" className="text-lg font-semibold text-white">
+						<h3 id="dialog-title" className="text-lg font-semibold text-text">
 							{title}
 						</h3>
 					</div>
 					<button
 						type="button"
 						onClick={onClose}
-						className="text-slate-400 hover:text-white transition-colors p-1"
+						className="text-text-secondary hover:text-text transition-colors p-1"
 					>
 						<X className="h-5 w-5" />
 					</button>
@@ -104,7 +104,7 @@ const ConfirmDialog = ({
 				{/* メッセージ */}
 				<div className="mb-6">
 					{typeof message === "string" ? (
-						<p className="text-slate-300">{message}</p>
+						<p className="text-text-secondary">{message}</p>
 					) : (
 						message
 					)}
@@ -134,7 +134,7 @@ const ConfirmDialog = ({
 						<button
 							type="button"
 							onClick={onClose}
-							className="w-full p-2 text-slate-400 hover:text-white transition-colors text-center"
+							className="w-full p-2 text-text-secondary hover:text-text transition-colors text-center"
 						>
 							キャンセル
 						</button>

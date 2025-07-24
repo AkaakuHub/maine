@@ -65,16 +65,16 @@ export default function VideoDescription({
 					onClick={onToggleDescription}
 					className="text-left w-full mb-3"
 				>
-					<h3 className="text-white font-semibold flex items-center justify-between">
+					<h3 className="text-text font-semibold flex items-center justify-between">
 						概要
-						<span className="text-purple-300 text-sm font-medium">
+						<span className="text-primary text-sm font-medium">
 							{showDescription ? "簡潔に表示" : "もっと見る"}
 						</span>
 					</h3>
 				</button>
 
 				<p
-					className={`text-slate-300 text-sm leading-relaxed transition-all duration-300 whitespace-pre-wrap ${
+					className={`text-text-secondary text-sm leading-relaxed transition-all duration-300 whitespace-pre-wrap ${
 						showDescription ? "" : "overflow-hidden text-ellipsis"
 					}`}
 					style={
@@ -94,28 +94,28 @@ export default function VideoDescription({
 
 			{/* オフライン管理セクション */}
 			{filePath && (
-				<div className="border-t border-slate-700/50 pt-4">
-					<h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+				<div className="border-t border-border-muted/50 pt-4">
+					<h3 className="text-text font-semibold mb-3 flex items-center gap-2">
 						<WifiOff className="h-4 w-4" />
 						オフライン再生
 					</h3>
 
 					<div className="space-y-3">
 						{!isVideoCached && !downloading && (
-							<div className="bg-slate-800/60 rounded-lg p-4 border border-slate-700/50">
+							<div className="bg-surface/60 rounded-lg p-4 border border-border-muted/50">
 								<div className="flex items-center justify-between">
 									<div>
-										<p className="text-sm text-slate-300 mb-1">
+										<p className="text-sm text-text-secondary mb-1">
 											この動画をダウンロードしてオフラインで視聴
 										</p>
-										<p className="text-xs text-slate-400">
+										<p className="text-xs text-text-secondary">
 											インターネット接続なしで再生可能になります
 										</p>
 									</div>
 									<button
 										type="button"
 										onClick={handleDownload}
-										className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+										className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-text rounded-lg transition-colors"
 									>
 										<Download className="h-4 w-4" />
 										ダウンロード
@@ -125,27 +125,27 @@ export default function VideoDescription({
 						)}
 
 						{downloading && (
-							<div className="bg-blue-900/30 rounded-lg p-4 border border-blue-600/30">
+							<div className="bg-primary/30 rounded-lg p-4 border border-primary/30">
 								<div className="flex items-center justify-between mb-2">
 									<div className="flex items-center gap-2">
-										<Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-										<span className="text-sm text-blue-300 font-medium">
+										<Loader2 className="h-4 w-4 animate-spin text-primary" />
+										<span className="text-sm text-primary font-medium">
 											ダウンロード中...
 										</span>
 									</div>
 									<button
 										type="button"
 										onClick={handleCancelDownload}
-										className="text-slate-400 hover:text-white transition-colors"
+										className="text-text-secondary hover:text-text transition-colors"
 									>
 										<X className="h-4 w-4" />
 									</button>
 								</div>
 
 								{currentDownloadProgress !== null && (
-									<div className="w-full bg-slate-700 rounded-full h-2">
+									<div className="w-full bg-surface-elevated rounded-full h-2">
 										<div
-											className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+											className="bg-primary h-2 rounded-full transition-all duration-300"
 											style={{
 												width: `${currentDownloadProgress.percentage}%`,
 											}}
@@ -153,7 +153,7 @@ export default function VideoDescription({
 									</div>
 								)}
 
-								<p className="text-xs text-slate-400 mt-2">
+								<p className="text-xs text-text-secondary mt-2">
 									{currentDownloadProgress !== null
 										? `${Math.round(currentDownloadProgress.percentage)}%`
 										: "準備中..."}
@@ -162,15 +162,15 @@ export default function VideoDescription({
 						)}
 
 						{isVideoCached && !downloading && (
-							<div className="bg-green-900/30 rounded-lg p-4 border border-green-600/30">
+							<div className="bg-success/30 rounded-lg p-4 border border-success/30">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2">
-										<CheckCircle className="h-4 w-4 text-green-400" />
+										<CheckCircle className="h-4 w-4 text-success" />
 										<div>
-											<p className="text-sm text-green-300 font-medium">
+											<p className="text-sm text-success font-medium">
 												オフライン再生可能
 											</p>
-											<p className="text-xs text-slate-400">
+											<p className="text-xs text-text-secondary">
 												この動画は保存済みです
 											</p>
 										</div>
@@ -178,7 +178,7 @@ export default function VideoDescription({
 									<button
 										type="button"
 										onClick={handleDelete}
-										className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors text-sm"
+										className="flex items-center gap-2 px-3 py-1.5 bg-surface-elevated hover:bg-surface-elevated text-text-secondary hover:text-text rounded-lg transition-colors text-sm"
 									>
 										<X className="h-3 w-3" />
 										削除

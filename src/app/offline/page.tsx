@@ -36,12 +36,12 @@ export default function OfflinePage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+		<div className="min-h-screen bg-gradient-to-br bg-surface-variant flex items-center justify-center">
 			<div className="max-w-md mx-auto p-8 text-center">
 				<div className="mb-8">
-					<WifiOff className="h-24 w-24 mx-auto text-red-400 mb-4" />
-					<h1 className="text-3xl font-bold text-white mb-4">オフラインです</h1>
-					<p className="text-slate-400 mb-6">
+					<WifiOff className="h-24 w-24 mx-auto text-error mb-4" />
+					<h1 className="text-3xl font-bold text-text mb-4">オフラインです</h1>
+					<p className="text-text-secondary mb-6">
 						インターネット接続を確認してください。オフライン動画がある場合は、ホームページから視聴できます。
 					</p>
 				</div>
@@ -50,14 +50,14 @@ export default function OfflinePage() {
 					<div
 						className={`flex items-center justify-center gap-2 p-3 rounded-lg ${
 							isOnline
-								? "bg-green-500/20 border border-green-500"
-								: "bg-red-500/20 border border-red-500"
+								? "bg-success/20 border border-success"
+								: "bg-error/20 border border-error"
 						}`}
 					>
 						<div
-							className={`w-3 h-3 rounded-full ${isOnline ? "bg-green-400" : "bg-red-400"}`}
+							className={`w-3 h-3 rounded-full ${isOnline ? "bg-success" : "bg-error"}`}
 						/>
-						<span className="text-white">
+						<span className="text-text">
 							{isOnline ? "オンライン" : "オフライン"}
 						</span>
 					</div>
@@ -66,7 +66,7 @@ export default function OfflinePage() {
 						<button
 							type="button"
 							onClick={handleRetry}
-							className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+							className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-text rounded-lg hover:bg-primary-hover transition-colors"
 						>
 							<RefreshCw className="h-4 w-4" />
 							再試行
@@ -74,7 +74,7 @@ export default function OfflinePage() {
 						<button
 							type="button"
 							onClick={handleGoHome}
-							className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
+							className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-surface-elevated text-text rounded-lg hover:bg-surface-elevated transition-colors"
 						>
 							<Home className="h-4 w-4" />
 							ホーム
@@ -82,11 +82,11 @@ export default function OfflinePage() {
 					</div>
 				</div>
 
-				<div className="mt-8 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-					<h3 className="text-lg font-semibold text-white mb-2">
+				<div className="mt-8 p-4 bg-surface/50 rounded-lg border border-border-muted">
+					<h3 className="text-lg font-semibold text-text mb-2">
 						オフライン機能
 					</h3>
-					<p className="text-sm text-slate-400">
+					<p className="text-sm text-text-secondary">
 						ダウンロード済みの動画は、オフラインでも視聴できます。ホームページの「オフライン」タブからアクセスしてください。
 					</p>
 				</div>

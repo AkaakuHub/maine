@@ -24,7 +24,7 @@ const EmptyState = ({
 		switch (type) {
 			case "no-videos":
 				return {
-					icon: <FolderOpen className="h-20 w-20 text-slate-400" />,
+					icon: <FolderOpen className="h-20 w-20 text-text-secondary" />,
 					title: "動画が見つかりません",
 					description: (
 						<div className="space-y-2">
@@ -36,7 +36,7 @@ const EmptyState = ({
 						<button
 							type="button"
 							onClick={onRetry}
-							className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+							className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary text-text rounded-lg transition-colors"
 						>
 							<RefreshCw className="h-4 w-4" />
 							データベースを更新
@@ -46,12 +46,12 @@ const EmptyState = ({
 
 			case "no-search-results":
 				return {
-					icon: <Search className="h-20 w-20 text-slate-400" />,
+					icon: <Search className="h-20 w-20 text-text-secondary" />,
 					title: "検索結果が見つかりません",
 					description: (
 						<div className="space-y-2">
 							<p>
-								「<span className="font-semibold text-white">{searchTerm}</span>
+								「<span className="font-semibold text-text">{searchTerm}</span>
 								」に一致する動画はありません。
 							</p>
 							<p className="text-sm">別のキーワードで検索してみてください。</p>
@@ -62,7 +62,7 @@ const EmptyState = ({
 
 			case "loading-error":
 				return {
-					icon: <Film className="h-20 w-20 text-red-400" />,
+					icon: <Film className="h-20 w-20 text-error" />,
 					title: "読み込みエラー",
 					description: (
 						<div className="space-y-2">
@@ -76,7 +76,7 @@ const EmptyState = ({
 						<button
 							type="button"
 							onClick={onRetry}
-							className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+							className="flex items-center gap-2 px-6 py-3 bg-error hover:bg-error text-text rounded-lg transition-colors"
 						>
 							<RefreshCw className="h-4 w-4" />
 							再試行
@@ -86,7 +86,7 @@ const EmptyState = ({
 
 			case "no-offline-videos":
 				return {
-					icon: <Download className="h-20 w-20 text-slate-400" />,
+					icon: <Download className="h-20 w-20 text-text-secondary" />,
 					title: "オフライン動画がありません",
 					description: (
 						<div className="space-y-2">
@@ -101,7 +101,7 @@ const EmptyState = ({
 
 			default:
 				return {
-					icon: <Film className="h-20 w-20 text-slate-400" />,
+					icon: <Film className="h-20 w-20 text-text-secondary" />,
 					title: "データなし",
 					description: <p>表示するコンテンツがありません。</p>,
 					action: null,
@@ -120,11 +120,11 @@ const EmptyState = ({
 		>
 			<div className="mb-6">{content.icon}</div>
 
-			<h3 className="text-2xl font-semibold text-white mb-4">
-				{content.title}
-			</h3>
+			<h3 className="text-2xl font-semibold text-text mb-4">{content.title}</h3>
 
-			<div className="text-slate-400 mb-8 max-w-md">{content.description}</div>
+			<div className="text-text-secondary mb-8 max-w-md">
+				{content.description}
+			</div>
 
 			{content.action}
 		</div>

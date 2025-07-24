@@ -45,10 +45,10 @@ export default function VideoInfo({
 			<h1
 				className={
 					isDesktop
-						? "text-2xl font-bold text-white mb-2 leading-tight"
+						? "text-2xl font-bold text-text mb-2 leading-tight"
 						: isResponsive
-							? "text-xl lg:text-2xl font-bold text-white mb-2 leading-tight"
-							: "text-xl font-bold text-white mb-2 leading-tight"
+							? "text-xl lg:text-2xl font-bold text-text mb-2 leading-tight"
+							: "text-xl font-bold text-text mb-2 leading-tight"
 				}
 			>
 				{videoInfo.title}
@@ -58,10 +58,10 @@ export default function VideoInfo({
 				<p
 					className={
 						isDesktop
-							? "text-purple-300 text-base mb-3 font-medium"
+							? "text-primary text-base mb-3 font-medium"
 							: isResponsive
-								? "text-purple-300 lg:text-base mb-3 font-medium"
-								: "text-purple-300 mb-3 font-medium"
+								? "text-primary lg:text-base mb-3 font-medium"
+								: "text-primary mb-3 font-medium"
 					}
 				>
 					{videoInfo.episode}
@@ -79,7 +79,7 @@ export default function VideoInfo({
 								: "text-sm"
 					}`}
 				>
-					<p className="text-slate-400">
+					<p className="text-text-secondary">
 						放送日時: {videoInfo.broadcastDate.getFullYear()}/
 						{(videoInfo.broadcastDate.getMonth() + 1)
 							.toString()
@@ -91,13 +91,13 @@ export default function VideoInfo({
 			)}
 
 			<div
-				className={`flex flex-wrap items-center gap-3 text-sm text-slate-300 mb-4 ${
+				className={`flex flex-wrap items-center gap-3 text-sm text-text-secondary mb-4 ${
 					isDesktop ? "gap-4" : isResponsive ? "gap-3 lg:gap-4" : "gap-3"
 				}`}
 			>
 				{videoInfo.genre && (
 					<span
-						className={`bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-medium ${
+						className={`bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-text font-medium ${
 							isDesktop
 								? "px-3 py-1"
 								: isResponsive
@@ -110,7 +110,7 @@ export default function VideoInfo({
 				)}
 				{videoInfo.broadcastStation && (
 					<span
-						className={`bg-gradient-to-r from-green-600 to-teal-600 rounded-full text-white font-medium ${
+						className={`bg-gradient-to-r from-green-600 to-teal-600 rounded-full text-text font-medium ${
 							isDesktop
 								? "px-3 py-1"
 								: isResponsive
@@ -123,7 +123,7 @@ export default function VideoInfo({
 				)}
 				{videoInfo.weeklySchedule && (
 					<span
-						className={`bg-gradient-to-r from-orange-600 to-red-600 rounded-full text-white font-medium ${
+						className={`bg-gradient-to-r from-orange-600 to-red-600 rounded-full text-text font-medium ${
 							isDesktop
 								? "px-3 py-1"
 								: isResponsive

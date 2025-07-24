@@ -875,7 +875,7 @@ const ModernVideoPlayer = ({
 		<div
 			ref={containerRef}
 			className={cn(
-				"relative bg-black rounded-lg overflow-hidden group",
+				"relative bg-overlay rounded-lg overflow-hidden group",
 				isFullscreen &&
 					"!fixed !inset-0 !w-screen !h-screen !rounded-none !z-50 flex flex-col",
 				className,
@@ -933,30 +933,30 @@ const ModernVideoPlayer = ({
 			{/* スキップ予測オーバーレイ */}
 			{predictedTime !== null && skipQueueRef.current !== 0 && (
 				<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-					<div className="bg-black/50 backdrop-blur-sm rounded-2xl px-6 py-4 flex items-center gap-4 border border-pink-500/30">
+					<div className="bg-overlay backdrop-blur-sm rounded-2xl px-6 py-4 flex items-center gap-4 border border-primary/30">
 						{/* YouTube風の半円アイコン */}
 						<div className="relative">
 							<div className="w-12 h-12 flex items-center justify-center">
 								{/* 半円の背景 */}
-								<div className="absolute w-12 h-12 border-4 border-pink-500/30 rounded-full" />
+								<div className="absolute w-12 h-12 border-4 border-primary/30 rounded-full" />
 								{/* ビデオーションする半円 */}
 								<div
-									className="absolute w-12 h-12 border-4 border-transparent border-t-pink-500 rounded-full animate-spin"
+									className="absolute w-12 h-12 border-4 border-transparent border-t-primary rounded-full animate-spin"
 									style={{ animationDuration: "0.8s" }}
 								/>
 								{/* 中央のアイコン */}
 								{skipQueueRef.current > 0 ? (
-									<SkipForward className="h-5 w-5 text-pink-400" />
+									<SkipForward className="h-5 w-5 text-primary" />
 								) : (
-									<SkipBack className="h-5 w-5 text-pink-400" />
+									<SkipBack className="h-5 w-5 text-primary" />
 								)}
 							</div>
 						</div>
 
 						{/* スキップ秒数とプレビュー時間 */}
-						<div className="text-white">
+						<div className="text-text">
 							{/* 数字部分を固定幅にして「秒」の位置を安定させる */}
-							<div className="text-lg font-bold text-pink-400 flex items-center justify-center">
+							<div className="text-lg font-bold text-primary flex items-center justify-center">
 								<div className="flex items-baseline">
 									<span className="font-mono text-right w-12 tabular-nums">
 										{skipQueueRef.current > 0 ? "+" : ""}
@@ -965,7 +965,7 @@ const ModernVideoPlayer = ({
 									<span className="text-base ml-1">秒</span>
 								</div>
 							</div>
-							<div className="text-sm text-slate-300 font-mono text-center">
+							<div className="text-sm text-text-secondary font-mono text-center">
 								{formatDuration(predictedTime)}
 							</div>
 						</div>
@@ -975,15 +975,15 @@ const ModernVideoPlayer = ({
 
 			{/* バッファリング表示 */}
 			{isBuffering && (
-				<div className="absolute inset-0 flex items-center justify-center bg-black/20">
-					<div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+				<div className="absolute inset-0 flex items-center justify-center bg-overlay">
+					<div className="w-12 h-12 border-4 border-surface/30 border-t-surface rounded-full animate-spin" />
 				</div>
 			)}
 
 			{/* 再生ボタンオーバーレイ */}
 			<button
 				className={cn(
-					"absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity border-0 w-full h-full",
+					"absolute inset-0 flex items-center justify-center bg-overlay transition-opacity border-0 w-full h-full",
 					!isPlaying && !isBuffering
 						? "opacity-100"
 						: "opacity-0 pointer-events-none",
@@ -998,8 +998,8 @@ const ModernVideoPlayer = ({
 				aria-label="動画を再生"
 				type="button"
 			>
-				<div className="bg-white/20 backdrop-blur-sm rounded-full p-6 hover:bg-white/30 transition-colors flex items-center justify-center">
-					<Play className="h-16 w-16 text-white" />
+				<div className="bg-surface-hover backdrop-blur-sm rounded-full p-6 hover:bg-surface-hover transition-colors flex items-center justify-center">
+					<Play className="h-16 w-16 text-text" />
 				</div>
 			</button>
 
@@ -1019,15 +1019,15 @@ const ModernVideoPlayer = ({
                 onClick={onBack}
                 className="p-2 bg-gradient-to-r from-purple-600/50 to-blue-600/50 backdrop-blur-sm rounded-full hover:from-purple-500/70 hover:to-blue-500/70 transition-all duration-300"
               >
-                <ArrowLeft className="h-5 w-5 text-white" />
+                <ArrowLeft className="h-5 w-5 text-text" />
               </button>
             )}
           </div>
           <button
             type="button"
-            className="p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition-colors"
+            className="p-2 bg-overlay backdrop-blur-sm rounded-full hover:bg-overlay transition-colors"
           >
-            <MoreHorizontal className="h-5 w-5 text-white" />
+            <MoreHorizontal className="h-5 w-5 text-text" />
           </button>
         </div> */}
 
@@ -1040,7 +1040,7 @@ const ModernVideoPlayer = ({
 						step={getSeekStep()}
 						value={currentTime}
 						onChange={handleSeek}
-						className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider progress-slider"
+						className="w-full h-2 bg-surface-hover rounded-lg appearance-none cursor-pointer slider progress-slider"
 					/>
 				</div>
 
@@ -1050,7 +1050,7 @@ const ModernVideoPlayer = ({
 						<button
 							type="button"
 							onClick={togglePlay}
-							className="text-white hover:text-purple-300 transition-colors"
+							className="text-text hover:text-primary transition-colors"
 						>
 							{isPlaying ? (
 								<Pause className="h-6 w-6" />
@@ -1064,7 +1064,7 @@ const ModernVideoPlayer = ({
 							<button
 								type="button"
 								onClick={skipBackward}
-								className="text-white hover:text-blue-300 transition-colors flex items-center gap-1"
+								className="text-text hover:text-primary transition-colors flex items-center gap-1"
 								title={`${skipSeconds}秒戻す`}
 							>
 								<RotateCcw className="h-4 w-4" />
@@ -1074,7 +1074,7 @@ const ModernVideoPlayer = ({
 							<button
 								type="button"
 								onClick={skipForward}
-								className="text-white hover:text-blue-300 transition-colors flex items-center gap-1"
+								className="text-text hover:text-primary transition-colors flex items-center gap-1"
 								title={`${skipSeconds}秒進む`}
 							>
 								<RotateCw className="h-4 w-4" />
@@ -1086,7 +1086,7 @@ const ModernVideoPlayer = ({
 							<button
 								type="button"
 								onClick={toggleMute}
-								className="text-white hover:text-cyan-300 transition-colors"
+								className="text-text hover:text-primary transition-colors"
 							>
 								{isMuted ? (
 									<VolumeX className="h-5 w-5" />
@@ -1101,22 +1101,22 @@ const ModernVideoPlayer = ({
 								step="0.1"
 								value={isMuted ? 0 : volume}
 								onChange={handleVolumeChange}
-								className="w-16 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer slider volume-slider"
+								className="w-16 h-1 bg-surface-hover rounded-lg appearance-none cursor-pointer slider volume-slider"
 							/>
 						</div>
-						<span className="text-white text-sm font-mono flex gap-1">
+						<span className="text-text text-sm font-mono flex gap-1">
 							<button
 								type="button"
 								onClick={() => {
 									setIsShowRestTime((c) => !c);
 								}}
-								className="cursor-pointer hover:text-yellow-300 transition-colors"
+								className="cursor-pointer hover:text-primary transition-colors"
 							>
 								{isShowRestTime ? (
 									<>
 										<span>-</span>
 										<span
-											className={predictedTime !== null ? "text-pink-400" : ""}
+											className={predictedTime !== null ? "text-primary" : ""}
 										>
 											{formatDuration(
 												duration - (predictedTime ?? currentTime),
@@ -1126,7 +1126,7 @@ const ModernVideoPlayer = ({
 								) : (
 									<>
 										<span
-											className={predictedTime !== null ? "text-pink-400" : ""}
+											className={predictedTime !== null ? "text-primary" : ""}
 										>
 											{formatDuration(predictedTime ?? currentTime)}
 										</span>
@@ -1151,18 +1151,18 @@ const ModernVideoPlayer = ({
 										setSettingsView("main"); // 設定を開くときはメインビューに
 									}
 								}}
-								className="text-white hover:text-yellow-300 transition-colors relative top-[2.5px]"
+								className="text-text hover:text-primary transition-colors relative top-[2.5px]"
 							>
 								<Settings className="h-5 w-5" />
 							</button>
 							{showSettings && (
 								<div
 									ref={settingsRef}
-									className="absolute bottom-8 lg:top-8 lg:bottom-auto right-0 lg:right-auto lg:left-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-purple-500/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
+									className="absolute bottom-8 lg:top-8 lg:bottom-auto right-0 lg:right-auto lg:left-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-primary/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
 								>
 									{settingsView === "main" && (
 										<div>
-											<div className="text-white text-sm mb-3 font-semibold flex items-center gap-2">
+											<div className="text-text text-sm mb-3 font-semibold flex items-center gap-2">
 												<Settings className="h-4 w-4" />
 												設定
 											</div>
@@ -1170,14 +1170,14 @@ const ModernVideoPlayer = ({
 											<button
 												type="button"
 												onClick={() => setSettingsView("skip")}
-												className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-300 hover:bg-orange-500/20 hover:text-orange-300 rounded transition-colors mb-2"
+												className="w-full flex items-center justify-between px-3 py-2 text-sm text-text-secondary hover:bg-primary/20 hover:text-primary rounded transition-colors mb-2"
 											>
 												<div className="flex items-center gap-2 w-30">
 													<Clock className="h-4 w-4" />
 													スキップ秒数
 												</div>
 												<div className="flex items-center gap-1">
-													<span className="text-xs text-orange-400 w-8">
+													<span className="text-xs text-warning w-8">
 														{skipSeconds}秒
 													</span>
 													<ChevronRight className="h-4 w-4" />
@@ -1186,14 +1186,14 @@ const ModernVideoPlayer = ({
 											<button
 												type="button"
 												onClick={() => setSettingsView("playback")}
-												className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 rounded transition-colors mb-2"
+												className="w-full flex items-center justify-between px-3 py-2 text-sm text-text-secondary hover:bg-primary/20 hover:text-primary rounded transition-colors mb-2"
 											>
 												<div className="flex items-center gap-2 w-30">
 													<Play className="h-4 w-4" />
 													再生速度
 												</div>
 												<div className="flex items-center gap-1">
-													<span className="text-xs text-purple-400 w-8">
+													<span className="text-xs text-primary w-8">
 														{playbackRate}x
 													</span>
 													<ChevronRight className="h-4 w-4" />
@@ -1202,14 +1202,14 @@ const ModernVideoPlayer = ({
 											<button
 												type="button"
 												onClick={() => setSettingsView("screenshot")}
-												className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-300 hover:bg-cyan-500/20 hover:text-cyan-300 rounded transition-colors mb-2"
+												className="w-full flex items-center justify-between px-3 py-2 text-sm text-text-secondary hover:bg-primary/20 hover:text-primary rounded transition-colors mb-2"
 											>
 												<div className="flex items-center gap-2 w-30">
 													<Camera className="h-4 w-4" />
 													スクリーンショット
 												</div>
 												<div className="flex items-center gap-1">
-													<span className="text-xs text-cyan-400 w-16">
+													<span className="text-xs text-primary w-16">
 														{autoDownloadScreenshot ? "自動DL" : "コピーのみ"}
 													</span>
 													<ChevronRight className="h-4 w-4" />
@@ -1223,11 +1223,11 @@ const ModernVideoPlayer = ({
 												<button
 													type="button"
 													onClick={() => setSettingsView("main")}
-													className="text-slate-400 hover:text-white transition-colors w-8"
+													className="text-text-secondary hover:text-text transition-colors w-8"
 												>
 													<ChevronLeft className="h-6 w-6" />
 												</button>
-												<div className="text-orange-300 text-sm font-semibold flex items-center gap-2">
+												<div className="text-warning text-sm font-semibold flex items-center gap-2">
 													<Clock className="h-4 w-4" />
 													スキップ秒数
 												</div>
@@ -1243,8 +1243,8 @@ const ModernVideoPlayer = ({
 													className={cn(
 														"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
 														skipSeconds === seconds
-															? "bg-gradient-to-r from-orange-500 to-red-500 text-white"
-															: "text-slate-300 hover:bg-orange-500/20",
+															? "bg-primary text-text-inverse"
+															: "text-text-secondary hover:bg-primary/20",
 													)}
 												>
 													{seconds}秒
@@ -1258,11 +1258,11 @@ const ModernVideoPlayer = ({
 												<button
 													type="button"
 													onClick={() => setSettingsView("main")}
-													className="text-slate-400 hover:text-white transition-colors w-8"
+													className="text-text-secondary hover:text-text transition-colors w-8"
 												>
 													<ChevronLeft className="h-6 w-6" />
 												</button>
-												<div className="text-purple-300 text-sm font-semibold flex items-center gap-2">
+												<div className="text-primary text-sm font-semibold flex items-center gap-2">
 													<Play className="h-4 w-4" />
 													再生速度
 												</div>
@@ -1279,8 +1279,8 @@ const ModernVideoPlayer = ({
 													className={cn(
 														"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
 														playbackRate === rate
-															? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-															: "text-slate-300 hover:bg-purple-500/20",
+															? "bg-primary text-text-inverse"
+															: "text-text-secondary hover:bg-primary/20",
 													)}
 												>
 													{rate}x
@@ -1294,11 +1294,11 @@ const ModernVideoPlayer = ({
 												<button
 													type="button"
 													onClick={() => setSettingsView("main")}
-													className="text-slate-400 hover:text-white transition-colors w-8"
+													className="text-text-secondary hover:text-text transition-colors w-8"
 												>
 													<ChevronLeft className="h-6 w-6" />
 												</button>
-												<div className="text-cyan-300 text-sm font-semibold flex items-center gap-2">
+												<div className="text-primary text-sm font-semibold flex items-center gap-2">
 													<Camera className="h-4 w-4" />
 													スクリーンショット設定
 												</div>
@@ -1310,8 +1310,8 @@ const ModernVideoPlayer = ({
 												className={cn(
 													"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
 													!autoDownloadScreenshot
-														? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white"
-														: "text-slate-300 hover:bg-cyan-500/20",
+														? "bg-primary text-text-inverse"
+														: "text-text-secondary hover:bg-primary/20",
 												)}
 											>
 												クリップボードにコピーのみ
@@ -1322,8 +1322,8 @@ const ModernVideoPlayer = ({
 												className={cn(
 													"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
 													autoDownloadScreenshot
-														? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white"
-														: "text-slate-300 hover:bg-cyan-500/20",
+														? "bg-primary text-text-inverse"
+														: "text-text-secondary hover:bg-primary/20",
 												)}
 											>
 												<div className="flex items-center gap-2">
@@ -1339,7 +1339,7 @@ const ModernVideoPlayer = ({
 						<button
 							type="button"
 							onClick={takeScreenshot}
-							className="text-white hover:text-cyan-300 transition-colors"
+							className="text-text hover:text-primary transition-colors"
 							title="スクリーンショットを撮る"
 						>
 							<Camera className="h-5 w-5" />
@@ -1347,7 +1347,7 @@ const ModernVideoPlayer = ({
 						<button
 							type="button"
 							onClick={togglePictureInPicture}
-							className="text-white hover:text-green-300 transition-colors"
+							className="text-text hover:text-primary transition-colors"
 						>
 							<PictureInPicture2 className="h-5 w-5" />
 						</button>{" "}
@@ -1358,7 +1358,7 @@ const ModernVideoPlayer = ({
 								e.stopPropagation();
 								toggleFullscreen();
 							}}
-							className="text-white hover:text-pink-300 transition-colors"
+							className="text-text hover:text-primary transition-colors"
 						>
 							{isFullscreen ? (
 								<Minimize className="h-5 w-5" />
@@ -1395,38 +1395,38 @@ const ModernVideoPlayer = ({
           height: 16px;
           width: 16px;
           border-radius: 50%;
-          background: linear-gradient(45deg, #8b5cf6, #3b82f6);
+          background: #D81C2F;
           cursor: pointer;
           border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+          box-shadow: 0 2px 8px rgba(216, 28, 47, 0.4);
         }
         .progress-slider::-moz-range-thumb {
           height: 16px;
           width: 16px;
           border-radius: 50%;
-          background: linear-gradient(45deg, #8b5cf6, #3b82f6);
+          background: #D81C2F;
           cursor: pointer;
           border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+          box-shadow: 0 2px 8px rgba(216, 28, 47, 0.4);
         }
         .volume-slider::-webkit-slider-thumb {
           appearance: none;
           height: 12px;
           width: 12px;
           border-radius: 50%;
-          background: linear-gradient(45deg, #06b6d4, #10b981);
+          background: #D81C2F;
           cursor: pointer;
           border: 2px solid white;
-          box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
+          box-shadow: 0 2px 6px rgba(216, 28, 47, 0.4);
         }
         .volume-slider::-moz-range-thumb {
           height: 12px;
           width: 12px;
           border-radius: 50%;
-          background: linear-gradient(45deg, #06b6d4, #10b981);
+          background: #D81C2F;
           cursor: pointer;
           border: 2px solid white;
-          box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
+          box-shadow: 0 2px 6px rgba(216, 28, 47, 0.4);
         }
       `}</style>
 		</div>
