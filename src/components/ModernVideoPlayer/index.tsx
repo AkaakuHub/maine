@@ -998,8 +998,8 @@ const ModernVideoPlayer = ({
 				aria-label="動画を再生"
 				type="button"
 			>
-				<div className="bg-white/20 backdrop-blur-sm rounded-full p-6 hover:bg-white/30 transition-colors">
-					<Play className="h-16 w-16 text-white ml-2" />
+				<div className="bg-white/20 backdrop-blur-sm rounded-full p-6 hover:bg-white/30 transition-colors flex items-center justify-center">
+					<Play className="h-16 w-16 text-white" />
 				</div>
 			</button>
 
