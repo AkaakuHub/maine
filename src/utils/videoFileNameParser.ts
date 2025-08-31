@@ -2,7 +2,7 @@
  * 動画ファイル名から番組情報を抽出するユーティリティ
  */
 
-export interface ParsedVideoInfo {
+interface ParsedVideoInfo {
 	cleanTitle: string; // クリーンなタイトル
 	originalTitle: string; // 元のタイトル
 	broadcastDate?: Date; // 放送日時
@@ -15,7 +15,7 @@ export interface ParsedVideoInfo {
 /**
  * 放送局名をクリーンアップ
  */
-export function cleanStationName(station: string): string {
+function cleanStationName(station: string): string {
 	// よくある放送局名のマッピング
 	const stationMap: Record<string, string> = {
 		ＢＳ１１イレブン: "BS11",
@@ -94,20 +94,4 @@ export function parseVideoFileName(fileName: string): ParsedVideoInfo {
 		timeSlot,
 		weeklySchedule,
 	};
-}
-
-/**
- * 放送日時を人間が読みやすい形式にフォーマット
- */
-export function formatBroadcastDate(date: Date): string {
-	const year = date.getFullYear();
-	const month = (date.getMonth() + 1).toString().padStart(2, "0");
-	const day = date.getDate().toString().padStart(2, "0");
-	const hour = date.getHours().toString().padStart(2, "0");
-	const minute = date.getMinutes().toString().padStart(2, "0");
-
-	const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
-	const dayOfWeek = daysOfWeek[date.getDay()];
-
-	return `${year}/${month}/${day}(${dayOfWeek}) ${hour}:${minute}`;
 }

@@ -12,6 +12,7 @@ import {
 	Wifi,
 	Trash2,
 	RefreshCw,
+	Settings,
 } from "lucide-react";
 import { useVideos } from "@/hooks/useVideos";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
@@ -23,6 +24,7 @@ import LoadingState from "@/components/LoadingState";
 import StreamingWarningDialog from "@/components/StreamingWarningDialog";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWADebugInfo from "@/components/PWADebugInfo";
+import UpdateIndicator from "@/components/UpdateIndicator";
 import { Button } from "@/components/ui/Button";
 import { cn, formatFileSize } from "@/libs/utils";
 import { PAGINATION, SEARCH } from "@/utils/constants";
@@ -294,6 +296,16 @@ const Home = () => {
 						</div>
 
 						<div className="flex items-center gap-4">
+							{/* 管理ページリンク */}
+							<a
+								href="/admin"
+								className="flex items-center gap-2 px-3 py-2 bg-surface-elevated hover:bg-surface border border-border rounded-lg text-text-secondary hover:text-text transition-all duration-200"
+								title="システム管理"
+							>
+								<Settings className="h-4 w-4" />
+								<span className="hidden sm:inline text-sm">管理</span>
+							</a>
+
 							{/* PWAインストールプロンプト */}
 							<PWAInstallPrompt />
 
@@ -554,8 +566,7 @@ const Home = () => {
 										{videosLoading ? "読み込み中..." : "すべての動画を表示"}
 									</Button>
 									<p className="text-sm text-text-muted">
-										※
-										4000件以上の動画がある場合、読み込みに時間がかかる場合があります
+										※ 多くの動画がある場合、読み込みに時間がかかる場合があります
 									</p>
 								</div>
 							</div>
@@ -641,6 +652,8 @@ const Home = () => {
 					videoTitle={warningVideoData.title}
 				/>
 			)}
+			{/* Update Indicator */}
+			<UpdateIndicator />
 		</main>
 	);
 };

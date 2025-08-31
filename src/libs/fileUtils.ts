@@ -9,13 +9,6 @@ export function normalizePath(filePath: string): string {
 }
 
 /**
- * ファイルパスからファイル名を取得
- */
-export function getFileName(filePath: string): string {
-	return path.basename(filePath);
-}
-
-/**
  * ファイルパスから拡張子を取得
  */
 function getFileExtension(filePath: string): string {
@@ -60,18 +53,6 @@ async function fileExists(filePath: string): Promise<boolean> {
 		return stats.isFile();
 	} catch {
 		return false;
-	}
-}
-
-/**
- * ファイルサイズを取得
- */
-export async function getFileSize(filePath: string): Promise<number> {
-	try {
-		const stats = await fs.stat(filePath);
-		return stats.size;
-	} catch {
-		return 0;
 	}
 }
 
