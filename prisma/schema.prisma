@@ -26,3 +26,34 @@ model VideoProgress {
 
   @@map("video_progress")
 }
+
+// ビデオメタデータ（ファイル情報をDBに保存）
+model VideoMetadata {
+  id           String   @id @default(cuid())
+  filePath     String   @unique // 動画ファイルのパス
+  fileName     String   // ファイル名
+  title        String   // タイトル
+  fileSize     BigInt   @default(0) // ファイルサイズ
+  episode      Int?     // エピソード番号
+  year         Int?     // 年
+  lastModified DateTime // ファイル最終更新日時
+  scannedAt    DateTime @default(now()) // スキャン日時
+  updatedAt    DateTime @updatedAt
+
+  @@map("video_metadata")
+  @@index([title])
+  @@index([fileName])
+  @@index([filePath])
+}
+
+// スキャン管理情報
+model ScanSettings {
+  id             String   @id @default("scan_settings") // 単一レコード
+  lastFullScan   DateTime @default("1970-01-01T00:00:00.000Z") // 最後のフルスキャン日時
+  isScanning     Boolean  @default(false) // スキャン中フラグ
+  scanProgress   Float    @default(0) // スキャン進捗 (0-100)
+  totalFiles     Int      @default(0) // 総ファイル数
+  updatedAt      DateTime @updatedAt
+
+  @@map("scan_settings")
+}

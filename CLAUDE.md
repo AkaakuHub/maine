@@ -84,7 +84,10 @@ pnpm db:reset    # Reset database (force)
 ## Development Notes
 
 ### Package Manager
-Use `pnpm` instead of `npm` for package management.
+- **ALWAYS use `pnpm` for package management** - never manually edit package.json
+- Add dependencies: `pnpm add package-name`
+- Add dev dependencies: `pnpm add -D package-name`
+- Remove dependencies: `pnpm remove package-name`
 
 ### Code Style
 - Biome configuration in `biome.json`
@@ -106,3 +109,9 @@ The database only stores user interaction data (progress, likes, watchlist). Vid
 
 ### Environment Setup
 Set `VIDEO_DIRECTORY` environment variable to specify video file locations. Multiple directories can be specified separated by platform-specific delimiters.
+
+### Development vs Production Environment
+- **Development**: macOS (current environment)
+- **Production**: Windows 11 
+- Database migrations and schema changes can be applied safely in development environment
+- Development and production databases are separate

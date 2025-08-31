@@ -1,4 +1,4 @@
-import { VideoScanService } from "@/services";
+import { videoCacheService } from "@/services/videoCacheService";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
 		// exactMatchが要求された場合は、まずクエリなしで全ての動画を取得
 		const searchResult =
 			exactMatch && query
-				? await VideoScanService.searchVideos("") // 全ての動画を取得
-				: await VideoScanService.searchVideos(query);
+				? await videoCacheService.searchVideos("") // 全ての動画を取得
+				: await videoCacheService.searchVideos(query);
 
 		if (!searchResult.success) {
 			return NextResponse.json(
