@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import UpdateIndicator from "@/components/UpdateIndicator";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -82,6 +83,7 @@ export default function RootLayout({
 			<body className={`${inter.className} antialiased`}>
 				<ServiceWorkerRegistration />
 				{children}
+				<UpdateIndicator />
 			</body>
 		</html>
 	);

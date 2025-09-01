@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
 	try {
-		const status = videoCacheService.getUpdateStatus();
+		const status = await videoCacheService.getUpdateStatus();
 
 		return NextResponse.json({
 			success: true,

@@ -24,7 +24,6 @@ import LoadingState from "@/components/LoadingState";
 import StreamingWarningDialog from "@/components/StreamingWarningDialog";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWADebugInfo from "@/components/PWADebugInfo";
-import UpdateIndicator from "@/components/UpdateIndicator";
 import { Button } from "@/components/ui/Button";
 import { cn, formatFileSize } from "@/libs/utils";
 import { PAGINATION, SEARCH } from "@/utils/constants";
@@ -652,8 +651,6 @@ const Home = () => {
 					videoTitle={warningVideoData.title}
 				/>
 			)}
-			{/* Update Indicator */}
-			<UpdateIndicator />
 		</main>
 	);
 };

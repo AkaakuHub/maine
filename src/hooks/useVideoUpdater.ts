@@ -28,8 +28,17 @@ export function useVideoUpdater() {
 
 	const checkForUpdates = async () => {
 		try {
-			const response = await fetch("/api/admin/update-status");
+			console.log("🔄 useVideoUpdater: checkForUpdates called");
+			const timestamp = Date.now();
+			const response = await fetch(`/api/admin/update-status?t=${timestamp}`, {
+				cache: "no-cache",
+				headers: {
+					"Cache-Control": "no-cache",
+					Pragma: "no-cache",
+				},
+			});
 			const status = await response.json();
+			console.log("📋 useVideoUpdater: API response:", status);
 
 			if (status.success) {
 				setUpdateStatus({

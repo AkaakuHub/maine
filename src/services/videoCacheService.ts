@@ -53,8 +53,10 @@ class VideoCacheService {
 	private initialized = false;
 
 	constructor() {
-		this.initialize();
+		this.initializePromise = this.initialize();
 	}
+
+	private initializePromise: Promise<void>;
 
 	/**
 	 * サービス初期化
@@ -82,6 +84,13 @@ class VideoCacheService {
 		} finally {
 			this.initialized = true;
 		}
+	}
+
+	/**
+	 * 初期化完了を保証
+	 */
+	private async ensureInitialized(): Promise<void> {
+		await this.initializePromise;
 	}
 
 	/**
@@ -321,14 +330,44 @@ class VideoCacheService {
 	 * フロントエンド開いた時の差分チェック
 	 */
 	async checkAndUpdateIfNeeded(): Promise<UpdateCheckResult> {
+		// 初期化を待つ（強制的に）
 		if (!this.initialized) {
-			return { needsUpdate: false, daysSince: -1, isUpdating: false };
+			console.log("⏳ checkAndUpdateIfNeeded: waiting for initialization...");
+			await this.ensureInitialized();
 		}
 
-		const daysSinceLastScan = this.getDaysSinceLastScan();
+		// DBから直接最新の値を取得（欺瞞防止）
+		const settings = await prisma.scanSettings.findUnique({
+			where: { id: "scan_settings" },
+		});
+
+		const daysSinceLastScan = settings?.lastFullScan
+			? Math.floor(
+					(new Date().getTime() - settings.lastFullScan.getTime()) /
+						(1000 * 60 * 60 * 24),
+				)
+			: -1;
 
 		if (daysSinceLastScan >= 7 && !this.isUpdating) {
 			console.log(`${daysSinceLastScan}日経過 - 差分更新を開始`);
+			// 即座に更新状態に設定（メモリとDB両方）
+			this.isUpdating = true;
+			this.updateProgress = 0;
+
+			// DBにも更新中状態を反映
+			await prisma.scanSettings.upsert({
+				where: { id: "scan_settings" },
+				update: {
+					isScanning: true,
+					scanProgress: 0,
+				},
+				create: {
+					id: "scan_settings",
+					isScanning: true,
+					scanProgress: 0,
+				},
+			});
+
 			// 非同期で差分更新を開始（レスポンスをブロックしない）
 			setImmediate(() => this.performIncrementalUpdate());
 
@@ -541,14 +580,27 @@ class VideoCacheService {
 	}
 
 	/**
-	 * 更新状況取得
+	 * 更新状況取得（読み取り専用）
 	 */
-	getUpdateStatus(): CacheStatus {
+	async getUpdateStatus(): Promise<CacheStatus> {
+		// DBから現在の値を読み取り専用で取得
+		const settings = await prisma.scanSettings.findUnique({
+			where: { id: "scan_settings" },
+		});
+
+		const lastScanDate = settings?.lastFullScan || null;
+		const daysSince = lastScanDate
+			? Math.floor(
+					(new Date().getTime() - lastScanDate.getTime()) /
+						(1000 * 60 * 60 * 24),
+				)
+			: -1;
+
 		return {
-			isUpdating: this.isUpdating,
-			progress: this.updateProgress,
-			lastScanDate: this.lastFullScanTime,
-			daysSinceLastScan: this.initialized ? this.getDaysSinceLastScan() : -1,
+			isUpdating: settings?.isScanning || false,
+			progress: settings?.scanProgress || 0,
+			lastScanDate,
+			daysSinceLastScan: daysSince,
 			cacheSize: 0, // DBベースではメモリキャッシュサイズは0
 		};
 	}
@@ -575,13 +627,6 @@ class VideoCacheService {
 	}
 
 	// ユーティリティメソッド
-
-	private getDaysSinceLastScan(): number {
-		if (!this.lastFullScanTime) return -1; // 未スキャン状態
-		const now = new Date();
-		const diffTime = Math.abs(now.getTime() - this.lastFullScanTime.getTime());
-		return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-	}
 
 	private sleep(ms: number): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, ms));

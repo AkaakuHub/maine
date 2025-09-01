@@ -6,7 +6,7 @@ export async function POST() {
 		console.log("手動フルDBリフレッシュ開始...");
 		await videoCacheService.manualRefresh();
 
-		const status = videoCacheService.getUpdateStatus();
+		const status = await videoCacheService.getUpdateStatus();
 
 		return NextResponse.json({
 			success: true,

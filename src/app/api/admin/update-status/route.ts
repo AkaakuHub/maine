@@ -3,8 +3,11 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
 	try {
-		const status = videoCacheService.getUpdateStatus();
+		console.log("🔍 /api/admin/update-status called");
 		const checkResult = await videoCacheService.checkAndUpdateIfNeeded();
+		console.log("🚀 checkResult:", checkResult);
+		const status = await videoCacheService.getUpdateStatus();
+		console.log("📊 status:", status);
 
 		return NextResponse.json({
 			success: true,

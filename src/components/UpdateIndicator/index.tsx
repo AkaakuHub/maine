@@ -10,60 +10,44 @@ export default function UpdateIndicator() {
 		return null;
 	}
 
-	if (
-		!updateStatus.isUpdating &&
-		(updateStatus.daysSince < 7 || updateStatus.daysSince === -1)
-	) {
-		return null; // 1週間未満または未スキャンなら何も表示しない
+	// 更新中でない場合は何も表示しない（1週間経過していれば自動で更新開始されるため）
+	if (!updateStatus.isUpdating) {
+		return null;
 	}
 
-	if (updateStatus.isUpdating) {
-		return (
-			<div className="fixed top-4 right-4 bg-primary text-text-inverse px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm">
-				<div className="flex items-center gap-3">
-					<div className="animate-spin w-5 h-5 border-2 border-text-inverse border-t-transparent rounded-full" />
-					<div>
-						<div className="font-medium">ファイル一覧を更新中...</div>
-						<div className="text-sm opacity-90">
-							新しいファイルをスキャンしています ({updateStatus.progress}%)
-						</div>
-					</div>
-				</div>
-
-				<div className="mt-2 bg-primary-hover rounded-full h-2">
-					<div
-						className="bg-surface h-2 rounded-full transition-all duration-300"
-						style={{ width: `${updateStatus.progress}%` }}
-					/>
-				</div>
-
-				<div className="mt-1 text-xs opacity-75">
-					現在 {updateStatus.cacheSize.toLocaleString()} ファイルをキャッシュ中
-				</div>
-			</div>
-		);
-	}
-
-	// 1週間経過している場合の警告表示
+	// 自動更新中の表示（1週間経過による強制更新も手動更新も同じ表示）
 	return (
-		<div className="fixed top-4 right-4 bg-warning text-text-inverse px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm">
-			<div className="flex items-center gap-3">
-				<div className="w-5 h-5 text-warning-hover">⚠️</div>
-				<div>
-					<div className="font-medium">ファイル一覧が古い可能性があります</div>
-					<div className="text-sm opacity-90">
-						最終更新から {updateStatus.daysSince} 日経過
+		<div className="fixed top-4 right-4 bg-warning text-text-inverse px-4 py-3 rounded-xl shadow-xl z-50 max-w-sm">
+			<div className="flex items-start gap-3">
+				<div className="w-8 h-8 bg-surface-variant/20 rounded-lg flex items-center justify-center flex-shrink-0">
+					<div className="animate-spin w-4 h-4 border-2 border-text-inverse border-t-transparent rounded-full" />
+				</div>
+				<div className="flex-1 min-w-0">
+					<div className="font-medium">
+						{updateStatus.daysSince >= 7
+							? "ファイル一覧が古いため更新中..."
+							: "ファイル一覧を更新中..."}
+					</div>
+					<div className="text-sm opacity-90 mt-1">
+						{updateStatus.daysSince >= 7
+							? `${updateStatus.daysSince} 日経過のため自動更新を実行中`
+							: `新しいファイルをスキャンしています (${updateStatus.progress}%)`}
 					</div>
 				</div>
 			</div>
 
-			<button
-				type="button"
-				onClick={() => fetch("/api/admin/manual-refresh", { method: "POST" })}
-				className="mt-2 w-full bg-warning-hover hover:bg-warning px-3 py-1 rounded text-sm"
-			>
-				今すぐ更新
-			</button>
+			<div className="mt-3 bg-surface-variant/20 rounded-full h-2">
+				<div
+					className="bg-text-inverse h-2 rounded-full transition-all duration-300"
+					style={{ width: `${updateStatus.progress}%` }}
+				/>
+			</div>
+
+			<div className="mt-1 text-xs opacity-75">
+				{updateStatus.daysSince >= 7
+					? "更新をキャンセルすることはできません"
+					: `現在 ${updateStatus.cacheSize.toLocaleString()} ファイルをキャッシュ中`}
+			</div>
 		</div>
 	);
 }
