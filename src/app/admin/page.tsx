@@ -57,10 +57,28 @@ export default function AdminPage() {
 										最終更新
 									</div>
 									<div className="text-lg font-semibold text-text">
-										{updateStatus.daysSince >= 0
+										{updateStatus.daysSince >= 0 && updateStatus.lastScanDate
 											? `${updateStatus.daysSince}日前`
-											: "未更新"}
+											: updateStatus.daysSince === -1 && updateStatus.isLoaded
+												? "未スキャン"
+												: "読み込み中..."}
 									</div>
+									{updateStatus.lastScanDate && (
+										<div className="text-xs text-text-muted mt-1">
+											{new Date(updateStatus.lastScanDate).toLocaleString(
+												"ja-JP",
+												{
+													year: "numeric",
+													month: "2-digit",
+													day: "2-digit",
+													hour: "2-digit",
+													minute: "2-digit",
+													second: "2-digit",
+													timeZone: "Asia/Tokyo",
+												},
+											)}
+										</div>
+									)}
 								</div>
 								<div className="bg-surface-elevated rounded-lg p-4">
 									<div className="text-sm text-text-secondary mb-1">

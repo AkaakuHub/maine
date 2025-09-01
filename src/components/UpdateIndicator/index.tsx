@@ -5,8 +5,16 @@ import { useVideoUpdater } from "@/hooks/useVideoUpdater";
 export default function UpdateIndicator() {
 	const updateStatus = useVideoUpdater();
 
-	if (!updateStatus.isUpdating && updateStatus.daysSince < 7) {
-		return null; // 1週間未満なら何も表示しない
+	// データがロードされるまで何も表示しない
+	if (!updateStatus.isLoaded) {
+		return null;
+	}
+
+	if (
+		!updateStatus.isUpdating &&
+		(updateStatus.daysSince < 7 || updateStatus.daysSince === -1)
+	) {
+		return null; // 1週間未満または未スキャンなら何も表示しない
 	}
 
 	if (updateStatus.isUpdating) {

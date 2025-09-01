@@ -6,6 +6,8 @@ interface UpdateStatus {
 	progress: number;
 	daysSince: number;
 	cacheSize: number;
+	isLoaded: boolean;
+	lastScanDate: Date | null;
 }
 
 export function useVideoUpdater() {
@@ -13,8 +15,10 @@ export function useVideoUpdater() {
 		isUpdating: false,
 		needsUpdate: false,
 		progress: 0,
-		daysSince: 0,
+		daysSince: -1,
 		cacheSize: 0,
+		isLoaded: false,
+		lastScanDate: null,
 	});
 
 	useEffect(() => {
@@ -34,6 +38,10 @@ export function useVideoUpdater() {
 					progress: status.progress,
 					daysSince: status.daysSinceLastScan,
 					cacheSize: status.totalFiles || 0,
+					isLoaded: true,
+					lastScanDate: status.lastScanDate
+						? new Date(status.lastScanDate)
+						: null,
 				});
 
 				// 更新中の場合はプログレス監視開始
@@ -43,6 +51,11 @@ export function useVideoUpdater() {
 			}
 		} catch (error) {
 			console.error("更新状況チェックエラー:", error);
+			// エラー時でもisLoadedをtrueにして、デフォルト値で表示を許可
+			setUpdateStatus((prev) => ({
+				...prev,
+				isLoaded: true,
+			}));
 		}
 	};
 

@@ -25,7 +25,7 @@ type SearchResult = {
 interface CacheStatus {
 	isUpdating: boolean;
 	progress: number;
-	lastScanDate: Date;
+	lastScanDate: Date | null;
 	daysSinceLastScan: number;
 	cacheSize: number;
 }
@@ -46,10 +46,11 @@ class VideoCacheService {
 	// ❌ メモリキャッシュ削除（週2-3回使用には無駄）
 	// private fileCache: Map<string, VideoFileInfo> = new Map();
 
-	private lastFullScanTime: Date = new Date(0);
+	private lastFullScanTime: Date | null = null;
 	private isUpdating = false;
 	private updateProgress = 0;
 	private cronJob: cron.ScheduledTask | null = null;
+	private initialized = false;
 
 	constructor() {
 		this.initialize();
@@ -78,6 +79,8 @@ class VideoCacheService {
 			}
 		} catch (error) {
 			console.error("VideoCacheService初期化エラー:", error);
+		} finally {
+			this.initialized = true;
 		}
 	}
 
@@ -99,13 +102,12 @@ class VideoCacheService {
 					`キャッシュ設定読み込み: 最終スキャン ${this.lastFullScanTime.toLocaleString()}`,
 				);
 			} else {
-				// 初回作成
-				await this.saveScanSettings();
-				console.log("キャッシュ設定を初期化しました");
+				// 初回作成 - nullのまま（スキャン実行時に設定）
+				console.log("キャッシュ設定を初期化します - 初回スキャンが必要");
 			}
 		} catch (error) {
-			console.warn("キャッシュ設定読み込みエラー - デフォルト値を使用:", error);
-			this.lastFullScanTime = new Date(0); // 1970年（確実に1週間以上前）
+			console.warn("キャッシュ設定読み込みエラー:", error);
+			// エラー時もnullのまま（初回スキャンが必要）
 		}
 	}
 
@@ -114,6 +116,9 @@ class VideoCacheService {
 	 */
 	private async saveScanSettings() {
 		try {
+			// nullの場合は保存しない
+			if (!this.lastFullScanTime) return;
+
 			// DB内のファイル数を取得
 			const totalFiles = await prisma.videoMetadata.count();
 
@@ -316,6 +321,10 @@ class VideoCacheService {
 	 * フロントエンド開いた時の差分チェック
 	 */
 	async checkAndUpdateIfNeeded(): Promise<UpdateCheckResult> {
+		if (!this.initialized) {
+			return { needsUpdate: false, daysSince: -1, isUpdating: false };
+		}
+
 		const daysSinceLastScan = this.getDaysSinceLastScan();
 
 		if (daysSinceLastScan >= 7 && !this.isUpdating) {
@@ -368,8 +377,9 @@ class VideoCacheService {
 
 								// 最後のスキャン以降に作成/更新されたファイルのみ処理
 								if (
-									stats.birthtime > this.lastFullScanTime ||
-									stats.mtime > this.lastFullScanTime
+									this.lastFullScanTime &&
+									(stats.birthtime > this.lastFullScanTime ||
+										stats.mtime > this.lastFullScanTime)
 								) {
 									// 既存のパーサーを使用して情報抽出
 									const parsedInfo = parseVideoFileName(videoFile.fileName);
@@ -538,7 +548,7 @@ class VideoCacheService {
 			isUpdating: this.isUpdating,
 			progress: this.updateProgress,
 			lastScanDate: this.lastFullScanTime,
-			daysSinceLastScan: this.getDaysSinceLastScan(),
+			daysSinceLastScan: this.initialized ? this.getDaysSinceLastScan() : -1,
 			cacheSize: 0, // DBベースではメモリキャッシュサイズは0
 		};
 	}
@@ -567,6 +577,7 @@ class VideoCacheService {
 	// ユーティリティメソッド
 
 	private getDaysSinceLastScan(): number {
+		if (!this.lastFullScanTime) return -1; // 未スキャン状態
 		const now = new Date();
 		const diffTime = Math.abs(now.getTime() - this.lastFullScanTime.getTime());
 		return Math.floor(diffTime / (1000 * 60 * 60 * 24));
