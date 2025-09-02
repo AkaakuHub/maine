@@ -83,17 +83,21 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 		}
 
 		const video = videoRef.current;
-		const skipCheckInterval: NodeJS.Timeout = setInterval(() => {
+
+		const handleTimeUpdate = () => {
 			if (!video) return;
 
 			const currentTime = video.currentTime;
 			const currentChapter = chapters.find(
 				(chapter) =>
-					currentTime >= chapter.startTime && currentTime <= chapter.endTime,
+					currentTime >= chapter.startTime && currentTime < chapter.endTime,
 			);
 
-			// チャプターが存在し、スキップ対象の場合
-			if (currentChapter) {
+			// チャプターが切り替わった時のみ処理
+			if (
+				currentChapter &&
+				currentChapterRef.current?.id !== currentChapter?.id
+			) {
 				// スキップ判定
 				const shouldSkip = skipRules.some((rule) =>
 					currentChapter.title
@@ -101,8 +105,7 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 						.includes(rule.pattern.toLowerCase()),
 				);
 
-				// 同じチャプターに対しては一度だけスキップ実行
-				if (shouldSkip && currentChapterRef.current?.id !== currentChapter.id) {
+				if (shouldSkip) {
 					// 次のスキップ対象でないチャプターを探す
 					const currentIndex = chapters.findIndex(
 						(c) => c.id === currentChapter.id,
@@ -146,12 +149,12 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 
 			// 現在のチャプターを記録（参照用）
 			currentChapterRef.current = currentChapter || null;
-		}, 100);
+		};
+
+		video.addEventListener("timeupdate", handleTimeUpdate);
 
 		return () => {
-			if (skipCheckInterval) {
-				clearInterval(skipCheckInterval);
-			}
+			video.removeEventListener("timeupdate", handleTimeUpdate);
 		};
 	}, [chapters, skipRules, videoRef]);
 
