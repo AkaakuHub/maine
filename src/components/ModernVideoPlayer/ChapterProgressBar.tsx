@@ -58,6 +58,8 @@ export default function ChapterProgressBar({
 
 	const currentChapter = getCurrentChapter();
 
+	const isHovered = currentChapter && hoveredChapter === currentChapter.id;
+
 	return (
 		<div className={cn("mb-3", className)}>
 			{/* チャプタータイトル表示 */}
@@ -148,6 +150,18 @@ export default function ChapterProgressBar({
 						);
 					})}
 				</div>
+
+				{/* プログレスバー右端の丸いつまみ */}
+				<div
+					className={cn(
+						"absolute bg-primary rounded-full shadow-lg transition-all duration-150 z-25",
+						isHovered ? "w-5 h-5 -top-1" : "w-3 h-3 top-0",
+					)}
+					style={{
+						left: `${(currentTime / duration) * 100}%`,
+						transform: "translateX(-50%)",
+					}}
+				/>
 
 				{/* 透明なシークバー - 最前面でホバー検知も兼ねる */}
 				<input
