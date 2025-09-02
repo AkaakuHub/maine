@@ -487,6 +487,10 @@ const ModernVideoPlayer = ({
 				video.currentTime = initialTime;
 			}
 
+			// LocalStorageから読み込んだ設定をビデオ要素に適用
+			video.playbackRate = playbackRate;
+			video.volume = isMuted ? 0 : volume;
+
 			// 動画が読み込まれたら自動で再生を開始
 			video
 				.play()
@@ -512,7 +516,7 @@ const ModernVideoPlayer = ({
 			video.removeEventListener("waiting", handleWaiting);
 			video.removeEventListener("canplay", handleCanPlay);
 		};
-	}, [onTimeUpdate, initialTime]);
+	}, [onTimeUpdate, initialTime, playbackRate, volume, isMuted]);
 	// フルスクリーン状態の変更を監視
 	useEffect(() => {
 		const handleFullscreenChange = () => {
