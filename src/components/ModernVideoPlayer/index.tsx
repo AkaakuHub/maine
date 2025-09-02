@@ -1,58 +1,21 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import {
-	Play,
-	Pause,
-	Volume2,
-	VolumeX,
-	Maximize,
-	Minimize,
-	SkipBack,
-	SkipForward,
-	Settings,
-	PictureInPicture2,
-	RotateCcw,
-	RotateCw,
-	Clock,
-	ChevronRight,
-	ChevronLeft,
-	Camera,
-	Download,
-} from "lucide-react";
 import { cn, formatDuration } from "@/libs/utils";
 
-// フルスクリーン用の型定義
-interface HTMLVideoElementWithFullscreen extends HTMLVideoElement {
-	webkitRequestFullscreen?: () => Promise<void>;
-	mozRequestFullScreen?: () => Promise<void>;
-	msRequestFullscreen?: () => Promise<void>;
-}
-
-interface HTMLElementWithFullscreen extends HTMLElement {
-	webkitRequestFullscreen?: () => Promise<void>;
-	mozRequestFullScreen?: () => Promise<void>;
-	msRequestFullscreen?: () => Promise<void>;
-}
-
-interface DocumentWithFullscreen extends Document {
-	webkitFullscreenElement?: Element | null;
-	mozFullScreenElement?: Element | null;
-	msFullscreenElement?: Element | null;
-	webkitExitFullscreen?: () => Promise<void>;
-	mozCancelFullScreen?: () => Promise<void>;
-	msExitFullscreen?: () => Promise<void>;
-}
-
-interface ModernVideoPlayerProps {
-	src: string;
-	title?: string;
-	onBack?: () => void;
-	onTimeUpdate?: (currentTime: number, duration: number) => void;
-	initialTime?: number;
-	className?: string;
-	onShowHelp?: () => void;
-}
+// 分離したコンポーネントとタイプのインポート
+import VideoElement from "./VideoElement";
+import SkipOverlay from "./SkipOverlay";
+import ControlsOverlay from "./ControlsOverlay";
+import SettingsMenu from "./SettingsMenu";
+import VideoPlayerStyles from "./VideoPlayerStyles";
+import type {
+	HTMLVideoElementWithFullscreen,
+	HTMLElementWithFullscreen,
+	DocumentWithFullscreen,
+	ModernVideoPlayerProps,
+	SettingsView,
+} from "./types";
 
 const ModernVideoPlayer = ({
 	src,
@@ -115,9 +78,7 @@ const ModernVideoPlayer = ({
 	const skipThrottleRef = useRef<NodeJS.Timeout | null>(null);
 	const skipQueueRef = useRef<number>(0);
 	const [predictedTime, setPredictedTime] = useState<number | null>(null); // 設定メニューの状態
-	const [settingsView, setSettingsView] = useState<
-		"main" | "playback" | "skip" | "screenshot"
-	>("main");
+	const [settingsView, setSettingsView] = useState<SettingsView>("main");
 	const skipOptions = [5, 10, 20, 60, 90]; // 選択可能な秒数
 	// サムネイル用の状態
 	const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
@@ -943,554 +904,71 @@ const ModernVideoPlayer = ({
 			}}
 		>
 			{/* ビデオ要素 */}
-			<video
-				ref={videoRef}
+			<VideoElement
 				src={src}
-				className={cn("w-full h-full object-contain", isFullscreen && "flex-1")}
-				onClick={(e) => {
-					handleVideoTap(e);
-					// シングルタップの場合は通常の再生/一時停止
-					if (Date.now() - lastTapTime > 300) {
-						togglePlay();
-					}
-					// クリック後もキーボードショートカットが効くようにフォーカスを維持
-					e.currentTarget.blur();
-				}}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						togglePlay();
-					}
-				}}
-				preload="metadata"
-				autoPlay
-				playsInline
-				tabIndex={0}
-				aria-label={`動画: ${title || src.split("/").pop()?.split(".")[0] || "無題の動画"}`}
-				data-title={
-					title || src.split("/").pop()?.split(".")[0] || "無題の動画"
-				}
-				x-webkit-airplay="allow"
-				webkit-playsinline="true"
-			>
-				<track kind="captions" srcLang="ja" label="日本語字幕" />
-			</video>
+				title={title}
+				videoRef={videoRef}
+				isFullscreen={isFullscreen}
+				isPlaying={isPlaying}
+				isBuffering={isBuffering}
+				lastTapTime={lastTapTime}
+				onVideoTap={handleVideoTap}
+				onTogglePlay={togglePlay}
+			/>
 
 			{/* スキップ予測オーバーレイ */}
-			{predictedTime !== null && skipQueueRef.current !== 0 && (
-				<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-					<div className="bg-overlay backdrop-blur-sm rounded-2xl px-6 py-4 flex items-center gap-4 border border-primary/30">
-						{/* YouTube風の半円アイコン */}
-						<div className="relative">
-							<div className="w-12 h-12 flex items-center justify-center">
-								{/* 半円の背景 */}
-								<div className="absolute w-12 h-12 border-4 border-primary/30 rounded-full" />
-								{/* ビデオーションする半円 */}
-								<div
-									className="absolute w-12 h-12 border-4 border-transparent border-t-primary rounded-full animate-spin"
-									style={{ animationDuration: "0.8s" }}
-								/>
-								{/* 中央のアイコン */}
-								{skipQueueRef.current > 0 ? (
-									<SkipForward className="h-5 w-5 text-primary" />
-								) : (
-									<SkipBack className="h-5 w-5 text-primary" />
-								)}
-							</div>
-						</div>
-
-						{/* スキップ秒数とプレビュー時間 */}
-						<div className="text-text">
-							{/* 数字部分を固定幅にして「秒」の位置を安定させる */}
-							<div className="text-lg font-bold text-primary flex items-center justify-center">
-								<div className="flex items-baseline">
-									<span className="font-mono text-right w-12 tabular-nums">
-										{skipQueueRef.current > 0 ? "+" : ""}
-										{skipQueueRef.current}
-									</span>
-									<span className="text-base ml-1">秒</span>
-								</div>
-							</div>
-							<div className="text-sm text-text-secondary font-mono text-center">
-								{formatDuration(predictedTime)}
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* バッファリング表示 */}
-			{isBuffering && (
-				<div className="absolute inset-0 flex items-center justify-center bg-overlay">
-					<div className="w-12 h-12 border-4 border-surface/30 border-t-surface rounded-full animate-spin" />
-				</div>
-			)}
-
-			{/* 再生ボタンオーバーレイ */}
-			<button
-				className={cn(
-					"absolute inset-0 flex items-center justify-center bg-overlay transition-opacity border-0 w-full h-full",
-					!isPlaying && !isBuffering
-						? "opacity-100"
-						: "opacity-0 pointer-events-none",
-				)}
-				onClick={togglePlay}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						togglePlay();
-					}
-				}}
-				aria-label="動画を再生"
-				type="button"
-			>
-				<div className="bg-surface-hover backdrop-blur-sm rounded-full p-6 hover:bg-surface-hover transition-colors flex items-center justify-center">
-					<Play className="h-16 w-16 text-text" />
-				</div>
-			</button>
+			<SkipOverlay
+				predictedTime={predictedTime}
+				skipQueue={skipQueueRef.current}
+				show={predictedTime !== null && skipQueueRef.current !== 0}
+			/>
 
 			{/* コントロール */}
-			<div
-				className={cn(
-					"absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-opacity duration-300 p-4",
-					showControls ? "opacity-100" : "opacity-0",
-				)}
-			>
-				{/* 上部: 戻るボタンのみ */}
-				{/* <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="p-2 bg-gradient-to-r from-purple-600/50 to-blue-600/50 backdrop-blur-sm rounded-full hover:from-purple-500/70 hover:to-blue-500/70 transition-all duration-300"
-              >
-                <ArrowLeft className="h-5 w-5 text-text" />
-              </button>
-            )}
-          </div>
-          <button
-            type="button"
-            className="p-2 bg-overlay backdrop-blur-sm rounded-full hover:bg-overlay transition-colors"
-          >
-            <MoreHorizontal className="h-5 w-5 text-text" />
-          </button>
-        </div> */}
+			<ControlsOverlay
+				show={showControls}
+				duration={duration}
+				currentTime={currentTime}
+				predictedTime={predictedTime}
+				isPlaying={isPlaying}
+				skipSeconds={skipSeconds}
+				isMuted={isMuted}
+				volume={volume}
+				isShowRestTime={isShowRestTime}
+				isFullscreen={isFullscreen}
+				showSettings={showSettings}
+				settingsButtonRef={settingsButtonRef}
+				getSeekStep={getSeekStep}
+				onSeek={handleSeek}
+				onTogglePlay={togglePlay}
+				onSkipBackward={skipBackward}
+				onSkipForward={skipForward}
+				onToggleMute={toggleMute}
+				onVolumeChange={handleVolumeChange}
+				onSetIsShowRestTime={setIsShowRestTime}
+				onSetShowSettings={setShowSettings}
+				onSetSettingsView={setSettingsView}
+				onTakeScreenshot={takeScreenshot}
+				onTogglePictureInPicture={togglePictureInPicture}
+				onToggleFullscreen={toggleFullscreen}
+			/>
 
-				{/* プログレスバー */}
-				<div className="mb-3">
-					<input
-						type="range"
-						min={0}
-						max={duration || 0}
-						step={getSeekStep()}
-						value={currentTime}
-						onChange={handleSeek}
-						className="w-full h-2 bg-surface-hover rounded-lg appearance-none cursor-pointer slider progress-slider"
-					/>
-				</div>
-
-				{/* 下部コントロール */}
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						<button
-							type="button"
-							onClick={togglePlay}
-							className="text-text hover:text-primary transition-colors"
-						>
-							{isPlaying ? (
-								<Pause className="h-6 w-6" />
-							) : (
-								<Play className="h-6 w-6" />
-							)}
-						</button>
-
-						{/* カスタムスキップボタン */}
-						<div className="flex items-center gap-1">
-							<button
-								type="button"
-								onClick={skipBackward}
-								className="text-text hover:text-primary transition-colors flex items-center gap-1"
-								title={`${skipSeconds}秒戻す`}
-							>
-								<RotateCcw className="h-4 w-4" />
-								<span className="text-xs w-6">{skipSeconds}s</span>
-							</button>
-
-							<button
-								type="button"
-								onClick={skipForward}
-								className="text-text hover:text-primary transition-colors flex items-center gap-1"
-								title={`${skipSeconds}秒進む`}
-							>
-								<RotateCw className="h-4 w-4" />
-								<span className="text-xs w-6">{skipSeconds}s</span>
-							</button>
-						</div>
-
-						<div className="flex items-center gap-2">
-							<button
-								type="button"
-								onClick={toggleMute}
-								className="text-text hover:text-primary transition-colors"
-							>
-								{isMuted ? (
-									<VolumeX className="h-5 w-5" />
-								) : (
-									<Volume2 className="h-5 w-5" />
-								)}
-							</button>
-							<input
-								type="range"
-								min="0"
-								max="1"
-								step="0.1"
-								value={isMuted ? 0 : volume}
-								onChange={handleVolumeChange}
-								className="w-16 h-1 bg-surface-hover rounded-lg appearance-none cursor-pointer slider volume-slider"
-							/>
-						</div>
-						<span className="text-text text-sm font-mono flex gap-1">
-							<button
-								type="button"
-								onClick={() => {
-									setIsShowRestTime((c) => {
-										const newValue = !c;
-										// LocalStorageに保存
-										localStorage.setItem(
-											"video-player-show-rest-time",
-											newValue.toString(),
-										);
-										return newValue;
-									});
-								}}
-								className="cursor-pointer hover:text-primary transition-colors"
-							>
-								{isShowRestTime ? (
-									<>
-										<span>-</span>
-										<span
-											className={predictedTime !== null ? "text-primary" : ""}
-										>
-											{formatDuration(
-												duration - (predictedTime ?? currentTime),
-											)}
-										</span>
-									</>
-								) : (
-									<>
-										<span
-											className={predictedTime !== null ? "text-primary" : ""}
-										>
-											{formatDuration(predictedTime ?? currentTime)}
-										</span>
-										<span>/</span>
-										<span>{formatDuration(duration)}</span>
-									</>
-								)}
-							</button>
-						</span>
-					</div>
-
-					<div className="flex items-center gap-3">
-						{/* 設定メニュー */}
-						<div className="relative">
-							<button
-								ref={settingsButtonRef}
-								type="button"
-								onClick={() => {
-									if (showSettings) {
-										setShowSettings(false);
-										setSettingsView("main"); // 閉じるときもメインビューにリセット
-									} else {
-										setShowSettings(true);
-										setSettingsView("main"); // 設定を開くときはメインビューに
-									}
-								}}
-								className="text-text hover:text-primary transition-colors relative top-[2.5px]"
-							>
-								<Settings className="h-5 w-5" />
-							</button>
-							{showSettings && (
-								<div
-									ref={settingsRef}
-									className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-primary/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
-								>
-									{settingsView === "main" && (
-										<div>
-											<div className="text-text text-sm mb-3 font-semibold flex items-center gap-2">
-												<Settings className="h-4 w-4" />
-												設定
-											</div>
-											{/* メインメニュー */}
-											<button
-												type="button"
-												onClick={() => setSettingsView("skip")}
-												className="w-full flex items-center justify-between px-3 py-2 text-sm text-text-secondary hover:bg-primary/20 hover:text-primary rounded transition-colors mb-2"
-											>
-												<div className="flex items-center gap-2 w-30">
-													<Clock className="h-4 w-4" />
-													<span className="text-start">スキップ秒数</span>
-												</div>
-												<div className="flex items-center gap-1">
-													<span className="text-xs text-warning w-8">
-														{skipSeconds}秒
-													</span>
-													<ChevronRight className="h-4 w-4" />
-												</div>
-											</button>{" "}
-											<button
-												type="button"
-												onClick={() => setSettingsView("playback")}
-												className="w-full flex items-center justify-between px-3 py-2 text-sm text-text-secondary hover:bg-primary/20 hover:text-primary rounded transition-colors mb-2"
-											>
-												<div className="flex items-center gap-2 w-30">
-													<Play className="h-4 w-4" />
-													<span className="text-start">再生速度</span>
-												</div>
-												<div className="flex items-center gap-1">
-													<span className="text-xs text-primary w-8">
-														{playbackRate}x
-													</span>
-													<ChevronRight className="h-4 w-4" />
-												</div>{" "}
-											</button>
-											<button
-												type="button"
-												onClick={() => setSettingsView("screenshot")}
-												className="w-full flex items-center justify-between px-3 py-2 text-sm text-text-secondary hover:bg-primary/20 hover:text-primary rounded transition-colors mb-2"
-											>
-												<div className="flex items-center gap-2 min-w-32">
-													<Camera className="h-4 w-4" />
-													<span className="text-start">スクリーンショット</span>
-												</div>
-												<div className="flex items-center gap-1">
-													<span className="text-xs text-primary w-16">
-														{autoDownloadScreenshot ? "自動DL" : "コピーのみ"}
-													</span>
-													<ChevronRight className="h-4 w-4" />
-												</div>
-											</button>
-										</div>
-									)}
-									{settingsView === "skip" && (
-										<div>
-											<div className="flex items-center gap-2 mb-3">
-												<button
-													type="button"
-													onClick={() => setSettingsView("main")}
-													className="text-text-secondary hover:text-text transition-colors w-8"
-												>
-													<ChevronLeft className="h-6 w-6" />
-												</button>
-												<div className="text-warning text-sm font-semibold flex items-center gap-2">
-													<Clock className="h-4 w-4" />
-													スキップ秒数
-												</div>
-											</div>
-
-											{skipOptions.map((seconds) => (
-												<button
-													key={seconds}
-													type="button"
-													onClick={() => {
-														handleSkipSecondsChange(seconds);
-													}}
-													className={cn(
-														"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
-														skipSeconds === seconds
-															? "bg-primary text-text-inverse"
-															: "text-text-secondary hover:bg-primary/20",
-													)}
-												>
-													{seconds}秒
-												</button>
-											))}
-										</div>
-									)}{" "}
-									{settingsView === "playback" && (
-										<div>
-											<div className="flex items-center gap-2 mb-3">
-												<button
-													type="button"
-													onClick={() => setSettingsView("main")}
-													className="text-text-secondary hover:text-text transition-colors w-8"
-												>
-													<ChevronLeft className="h-6 w-6" />
-												</button>
-												<div className="text-primary text-sm font-semibold flex items-center gap-2">
-													<Play className="h-4 w-4" />
-													再生速度
-												</div>
-											</div>
-
-											{[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
-												<button
-													key={rate}
-													type="button"
-													onClick={() => {
-														handlePlaybackRateChange(rate);
-														setSettingsView("main");
-													}}
-													className={cn(
-														"block w-full text-left px-3 py-2 text-sm rounded transition-colors mb-1",
-														playbackRate === rate
-															? "bg-primary text-text-inverse"
-															: "text-text-secondary hover:bg-primary/20",
-													)}
-												>
-													{rate}x
-												</button>
-											))}
-										</div>
-									)}
-									{settingsView === "screenshot" && (
-										<div>
-											<div className="flex items-center gap-2 mb-3">
-												<button
-													type="button"
-													onClick={() => setSettingsView("main")}
-													className="text-text-secondary hover:text-text transition-colors w-8"
-												>
-													<ChevronLeft className="h-6 w-6" />
-												</button>
-												<div className="text-primary text-sm font-semibold flex items-center gap-2">
-													<Camera className="h-4 w-4" />
-													<span>スクリーンショット設定</span>
-												</div>
-											</div>
-
-											<button
-												type="button"
-												onClick={() => handleScreenshotSettingChange(false)}
-												className={cn(
-													"flex w-full px-3 py-2 text-sm rounded transition-colors mb-1 justify-start items-center",
-													!autoDownloadScreenshot
-														? "bg-primary text-text-inverse"
-														: "text-text-secondary hover:bg-primary/20",
-												)}
-												style={{ textAlign: "left" }}
-											>
-												<span className="text-left">
-													クリップボードにコピーのみ
-												</span>
-											</button>
-											<button
-												type="button"
-												onClick={() => handleScreenshotSettingChange(true)}
-												className={cn(
-													"flex w-full px-3 py-2 text-sm rounded transition-colors mb-1 justify-start items-center",
-													autoDownloadScreenshot
-														? "bg-primary text-text-inverse"
-														: "text-text-secondary hover:bg-primary/20",
-												)}
-												style={{ textAlign: "left" }}
-											>
-												<div className="flex items-center gap-2 text-left">
-													<Download className="h-4 w-4" />
-													<span className="text-left">
-														クリップボード + 自動ダウンロード
-													</span>
-												</div>
-											</button>
-										</div>
-									)}
-								</div>
-							)}
-						</div>
-						<button
-							type="button"
-							onClick={takeScreenshot}
-							className="text-text hover:text-primary transition-colors"
-							title="スクリーンショットを撮る"
-						>
-							<Camera className="h-5 w-5" />
-						</button>
-						<button
-							type="button"
-							onClick={togglePictureInPicture}
-							className="text-text hover:text-primary transition-colors"
-						>
-							<PictureInPicture2 className="h-5 w-5" />
-						</button>{" "}
-						<button
-							type="button"
-							onClick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
-								toggleFullscreen();
-							}}
-							className="text-text hover:text-primary transition-colors"
-						>
-							{isFullscreen ? (
-								<Minimize className="h-5 w-5" />
-							) : (
-								<Maximize className="h-5 w-5" />
-							)}
-						</button>
-					</div>
-				</div>
-			</div>
+			{/* 設定メニュー */}
+			<SettingsMenu
+				show={showSettings}
+				settingsView={settingsView}
+				setSettingsView={setSettingsView}
+				skipSeconds={skipSeconds}
+				skipOptions={skipOptions}
+				playbackRate={playbackRate}
+				autoDownloadScreenshot={autoDownloadScreenshot}
+				onSkipSecondsChange={handleSkipSecondsChange}
+				onPlaybackRateChange={handlePlaybackRateChange}
+				onScreenshotSettingChange={handleScreenshotSettingChange}
+				settingsRef={settingsRef}
+			/>
 
 			{/* カスタムスライダースタイル */}
-			<style jsx>{`
-        /* フルスクリーン時のスタイル */
-        .group:fullscreen {
-          display: flex;
-          flex-direction: column;
-          width: 100vw !important;
-          height: 100vh !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          border-radius: 0 !important;
-        }
-        
-        .group:fullscreen video {
-          flex: 1;
-          width: 100% !important;
-          height: 100% !important;
-          object-fit: contain;
-        }
-        
-        .progress-slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #D81C2F;
-          cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(216, 28, 47, 0.4);
-        }
-        .progress-slider::-moz-range-thumb {
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #D81C2F;
-          cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(216, 28, 47, 0.4);
-        }
-        .volume-slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 12px;
-          width: 12px;
-          border-radius: 50%;
-          background: #D81C2F;
-          cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 2px 6px rgba(216, 28, 47, 0.4);
-        }
-        .volume-slider::-moz-range-thumb {
-          height: 12px;
-          width: 12px;
-          border-radius: 50%;
-          background: #D81C2F;
-          cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 2px 6px rgba(216, 28, 47, 0.4);
-        }
-      `}</style>
+			<VideoPlayerStyles />
 		</div>
 	);
 };
