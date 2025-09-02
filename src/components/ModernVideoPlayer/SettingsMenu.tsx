@@ -289,7 +289,7 @@ export default function SettingsMenu({
 											await chapterSkipStore.addRule(newPattern.trim());
 											setNewPattern("");
 										} catch (_error) {
-											// エラーハンドリングは useChapterSkipSettings で管理
+											// エラーハンドリングはストアで管理
 										}
 									}
 								}}
@@ -358,7 +358,7 @@ export default function SettingsMenu({
 															setEditingRule(null);
 															setEditPattern("");
 														} catch (_error) {
-															// エラーハンドリングは useChapterSkipSettings で管理
+															// エラーハンドリングはストアで管理
 														}
 													}
 												}}

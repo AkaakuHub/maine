@@ -131,5 +131,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 	},
 }));
 
-// 初期データ読み込み
-useChapterSkipStore.getState().fetchRules();
+// 初期データ読み込み（クライアントサイドのみ）
+if (typeof window !== "undefined") {
+	useChapterSkipStore.getState().fetchRules();
+}
