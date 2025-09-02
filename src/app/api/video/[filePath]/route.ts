@@ -13,8 +13,6 @@ export async function GET(
 
 		// ダウンロードモードかどうかを確認
 		const isDownload = request.nextUrl.searchParams.get("download") === "true";
-		console.log("API called with download mode:", isDownload);
-		console.log("File path:", decodedPath);
 
 		// 複数のビデオディレクトリからファイルを検索
 		const fileValidation = await findFileInVideoDirectories(decodedPath);
@@ -37,8 +35,6 @@ export async function GET(
 		const stat = statSync(fullPath);
 		const fileSize = stat.size;
 		const range = request.headers.get("range");
-
-		console.log("Streaming video:", { fullPath, fileSize, range });
 
 		// Range リクエストの処理（動画ストリーミング用）
 		if (range) {
