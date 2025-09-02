@@ -6,6 +6,7 @@ import { WifiOff } from "lucide-react";
 import Navigation from "@/components/VideoPlayer/Navigation";
 import LoadingScreen from "@/components/VideoPlayer/LoadingScreen";
 import ResponsiveVideoLayout from "@/components/VideoPlayer/ResponsiveVideoLayout";
+import { SettingsModal } from "@/components/settings/SettingsModal";
 import { useVideoPlayer } from "@/hooks/useVideoPlayer";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
@@ -14,6 +15,7 @@ export default function PlayPage() {
 	const { isOnline } = useNetworkStatus();
 	const [showNetworkWarning, setShowNetworkWarning] = useState(false);
 	const [isPageReady, setIsPageReady] = useState(false);
+	const [showSettings, setShowSettings] = useState(false);
 
 	const {
 		videoData,
@@ -108,6 +110,7 @@ export default function PlayPage() {
 				onGoBack={handleGoBack}
 				onGoHome={handleGoHome}
 				onShare={handleShare}
+				onOpenSettings={() => setShowSettings(true)}
 			/>
 
 			{/* レスポンシブレイアウト */}
@@ -125,6 +128,12 @@ export default function PlayPage() {
 				onToggleDescription={toggleDescription}
 				onTimeUpdate={handleTimeUpdate}
 				initialTime={initialTime}
+			/>
+
+			{/* 設定モーダル */}
+			<SettingsModal
+				isOpen={showSettings}
+				onClose={() => setShowSettings(false)}
 			/>
 		</div>
 	);

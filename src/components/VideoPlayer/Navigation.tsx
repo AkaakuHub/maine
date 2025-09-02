@@ -1,17 +1,19 @@
 "use client";
 
-import { ArrowLeft, Home, Share2, MoreVertical } from "lucide-react";
+import { ArrowLeft, Home, Share2, Settings } from "lucide-react";
 
 interface NavigationProps {
 	onGoBack: () => void;
 	onGoHome: () => void;
 	onShare: () => void;
+	onOpenSettings: () => void;
 }
 
 export default function Navigation({
 	onGoBack,
 	onGoHome,
 	onShare,
+	onOpenSettings,
 }: NavigationProps) {
 	return (
 		<nav className="relative z-50 bg-gradient-to-r from-slate-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-sm border-b border-purple-500/20 h-16 flex-shrink-0">
@@ -48,10 +50,11 @@ export default function Navigation({
 						</button>
 						<button
 							type="button"
-							className="p-2 text-text hover:text-text-secondary hover:bg-surface-hover rounded-lg transition-all duration-200 active:scale-95"
-							aria-label="その他のオプション"
+							onClick={onOpenSettings}
+							className="p-2 text-text hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 active:scale-95"
+							aria-label="設定"
 						>
-							<MoreVertical size={18} />
+							<Settings size={18} />
 						</button>
 					</div>
 				</div>

@@ -25,6 +25,7 @@ import LoadingState from "@/components/LoadingState";
 import StreamingWarningDialog from "@/components/StreamingWarningDialog";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWADebugInfo from "@/components/PWADebugInfo";
+import { SettingsModal } from "@/components/settings/SettingsModal";
 import { Button } from "@/components/ui/Button";
 import { cn, formatFileSize } from "@/libs/utils";
 import { PAGINATION, SEARCH } from "@/utils/constants";
@@ -55,6 +56,7 @@ const Home = () => {
 	const [showStreamingWarning, setShowStreamingWarning] = useState(false);
 	const [warningVideoData, setWarningVideoData] =
 		useState<VideoFileData | null>(null);
+	const [showSettings, setShowSettings] = useState(false);
 
 	// オフライン時は自動的にオフラインタブに切り替え
 	useEffect(() => {
@@ -287,15 +289,16 @@ const Home = () => {
 						</div>
 
 						<div className="flex items-center gap-4">
-							{/* 設定ページリンク */}
-							<a
-								href="/settings"
+							{/* 設定ボタン */}
+							<button
+								type="button"
+								onClick={() => setShowSettings(true)}
 								className="flex items-center gap-2 px-3 py-2 bg-surface-elevated hover:bg-surface border border-border rounded-lg text-text-secondary hover:text-text transition-all duration-200"
 								title="設定"
 							>
 								<Settings className="h-4 w-4" />
 								<span className="hidden sm:inline text-sm">設定</span>
-							</a>
+							</button>
 
 							{/* PWAインストールプロンプト */}
 							<PWAInstallPrompt />
@@ -643,6 +646,12 @@ const Home = () => {
 					videoTitle={warningVideoData.title}
 				/>
 			)}
+
+			{/* 設定モーダル */}
+			<SettingsModal
+				isOpen={showSettings}
+				onClose={() => setShowSettings(false)}
+			/>
 		</main>
 	);
 };
