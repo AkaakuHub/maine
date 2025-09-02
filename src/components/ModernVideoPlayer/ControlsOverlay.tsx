@@ -113,14 +113,14 @@ export default function ControlsOverlay({
 					</button>
 
 					{/* カスタムスキップボタン */}
-					<div className="flex items-center gap-1">
+					<div className="flex items-center gap-2">
 						<button
 							type="button"
 							onClick={onSkipBackward}
 							className="text-text hover:text-primary transition-colors flex items-center gap-1"
 							title={`${skipSeconds}秒戻す`}
 						>
-							<RotateCcw className="h-4 w-4" />
+							<RotateCcw className="h-5 w-5" />
 							<span className="text-xs w-6">{skipSeconds}s</span>
 						</button>
 
@@ -130,14 +130,14 @@ export default function ControlsOverlay({
 							className="text-text hover:text-primary transition-colors flex items-center gap-1"
 							title={`${skipSeconds}秒進む`}
 						>
-							<RotateCw className="h-4 w-4" />
+							<RotateCw className="h-5 w-5" />
 							<span className="text-xs w-6">{skipSeconds}s</span>
 						</button>
 					</div>
 
 					{/* チャプター移動ボタン */}
 					{chapters.length > 0 && (
-						<div className="flex items-center gap-1">
+						<div className="flex items-center gap-2">
 							<button
 								type="button"
 								onClick={() => {
@@ -161,7 +161,7 @@ export default function ControlsOverlay({
 								className="text-text hover:text-primary transition-colors"
 								title="前のチャプター"
 							>
-								<SkipBack className="h-4 w-4" />
+								<SkipBack className="h-5 w-5" />
 							</button>
 
 							<button
@@ -183,7 +183,7 @@ export default function ControlsOverlay({
 								className="text-text hover:text-primary transition-colors"
 								title="次のチャプター"
 							>
-								<SkipForward className="h-4 w-4" />
+								<SkipForward className="h-5 w-5" />
 							</button>
 
 							<button
@@ -192,7 +192,7 @@ export default function ControlsOverlay({
 								className="text-text hover:text-primary transition-colors"
 								title="チャプター一覧"
 							>
-								<List className="h-4 w-4" />
+								<List className="h-5 w-5" />
 							</button>
 						</div>
 					)}

@@ -71,7 +71,7 @@ export default function VideoElement({
 			{/* 再生ボタンオーバーレイ */}
 			<button
 				className={cn(
-					"absolute inset-0 flex items-center justify-center bg-overlay transition-opacity border-0 w-full h-full",
+					"absolute inset-0 flex items-center justify-center transition-opacity border-0 w-full h-full",
 					!isPlaying && !isBuffering
 						? "opacity-100"
 						: "opacity-0 pointer-events-none",
@@ -86,7 +86,7 @@ export default function VideoElement({
 				aria-label="動画を再生"
 				type="button"
 			>
-				<div className="bg-surface-hover backdrop-blur-sm rounded-full p-6 hover:bg-surface-hover transition-colors flex items-center justify-center">
+				<div className="bg-surface-hover/40 backdrop-blur-sm rounded-full p-6 hover:bg-surface-hover/60 transition-colors flex items-center justify-center">
 					<Play className="h-16 w-16 text-text" />
 				</div>
 			</button>
