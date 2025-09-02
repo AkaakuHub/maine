@@ -49,7 +49,6 @@ const Home = () => {
 	const [sortBy, setSortBy] = useState<SortBy>("title");
 	const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 	const [currentPage, setCurrentPage] = useState(1); // IME状態管理
-	const [isComposing, setIsComposing] = useState(false);
 	const [showAll, setShowAll] = useState(false); // 一覧表示フラグ
 
 	// 警告ダイアログの状態
@@ -389,17 +388,6 @@ const Home = () => {
 										placeholder={`動画タイトルやファイル名で検索... (${SEARCH.MIN_QUERY_LENGTH}文字以上)`}
 										value={searchTerm}
 										onChange={(e) => setSearchTerm(e.target.value)}
-										onCompositionStart={() => setIsComposing(true)}
-										onCompositionEnd={() => setIsComposing(false)}
-										onKeyDown={(e) => {
-											if (
-												e.key === "Enter" &&
-												!isComposing &&
-												searchTerm.trim().length >= SEARCH.MIN_QUERY_LENGTH
-											) {
-												handleSearch();
-											}
-										}}
 										className="w-full pl-10 pr-24 py-3 bg-surface border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
 									/>
 									<div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
