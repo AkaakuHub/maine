@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { VideoInfoType } from "@/types/VideoInfo";
 import type { VideoFileData } from "@/type";
-import { useProgress } from "./useProgress";
+import { useVideoProgress } from "./useVideoProgress";
 import { useOfflineStorage } from "./useOfflineStorage";
 import { useNetworkStatus } from "./useNetworkStatus";
 import { API } from "@/utils/constants";
@@ -38,9 +38,12 @@ export function useVideoPlayer() {
 	const [isLiked, setIsLiked] = useState<boolean>(false);
 	const [isInWatchlist, setIsInWatchlist] = useState<boolean>(false);
 	const [programInfo, setProgramInfo] = useState<string>("");
-	const { updateProgress } = useProgress();
-	const lastProgressSaveRef = useRef<number>(0);
-	const progressSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+	// ビデオ進捗管理（ページ離脱時のみ保存）
+	const videoProgressHook = useVideoProgress({
+		filePath: videoData?.filePath || "",
+		enableBackup: !isOfflineMode,
+		onProgressSaved: () => {},
+	});
 
 	// ファイル名から VideoInfo を生成するヘルパー関数
 	const createVideoInfoFromFileName = useCallback(
@@ -387,53 +390,18 @@ export function useVideoPlayer() {
 	]);
 	useEffect(() => {
 		initializePlayer();
-
-		// エフェクト開始時点でのrefの値をコピー
-		const currentInterval = progressSaveIntervalRef.current;
-
-		// クリーンアップ
-		return () => {
-			if (currentInterval) {
-				clearInterval(currentInterval);
-			}
-		};
 	}, [initializePlayer]);
 
-	// 視聴進捗を保存する関数
-	const saveProgress = useCallback(
-		async (currentTime: number, duration: number) => {
+	// ビデオの時間更新ハンドラー（新しいuseVideoProgressフックを使用）
+	const handleTimeUpdate = useCallback(
+		(currentTime: number, duration: number) => {
 			// オフラインモードでは進捗を保存しない
 			if (isOfflineMode || !videoData || !duration) return;
 
-			const progress = Math.min(
-				100,
-				Math.max(0, (currentTime / duration) * 100),
-			);
-
-			// 5秒以上の差がある場合のみ保存（頻繁すぎる更新を防ぐ）
-			if (Math.abs(currentTime - lastProgressSaveRef.current) >= 5) {
-				lastProgressSaveRef.current = currentTime;
-
-				try {
-					await updateProgress({
-						filePath: videoData.filePath,
-						watchTime: currentTime,
-						watchProgress: progress,
-					});
-				} catch (error) {
-					console.error("Failed to save progress:", error);
-				}
-			}
+			// 新しいフックのhandleTimeUpdateを呼び出し
+			videoProgressHook.handleTimeUpdate(currentTime, duration);
 		},
-		[isOfflineMode, videoData, updateProgress],
-	);
-
-	// ビデオの時間更新ハンドラー
-	const handleTimeUpdate = useCallback(
-		(currentTime: number, duration: number) => {
-			saveProgress(currentTime, duration);
-		},
-		[saveProgress],
+		[isOfflineMode, videoData, videoProgressHook],
 	);
 
 	const handleGoBack = () => {
@@ -475,10 +443,12 @@ export function useVideoPlayer() {
 		setIsLiked(newLikeStatus); // 楽観的更新
 
 		try {
-			await updateProgress({
-				filePath: videoData.filePath,
-				isLiked: newLikeStatus,
-			});
+			const success = await videoProgressHook.updateLikeStatus(newLikeStatus);
+			if (!success) {
+				// 失敗時は元に戻す
+				setIsLiked(!newLikeStatus);
+				console.error("Failed to update like status");
+			}
 		} catch (error) {
 			// エラー時は元に戻す
 			setIsLiked(!newLikeStatus);
@@ -535,6 +505,9 @@ export function useVideoPlayer() {
 		toggleWatchlist,
 		toggleDescription,
 		handleTimeUpdate,
-		saveProgress,
+		// 進捗保存の状態とエラー情報も公開
+		progressLoading: videoProgressHook.loading,
+		progressError: videoProgressHook.error,
+		hasUnsavedProgress: videoProgressHook.hasUnsavedChanges,
 	};
 }

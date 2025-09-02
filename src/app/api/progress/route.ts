@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
 
-export async function PUT(request: NextRequest) {
+async function handleProgressUpdate(request: NextRequest) {
 	try {
 		const body = await request.json();
 		const { filePath, watchTime, watchProgress, isLiked, isInWatchlist } = body;
@@ -136,4 +136,12 @@ export async function GET(request: NextRequest) {
 			{ status: 500 },
 		);
 	}
+}
+
+export async function POST(request: NextRequest) {
+	return handleProgressUpdate(request);
+}
+
+export async function PUT(request: NextRequest) {
+	return handleProgressUpdate(request);
 }
