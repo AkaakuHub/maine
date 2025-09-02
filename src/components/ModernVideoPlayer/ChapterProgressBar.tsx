@@ -81,7 +81,7 @@ export default function ChapterProgressBar({
 							key={`bg-${chapter.id}`}
 							className={cn(
 								"absolute bg-surface-hover transition-all duration-150",
-								isHovered ? "h-3 top-0" : "h-2 top-0.5",
+								isHovered ? "h-2 top-0.5" : "h-1 top-1",
 								index === 0 ? "rounded-l-lg" : "",
 								index === chapters.length - 1 ? "rounded-r-lg" : "",
 							)}
@@ -117,7 +117,7 @@ export default function ChapterProgressBar({
 							key={`progress-${chapter.id}`}
 							className={cn(
 								"absolute bg-primary transition-all duration-150",
-								isHovered ? "h-3 top-0" : "h-2 top-0.5",
+								isHovered ? "h-2 top-0.5" : "h-1 top-1",
 								index === 0 ? "rounded-l-lg" : "",
 								index === chapters.length - 1 ? "rounded-r-lg" : "",
 							)}
@@ -138,7 +138,7 @@ export default function ChapterProgressBar({
 								key={`divider-${chapter.id}`}
 								className={cn(
 									"absolute w-0.5 bg-text-inverse/60 rounded-full transition-all duration-150",
-									isHovered ? "h-3 top-0" : "h-2 top-0.5",
+									isHovered ? "h-2 top-0.5" : "h-1 top-1",
 								)}
 								style={{
 									left: `${getChapterPosition(chapter)}%`,
