@@ -49,19 +49,51 @@ export function useVideoSkip({
 				clearTimeout(skipThrottleRef.current);
 			}
 
-			// 500ms後に実際のスキップを実行
+			// 300ms後に実際のスキップを実行（レスポンシブに）
 			skipThrottleRef.current = setTimeout(() => {
 				if (!videoRef.current) return;
 
+				// タイマー実行時の最新の現在時刻を取得
+				const currentVideoTime = videoRef.current.currentTime;
 				const totalSkip = skipQueueRef.current;
-				skipQueueRef.current = 0; // キューをリセット
-				setPredictedTime(null); // 予測時間をリセット
 
-				videoRef.current.currentTime = Math.max(
+				// 新しい時刻を計算（黒いフレームを避けるため微小な調整）
+				let newTime = Math.max(
 					0,
-					Math.min(duration, currentTime + totalSkip),
+					Math.min(duration, currentVideoTime + totalSkip),
 				);
-			}, 500);
+
+				// 0秒付近の黒いフレームを避ける（30fps想定で1フレーム分調整）
+				if (newTime < 0.034) {
+					newTime = 0.034;
+				}
+
+				// キューをリセット
+				skipQueueRef.current = 0;
+				setPredictedTime(null);
+
+				// Pause-Seek-Play パターンで暗転を防ぐ
+				const video = videoRef.current;
+				if (video) {
+					const wasPlaying = !video.paused;
+
+					// 一時停止してからシーク
+					video.pause();
+
+					// seekedイベントを待ってから再生再開
+					const handleSeeked = () => {
+						video.removeEventListener("seeked", handleSeeked);
+						if (wasPlaying) {
+							video.play().catch(() => {
+								// 再生失敗を無視
+							});
+						}
+					};
+
+					video.addEventListener("seeked", handleSeeked, { once: true });
+					video.currentTime = newTime;
+				}
+			}, 300);
 		},
 		[videoRef, duration],
 	);
