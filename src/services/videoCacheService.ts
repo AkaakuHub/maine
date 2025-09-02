@@ -107,9 +107,6 @@ class VideoCacheService {
 				this.lastFullScanTime = settings.lastFullScan;
 				this.isUpdating = settings.isScanning;
 				this.updateProgress = settings.scanProgress;
-				console.log(
-					`キャッシュ設定読み込み: 最終スキャン ${this.lastFullScanTime.toLocaleString()}`,
-				);
 			} else {
 				// 初回作成 - nullのまま（スキャン実行時に設定）
 				console.log("キャッシュ設定を初期化します - 初回スキャンが必要");
@@ -332,7 +329,6 @@ class VideoCacheService {
 	async checkAndUpdateIfNeeded(): Promise<UpdateCheckResult> {
 		// 初期化を待つ（強制的に）
 		if (!this.initialized) {
-			console.log("⏳ checkAndUpdateIfNeeded: waiting for initialization...");
 			await this.ensureInitialized();
 		}
 
