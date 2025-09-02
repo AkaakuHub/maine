@@ -40,7 +40,17 @@ export async function GET(
 		if (range) {
 			const parts = range.replace(/bytes=/, "").split("-");
 			const start = Number.parseInt(parts[0], 10);
-			const end = parts[1] ? Number.parseInt(parts[1], 10) : fileSize - 1;
+			let end =
+				parts[1] && parts[1].trim() !== ""
+					? Number.parseInt(parts[1], 10)
+					: fileSize - 1;
+
+			// 大きなチャンクを制限（最大10MB）
+			const maxChunkSize = 10 * 1024 * 1024;
+			if (end - start + 1 > maxChunkSize) {
+				end = start + maxChunkSize - 1;
+			}
+
 			const chunksize = end - start + 1;
 
 			const file = createReadStream(fullPath, { start, end });
