@@ -71,17 +71,45 @@ const ModernVideoPlayer = ({
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
-	const [isShowRestTime, setIsShowRestTime] = useState(false);
-	const [volume, setVolume] = useState(1);
+	const [isShowRestTime, setIsShowRestTime] = useState(() => {
+		// LocalStorageから設定を読み込み
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem("video-player-show-rest-time");
+			return saved === "true";
+		}
+		return false;
+	});
+	const [volume, setVolume] = useState(() => {
+		// LocalStorageから設定を読み込み
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem("video-player-volume");
+			return saved ? Number.parseFloat(saved) : 1;
+		}
+		return 1;
+	});
 	const [isMuted, setIsMuted] = useState(false);
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [showControls, setShowControls] = useState(true);
-	const [playbackRate, setPlaybackRate] = useState(1);
+	const [playbackRate, setPlaybackRate] = useState(() => {
+		// LocalStorageから設定を読み込み
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem("video-player-playback-rate");
+			return saved ? Number.parseFloat(saved) : 1;
+		}
+		return 1;
+	});
 	const [showSettings, setShowSettings] = useState(false);
 	const [isBuffering, setIsBuffering] = useState(false);
 
 	// スキップ機能
-	const [skipSeconds, setSkipSeconds] = useState(10); // デフォルト10秒
+	const [skipSeconds, setSkipSeconds] = useState(() => {
+		// LocalStorageから設定を読み込み
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem("video-player-skip-seconds");
+			return saved ? Number.parseInt(saved, 10) : 10;
+		}
+		return 10; // デフォルト10秒
+	});
 
 	// 連続スキップの閾値管理
 	const skipThrottleRef = useRef<NodeJS.Timeout | null>(null);
@@ -121,6 +149,8 @@ const ModernVideoPlayer = ({
 	const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newVolume = Number.parseFloat(e.target.value);
 		setVolume(newVolume);
+		// LocalStorageに保存
+		localStorage.setItem("video-player-volume", newVolume.toString());
 		if (videoRef.current) {
 			videoRef.current.volume = newVolume;
 			setIsMuted(newVolume === 0);
@@ -209,6 +239,8 @@ const ModernVideoPlayer = ({
 		if (!videoRef.current) return;
 		videoRef.current.playbackRate = rate;
 		setPlaybackRate(rate);
+		// LocalStorageに保存
+		localStorage.setItem("video-player-playback-rate", rate.toString());
 		setShowSettings(false);
 	};
 	// スキップ - 連続処理に対応
@@ -260,6 +292,8 @@ const ModernVideoPlayer = ({
 	// スキップ秒数設定
 	const handleSkipSecondsChange = (seconds: number) => {
 		setSkipSeconds(seconds);
+		// LocalStorageに保存
+		localStorage.setItem("video-player-skip-seconds", seconds.toString());
 		setShowSettings(false); // 設定ダイアログを閉じる
 	};
 
@@ -1116,7 +1150,15 @@ const ModernVideoPlayer = ({
 							<button
 								type="button"
 								onClick={() => {
-									setIsShowRestTime((c) => !c);
+									setIsShowRestTime((c) => {
+										const newValue = !c;
+										// LocalStorageに保存
+										localStorage.setItem(
+											"video-player-show-rest-time",
+											newValue.toString(),
+										);
+										return newValue;
+									});
 								}}
 								className="cursor-pointer hover:text-primary transition-colors"
 							>
