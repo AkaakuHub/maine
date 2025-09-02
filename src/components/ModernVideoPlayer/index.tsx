@@ -22,6 +22,7 @@ import { useVideoSkip } from "./hooks/useVideoSkip";
 import { useVideoControls } from "./hooks/useVideoControls";
 import { useVideoScreenshot } from "./hooks/useVideoScreenshot";
 import { useVideoInteraction } from "./hooks/useVideoInteraction";
+import { useVideoChapters } from "./hooks/useVideoChapters";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useMediaSession } from "./hooks/useMediaSession";
 
@@ -109,6 +110,11 @@ const ModernVideoPlayer = ({
 			skipForward,
 			skipBackward,
 		});
+
+	const { chapters, seekToTime } = useVideoChapters({
+		src,
+		videoRef,
+	});
 
 	// 音量変更ハンドラー（元のコードと同じ動作に復元）
 	const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,8 +258,10 @@ const ModernVideoPlayer = ({
 				isFullscreen={isFullscreen}
 				showSettings={showSettings}
 				settingsButtonRef={settingsButtonRef}
+				chapters={chapters}
 				getSeekStep={getSeekStep}
 				onSeek={handleSeek}
+				onSeekToTime={seekToTime}
 				onTogglePlay={togglePlay}
 				onSkipBackward={skipBackward}
 				onSkipForward={skipForward}

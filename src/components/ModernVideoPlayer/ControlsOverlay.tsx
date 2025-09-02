@@ -10,9 +10,15 @@ import {
 	Settings,
 	PictureInPicture2,
 	Camera,
+	SkipBack,
+	SkipForward,
+	List,
 } from "lucide-react";
+import { useState } from "react";
 import { cn, formatDuration } from "@/libs/utils";
 import type { SettingsView } from "./types";
+import ChapterProgressBar from "./ChapterProgressBar";
+import type { VideoChapter } from "@/services/chapterService";
 
 interface ControlsOverlayProps {
 	show: boolean;
@@ -27,8 +33,10 @@ interface ControlsOverlayProps {
 	isFullscreen: boolean;
 	showSettings: boolean;
 	settingsButtonRef: React.RefObject<HTMLButtonElement | null>;
+	chapters: VideoChapter[];
 	getSeekStep: () => number;
 	onSeek: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onSeekToTime: (time: number) => void;
 	onTogglePlay: () => void;
 	onSkipBackward: () => void;
 	onSkipForward: () => void;
@@ -55,8 +63,10 @@ export default function ControlsOverlay({
 	isFullscreen,
 	showSettings,
 	settingsButtonRef,
+	chapters,
 	getSeekStep,
 	onSeek,
+	onSeekToTime,
 	onTogglePlay,
 	onSkipBackward,
 	onSkipForward,
@@ -69,6 +79,8 @@ export default function ControlsOverlay({
 	onTogglePictureInPicture,
 	onToggleFullscreen,
 }: ControlsOverlayProps) {
+	const [showChapterList, setShowChapterList] = useState(false);
+
 	return (
 		<div
 			className={cn(
@@ -76,18 +88,14 @@ export default function ControlsOverlay({
 				show ? "opacity-100" : "opacity-0",
 			)}
 		>
-			{/* プログレスバー */}
-			<div className="mb-3">
-				<input
-					type="range"
-					min={0}
-					max={duration || 0}
-					step={getSeekStep()}
-					value={currentTime}
-					onChange={onSeek}
-					className="w-full h-2 bg-surface-hover rounded-lg appearance-none cursor-pointer slider progress-slider"
-				/>
-			</div>
+			{/* チャプター対応プログレスバー */}
+			<ChapterProgressBar
+				duration={duration}
+				currentTime={currentTime}
+				chapters={chapters}
+				onSeek={onSeek}
+				getSeekStep={getSeekStep}
+			/>
 
 			{/* 下部コントロール */}
 			<div className="flex items-center justify-between">
@@ -126,6 +134,68 @@ export default function ControlsOverlay({
 							<span className="text-xs w-6">{skipSeconds}s</span>
 						</button>
 					</div>
+
+					{/* チャプター移動ボタン */}
+					{chapters.length > 0 && (
+						<div className="flex items-center gap-1">
+							<button
+								type="button"
+								onClick={() => {
+									const currentChapter = chapters.find(
+										(chapter) =>
+											currentTime >= chapter.startTime &&
+											currentTime <= chapter.endTime,
+									);
+									if (!currentChapter) return;
+
+									if (currentTime - currentChapter.startTime < 3) {
+										const prevChapterIndex =
+											chapters.findIndex((c) => c.id === currentChapter.id) - 1;
+										if (prevChapterIndex >= 0) {
+											onSeekToTime(chapters[prevChapterIndex].startTime);
+										}
+									} else {
+										onSeekToTime(currentChapter.startTime);
+									}
+								}}
+								className="text-text hover:text-primary transition-colors"
+								title="前のチャプター"
+							>
+								<SkipBack className="h-4 w-4" />
+							</button>
+
+							<button
+								type="button"
+								onClick={() => {
+									const currentChapter = chapters.find(
+										(chapter) =>
+											currentTime >= chapter.startTime &&
+											currentTime <= chapter.endTime,
+									);
+									if (!currentChapter) return;
+
+									const nextChapterIndex =
+										chapters.findIndex((c) => c.id === currentChapter.id) + 1;
+									if (nextChapterIndex < chapters.length) {
+										onSeekToTime(chapters[nextChapterIndex].startTime);
+									}
+								}}
+								className="text-text hover:text-primary transition-colors"
+								title="次のチャプター"
+							>
+								<SkipForward className="h-4 w-4" />
+							</button>
+
+							<button
+								type="button"
+								onClick={() => setShowChapterList(!showChapterList)}
+								className="text-text hover:text-primary transition-colors"
+								title="チャプター一覧"
+							>
+								<List className="h-4 w-4" />
+							</button>
+						</div>
+					)}
 
 					<div className="flex items-center gap-2">
 						<button
@@ -241,6 +311,46 @@ export default function ControlsOverlay({
 					</button>
 				</div>
 			</div>
+
+			{/* チャプターリストオーバーレイ */}
+			{showChapterList && chapters.length > 0 && (
+				<div className="absolute bottom-16 left-0 right-0 bg-surface/90 rounded-lg p-4 max-h-60 overflow-y-auto z-50">
+					<h3 className="text-text-inverse font-semibold mb-2">チャプター</h3>
+					<div className="space-y-1">
+						{chapters.map((chapter) => {
+							const currentChapter = chapters.find(
+								(ch) =>
+									currentTime >= ch.startTime && currentTime <= ch.endTime,
+							);
+							const isActive = currentChapter?.id === chapter.id;
+							const minutes = Math.floor(chapter.startTime / 60);
+							const seconds = Math.floor(chapter.startTime % 60);
+
+							return (
+								<button
+									key={chapter.id}
+									type="button"
+									onClick={() => {
+										onSeekToTime(chapter.startTime);
+										setShowChapterList(false);
+									}}
+									className={cn(
+										"w-full text-left flex items-center justify-between p-2 rounded transition-colors",
+										isActive
+											? "bg-primary text-text-inverse"
+											: "text-text-secondary hover:bg-surface-elevated hover:text-text",
+									)}
+								>
+									<span className="flex-1">{chapter.title}</span>
+									<span className="text-xs opacity-75">
+										{minutes}:{seconds.toString().padStart(2, "0")}
+									</span>
+								</button>
+							);
+						})}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
