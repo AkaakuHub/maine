@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/libs/utils";
 import type { SettingsView } from "./types";
-import { useChapterSkipSettings } from "./hooks/useChapterSkipSettings";
+import { useChapterSkipStore } from "@/stores/chapterSkipStore";
 import { useState } from "react";
-import type { ChapterSkipRule } from "./hooks/useChapterSkipSettings";
+import type { ChapterSkipRule } from "@/stores/chapterSkipStore";
 
 interface SettingsMenuProps {
 	show: boolean;
@@ -45,7 +45,7 @@ export default function SettingsMenu({
 	onScreenshotSettingChange,
 	settingsRef,
 }: SettingsMenuProps) {
-	const chapterSkipSettings = useChapterSkipSettings();
+	const chapterSkipStore = useChapterSkipStore();
 	const [newPattern, setNewPattern] = useState("");
 	const [editingRule, setEditingRule] = useState<ChapterSkipRule | null>(null);
 	const [editPattern, setEditPattern] = useState("");
@@ -121,7 +121,7 @@ export default function SettingsMenu({
 						</div>
 						<div className="flex items-center gap-1">
 							<span className="text-xs text-primary w-8">
-								{chapterSkipSettings.rules.filter((r) => r.enabled).length}個
+								{chapterSkipStore.rules.filter((r) => r.enabled).length}個
 							</span>
 							<ChevronRight className="h-4 w-4" />
 						</div>
@@ -286,14 +286,14 @@ export default function SettingsMenu({
 								onClick={async () => {
 									if (newPattern.trim()) {
 										try {
-											await chapterSkipSettings.addRule(newPattern.trim());
+											await chapterSkipStore.addRule(newPattern.trim());
 											setNewPattern("");
 										} catch (_error) {
 											// エラーハンドリングは useChapterSkipSettings で管理
 										}
 									}
 								}}
-								disabled={!newPattern.trim() || chapterSkipSettings.isLoading}
+								disabled={!newPattern.trim() || chapterSkipStore.isLoading}
 								className="px-2 py-1 bg-primary text-text-inverse text-xs rounded hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								<Plus className="h-3 w-3" />
@@ -302,24 +302,24 @@ export default function SettingsMenu({
 					</div>
 
 					{/* エラー表示 */}
-					{chapterSkipSettings.error && (
+					{chapterSkipStore.error && (
 						<div className="mb-3 p-2 bg-error/20 border border-error/50 rounded text-xs text-error">
-							{chapterSkipSettings.error}
+							{chapterSkipStore.error}
 						</div>
 					)}
 
 					{/* 既存ルール一覧 */}
 					<div className="max-h-48 overflow-y-auto">
-						{chapterSkipSettings.isLoading ? (
+						{chapterSkipStore.isLoading ? (
 							<div className="text-center text-text-secondary text-xs py-4">
 								読み込み中...
 							</div>
-						) : chapterSkipSettings.rules.length === 0 ? (
+						) : chapterSkipStore.rules.length === 0 ? (
 							<div className="text-center text-text-secondary text-xs py-4">
 								スキップパターンがありません
 							</div>
 						) : (
-							chapterSkipSettings.rules.map((rule) => (
+							chapterSkipStore.rules.map((rule) => (
 								<div
 									key={rule.id}
 									className="flex items-center gap-2 p-2 mb-1 bg-surface/30 rounded border border-surface-hover"
@@ -335,7 +335,7 @@ export default function SettingsMenu({
 													if (e.key === "Enter") {
 														e.preventDefault();
 														if (editPattern.trim()) {
-															chapterSkipSettings.updateRule(rule.id, {
+															chapterSkipStore.updateRule(rule.id, {
 																pattern: editPattern.trim(),
 															});
 															setEditingRule(null);
@@ -352,7 +352,7 @@ export default function SettingsMenu({
 												onClick={async () => {
 													if (editPattern.trim()) {
 														try {
-															await chapterSkipSettings.updateRule(rule.id, {
+															await chapterSkipStore.updateRule(rule.id, {
 																pattern: editPattern.trim(),
 															});
 															setEditingRule(null);
@@ -383,7 +383,7 @@ export default function SettingsMenu({
 										<>
 											<button
 												type="button"
-												onClick={() => chapterSkipSettings.toggleRule(rule.id)}
+												onClick={() => chapterSkipStore.toggleRule(rule.id)}
 												className={cn(
 													"w-3 h-3 rounded-sm border transition-colors",
 													rule.enabled
@@ -418,7 +418,7 @@ export default function SettingsMenu({
 											</button>
 											<button
 												type="button"
-												onClick={() => chapterSkipSettings.deleteRule(rule.id)}
+												onClick={() => chapterSkipStore.deleteRule(rule.id)}
 												className="text-text-secondary hover:text-error transition-colors"
 												title="削除"
 											>

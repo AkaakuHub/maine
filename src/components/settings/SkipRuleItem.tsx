@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Edit, Trash2, Check, X } from "lucide-react";
 import { cn } from "@/libs/utils";
+import type { ChapterSkipRule } from "@/stores/chapterSkipStore";
 
 interface SkipRuleItemProps {
 	rule: ChapterSkipRule;

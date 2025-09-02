@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { VideoChapter } from "@/services/chapterService";
-import type { ChapterSkipRule } from "./useChapterSkipSettings";
+import { useChapterSkipStore } from "@/stores/chapterSkipStore";
 
 interface UseVideoChaptersProps {
 	src: string;
@@ -16,11 +16,13 @@ interface SkippedChapter {
 export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 	const [chapters, setChapters] = useState<VideoChapter[]>([]);
 	const [isLoadingChapters, setIsLoadingChapters] = useState(false);
-	const [skipRules, setSkipRules] = useState<ChapterSkipRule[]>([]);
 	const [skippedChapter, setSkippedChapter] = useState<SkippedChapter | null>(
 		null,
 	);
 	const currentChapterRef = useRef<VideoChapter | null>(null);
+
+	// チャプタースキップ設定を取得（リアルタイムで更新される）
+	const chapterSkipStore = useChapterSkipStore();
 
 	// チャプター情報を取得
 	useEffect(() => {
@@ -56,29 +58,15 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 		fetchChapters();
 	}, [src]);
 
-	// スキップルールを取得
-	useEffect(() => {
-		const fetchSkipRules = async () => {
-			try {
-				const response = await fetch("/api/settings/chapter-skip");
-				const data = await response.json();
-
-				if (response.ok && data.success) {
-					setSkipRules(
-						data.data.filter((rule: ChapterSkipRule) => rule.enabled),
-					);
-				}
-			} catch (error) {
-				console.error("Failed to fetch chapter skip rules:", error);
-			}
-		};
-
-		fetchSkipRules();
-	}, []);
+	// 現在有効なスキップルールをメモ化
+	const enabledSkipRules = useMemo(
+		() => chapterSkipStore.rules.filter((rule) => rule.enabled),
+		[chapterSkipStore.rules],
+	);
 
 	// チャプター自動スキップ監視
 	useEffect(() => {
-		if (chapters.length === 0 || skipRules.length === 0 || !videoRef.current) {
+		if (chapters.length === 0 || !videoRef.current) {
 			return;
 		}
 
@@ -99,7 +87,7 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 				currentChapterRef.current?.id !== currentChapter?.id
 			) {
 				// スキップ判定
-				const shouldSkip = skipRules.some((rule) =>
+				const shouldSkip = enabledSkipRules.some((rule) =>
 					currentChapter.title
 						.toLowerCase()
 						.includes(rule.pattern.toLowerCase()),
@@ -115,7 +103,7 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 					// 連続するスキップ対象チャプターを全て飛ばして、スキップ対象でない最初のチャプターを探す
 					for (let i = currentIndex + 1; i < chapters.length; i++) {
 						const chapter = chapters[i];
-						const isSkipTarget = skipRules.some((rule) =>
+						const isSkipTarget = enabledSkipRules.some((rule) =>
 							chapter.title.toLowerCase().includes(rule.pattern.toLowerCase()),
 						);
 
@@ -156,7 +144,7 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 		return () => {
 			video.removeEventListener("timeupdate", handleTimeUpdate);
 		};
-	}, [chapters, skipRules, videoRef]);
+	}, [chapters, videoRef, enabledSkipRules]);
 
 	// 時間指定でのシーク（チャプター移動用）
 	const seekToTime = useCallback(

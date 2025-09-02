@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ManualRefreshButton from "@/components/ManualRefreshButton";
 import { useVideoUpdater } from "@/hooks/useVideoUpdater";
-import { useChapterSkipSettings } from "@/components/ModernVideoPlayer/hooks/useChapterSkipSettings";
+import { useChapterSkipStore } from "@/stores/chapterSkipStore";
 import { Settings, Database, SkipForward, ArrowLeft } from "lucide-react";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { CacheStatsCard } from "@/components/settings/CacheStatsCard";
@@ -12,7 +12,7 @@ import { SkipRuleItem } from "@/components/settings/SkipRuleItem";
 
 export default function SettingsPage() {
 	const updateStatus = useVideoUpdater();
-	const chapterSkipSettings = useChapterSkipSettings();
+	const chapterSkipStore = useChapterSkipStore();
 	const [expandedSection, setExpandedSection] = useState<string | null>(
 		"system",
 	);
@@ -176,7 +176,7 @@ export default function SettingsPage() {
 					<SettingsSection
 						icon={SkipForward}
 						title="チャプタースキップ"
-						badge={`${chapterSkipSettings.rules.filter((r) => r.enabled).length}個有効`}
+						badge={`${chapterSkipStore.rules.filter((r) => r.enabled).length}個有効`}
 						isExpanded={expandedSection === "chapter-skip"}
 						onToggle={() => toggleSection("chapter-skip")}
 					>
@@ -185,14 +185,14 @@ export default function SettingsPage() {
 						</div>
 
 						<SkipRuleForm
-							onAdd={chapterSkipSettings.addRule}
-							isLoading={chapterSkipSettings.isLoading}
+							onAdd={chapterSkipStore.addRule}
+							isLoading={chapterSkipStore.isLoading}
 						/>
 
 						{/* エラー表示 */}
-						{chapterSkipSettings.error && (
+						{chapterSkipStore.error && (
 							<div className="mb-4 p-3 bg-error/20 border border-error/50 rounded-lg text-sm text-error">
-								{chapterSkipSettings.error}
+								{chapterSkipStore.error}
 							</div>
 						)}
 
@@ -201,23 +201,23 @@ export default function SettingsPage() {
 							<h3 className="text-sm font-medium text-text mb-3">
 								スキップパターン一覧
 							</h3>
-							{chapterSkipSettings.isLoading ? (
+							{chapterSkipStore.isLoading ? (
 								<div className="text-center text-text-secondary text-sm py-8">
 									読み込み中...
 								</div>
-							) : chapterSkipSettings.rules.length === 0 ? (
+							) : chapterSkipStore.rules.length === 0 ? (
 								<div className="text-center text-text-secondary text-sm py-8">
 									スキップパターンがありません
 								</div>
 							) : (
 								<div className="space-y-2">
-									{chapterSkipSettings.rules.map((rule) => (
+									{chapterSkipStore.rules.map((rule) => (
 										<SkipRuleItem
 											key={rule.id}
 											rule={rule}
-											onToggle={chapterSkipSettings.toggleRule}
-											onUpdate={chapterSkipSettings.updateRule}
-											onDelete={chapterSkipSettings.deleteRule}
+											onToggle={chapterSkipStore.toggleRule}
+											onUpdate={chapterSkipStore.updateRule}
+											onDelete={chapterSkipStore.deleteRule}
 										/>
 									))}
 								</div>
