@@ -15,6 +15,7 @@ import {
 	ChevronUp,
 	ArrowLeft,
 	Check,
+	X,
 } from "lucide-react";
 import { cn } from "@/libs/utils";
 import type { ChapterSkipRule } from "@/components/ModernVideoPlayer/hooks/useChapterSkipSettings";
@@ -370,7 +371,7 @@ export default function SettingsPage() {
 																className="text-primary hover:text-primary/80 transition-colors"
 																title="保存"
 															>
-																✓
+																<Check className="w-4 h-4" />
 															</button>
 															<button
 																type="button"
@@ -381,7 +382,7 @@ export default function SettingsPage() {
 																className="text-text-secondary hover:text-text transition-colors"
 																title="キャンセル"
 															>
-																✕
+																<X className="w-4 h-4" />
 															</button>
 														</>
 													) : (

@@ -13,6 +13,7 @@ import {
 	Trash2,
 	RefreshCw,
 	Settings,
+	Play,
 } from "lucide-react";
 import { useVideos } from "@/hooks/useVideos";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
@@ -259,16 +260,7 @@ const Home = () => {
 					<div className="flex items-center justify-between mb-6">
 						<div className="flex items-center gap-4">
 							<div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
-								<svg
-									className="w-6 h-6 text-text-inverse"
-									fill="currentColor"
-									viewBox="0 0 20 20"
-									aria-label="Video Storage Icon"
-								>
-									<title>Video Storage</title>
-									<path d="M2 3a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 3v10h14V6H3z" />
-									<path d="M8 8l4 2.5L8 13V8z" />
-								</svg>
+								<Play className="w-6 h-6 text-text-inverse" />
 							</div>
 							<div>
 								<h1 className="text-2xl font-bold text-text flex items-center gap-3">
