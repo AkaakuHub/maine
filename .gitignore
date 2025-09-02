@@ -77,6 +77,7 @@ coverage
 esm
 
 dev.db
+settings.db
 junit.xml
 /output.txt
 
@@ -89,3 +90,4 @@ package.copy.json
 *.tgz
 /prisma/*.db-journal
 /prisma/migrations
+/prisma/generated

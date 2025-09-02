@@ -1,0 +1,36 @@
+// 設定専用データベーススキーマ
+// メインDBと分離して耐障害性を向上
+
+generator settingsClient {
+  provider = "prisma-client-js"
+  output   = "./generated/settings"
+}
+
+datasource settingsDb {
+  provider = "sqlite"
+  url      = "file:./settings.db"
+}
+
+// チャプター自動スキップルール
+model ChapterSkipRule {
+  id        String   @id @default(cuid())
+  pattern   String   // スキップするチャプター名のパターン（部分一致）
+  enabled   Boolean  @default(true) // 有効/無効切り替え
+  userId    String?  // 将来のマルチユーザー対応用（現在は未使用）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chapter_skip_rules")
+  @@index([enabled])
+  @@index([pattern])
+}
+
+// 将来の設定項目拡張用
+model UserSettings {
+  id                    String   @id @default("user_settings") // 単一レコード
+  chapterSkipEnabled    Boolean  @default(true) // チャプタースキップ機能全体の有効/無効
+  skipNotificationShow  Boolean  @default(true) // スキップ通知表示
+  updatedAt            DateTime @updatedAt
+
+  @@map("user_settings")
+}

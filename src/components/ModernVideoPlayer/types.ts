@@ -30,4 +30,9 @@ export interface ModernVideoPlayerProps {
 	onShowHelp?: () => void;
 }
 
-export type SettingsView = "main" | "playback" | "skip" | "screenshot";
+export type SettingsView =
+	| "main"
+	| "playback"
+	| "skip"
+	| "screenshot"
+	| "chapter-skip";

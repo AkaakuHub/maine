@@ -295,14 +295,14 @@ const Home = () => {
 						</div>
 
 						<div className="flex items-center gap-4">
-							{/* 管理ページリンク */}
+							{/* 設定ページリンク */}
 							<a
-								href="/admin"
+								href="/settings"
 								className="flex items-center gap-2 px-3 py-2 bg-surface-elevated hover:bg-surface border border-border rounded-lg text-text-secondary hover:text-text transition-all duration-200"
-								title="システム管理"
+								title="設定"
 							>
 								<Settings className="h-4 w-4" />
-								<span className="hidden sm:inline text-sm">管理</span>
+								<span className="hidden sm:inline text-sm">設定</span>
 							</a>
 
 							{/* PWAインストールプロンプト */}

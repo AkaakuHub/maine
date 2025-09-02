@@ -111,7 +111,12 @@ const ModernVideoPlayer = ({
 			skipBackward,
 		});
 
-	const { chapters, seekToTime } = useVideoChapters({
+	const {
+		chapters,
+		seekToTime,
+		skippedChapter,
+		clearSkippedChapter: _clearSkippedChapter,
+	} = useVideoChapters({
 		src,
 		videoRef,
 	});
@@ -243,6 +248,16 @@ const ModernVideoPlayer = ({
 				skipQueue={skipQueue}
 				show={predictedTime !== null && skipQueue !== 0}
 			/>
+
+			{/* チャプタースキップ通知 */}
+			{skippedChapter && (
+				<div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500/90 to-red-500/90 text-text-inverse px-4 py-2 rounded-lg shadow-lg z-40 animate-fade-in">
+					<div className="text-xs font-semibold">
+						チャプターをスキップしました
+					</div>
+					<div className="text-xs opacity-90">{skippedChapter.title}</div>
+				</div>
+			)}
 
 			{/* コントロール */}
 			<ControlsOverlay
