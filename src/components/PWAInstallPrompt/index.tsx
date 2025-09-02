@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
 	prompt(): Promise<void>;
@@ -69,8 +70,11 @@ export default function PWAInstallPrompt({ className }: PWAInstallPromptProps) {
 
 	if (isInstalled) {
 		return (
-			<div className={`text-sm text-success ${className}`}>
-				✓ PWAとしてインストール済み
+			<div
+				className={`flex items-center gap-2 text-sm text-success ${className}`}
+			>
+				<Check className="w-4 h-4" />
+				PWAとしてインストール済み
 			</div>
 		);
 	}

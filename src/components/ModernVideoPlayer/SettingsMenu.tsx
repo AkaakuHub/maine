@@ -10,6 +10,7 @@ import {
 	Plus,
 	Trash2,
 	Edit,
+	Check,
 } from "lucide-react";
 import { cn } from "@/libs/utils";
 import type { SettingsView } from "./types";
@@ -364,7 +365,7 @@ export default function SettingsMenu({
 												className="text-primary hover:text-primary/80 transition-colors"
 												title="保存"
 											>
-												✓
+												<Check className="w-4 h-4" />
 											</button>
 											<button
 												type="button"
@@ -391,9 +392,7 @@ export default function SettingsMenu({
 												)}
 											>
 												{rule.enabled && (
-													<span className="text-text-inverse text-xs leading-none">
-														✓
-													</span>
+													<Check className="w-3 h-3 text-text-inverse" />
 												)}
 											</button>
 											<span
