@@ -37,6 +37,8 @@ export default function ChapterProgressBar({
 	// range input の onChange ハンドラー
 	const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		onSeek(e);
+		// シーク後は即座にフォーカスを外して、キーボードイベントを親に委ねる
+		e.target.blur();
 	};
 
 	if (chapters.length === 0) {
@@ -187,6 +189,7 @@ export default function ChapterProgressBar({
 						setHoveredChapter(hoveredChapterData?.id || null);
 					}}
 					onMouseLeave={() => setHoveredChapter(null)}
+					onMouseUp={(e) => e.currentTarget.blur()}
 					className="absolute inset-0 w-full h-3 bg-transparent appearance-none cursor-pointer z-30 opacity-0"
 				/>
 			</div>
