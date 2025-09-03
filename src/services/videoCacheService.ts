@@ -229,10 +229,11 @@ class VideoCacheService {
 			let totalFiles = 0;
 			let processedFiles = 0;
 
-			// 既存DBデータをクリア
-			await prisma.videoMetadata.deleteMany({});
+			// 現在のDBレコード数を記録（ロールバック時の参考用）
+			const initialRecordCount = await prisma.videoMetadata.count();
+			console.log(`スキャン開始 - 既存レコード数: ${initialRecordCount}`);
 
-			// 全ディレクトリからビデオファイルを収集
+			// 全ディレクトリからビデオファイルを収集（DB操作前に完了）
 			const allVideoFiles: Array<{ filePath: string; fileName: string }> = [];
 
 			for (const directory of videoDirectories) {
@@ -251,75 +252,134 @@ class VideoCacheService {
 
 			console.log(`発見したファイル数: ${allVideoFiles.length}`);
 
-			// HDDに優しいバッチ処理（DB保存）
-			for (let i = 0; i < allVideoFiles.length; i += 100) {
-				const batch = allVideoFiles.slice(i, i + 100);
-				const dbBatch = [];
+			// 全データをメモリ上で準備（トランザクション前に完全に準備）
+			const allDbRecords: Array<{
+				id: string;
+				filePath: string;
+				fileName: string;
+				title: string;
+				fileSize: number;
+				episode: number | null;
+				year: number | null;
+				lastModified: Date;
+			}> = [];
 
-				for (const videoFile of batch) {
-					try {
-						// 既存のパーサーを使用して情報抽出
-						const parsedInfo = parseVideoFileName(videoFile.fileName);
+			console.log("ファイルメタデータ処理中...");
 
-						// DBバッチに追加
-						dbBatch.push({
-							id: videoFile.filePath,
-							filePath: videoFile.filePath,
-							fileName: videoFile.fileName,
-							title: parsedInfo.cleanTitle,
-							fileSize: 0, // ファイルサイズはstatが必要なため省略（HDDアクセス削減）
-							episode: this.extractEpisode(videoFile.fileName),
-							year: parsedInfo.broadcastDate?.getFullYear(),
-							lastModified: new Date(), // 仮の値、実際のstatは重いため省略
-						});
+			// ファイル情報をDBレコード形式に変換（メモリ上で処理）
+			for (let i = 0; i < allVideoFiles.length; i++) {
+				const videoFile = allVideoFiles[i];
 
-						totalFiles++;
-						processedFiles++;
+				try {
+					// 既存のパーサーを使用して情報抽出
+					const parsedInfo = parseVideoFileName(videoFile.fileName);
 
-						// プログレス更新
-						if (allVideoFiles.length > 0) {
-							this.updateProgress = Math.floor(
-								(processedFiles / allVideoFiles.length) * 100,
-							);
-						}
-					} catch (fileError) {
-						console.warn(
-							`ファイル処理エラー: ${videoFile.fileName}`,
-							fileError,
+					// DBレコードとして準備
+					allDbRecords.push({
+						id: videoFile.filePath,
+						filePath: videoFile.filePath,
+						fileName: videoFile.fileName,
+						title: parsedInfo.cleanTitle,
+						fileSize: 0, // ファイルサイズはstatが必要なため省略（HDDアクセス削減）
+						episode: this.extractEpisode(videoFile.fileName) ?? null,
+						year: parsedInfo.broadcastDate?.getFullYear() ?? null,
+						lastModified: new Date(), // 仮の値、実際のstatは重いため省略
+					});
+
+					processedFiles++;
+
+					// プログレス更新（準備フェーズとして50%まで）
+					if (allVideoFiles.length > 0) {
+						this.updateProgress = Math.floor(
+							(processedFiles / allVideoFiles.length) * 50,
 						);
 					}
-				}
 
-				// DBにバッチ保存（100件ずつ）
-				if (dbBatch.length > 0) {
-					try {
-						await prisma.videoMetadata.createMany({
-							data: dbBatch,
-						});
-					} catch (dbError) {
-						console.warn("DBバッチ保存エラー:", dbError);
+					// 軽い休憩（CPUを労る）
+					if (i % 100 === 0 && i > 0) {
+						await this.sleep(1);
 					}
-				}
-
-				// 100ファイルごとに10ms休憩（HDDを労る）
-				if (i + 100 < allVideoFiles.length) {
-					await this.sleep(10);
-				}
-
-				// プログレス保存（バッチごと）
-				if (processedFiles % 500 === 0) {
-					await this.saveScanSettings();
+				} catch (fileError) {
+					console.warn(`ファイル処理エラー: ${videoFile.fileName}`, fileError);
 				}
 			}
+
+			totalFiles = allDbRecords.length;
+			console.log(`メタデータ準備完了: ${totalFiles}レコード`);
+
+			// 🔒 重要: トランザクション内でDBを安全に更新
+			console.log("データベース更新開始（トランザクション内）...");
+			await prisma.$transaction(
+				async (tx) => {
+					// 1. 既存データを削除
+					await tx.videoMetadata.deleteMany({});
+					console.log("既存データクリア完了");
+
+					// 2. バッチインサート（50件ずつの適切なサイズで処理）
+					const BATCH_SIZE = 50;
+					for (let i = 0; i < allDbRecords.length; i += BATCH_SIZE) {
+						const batch = allDbRecords.slice(i, i + BATCH_SIZE);
+
+						await tx.videoMetadata.createMany({
+							data: batch,
+						});
+
+						// プログレス更新（50%〜100%）
+						const dbProgress = Math.floor(
+							((i + batch.length) / allDbRecords.length) * 50,
+						);
+						this.updateProgress = 50 + dbProgress;
+
+						console.log(
+							`DBバッチ保存: ${i + batch.length}/${allDbRecords.length}`,
+						);
+					}
+
+					console.log("全データベース保存完了");
+				},
+				{
+					// トランザクションタイムアウト: 10分（大量ファイル対応）
+					timeout: 600000,
+				},
+			);
 
 			this.lastFullScanTime = new Date();
 			this.updateProgress = 100;
 			console.log(
 				`フルDBキャッシュ構築完了: ${totalFiles}ファイル（メモリ使用: 数KB）`,
 			);
-		} finally {
-			this.isUpdating = false;
+		} catch (error) {
+			// 🚨 エラーハンドリング強化
+			console.error("フルキャッシュ構築中にエラーが発生:", error);
+
+			// トランザクション外でエラーが発生した場合の処理
+			if (error instanceof Error) {
+				console.error("エラー詳細:", {
+					message: error.message,
+					stack: error.stack,
+				});
+			}
+
+			// プログレス状態をエラー状態にリセット
+			this.updateProgress = -1; // エラー状態を示す特殊値
+
+			// エラー情報を永続化
 			await this.saveScanSettings();
+
+			// エラーを再度投げて上位に伝達
+			throw new Error(
+				`ビデオスキャン処理が失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		} finally {
+			// 🔒 確実にクリーンアップ
+			this.isUpdating = false;
+
+			try {
+				await this.saveScanSettings();
+				console.log("スキャン設定保存完了");
+			} catch (saveError) {
+				console.warn("スキャン設定保存エラー:", saveError);
+			}
 		}
 	}
 
