@@ -17,48 +17,47 @@ export function TabNavigation({
 	onTabChange,
 }: TabNavigationProps) {
 	return (
-		<div className="container mx-auto px-6">
-			{/* タブナビゲーション */}
-			<div className="flex bg-surface-elevated rounded-lg p-1 mb-6">
-				<button
-					type="button"
-					onClick={() => onTabChange("streaming")}
-					className={cn(
-						"flex-1 flex items-center justify-center gap-3 px-6 py-3 rounded-md transition-all duration-200 font-medium",
-						activeTab === "streaming"
-							? "bg-primary text-text-inverse shadow-sm"
-							: "text-text-secondary hover:text-text hover:bg-surface",
-					)}
-				>
-					<Wifi className="h-5 w-5" />
-					<span>ストリーミング</span>
-				</button>
-				<button
-					type="button"
-					onClick={() => onTabChange("offline")}
-					className={cn(
-						"flex-1 flex items-center justify-center gap-3 px-6 py-3 rounded-md transition-all duration-200 font-medium relative",
-						activeTab === "offline"
-							? "bg-primary text-text-inverse shadow-sm"
-							: "text-text-secondary hover:text-text hover:bg-surface",
-					)}
-				>
-					<Download className="h-5 w-5" />
-					<span>オフライン動画</span>
-					{offlineVideos.length > 0 && (
-						<span
-							className={cn(
-								"absolute -top-1 -right-1 px-2 py-0.5 text-xs rounded-full font-semibold",
-								activeTab === "offline"
-									? "bg-surface text-primary"
-									: "bg-primary text-text-inverse",
-							)}
-						>
-							{offlineVideos.length}
-						</span>
-					)}
-				</button>
+		<nav className="bg-surface">
+			<div className="max-w-7xl mx-auto px-3 sm:px-6">
+				<div className="flex space-x-4 sm:space-x-8 -mb-px" role="tablist">
+					<button
+						type="button"
+						role="tab"
+						aria-selected={activeTab === "streaming"}
+						onClick={() => onTabChange("streaming")}
+						className={cn(
+							"flex items-center gap-1.5 sm:gap-2 py-3 sm:py-4 px-1 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+							activeTab === "streaming"
+								? "border-primary text-primary"
+								: "border-transparent text-text-secondary hover:text-text hover:border-border",
+						)}
+					>
+						<Wifi className="w-4 h-4" />
+						<span>ストリーミング</span>
+					</button>
+
+					<button
+						type="button"
+						role="tab"
+						aria-selected={activeTab === "offline"}
+						onClick={() => onTabChange("offline")}
+						className={cn(
+							"flex items-center gap-1.5 sm:gap-2 py-3 sm:py-4 px-1 text-sm font-medium border-b-2 transition-colors relative whitespace-nowrap",
+							activeTab === "offline"
+								? "border-primary text-primary"
+								: "border-transparent text-text-secondary hover:text-text hover:border-border",
+						)}
+					>
+						<Download className="w-4 h-4" />
+						<span>オフライン動画</span>
+						{offlineVideos.length > 0 && (
+							<span className="ml-1 sm:ml-2 inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium bg-surface-elevated text-text-secondary">
+								{offlineVideos.length}
+							</span>
+						)}
+					</button>
+				</div>
 			</div>
-		</div>
+		</nav>
 	);
 }

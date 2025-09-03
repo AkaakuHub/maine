@@ -1,8 +1,17 @@
 "use client";
 
-import { Search, X, SortAsc, SortDesc } from "lucide-react";
+import { Search, X, SortAsc, SortDesc, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import type { SortBy, SortOrder } from "@/stores/appStateStore";
+import { formatFileSize } from "@/libs/utils";
+import type { SortBy, SortOrder, TabType } from "@/stores/appStateStore";
+import type { VideoFileData } from "@/type";
+
+interface PaginationData {
+	total: number;
+	page: number;
+	totalPages: number;
+	limit: number;
+}
 
 interface SearchSectionProps {
 	searchTerm: string;
@@ -14,6 +23,13 @@ interface SearchSectionProps {
 	onClearSearch: () => void;
 	onSortByChange: (sortBy: SortBy) => void;
 	onSortOrderToggle: () => void;
+	// Status Indicator props
+	videosLoading: boolean;
+	activeTab: TabType;
+	videos: VideoFileData[];
+	pagination: PaginationData;
+	offlineVideos: VideoFileData[];
+	cacheSize: number;
 }
 
 export function SearchSection({
@@ -26,6 +42,12 @@ export function SearchSection({
 	onClearSearch,
 	onSortByChange,
 	onSortOrderToggle,
+	videosLoading,
+	activeTab,
+	videos,
+	pagination,
+	offlineVideos,
+	cacheSize,
 }: SearchSectionProps) {
 	return (
 		<div className="container mx-auto px-6">
@@ -85,6 +107,36 @@ export function SearchSection({
 								<SortDesc className="h-4 w-4" />
 							)}
 						</button>
+					</div>
+				</div>
+
+				{/* Status Indicator */}
+				<div className="mt-4 pt-3 border-t border-border">
+					<div className="flex items-center gap-2 text-sm text-text-secondary">
+						{videosLoading && activeTab === "streaming" && (
+							<Loader2 className="w-4 h-4 animate-spin text-primary" />
+						)}
+						<span>
+							{activeTab === "streaming" ? (
+								videos.length === 0 ? (
+									"動画が見つかりません"
+								) : pagination.total === 0 ||
+									videos.length === pagination.total ? (
+									`${videos.length} 動画を表示中`
+								) : (
+									`${videos.length} / ${pagination.total} 動画を表示中`
+								)
+							) : (
+								<>
+									{offlineVideos.length} 動画がオフラインで利用可能
+									{cacheSize > 0 && (
+										<span className="text-text-muted ml-1">
+											({formatFileSize(cacheSize)})
+										</span>
+									)}
+								</>
+							)}
+						</span>
 					</div>
 				</div>
 			</div>

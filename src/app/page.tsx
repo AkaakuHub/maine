@@ -199,12 +199,6 @@ const Home = () => {
 			<div className="bg-surface border-b border-border">
 				<div className="container mx-auto px-6 py-6">
 					<HeaderSection
-						videosLoading={videosLoading}
-						activeTab={activeTab}
-						videos={videos}
-						pagination={pagination}
-						offlineVideos={offlineVideos}
-						cacheSize={cacheSize}
 						viewMode={viewMode}
 						onShowSettings={handleShowSettings}
 						onViewModeChange={setViewMode}
@@ -228,6 +222,12 @@ const Home = () => {
 							onClearSearch={handleClearSearch}
 							onSortByChange={setSortBy}
 							onSortOrderToggle={toggleSortOrder}
+							videosLoading={videosLoading}
+							activeTab={activeTab}
+							videos={videos}
+							pagination={pagination}
+							offlineVideos={offlineVideos}
+							cacheSize={cacheSize}
 						/>
 					)}
 
