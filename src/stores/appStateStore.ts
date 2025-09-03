@@ -94,13 +94,13 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		const { searchTerm } = get();
 		const trimmedTerm = searchTerm.trim();
 
-		// 空白検索の場合は検索状態をクリア
+		// 空白検索の場合は常に初期状態に戻す
 		if (!trimmedTerm) {
 			set({
 				searchQuery: "",
 				currentPage: 1,
-				showAll: false,
 				searchTerm: "",
+				showAll: false,
 				shouldCreateHistoryEntry: true,
 			});
 		} else {
@@ -157,7 +157,7 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		const sortBy = (params.get("sortBy") as SortBy) || "title";
 		const sortOrder = (params.get("sortOrder") as SortOrder) || "asc";
 		const currentPage = Number.parseInt(params.get("page") || "1", 10);
-		const showAll = params.get("showAll") === "true";
+		// showAllはURLから読み取らない（常にfalseで初期化）
 
 		set({
 			searchTerm: searchQuery,
@@ -165,12 +165,12 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 			sortBy,
 			sortOrder,
 			currentPage: Math.max(1, currentPage),
-			showAll,
+			showAll: false, // 常にfalse
 		});
 	},
 
 	getSearchParams: () => {
-		const { searchQuery, sortBy, sortOrder, currentPage, showAll } = get();
+		const { searchQuery, sortBy, sortOrder, currentPage } = get();
 		const params = new URLSearchParams();
 
 		// searchQueryが空でない場合のみURLに含める
@@ -190,9 +190,7 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 			params.set("page", currentPage.toString());
 		}
 
-		if (showAll) {
-			params.set("showAll", "true");
-		}
+		// showAllはURLに含めない
 
 		return params;
 	},

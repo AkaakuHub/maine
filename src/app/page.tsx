@@ -187,7 +187,7 @@ const Home = () => {
 		return (
 			<div className="min-h-screen bg-surface-variant">
 				<div className="container mx-auto px-4 py-8">
-					<EmptyState type="loading-error" onRetry={handleRetry} />
+					<EmptyState type="loading-error" />
 				</div>
 			</div>
 		);
@@ -262,6 +262,7 @@ const Home = () => {
 				onShowAll={handleShowAll}
 				onOfflineVideoDelete={handleOfflineVideoDelete}
 				onPageChange={setCurrentPage}
+				onRetry={handleRetry}
 			/>
 			{/* PWA デバッグ情報 */}
 			{process.env.NODE_ENV === "development" && (

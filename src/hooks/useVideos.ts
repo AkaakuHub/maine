@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { VideoFileData } from "@/type";
 import { API } from "@/utils/constants";
 
@@ -56,8 +56,6 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 		total: 0,
 		totalPages: 0,
 	});
-	// 前回のパラメータをキャッシュして無限ループを防ぐ
-	const lastParamsRef = useRef<string>("");
 
 	// URLパラメータを構築
 	const searchParams = useMemo(() => {
@@ -87,7 +85,9 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 	]);
 	// データを取得する関数
 	const fetchVideos = useCallback(async () => {
-		if (!enabled) return;
+		if (!enabled) {
+			return;
+		}
 
 		// 検索条件もloadAllフラグもない場合は何もしない
 		const hasSearchConditions =
@@ -105,16 +105,13 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 			return;
 		}
 
-		// パラメータが変更されていない場合はスキップ
-		if (lastParamsRef.current === searchParams) {
-			return;
-		}
 		try {
 			setLoading(true);
 			setError(null);
-			lastParamsRef.current = searchParams;
 
-			const response = await fetch(`${API.ENDPOINTS.VIDEOS}?${searchParams}`, {
+			const url = `${API.ENDPOINTS.VIDEOS}?${searchParams}`;
+
+			const response = await fetch(url, {
 				signal: AbortSignal.timeout(API.TIMEOUT),
 			});
 
@@ -186,8 +183,6 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 
 	// 再フェッチ用の安定した関数
 	const refetch = useCallback(async () => {
-		// 強制的に再フェッチ
-		lastParamsRef.current = "";
 		await fetchVideos();
 	}, [fetchVideos]);
 

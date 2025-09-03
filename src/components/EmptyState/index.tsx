@@ -29,7 +29,6 @@ const EmptyState = ({
 					description: (
 						<div className="space-y-2">
 							<p>動画フォルダに動画ファイルがありません。</p>
-							<p className="text-sm">対応形式: .mp4, .mkv, .avi, .mov</p>
 						</div>
 					),
 					action: onRetry ? (
