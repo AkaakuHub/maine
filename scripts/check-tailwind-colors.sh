@@ -76,17 +76,6 @@ FORBIDDEN_PATTERNS=(
     "outline-gray-[0-9]+"
 )
 
-# 許可されている例外（必要に応じて追加）
-ALLOWED_EXCEPTIONS=(
-    "bg-transparent"
-    "text-transparent"
-    "border-transparent"
-    "bg-black/[0-9]+"
-    "bg-white/[0-9]+"
-    "text-black/[0-9]+"
-    "text-white/[0-9]+"
-)
-
 ERRORS_FOUND=0
 TEMP_FILE=$(mktemp)
 

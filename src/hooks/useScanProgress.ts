@@ -25,6 +25,13 @@ export interface ScanProgressEvent {
 	timestamp?: string;
 	connectionId?: string;
 	activeConnections?: number;
+
+	// 詳細プログレス情報
+	processingSpeed?: number; // ファイル/秒
+	estimatedTimeRemaining?: number; // 秒
+	phaseStartTime?: string;
+	totalElapsedTime?: number; // 秒
+	currentPhaseElapsed?: number; // 秒
 }
 
 /**
@@ -57,6 +64,13 @@ export interface ScanProgressState {
 	// 完了状態
 	isComplete: boolean;
 	completedAt: Date | null;
+
+	// 詳細プログレス情報
+	processingSpeed?: number;
+	estimatedTimeRemaining?: number;
+	phaseStartTime?: Date;
+	totalElapsedTime?: number;
+	currentPhaseElapsed?: number;
 }
 
 /**
@@ -92,6 +106,13 @@ export function useScanProgress() {
 		// 完了状態
 		isComplete: false,
 		completedAt: null,
+
+		// 詳細プログレス情報
+		processingSpeed: undefined,
+		estimatedTimeRemaining: undefined,
+		phaseStartTime: undefined,
+		totalElapsedTime: undefined,
+		currentPhaseElapsed: undefined,
 	});
 
 	const eventSourceRef = useRef<EventSource | null>(null);
@@ -157,6 +178,14 @@ export function useScanProgress() {
 								newState.totalFiles = data.totalFiles || 0;
 								newState.message = data.message || null;
 								newState.isComplete = false;
+								// 詳細プログレス情報を更新
+								newState.processingSpeed = data.processingSpeed;
+								newState.estimatedTimeRemaining = data.estimatedTimeRemaining;
+								newState.phaseStartTime = data.phaseStartTime
+									? new Date(data.phaseStartTime)
+									: undefined;
+								newState.totalElapsedTime = data.totalElapsedTime;
+								newState.currentPhaseElapsed = data.currentPhaseElapsed;
 								// スキャン開始時に制御ボタンを有効化
 								newState.canPause = true;
 								newState.canCancel = true;
@@ -173,6 +202,14 @@ export function useScanProgress() {
 								newState.totalFiles = data.totalFiles || prev.totalFiles;
 								newState.currentFile = data.currentFile || null;
 								newState.message = data.message || null;
+								// 詳細プログレス情報を更新
+								newState.processingSpeed = data.processingSpeed;
+								newState.estimatedTimeRemaining = data.estimatedTimeRemaining;
+								newState.phaseStartTime = data.phaseStartTime
+									? new Date(data.phaseStartTime)
+									: undefined;
+								newState.totalElapsedTime = data.totalElapsedTime;
+								newState.currentPhaseElapsed = data.currentPhaseElapsed;
 								break;
 
 							case "complete":
@@ -182,6 +219,14 @@ export function useScanProgress() {
 								newState.completedAt = new Date();
 								newState.message = data.message || "スキャン完了";
 								newState.currentFile = null;
+								// 詳細プログレス情報を更新（完了時）
+								newState.processingSpeed = data.processingSpeed;
+								newState.estimatedTimeRemaining = data.estimatedTimeRemaining;
+								newState.phaseStartTime = data.phaseStartTime
+									? new Date(data.phaseStartTime)
+									: undefined;
+								newState.totalElapsedTime = data.totalElapsedTime;
+								newState.currentPhaseElapsed = data.currentPhaseElapsed;
 								break;
 
 							case "error":
@@ -325,6 +370,12 @@ export function useScanProgress() {
 			canCancel: false,
 			isComplete: false,
 			completedAt: null,
+			// 詳細プログレス情報もリセット
+			processingSpeed: undefined,
+			estimatedTimeRemaining: undefined,
+			phaseStartTime: undefined,
+			totalElapsedTime: undefined,
+			currentPhaseElapsed: undefined,
 		}));
 	}, []);
 

@@ -13,6 +13,21 @@ import { cn } from "@/libs/utils";
 import { useScanProgress } from "@/hooks/useScanProgress";
 import { ScanControlButtons } from "./ScanControlButtons";
 
+// 時間をフォーマットするヘルパー関数
+const formatDuration = (seconds: number): string => {
+	if (seconds < 60) {
+		return `${Math.round(seconds)}秒`;
+	}
+	if (seconds < 3600) {
+		const minutes = Math.floor(seconds / 60);
+		const remainingSeconds = Math.round(seconds % 60);
+		return `${minutes}分${remainingSeconds}秒`;
+	}
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	return `${hours}時間${minutes}分`;
+};
+
 interface ScanProgressBarProps {
 	className?: string;
 	showDetails?: boolean;
@@ -180,6 +195,39 @@ export function ScanProgressBar({
 							</span>
 						</div>
 					)}
+
+					{/* 処理速度 */}
+					{scanProgress.processingSpeed !== undefined &&
+						scanProgress.processingSpeed > 0 && (
+							<div className="flex items-center gap-2">
+								<span className="font-medium">処理速度:</span>
+								<span className="tabular-nums">
+									{scanProgress.processingSpeed.toFixed(1)} ファイル/秒
+								</span>
+							</div>
+						)}
+
+					{/* 推定残り時間 */}
+					{scanProgress.estimatedTimeRemaining !== undefined &&
+						scanProgress.estimatedTimeRemaining > 0 && (
+							<div className="flex items-center gap-2">
+								<span className="font-medium">推定残り時間:</span>
+								<span className="tabular-nums">
+									{formatDuration(scanProgress.estimatedTimeRemaining)}
+								</span>
+							</div>
+						)}
+
+					{/* 経過時間 */}
+					{scanProgress.totalElapsedTime !== undefined &&
+						scanProgress.totalElapsedTime > 0 && (
+							<div className="flex items-center gap-2">
+								<span className="font-medium">経過時間:</span>
+								<span className="tabular-nums">
+									{formatDuration(scanProgress.totalElapsedTime)}
+								</span>
+							</div>
+						)}
 
 					{/* 現在処理中のファイル */}
 					{scanProgress.currentFile && (

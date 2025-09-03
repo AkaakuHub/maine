@@ -11,6 +11,8 @@ import {
 import type { VideoFileData } from "@/type";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
 import { scanEventEmitter } from "@/services/scanEventEmitter";
+import type { ScanSettings } from "@/types/scanSettings";
+import { DEFAULT_SCAN_SETTINGS } from "@/types/scanSettings";
 
 // 既存のVideoScanServiceから型をimport
 // VideoFileInfo型は削除（DBベース移行でメモリキャッシュ不要）
@@ -64,6 +66,16 @@ class VideoCacheService {
 		isCancelled: false,
 		shouldStop: false,
 	};
+
+	// 詳細プログレス追跡
+	private scanStartTime: Date | null = null;
+	private phaseStartTime: Date | null = null;
+	private lastProgressUpdate: Date | null = null;
+	private processedFilesInCurrentWindow = 0;
+	private progressWindowStartTime: Date | null = null;
+
+	// スキャン設定
+	private scanSettings: ScanSettings = DEFAULT_SCAN_SETTINGS;
 
 	constructor() {
 		this.initializePromise = this.initialize();
@@ -193,6 +205,99 @@ class VideoCacheService {
 			isCancelled: false,
 			shouldStop: false,
 		};
+
+		// 詳細プログレス追跡もリセット
+		const now = new Date();
+		this.scanStartTime = now;
+		this.phaseStartTime = now;
+		this.lastProgressUpdate = now;
+		this.processedFilesInCurrentWindow = 0;
+		this.progressWindowStartTime = now;
+	}
+
+	/**
+	 * 処理速度と推定時間を計算
+	 */
+	private calculateProgressMetrics(
+		processedFiles: number,
+		totalFiles: number,
+	): {
+		processingSpeed: number;
+		estimatedTimeRemaining: number;
+		totalElapsedTime: number;
+		currentPhaseElapsed: number;
+	} {
+		const now = new Date();
+
+		// 全体の経過時間（秒）
+		const totalElapsedTime = this.scanStartTime
+			? (now.getTime() - this.scanStartTime.getTime()) / 1000
+			: 0;
+
+		// 現在フェーズの経過時間（秒）
+		const currentPhaseElapsed = this.phaseStartTime
+			? (now.getTime() - this.phaseStartTime.getTime()) / 1000
+			: 0;
+
+		// 処理速度計算（移動平均ウィンドウ：30秒）
+		let processingSpeed = 0;
+		if (this.progressWindowStartTime && this.lastProgressUpdate) {
+			const windowElapsed =
+				(now.getTime() - this.progressWindowStartTime.getTime()) / 1000;
+			if (windowElapsed > 0) {
+				processingSpeed = this.processedFilesInCurrentWindow / windowElapsed;
+			}
+
+			// 30秒経過したらウィンドウをリセット
+			if (windowElapsed >= 30) {
+				this.progressWindowStartTime = now;
+				this.processedFilesInCurrentWindow = 0;
+			}
+		}
+
+		// 推定残り時間（秒）
+		let estimatedTimeRemaining = 0;
+		if (processingSpeed > 0 && totalFiles > processedFiles) {
+			const remainingFiles = totalFiles - processedFiles;
+			estimatedTimeRemaining = remainingFiles / processingSpeed;
+		}
+
+		return {
+			processingSpeed,
+			estimatedTimeRemaining,
+			totalElapsedTime,
+			currentPhaseElapsed,
+		};
+	}
+
+	/**
+	 * フェーズ開始時の時間をリセット
+	 */
+	private resetPhaseTimer(): void {
+		this.phaseStartTime = new Date();
+	}
+
+	/**
+	 * スキャン設定を更新
+	 */
+	updateScanSettings(settings: Partial<ScanSettings>): void {
+		this.scanSettings = { ...this.scanSettings, ...settings };
+		console.log("📝 Scan settings updated:", this.scanSettings);
+	}
+
+	/**
+	 * 現在のスキャン設定を取得
+	 */
+	getScanSettings(): ScanSettings {
+		return { ...this.scanSettings };
+	}
+
+	/**
+	 * スキャン設定をデフォルトにリセット
+	 */
+	resetScanSettings(): void {
+		this.scanSettings = { ...DEFAULT_SCAN_SETTINGS };
+		console.log("🔄 Scan settings reset to default:", this.scanSettings);
 	}
 
 	/**
@@ -380,7 +485,14 @@ class VideoCacheService {
 
 			console.log(`発見したファイル数: ${allVideoFiles.length}`);
 
+			// フェーズ切り替え時にタイマーをリセット
+			this.resetPhaseTimer();
+
 			// 📡 ディスカバリー完了イベント送信
+			const discoveryMetrics = this.calculateProgressMetrics(
+				0,
+				allVideoFiles.length,
+			);
 			scanEventEmitter.emitScanProgress({
 				type: "phase",
 				scanId,
@@ -389,6 +501,9 @@ class VideoCacheService {
 				processedFiles: 0,
 				totalFiles: allVideoFiles.length,
 				message: `${allVideoFiles.length}ファイルを発見 - メタデータ処理開始`,
+				phaseStartTime: this.phaseStartTime || undefined,
+				totalElapsedTime: discoveryMetrics.totalElapsedTime,
+				currentPhaseElapsed: 0, // 新フェーズ開始
 			});
 
 			// 📝 チェックポイント保存: ファイル発見フェーズ完了
@@ -445,8 +560,19 @@ class VideoCacheService {
 							(processedFiles / allVideoFiles.length) * 50,
 						);
 
-						// 📡 進捗イベント送信（100ファイルごと）
-						if (processedFiles % 100 === 0) {
+						// 📡 進捗イベント送信（設定間隔ごと）
+						if (
+							processedFiles % this.scanSettings.progressUpdateInterval ===
+							0
+						) {
+							// 処理ファイル数をウィンドウに追加
+							this.processedFilesInCurrentWindow +=
+								this.scanSettings.progressUpdateInterval;
+
+							const metrics = this.calculateProgressMetrics(
+								processedFiles,
+								allVideoFiles.length,
+							);
 							scanEventEmitter.emitScanProgress({
 								type: "progress",
 								scanId,
@@ -458,15 +584,20 @@ class VideoCacheService {
 								totalFiles: allVideoFiles.length,
 								currentFile: videoFile.fileName,
 								message: `メタデータ処理中 (${processedFiles}/${allVideoFiles.length})`,
+								processingSpeed: metrics.processingSpeed,
+								estimatedTimeRemaining: metrics.estimatedTimeRemaining,
+								phaseStartTime: this.phaseStartTime || undefined,
+								totalElapsedTime: metrics.totalElapsedTime,
+								currentPhaseElapsed: metrics.currentPhaseElapsed,
 							});
 						}
 					}
 
 					// 軽い休憩とチェックポイント保存（CPUを労る）
-					if (i % 100 === 0 && i > 0) {
-						await this.sleep(1);
+					if (i % this.scanSettings.progressUpdateInterval === 0 && i > 0) {
+						await this.sleep(this.scanSettings.sleepInterval);
 
-						// 📝 定期チェックポイント保存（100ファイルごと）
+						// 📝 定期チェックポイント保存（設定間隔ごと）
 						await this.saveCheckpoint({
 							scanId,
 							scanType: "full",
@@ -484,7 +615,14 @@ class VideoCacheService {
 			totalFiles = allDbRecords.length;
 			console.log(`メタデータ準備完了: ${totalFiles}レコード`);
 
+			// データベースフェーズに切り替え
+			this.resetPhaseTimer();
+
 			// 📡 メタデータ処理完了イベント送信
+			const metadataCompleteMetrics = this.calculateProgressMetrics(
+				totalFiles,
+				totalFiles,
+			);
 			scanEventEmitter.emitScanProgress({
 				type: "phase",
 				scanId,
@@ -493,6 +631,9 @@ class VideoCacheService {
 				processedFiles: totalFiles,
 				totalFiles: totalFiles,
 				message: "メタデータ処理完了 - データベース更新開始",
+				phaseStartTime: this.phaseStartTime || undefined,
+				totalElapsedTime: metadataCompleteMetrics.totalElapsedTime,
+				currentPhaseElapsed: 0, // 新フェーズ開始
 			});
 
 			// 📝 チェックポイント保存: メタデータフェーズ完了
@@ -535,6 +676,12 @@ class VideoCacheService {
 						this.updateProgress = 50 + dbProgress;
 
 						// 📡 データベース更新進捗イベント送信
+						this.processedFilesInCurrentWindow += batch.length;
+						const dbMetrics = this.calculateProgressMetrics(
+							i + batch.length,
+							allDbRecords.length,
+						);
+
 						scanEventEmitter.emitScanProgress({
 							type: "progress",
 							scanId,
@@ -545,6 +692,11 @@ class VideoCacheService {
 							message: `データベース更新中 (${i + batch.length}/${
 								allDbRecords.length
 							})`,
+							processingSpeed: dbMetrics.processingSpeed,
+							estimatedTimeRemaining: dbMetrics.estimatedTimeRemaining,
+							phaseStartTime: this.phaseStartTime || undefined,
+							totalElapsedTime: dbMetrics.totalElapsedTime,
+							currentPhaseElapsed: dbMetrics.currentPhaseElapsed,
 						});
 
 						console.log(
@@ -567,6 +719,10 @@ class VideoCacheService {
 			this.updateProgress = 100;
 
 			// 📡 スキャン完了イベント送信
+			const finalMetrics = this.calculateProgressMetrics(
+				totalFiles,
+				totalFiles,
+			);
 			scanEventEmitter.emitScanProgress({
 				type: "complete",
 				scanId,
@@ -575,6 +731,11 @@ class VideoCacheService {
 				processedFiles: totalFiles,
 				totalFiles: totalFiles,
 				message: `スキャン完了 - ${totalFiles}ファイル処理完了`,
+				processingSpeed: 0, // 完了時は速度0
+				estimatedTimeRemaining: 0, // 残り時間0
+				phaseStartTime: this.phaseStartTime || undefined,
+				totalElapsedTime: finalMetrics.totalElapsedTime,
+				currentPhaseElapsed: finalMetrics.currentPhaseElapsed,
 			});
 
 			console.log(

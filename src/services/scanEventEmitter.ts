@@ -14,6 +14,13 @@ export interface ScanProgressEvent {
 	message?: string;
 	error?: string;
 	timestamp: Date;
+
+	// 詳細プログレス情報
+	processingSpeed?: number; // ファイル/秒
+	estimatedTimeRemaining?: number; // 秒
+	phaseStartTime?: Date;
+	totalElapsedTime?: number; // 秒
+	currentPhaseElapsed?: number; // 秒
 }
 
 /**

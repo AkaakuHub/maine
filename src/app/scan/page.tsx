@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { ScanProgressBar } from "@/components/scan/ScanProgressBar";
 import { ScanControlButtons } from "@/components/scan/ScanControlButtons";
+import { ScanSettingsPanel } from "@/components/scan/ScanSettingsPanel";
 import { useScanProgress } from "@/hooks/useScanProgress";
 import { cn } from "@/libs/utils";
 
@@ -194,6 +195,9 @@ export default function ScanManagementPage() {
 								</div>
 							</div>
 						)}
+
+						{/* スキャン設定パネル */}
+						<ScanSettingsPanel />
 
 						{/* ログ表示エリア（将来の拡張用） */}
 						<div className="bg-surface rounded-lg border border-border p-6">
