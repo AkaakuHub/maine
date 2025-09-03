@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { prisma } from "@/libs/prisma";
+import { PrismaClient as SettingsPrismaClient } from "../../prisma/generated/settings";
 import {
 	normalizePath,
 	isVideoFile,
@@ -40,6 +41,7 @@ class VideoCacheService {
 	private updateProgress = -1;
 	private currentScanId: string | null = null;
 	private scanSettings: ScanSettings = DEFAULT_SCAN_SETTINGS;
+	private settingsDb: SettingsPrismaClient;
 
 	// 分離されたモジュール
 	private resourceMonitor: ScanResourceMonitor;
@@ -56,10 +58,21 @@ class VideoCacheService {
 	};
 
 	constructor() {
+		this.settingsDb = new SettingsPrismaClient();
 		this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
 		this.checkpointManager = new ScanCheckpointManager();
 		this.progressCalculator = new ScanProgressCalculator();
 		this.initializeStreamProcessor();
+		this.setupProgressListener();
+		this.loadScanSettings();
+	}
+
+	private setupProgressListener(): void {
+		scanEventEmitter.on("scanProgress", (data) => {
+			if (this.currentScanId === data.scanId) {
+				this.updateProgress = data.progress;
+			}
+		});
 	}
 
 	private initializeStreamProcessor(): void {
@@ -84,12 +97,78 @@ class VideoCacheService {
 
 	private async saveScanSettings(): Promise<void> {
 		try {
-			await fs.writeFile(
-				path.join(process.cwd(), "scan-settings.json"),
-				JSON.stringify(this.scanSettings, null, 2),
-			);
+			await this.settingsDb.scanSettings.upsert({
+				where: { id: "scan_settings" },
+				update: {
+					batchSize: this.scanSettings.batchSize,
+					progressUpdateInterval: this.scanSettings.progressUpdateInterval,
+					sleepInterval: this.scanSettings.sleepInterval,
+					processingPriority: this.scanSettings.processingPriority,
+					maxConcurrentOperations: this.scanSettings.maxConcurrentOperations,
+					memoryThresholdMB: this.scanSettings.memoryThresholdMB,
+					autoPauseOnHighCPU: this.scanSettings.autoPauseOnHighCPU,
+					autoPauseThreshold: this.scanSettings.autoPauseThreshold,
+					autoPauseStartHour: this.scanSettings.autoPauseTimeRange.startHour,
+					autoPauseEndHour: this.scanSettings.autoPauseTimeRange.endHour,
+					enableDetailedLogging: this.scanSettings.enableDetailedLogging,
+					enableResourceMonitoring: this.scanSettings.showResourceMonitoring,
+				},
+				create: {
+					id: "scan_settings",
+					batchSize: this.scanSettings.batchSize,
+					progressUpdateInterval: this.scanSettings.progressUpdateInterval,
+					sleepInterval: this.scanSettings.sleepInterval,
+					processingPriority: this.scanSettings.processingPriority,
+					maxConcurrentOperations: this.scanSettings.maxConcurrentOperations,
+					memoryThresholdMB: this.scanSettings.memoryThresholdMB,
+					autoPauseOnHighCPU: this.scanSettings.autoPauseOnHighCPU,
+					autoPauseThreshold: this.scanSettings.autoPauseThreshold,
+					autoPauseStartHour: this.scanSettings.autoPauseTimeRange.startHour,
+					autoPauseEndHour: this.scanSettings.autoPauseTimeRange.endHour,
+					enableDetailedLogging: this.scanSettings.enableDetailedLogging,
+					enableResourceMonitoring: this.scanSettings.showResourceMonitoring,
+				},
+			});
 		} catch (error) {
 			console.warn("スキャン設定保存エラー:", error);
+		}
+	}
+
+	private async loadScanSettings(): Promise<void> {
+		try {
+			const settings = await this.settingsDb.scanSettings.findUnique({
+				where: { id: "scan_settings" },
+			});
+
+			if (settings) {
+				this.scanSettings = {
+					batchSize: settings.batchSize,
+					progressUpdateInterval: settings.progressUpdateInterval,
+					sleepInterval: settings.sleepInterval,
+					processingPriority: settings.processingPriority as
+						| "low"
+						| "normal"
+						| "high",
+					maxConcurrentOperations: settings.maxConcurrentOperations,
+					memoryThresholdMB: settings.memoryThresholdMB,
+					autoPauseOnHighCPU: settings.autoPauseOnHighCPU,
+					autoPauseThreshold: settings.autoPauseThreshold,
+					autoPauseTimeRange: {
+						enabled: false,
+						startHour: settings.autoPauseStartHour,
+						endHour: settings.autoPauseEndHour,
+					},
+					enableDetailedLogging: settings.enableDetailedLogging,
+					showResourceMonitoring: settings.enableResourceMonitoring,
+					enablePerformanceMetrics: true,
+				};
+
+				// 依存モジュールを再初期化
+				this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
+				this.initializeStreamProcessor();
+			}
+		} catch (error) {
+			console.warn("スキャン設定読み込みエラー:", error);
 		}
 	}
 
@@ -112,6 +191,7 @@ class VideoCacheService {
 		}
 
 		this.isUpdating = true;
+		this.updateProgress = 0;
 		const scanId = this.generateScanId();
 		this.currentScanId = scanId;
 		this.resetScanControl();
@@ -147,6 +227,7 @@ class VideoCacheService {
 			};
 		} finally {
 			this.isUpdating = false;
+			this.updateProgress = -1;
 			this.currentScanId = null;
 			this.resetScanControl();
 			await this.saveScanSettings();

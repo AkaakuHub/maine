@@ -34,3 +34,24 @@ model UserSettings {
 
   @@map("user_settings")
 }
+
+// スキャン設定
+model ScanSettings {
+  id                        String   @id @default("scan_settings")
+  batchSize                 Int      @default(50)
+  progressUpdateInterval    Int      @default(100)
+  sleepInterval             Int      @default(1)
+  processingPriority        String   @default("normal") // "low" | "normal" | "high"
+  maxConcurrentOperations   Int      @default(4)
+  memoryThresholdMB         Int      @default(1024)
+  autoPauseOnHighCPU        Boolean  @default(false)
+  autoPauseThreshold        Int      @default(80)
+  autoPauseStartHour        Int      @default(9)
+  autoPauseEndHour          Int      @default(18)
+  enableDetailedLogging     Boolean  @default(false)
+  enableResourceMonitoring  Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("scan_settings")
+}

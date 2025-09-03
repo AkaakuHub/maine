@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useVideos } from "@/hooks/useVideos";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
@@ -21,7 +21,7 @@ import PWADebugInfo from "@/components/PWADebugInfo";
 import { SettingsModal } from "@/components/settings/SettingsModal";
 import { PAGINATION } from "@/utils/constants";
 
-const Home = () => {
+const HomeContent = () => {
 	// ネットワーク状態
 	const { isOffline } = useNetworkStatus();
 	const router = useRouter();
@@ -284,6 +284,20 @@ const Home = () => {
 			{/* 設定モーダル */}
 			<SettingsModal isOpen={showSettings} onClose={handleCloseSettings} />
 		</main>
+	);
+};
+
+const Home = () => {
+	return (
+		<Suspense
+			fallback={
+				<div className="min-h-screen bg-surface-variant">
+					<div className="container mx-auto px-4 py-8">Loading...</div>
+				</div>
+			}
+		>
+			<HomeContent />
+		</Suspense>
 	);
 };
 
