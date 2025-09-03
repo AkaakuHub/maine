@@ -7,73 +7,23 @@ set -e
 
 echo "🎨 Tailwindデフォルト色の使用をチェック中..."
 
+# 色名定義
+COLORS="gray|red|blue|green|yellow|purple|pink|indigo|teal|cyan|orange|lime|emerald|sky|violet|fuchsia|rose|amber|zinc|neutral|stone|slate"
+
 # 禁止されている色クラスのパターン
 FORBIDDEN_PATTERNS=(
-    # 背景色
-    "bg-white\b"
-    "bg-black\b"
-    "bg-gray-[0-9]+"
-    "bg-red-[0-9]+"
-    "bg-blue-[0-9]+"
-    "bg-green-[0-9]+"
-    "bg-yellow-[0-9]+"
-    "bg-purple-[0-9]+"
-    "bg-pink-[0-9]+"
-    "bg-indigo-[0-9]+"
-    "bg-teal-[0-9]+"
-    "bg-cyan-[0-9]+"
-    "bg-orange-[0-9]+"
-    "bg-lime-[0-9]+"
-    "bg-emerald-[0-9]+"
-    "bg-sky-[0-9]+"
-    "bg-violet-[0-9]+"
-    "bg-fuchsia-[0-9]+"
-    "bg-rose-[0-9]+"
-    "bg-amber-[0-9]+"
-    "bg-zinc-[0-9]+"
-    "bg-neutral-[0-9]+"
-    "bg-stone-[0-9]+"
-    "bg-slate-[0-9]+"
+    # 基本色
+    "(bg|text|border)-(white|black)\b"
+    "(bg|text|border)-($COLORS)-[0-9]+(/[0-9]+)?"
     
-    # テキスト色
-    "text-white\b"
-    "text-black\b"
-    "text-gray-[0-9]+"
-    "text-red-[0-9]+"
-    "text-blue-[0-9]+"
-    "text-green-[0-9]+"
-    "text-yellow-[0-9]+"
-    "text-purple-[0-9]+"
-    "text-pink-[0-9]+"
-    "text-indigo-[0-9]+"
-    "text-teal-[0-9]+"
-    "text-cyan-[0-9]+"
-    "text-orange-[0-9]+"
-    "text-lime-[0-9]+"
-    "text-emerald-[0-9]+"
-    "text-sky-[0-9]+"
-    "text-violet-[0-9]+"
-    "text-fuchsia-[0-9]+"
-    "text-rose-[0-9]+"
-    "text-amber-[0-9]+"
-    "text-zinc-[0-9]+"
-    "text-neutral-[0-9]+"
-    "text-stone-[0-9]+"
-    "text-slate-[0-9]+"
-    
-    # ボーダー色
-    "border-white\b"
-    "border-black\b"
-    "border-gray-[0-9]+"
-    "border-red-[0-9]+"
-    "border-blue-[0-9]+"
-    "border-green-[0-9]+"
+    # グラデーション色
+    "from-($COLORS)-[0-9]+(/[0-9]+)?"
+    "to-($COLORS)-[0-9]+(/[0-9]+)?"
+    "via-($COLORS)-[0-9]+(/[0-9]+)?"
     
     # その他
-    "ring-gray-[0-9]+"
-    "ring-blue-[0-9]+"
-    "divide-gray-[0-9]+"
-    "outline-gray-[0-9]+"
+    "(ring|divide|outline)-($COLORS)-[0-9]+(/[0-9]+)?"
+    "(shadow)-($COLORS)-[0-9]+(/[0-9]+)?"
 )
 
 ERRORS_FOUND=0
