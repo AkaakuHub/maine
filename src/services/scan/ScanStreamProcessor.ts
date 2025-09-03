@@ -5,6 +5,7 @@ import { scanEventEmitter } from "@/services/scanEventEmitter";
 import type { ScanSettings } from "@/types/scanSettings";
 import { SCAN } from "@/utils/constants";
 import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";
+import { ThumbnailGenerator } from "@/services/ThumbnailGenerator";
 
 export interface ProcessedVideoRecord {
 	id: string;
@@ -15,6 +16,7 @@ export interface ProcessedVideoRecord {
 	episode: number | null;
 	year: number | null;
 	duration: number | null;
+	thumbnailPath: string | null;
 	lastModified: Date;
 }
 
@@ -29,6 +31,7 @@ export interface VideoFile {
  */
 export class ScanStreamProcessor {
 	private ffprobeExtractor: FFprobeMetadataExtractor;
+	private thumbnailGenerator: ThumbnailGenerator;
 
 	constructor(
 		private settings: ScanSettings,
@@ -51,6 +54,7 @@ export class ScanStreamProcessor {
 		private extractEpisode: (fileName: string) => number | undefined,
 	) {
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
+		this.thumbnailGenerator = new ThumbnailGenerator("./public/thumbnails");
 	}
 
 	/**
@@ -71,8 +75,9 @@ export class ScanStreamProcessor {
 		const metadataTransform = new Transform({
 			objectMode: true,
 			highWaterMark: this.settings.batchSize,
-			// biome-ignore lint/correctness/noUnusedVariables: encoding parameter required by Transform stream interface
 			async transform(videoFile: VideoFile, encoding, callback) {
+				// encoding parameter required by Transform interface but unused
+				void encoding;
 				try {
 					// 制御状態をチェック（一時停止・キャンセル）
 					await self.checkScanControl(scanId);
@@ -81,6 +86,20 @@ export class ScanStreamProcessor {
 					const metadata = await self.ffprobeExtractor.extractMetadata(
 						videoFile.filePath,
 					);
+
+					// サムネイル生成（メタデータ処理と並行して実行）
+					let thumbnailPath: string | null = null;
+					try {
+						const thumbnailResult =
+							await self.thumbnailGenerator.generateThumbnail(
+								videoFile.filePath,
+							);
+						if (thumbnailResult.success) {
+							thumbnailPath = thumbnailResult.thumbnailPath;
+						}
+					} catch (error) {
+						console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
+					}
 
 					// 既存のパーサーを使用してタイトル情報抽出
 					const parsedInfo = parseVideoFileName(videoFile.fileName);
@@ -95,6 +114,7 @@ export class ScanStreamProcessor {
 						episode: self.extractEpisode(videoFile.fileName) ?? null,
 						year: parsedInfo.broadcastDate?.getFullYear() ?? null,
 						duration: metadata.duration,
+						thumbnailPath,
 						lastModified: metadata.lastModified,
 					};
 
@@ -158,8 +178,9 @@ export class ScanStreamProcessor {
 		// 結果収集ストリーム
 		const collectStream = new Transform({
 			objectMode: true,
-			// biome-ignore lint/correctness/noUnusedVariables: encoding parameter required by Transform stream interface
 			transform(record: ProcessedVideoRecord, encoding, callback) {
+				// encoding parameter required by Transform interface but unused
+				void encoding;
 				results.push(record);
 				callback();
 			},

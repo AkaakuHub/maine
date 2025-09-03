@@ -17,6 +17,7 @@ export interface VideoFileData {
 	fileName: string;
 	filePath: string;
 	duration?: number;
+	thumbnailPath?: string;
 	fileSize: number;
 	episode?: number;
 	season?: string;

@@ -24,7 +24,6 @@ import {
 import { ScanResourceMonitor } from "@/services/scan/ScanResourceMonitor";
 import { ScanCheckpointManager } from "@/services/scan/ScanCheckpointManager";
 import { ScanProgressCalculator } from "@/services/scan/ScanProgressCalculator";
-import { ThumbnailGenerator } from "@/services/ThumbnailGenerator";
 import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";
 
 type SearchResult = {
@@ -51,7 +50,6 @@ class VideoCacheService {
 	private checkpointManager: ScanCheckpointManager;
 	private progressCalculator: ScanProgressCalculator;
 	private streamProcessor: ScanStreamProcessor | null = null;
-	private thumbnailGenerator: ThumbnailGenerator;
 	private ffprobeExtractor: FFprobeMetadataExtractor;
 
 	// スキャン制御状態
@@ -67,7 +65,6 @@ class VideoCacheService {
 		this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
 		this.checkpointManager = new ScanCheckpointManager();
 		this.progressCalculator = new ScanProgressCalculator();
-		this.thumbnailGenerator = new ThumbnailGenerator("./public/thumbnails");
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
 		this.initializeStreamProcessor();
 		this.setupProgressListener();
@@ -327,6 +324,7 @@ class VideoCacheService {
 					episode: this.extractEpisode(videoFile.fileName) ?? null,
 					year: parsedInfo.broadcastDate?.getFullYear() ?? null,
 					duration: metadata.duration,
+					thumbnailPath: null, // バッチ処理ではサムネイル生成しない
 					lastModified: metadata.lastModified,
 				});
 			}
@@ -356,6 +354,7 @@ class VideoCacheService {
 						episode: record.episode,
 						year: record.year,
 						duration: record.duration,
+						thumbnail_path: record.thumbnailPath,
 						lastModified: record.lastModified,
 						metadata_extracted_at: record.duration ? new Date() : null,
 					})),
@@ -478,6 +477,7 @@ class VideoCacheService {
 					episode: v.episode ?? undefined,
 					year: v.year ?? undefined,
 					duration: v.duration ?? undefined,
+					thumbnailPath: v.thumbnail_path ?? undefined,
 					watchProgress: 0,
 					watchTime: 0,
 					isLiked: false,
@@ -512,6 +512,7 @@ class VideoCacheService {
 				episode: v.episode ?? undefined,
 				year: v.year ?? undefined,
 				duration: v.duration ?? undefined,
+				thumbnailPath: v.thumbnail_path ?? undefined,
 				watchProgress: 0,
 				watchTime: 0,
 				isLiked: false,

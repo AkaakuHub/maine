@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Download, Radio, MoreHorizontal, Trash2 } from "lucide-react";
 import type { VideoFileData } from "@/type";
 import { cn, formatFileSize } from "@/libs/utils";
+import { formatDuration, API } from "@/utils/constants";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
@@ -121,17 +122,26 @@ const VideoCard = ({
 			>
 				{/* サムネイル */}
 				<div className="relative aspect-video bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 overflow-hidden">
-					{/* 装飾的なグリッド */}
-					<div className="absolute inset-0 opacity-10">
-						<div
-							className="w-full h-full"
-							style={{
-								backgroundImage:
-									"linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-								backgroundSize: "20px 20px",
-							}}
+					{video.thumbnailPath ? (
+						<img
+							src={`${API.ENDPOINTS.THUMBNAILS}/${video.thumbnailPath}`}
+							alt={video.title}
+							className="w-full h-full object-cover"
+							loading="lazy"
 						/>
-					</div>
+					) : (
+						// フォールバック: 装飾的なグリッド
+						<div className="absolute inset-0 opacity-10">
+							<div
+								className="w-full h-full"
+								style={{
+									backgroundImage:
+										"linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+									backgroundSize: "20px 20px",
+								}}
+							/>
+						</div>
+					)}
 					{/* ダウンロード進行状況オーバーレイ */}
 					{isCurrentlyDownloading && currentDownloadProgress && (
 						<div className="absolute inset-0 bg-overlay flex items-center justify-center">
@@ -156,15 +166,14 @@ const VideoCard = ({
 							</div>
 						</div>
 					)}
-					{/* 動画時間（仮想的に表示 - 実際の時間があれば使用） */}
-					<div className="absolute bottom-3 right-3">
-						<div className="bg-surface-elevated/75 backdrop-blur-sm px-2 py-1 rounded text-text text-xs font-medium">
-							{Math.floor(video.fileSize / (1024 * 1024 * 10))}:
-							{String(
-								Math.floor((video.fileSize / (1024 * 1024)) % 60),
-							).padStart(2, "0")}
+					{/* 動画時間 */}
+					{video.duration && (
+						<div className="absolute bottom-3 right-3">
+							<div className="bg-surface-elevated/75 backdrop-blur-sm px-2 py-1 rounded text-text text-xs font-medium">
+								{formatDuration(video.duration)}
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
 
 				{/* コンテンツ */}

@@ -91,6 +91,19 @@ export const API = {
 		VIDEO_STREAM: "/api/video",
 		PROGRESS: "/api/progress",
 		PROGRAM_INFO: "/api/programInfo",
+		THUMBNAILS: "/api/thumbnails",
 	},
 	TIMEOUT: 30000,
 } as const;
+
+// 動画時間フォーマット関数
+export const formatDuration = (seconds: number): string => {
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const secs = Math.floor(seconds % 60);
+
+	if (hours > 0) {
+		return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+	}
+	return `${minutes}:${secs.toString().padStart(2, "0")}`;
+};

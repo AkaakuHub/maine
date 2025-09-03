@@ -9,9 +9,14 @@ import { existsSync } from "node:fs";
  *
  * WebP形式のサムネイル画像を配信します
  */
-export async function GET({ params }: { params: { path: string[] } }) {
+export async function GET(
+	request: Request,
+	{ params }: { params: Promise<{ path: string[] }> },
+) {
+	void request; // Request parameter required by Next.js API route interface but unused
 	try {
-		const thumbnailPath = params.path.join("/");
+		const { path } = await params;
+		const thumbnailPath = path.join("/");
 
 		// セキュリティ: パストラバーサル攻撃を防ぐ
 		if (thumbnailPath.includes("..") || thumbnailPath.includes("~")) {

@@ -31,3 +31,4 @@
 - エラーは、ide diagnosticsを使用して検出すること
 - anyは禁止
 - 型定義は厳密に行うこと
+- biome-ignoreなど、lint無効化は禁止
