@@ -4,14 +4,14 @@ import { NextResponse } from "next/server";
 export async function POST() {
 	try {
 		console.log("手動フルDBリフレッシュ開始...");
-		await videoCacheService.manualRefresh();
+		const refreshResult = await videoCacheService.manualRefresh();
 
-		const status = await videoCacheService.getUpdateStatus();
+		const status = videoCacheService.getUpdateStatus();
 
 		return NextResponse.json({
-			success: true,
-			message: "フルDB更新が完了しました",
-			totalFiles: status.cacheSize,
+			success: refreshResult.success,
+			message: refreshResult.message,
+			status: status.message,
 			memoryUsage: "数KB (DB使用)",
 		});
 	} catch (error) {

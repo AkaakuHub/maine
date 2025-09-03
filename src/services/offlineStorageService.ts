@@ -84,7 +84,7 @@ class OfflineStorageService {
 			}
 
 			const reader = response.body.getReader();
-			const chunks: Uint8Array[] = [];
+			const chunks: BlobPart[] = [];
 			let loaded = 0;
 
 			while (true) {

@@ -59,6 +59,9 @@ export const SCAN = {
 	CHECKPOINT_VALIDITY_HOURS: 24,
 	TRANSACTION_TIMEOUT_MS: 600000, // 10分
 
+	// ストリーム処理
+	STREAM_PROCESSING_THRESHOLD: 1000, // この数以上のファイルでストリーム処理を使用
+
 	// スキャンID生成
 	SCAN_ID_PREFIX: "scan_",
 } as const;

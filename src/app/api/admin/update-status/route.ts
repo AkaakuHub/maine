@@ -4,17 +4,16 @@ import { NextResponse } from "next/server";
 export async function GET() {
 	try {
 		const checkResult = await videoCacheService.checkAndUpdateIfNeeded();
-		const status = await videoCacheService.getUpdateStatus();
+		const status = videoCacheService.getUpdateStatus();
 
 		return NextResponse.json({
 			success: true,
 			isUpdating: status.isUpdating,
 			progress: status.progress,
-			lastScanDate: status.lastScanDate,
-			daysSinceLastScan: status.daysSinceLastScan,
-			totalFiles: status.cacheSize,
+			message: status.message,
 			memoryUsage: "数KB (DB使用)",
-			needsUpdate: checkResult.needsUpdate,
+			updated: checkResult.updated,
+			checkMessage: checkResult.message,
 		});
 	} catch (error) {
 		console.error("更新状況取得エラー:", error);

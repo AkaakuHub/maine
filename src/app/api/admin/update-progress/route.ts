@@ -3,14 +3,14 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
 	try {
-		const status = await videoCacheService.getUpdateStatus();
+		const status = videoCacheService.getUpdateStatus();
 
 		return NextResponse.json({
 			success: true,
 			progress: status.progress,
 			isUpdating: status.isUpdating,
 			completed: !status.isUpdating && status.progress === 100,
-			totalFiles: status.cacheSize,
+			message: status.message,
 			memoryUsage: "数KB (DB使用)",
 		});
 	} catch (error) {

@@ -12,7 +12,7 @@ export async function POST() {
 		console.log("🚀 Manual scan start requested via API");
 
 		// 既にスキャン中かチェック
-		const status = await videoCacheService.getUpdateStatus();
+		const status = videoCacheService.getUpdateStatus();
 		if (status.isUpdating) {
 			return NextResponse.json(
 				{
@@ -54,15 +54,13 @@ export async function POST() {
  */
 export async function GET() {
 	try {
-		const status = await videoCacheService.getUpdateStatus();
+		const status = videoCacheService.getUpdateStatus();
 
 		return NextResponse.json({
 			success: true,
 			isScanning: status.isUpdating,
 			progress: status.progress,
-			lastScanDate: status.lastScanDate,
-			daysSinceLastScan: status.daysSinceLastScan,
-			cacheSize: status.cacheSize,
+			message: status.message,
 		});
 	} catch (error) {
 		console.error("Scan status API error:", error);
