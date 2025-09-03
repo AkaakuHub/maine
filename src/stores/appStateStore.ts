@@ -26,6 +26,9 @@ interface AppStateStore {
 	currentPage: number;
 	showAll: boolean;
 
+	// URL履歴管理
+	shouldCreateHistoryEntry: boolean;
+
 	// Actions
 	setSearchTerm: (term: string) => void;
 	setSearchQuery: (query: string) => void;
@@ -51,6 +54,7 @@ interface AppStateStore {
 	// URL同期
 	initializeFromURL: (params: URLSearchParams) => void;
 	getSearchParams: () => URLSearchParams;
+	setShouldCreateHistoryEntry: (should: boolean) => void;
 }
 
 export const useAppStateStore = create<AppStateStore>((set, get) => ({
@@ -65,6 +69,7 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 	showSettings: false,
 	currentPage: 1,
 	showAll: false,
+	shouldCreateHistoryEntry: false,
 
 	// Basic setters
 	setSearchTerm: (term) => set({ searchTerm: term }),
@@ -81,6 +86,8 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 	setShowSettings: (show) => set({ showSettings: show }),
 	setCurrentPage: (page) => set({ currentPage: page }),
 	setShowAll: (showAll) => set({ showAll }),
+	setShouldCreateHistoryEntry: (should) =>
+		set({ shouldCreateHistoryEntry: should }),
 
 	// Compound actions
 	handleSearch: () => {
@@ -89,9 +96,20 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 
 		// 空白検索の場合は検索状態をクリア
 		if (!trimmedTerm) {
-			set({ searchQuery: "", currentPage: 1, showAll: false, searchTerm: "" });
+			set({
+				searchQuery: "",
+				currentPage: 1,
+				showAll: false,
+				searchTerm: "",
+				shouldCreateHistoryEntry: true,
+			});
 		} else {
-			set({ searchQuery: trimmedTerm, currentPage: 1, showAll: false });
+			set({
+				searchQuery: trimmedTerm,
+				currentPage: 1,
+				showAll: false,
+				shouldCreateHistoryEntry: true,
+			});
 		}
 	},
 

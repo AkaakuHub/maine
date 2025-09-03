@@ -65,6 +65,8 @@ const Home = () => {
 		// URL同期
 		initializeFromURL,
 		getSearchParams,
+		shouldCreateHistoryEntry,
+		setShouldCreateHistoryEntry,
 	} = useAppStateStore();
 
 	// オフラインストレージのフック
@@ -88,10 +90,23 @@ const Home = () => {
 
 			if (query !== currentQuery) {
 				const newUrl = query ? `/?${query}` : "/";
-				router.replace(newUrl, { scroll: false });
+
+				// 履歴エントリを作成するかどうかを判定
+				if (shouldCreateHistoryEntry) {
+					router.push(newUrl, { scroll: false });
+					setShouldCreateHistoryEntry(false); // フラグをリセット
+				} else {
+					router.replace(newUrl, { scroll: false });
+				}
 			}
 		}
-	}, [getSearchParams, router, searchParams]);
+	}, [
+		getSearchParams,
+		router,
+		searchParams,
+		shouldCreateHistoryEntry,
+		setShouldCreateHistoryEntry,
+	]);
 
 	// オフライン状態に応じたタブ自動切り替え
 	useEffect(() => {
@@ -99,32 +114,6 @@ const Home = () => {
 			setActiveTab("offline");
 		}
 	}, [isOffline, activeTab, setActiveTab]);
-
-	// 検索実行時の履歴管理（pushで新しい履歴エントリを作成）
-	const handleSearchWithHistory = () => {
-		handleSearch(); // Zustandストアの検索実行
-
-		// 検索実行時のみpushで履歴を追加
-		if (isInitialized.current) {
-			const trimmedSearchTerm = searchTerm.trim();
-
-			if (trimmedSearchTerm) {
-				// 検索語がある場合は履歴に追加
-				const params = new URLSearchParams();
-				params.set("search", trimmedSearchTerm);
-
-				if (sortBy !== "title") params.set("sortBy", sortBy);
-				if (sortOrder !== "asc") params.set("sortOrder", sortOrder);
-
-				const query = params.toString();
-				const newUrl = query ? `/?${query}` : "/";
-				router.push(newUrl, { scroll: false });
-			} else {
-				// 空検索の場合はトップページに戻る
-				router.push("/", { scroll: false });
-			}
-		}
-	};
 
 	// タブ変更処理
 	const handleTabChange = (tab: TabType) => {
@@ -235,7 +224,7 @@ const Home = () => {
 							sortOrder={sortOrder}
 							onSearchTermChange={setSearchTerm}
 							onSetIsComposing={setIsComposing}
-							onSearch={handleSearchWithHistory}
+							onSearch={handleSearch}
 							onClearSearch={handleClearSearch}
 							onSortByChange={setSortBy}
 							onSortOrderToggle={toggleSortOrder}
