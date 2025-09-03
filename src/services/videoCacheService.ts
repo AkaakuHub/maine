@@ -64,13 +64,16 @@ class VideoCacheService {
 		this.progressCalculator = new ScanProgressCalculator();
 		this.initializeStreamProcessor();
 		this.setupProgressListener();
-		this.loadScanSettings();
 	}
 
 	private setupProgressListener(): void {
 		scanEventEmitter.on("scanProgress", (data) => {
+			console.log(
+				`🔄 Progress event received: ${data.progress}% (scanId: ${data.scanId}, current: ${this.currentScanId})`,
+			);
 			if (this.currentScanId === data.scanId) {
 				this.updateProgress = data.progress;
+				console.log(`✅ updateProgress set to: ${this.updateProgress}`);
 			}
 		});
 	}
@@ -207,7 +210,6 @@ class VideoCacheService {
 
 			return await this.performFullScan(scanId);
 		} catch (error) {
-			this.updateProgress = -1;
 			scanEventEmitter.emitScanProgress({
 				type: "error",
 				scanId,
@@ -227,7 +229,6 @@ class VideoCacheService {
 			};
 		} finally {
 			this.isUpdating = false;
-			this.updateProgress = -1;
 			this.currentScanId = null;
 			this.resetScanControl();
 			await this.saveScanSettings();
@@ -553,6 +554,9 @@ class VideoCacheService {
 		progress: number;
 		message: string;
 	} {
+		console.log(
+			`📊 getUpdateStatus called: isUpdating=${this.isUpdating}, progress=${this.updateProgress}`,
+		);
 		return {
 			isUpdating: this.isUpdating,
 			progress: this.updateProgress,
