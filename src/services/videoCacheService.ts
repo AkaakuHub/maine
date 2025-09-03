@@ -68,12 +68,8 @@ class VideoCacheService {
 
 	private setupProgressListener(): void {
 		scanEventEmitter.on("scanProgress", (data) => {
-			console.log(
-				`🔄 Progress event received: ${data.progress}% (scanId: ${data.scanId}, current: ${this.currentScanId})`,
-			);
 			if (this.currentScanId === data.scanId) {
 				this.updateProgress = data.progress;
-				console.log(`✅ updateProgress set to: ${this.updateProgress}`);
 			}
 		});
 	}
@@ -353,10 +349,10 @@ class VideoCacheService {
 					filePath: videoFile.filePath,
 					fileName: videoFile.fileName,
 					title: parsedInfo.cleanTitle,
-					fileSize: 0,
+					fileSize: 0, // ファイルサイズはffprobe導入時にまとめて取得予定
 					episode: this.extractEpisode(videoFile.fileName) ?? null,
 					year: parsedInfo.broadcastDate?.getFullYear() ?? null,
-					lastModified: new Date(),
+					lastModified: new Date(), // ffprobe導入時に実際の値を取得予定
 				});
 			}
 			return records;
@@ -554,9 +550,6 @@ class VideoCacheService {
 		progress: number;
 		message: string;
 	} {
-		console.log(
-			`📊 getUpdateStatus called: isUpdating=${this.isUpdating}, progress=${this.updateProgress}`,
-		);
 		return {
 			isUpdating: this.isUpdating,
 			progress: this.updateProgress,

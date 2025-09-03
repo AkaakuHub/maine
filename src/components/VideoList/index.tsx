@@ -255,7 +255,7 @@ const VideoListItem = ({
 									className="p-2 text-text-secondary hover:text-text hover:bg-surface-elevated/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
 									onClick={(e) => {
 										e.preventDefault();
-										// TODO: 詳細モーダルを実装
+										console.log("詳細情報:", video);
 									}}
 								>
 									<Info className="h-4 w-4" />

@@ -80,10 +80,10 @@ export class ScanStreamProcessor {
 						filePath: videoFile.filePath,
 						fileName: videoFile.fileName,
 						title: parsedInfo.cleanTitle,
-						fileSize: 0, // ファイルサイズはstatが必要なため省略（HDDアクセス削減）
+						fileSize: 0, // ファイルサイズはffprobe導入時にまとめて取得予定
 						episode: self.extractEpisode(videoFile.fileName) ?? null,
 						year: parsedInfo.broadcastDate?.getFullYear() ?? null,
-						lastModified: new Date(), // 仮の値、実際のstatは重いため省略
+						lastModified: new Date(), // ffprobe導入時に実際の値を取得予定
 					};
 
 					processedCount++;

@@ -35,7 +35,6 @@ export default function ScanManagementPage() {
 			if (!response.ok) {
 				const error = await response.json();
 				console.error("Failed to start scan:", error);
-				// TODO: エラー通知を表示
 			}
 		} catch (error) {
 			console.error("Scan start request failed:", error);
