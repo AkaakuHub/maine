@@ -56,8 +56,11 @@ export function HeaderSection({
 								</h1>
 								<p className="text-sm text-text-secondary mt-1">
 									{activeTab === "streaming" ? (
-										videos.length === pagination.total ? (
-											`${pagination.total} 動画`
+										videos.length === 0 ? (
+											"動画が見つかりません"
+										) : pagination.total === 0 ||
+											videos.length === pagination.total ? (
+											`${videos.length} 動画`
 										) : (
 											`${videos.length} / ${pagination.total} 動画が見つかりました`
 										)
