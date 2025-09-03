@@ -146,61 +146,6 @@ const VideoCard = ({
 							</div>
 						</div>
 					)}
-					{/* メニューボタン（右上） */}
-					{!isCurrentlyDownloading && (
-						<div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-							<div className="relative">
-								<button
-									type="button"
-									onClick={handleMenuClick}
-									className="w-8 h-8 bg-surface-elevated/75 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-surface-elevated transition-colors"
-								>
-									<MoreHorizontal className="h-4 w-4 text-text" />
-								</button>
-
-								{/* コンテキストメニュー */}
-								{showMenu && (
-									<div className="absolute right-0 top-full mt-2 bg-surface border border-border-muted rounded-lg shadow-xl z-20 min-w-[160px]">
-										{isOfflineMode ? (
-											<button
-												type="button"
-												onClick={handleDelete}
-												disabled={isDeleting}
-												className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-											>
-												<Trash2 className="h-4 w-4" />
-												削除
-											</button>
-										) : (
-											<>
-												{!isVideoCached && !isCurrentlyDownloading && (
-													<button
-														type="button"
-														onClick={() => setShowDownloadConfirm(true)}
-														className="w-full px-4 py-2 text-left text-primary hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2"
-													>
-														<Download className="h-4 w-4" />
-														ダウンロード
-													</button>
-												)}
-												{isVideoCached && (
-													<button
-														type="button"
-														onClick={handleDelete}
-														disabled={isDeleting}
-														className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-													>
-														<Trash2 className="h-4 w-4" />
-														オフラインデータを削除
-													</button>
-												)}
-											</>
-										)}
-									</div>
-								)}
-							</div>
-						</div>
-					)}
 					{/* エピソード番号 */}
 					{video.episode && (
 						<div className="absolute top-3 left-3">
@@ -263,6 +208,63 @@ const VideoCard = ({
 					</div>
 				</div>
 			</button>
+
+			{/* メニューボタン（右上） */}
+			{!isCurrentlyDownloading && (
+				<div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+					<div className="relative">
+						<button
+							type="button"
+							onClick={handleMenuClick}
+							className="w-8 h-8 bg-surface-elevated/75 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-surface-elevated transition-colors"
+						>
+							<MoreHorizontal className="h-4 w-4 text-text" />
+						</button>
+
+						{/* コンテキストメニュー */}
+						{showMenu && (
+							<div className="absolute right-0 top-full mt-2 bg-surface border border-border-muted rounded-lg shadow-xl z-20 min-w-[160px]">
+								{isOfflineMode ? (
+									<button
+										type="button"
+										onClick={handleDelete}
+										disabled={isDeleting}
+										className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										<Trash2 className="h-4 w-4" />
+										削除
+									</button>
+								) : (
+									<>
+										{!isVideoCached && !isCurrentlyDownloading && (
+											<button
+												type="button"
+												onClick={() => setShowDownloadConfirm(true)}
+												className="w-full px-4 py-2 text-left text-primary hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2"
+											>
+												<Download className="h-4 w-4" />
+												ダウンロード
+											</button>
+										)}
+										{isVideoCached && (
+											<button
+												type="button"
+												onClick={handleDelete}
+												disabled={isDeleting}
+												className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+											>
+												<Trash2 className="h-4 w-4" />
+												オフラインデータを削除
+											</button>
+										)}
+									</>
+								)}
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+
 			{/* 進行状況バー（視聴進捗があれば表示） */}
 			{video.watchProgress && video.watchProgress > 0 && (
 				<div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated">
