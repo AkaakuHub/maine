@@ -57,7 +57,7 @@ export function useVideoPlayer() {
 				episode: episode || "",
 				fullTitle: parsedInfo.cleanTitle || title,
 				filePath,
-				description: `${parsedInfo.cleanTitle || title}をお楽しみください。`,
+				description: "",
 				genre: "動画",
 				year: parsedInfo.broadcastDate?.getFullYear().toString() || "不明",
 				duration: "不明",
@@ -95,11 +95,6 @@ export function useVideoPlayer() {
 								description: data.programInfo,
 							}));
 							console.log("番組情報を取得しました:", data.filePath);
-						} else {
-							console.log(
-								"番組情報は空文字列のため、デフォルトメッセージを使用",
-							);
-							// 空文字列の場合は何もしない（デフォルトの説明文を保持）
 						}
 					}
 				}
@@ -363,7 +358,7 @@ export function useVideoPlayer() {
 					episode: episodeName,
 					fullTitle: `${videoTitle} - ${episodeName}`,
 					filePath: decodedPath,
-					description: `${videoTitle}の${episodeName}をお楽しみください。`,
+					description: "",
 					genre: "動画",
 					year: "不明",
 					duration: "不明",
