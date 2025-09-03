@@ -202,7 +202,7 @@ const VideoCard = ({
 					)}
 					{/* メタデータ */}
 					<div className="flex items-center gap-3 text-xs text-text-secondary">
-						{parsedInfo.broadcastDate && (
+						{parsedInfo.broadcastDate ? (
 							<span>
 								{parsedInfo.broadcastDate.getFullYear()}/
 								{(parsedInfo.broadcastDate.getMonth() + 1)
@@ -211,7 +211,19 @@ const VideoCard = ({
 								/
 								{parsedInfo.broadcastDate.getDate().toString().padStart(2, "0")}
 							</span>
-						)}
+						) : video.fileModifiedAt ? (
+							<span>
+								{new Date(video.fileModifiedAt).getFullYear()}/
+								{(new Date(video.fileModifiedAt).getMonth() + 1)
+									.toString()
+									.padStart(2, "0")}
+								/
+								{new Date(video.fileModifiedAt)
+									.getDate()
+									.toString()
+									.padStart(2, "0")}
+							</span>
+						) : null}
 						<span>•</span>
 						<span>{formatFileSize(video.fileSize)}</span>
 					</div>
