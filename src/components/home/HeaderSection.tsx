@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, Grid, List, Settings, Scan } from "lucide-react";
+import { Play, Grid, List, Settings, Activity } from "lucide-react";
 import { cn } from "@/libs/utils";
 import type { ViewMode } from "@/stores/appStateStore";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -97,7 +97,7 @@ export function HeaderSection({
 							className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
 							aria-label="スキャン"
 						>
-							<Scan className="w-4 h-4 sm:w-5 sm:h-5" />
+							<Activity className="w-4 h-4 sm:w-5 sm:h-5" />
 						</button>
 
 						{/* Settings Button */}
