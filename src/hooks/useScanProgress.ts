@@ -155,6 +155,13 @@ export function useScanProgress() {
 			eventSource.onmessage = (event) => {
 				try {
 					const data: ScanProgressEvent = JSON.parse(event.data);
+					console.log(
+						"📡 SSE received:",
+						data.type,
+						data.scanId,
+						data.progress,
+						data.phase,
+					);
 
 					setState((prev) => {
 						const newState = { ...prev };

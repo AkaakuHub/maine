@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
 
 			// 接続を登録
 			scanEventEmitter.addConnection(connectionId);
+			console.log("🔌 SSE connection registered:", connectionId);
 
 			// 初期メッセージを送信
 			const encoder = new TextEncoder();
@@ -62,6 +63,11 @@ export async function GET(request: NextRequest) {
 
 			// スキャン進捗イベントのリスナー
 			const progressListener = (event: ScanProgressEvent) => {
+				console.log(
+					"🔄 SSE sending progress event:",
+					event.type,
+					event.progress,
+				);
 				sendMessage(event);
 			};
 
@@ -95,6 +101,7 @@ export async function GET(request: NextRequest) {
 
 			// 接続終了時のクリーンアップ
 			request.signal.addEventListener("abort", () => {
+				console.log("🔌 SSE connection disconnected:", connectionId);
 				scanEventEmitter.removeConnection(connectionId);
 				scanEventEmitter.off("scanProgress", progressListener);
 				scanEventEmitter.off("scanControl", controlListener);

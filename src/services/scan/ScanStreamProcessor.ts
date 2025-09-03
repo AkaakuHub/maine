@@ -54,7 +54,7 @@ export class ScanStreamProcessor {
 		private extractEpisode: (fileName: string) => number | undefined,
 	) {
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
-		this.thumbnailGenerator = new ThumbnailGenerator("./public/thumbnails");
+		this.thumbnailGenerator = new ThumbnailGenerator("./data/thumbnails");
 	}
 
 	/**
@@ -95,7 +95,7 @@ export class ScanStreamProcessor {
 								videoFile.filePath,
 							);
 						if (thumbnailResult.success) {
-							thumbnailPath = thumbnailResult.thumbnailPath;
+							thumbnailPath = thumbnailResult.relativePath; // API配信用の相対パスをDB保存
 						}
 					} catch (error) {
 						console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);

@@ -275,7 +275,7 @@ const VideoCard = ({
 			)}
 
 			{/* 進行状況バー（視聴進捗があれば表示） */}
-			{video.watchProgress && video.watchProgress > 0 && (
+			{video.watchProgress > 0 && (
 				<div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated">
 					<div
 						className="h-full bg-error transition-all duration-300"

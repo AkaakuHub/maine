@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, Grid, List, Settings } from "lucide-react";
+import { Play, Grid, List, Settings, Scan } from "lucide-react";
 import { cn } from "@/libs/utils";
 import type { ViewMode } from "@/stores/appStateStore";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -9,12 +9,14 @@ interface HeaderSectionProps {
 	viewMode: ViewMode;
 	onShowSettings: () => void;
 	onViewModeChange: (mode: ViewMode) => void;
+	onScanNavigate: () => void;
 }
 
 export function HeaderSection({
 	viewMode,
 	onShowSettings,
 	onViewModeChange,
+	onScanNavigate,
 }: HeaderSectionProps) {
 	return (
 		<header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-sm border-b border-border">
@@ -87,6 +89,16 @@ export function HeaderSection({
 								)}
 							</button>
 						</div>
+
+						{/* Scan Button */}
+						<button
+							type="button"
+							onClick={onScanNavigate}
+							className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
+							aria-label="スキャン"
+						>
+							<Scan className="w-4 h-4 sm:w-5 sm:h-5" />
+						</button>
 
 						{/* Settings Button */}
 						<button

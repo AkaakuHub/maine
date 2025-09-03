@@ -79,7 +79,7 @@ class ScanEventEmitter extends EventEmitter {
 
 		// デバッグ用ログ
 		console.log(
-			`📡 Scan Progress: ${event.type} - ${event.progress}% (${event.processedFiles}/${event.totalFiles})`,
+			`📡 Scan Progress: ${event.type} - ${event.progress}% (${event.processedFiles}/${event.totalFiles}) - Active connections: ${this.activeConnections.size}`,
 		);
 	}
 

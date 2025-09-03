@@ -23,10 +23,10 @@ export async function GET(
 			return NextResponse.json({ error: "Invalid path" }, { status: 400 });
 		}
 
-		// サムネイルファイルの絶対パス
+		// サムネイルファイルの絶対パス（バックエンド専用ディレクトリ）
 		const fullThumbnailPath = join(
 			process.cwd(),
-			"public",
+			"data",
 			"thumbnails",
 			thumbnailPath,
 		);

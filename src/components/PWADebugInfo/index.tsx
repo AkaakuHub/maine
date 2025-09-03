@@ -15,30 +15,16 @@ export default function PWADebugInfo({ className }: PWADebugInfoProps) {
 	const { isOnline, isOfflineMode } = useNetworkStatus();
 
 	useEffect(() => {
-		// Service Worker状態をチェック
-		if ("serviceWorker" in navigator) {
-			navigator.serviceWorker.ready
-				.then(() => {
-					setServiceWorkerStatus("有効");
-				})
-				.catch(() => {
-					setServiceWorkerStatus("エラー");
-				});
+		// Service Worker無効化
+		setServiceWorkerStatus("無効");
 
-			// Service Worker登録状態を詳細チェック
+		// 旧Service Worker登録を削除（もし存在する場合）
+		if ("serviceWorker" in navigator) {
 			navigator.serviceWorker.getRegistrations().then((registrations) => {
-				console.log(
-					"PWA Debug: Service Worker registrations:",
-					registrations.length,
-				);
-				registrations.forEach((registration, index) => {
-					console.log(`PWA Debug: SW ${index + 1}:`, {
-						scope: registration.scope,
-						active: registration.active?.state,
-						installing: registration.installing?.state,
-						waiting: registration.waiting?.state,
-					});
-				});
+				for (const registration of registrations) {
+					registration.unregister();
+					console.log("PWA Debug: Unregistered old Service Worker");
+				}
 			});
 		}
 

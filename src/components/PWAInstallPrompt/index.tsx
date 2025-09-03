@@ -22,13 +22,6 @@ export default function PWAInstallPrompt({ className }: PWAInstallPromptProps) {
 	const [isInstalled, setIsInstalled] = useState(false);
 
 	useEffect(() => {
-		// Service Workerの登録状態を確認
-		if ("serviceWorker" in navigator) {
-			navigator.serviceWorker.ready.then(() => {
-				console.log("Service Worker is ready");
-			});
-		}
-
 		// PWAインストール可能か確認
 		const handleBeforeInstallPrompt = (e: Event) => {
 			e.preventDefault();

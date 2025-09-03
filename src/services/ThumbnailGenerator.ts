@@ -1,8 +1,9 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { mkdir } from "node:fs/promises";
-import { dirname, join, basename } from "node:path";
+import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { FFPROBE } from "@/utils/constants";
 
 const execAsync = promisify(exec);
@@ -15,7 +16,8 @@ export interface ThumbnailOptions {
 
 export interface ThumbnailResult {
 	success: boolean;
-	thumbnailPath: string | null;
+	thumbnailPath: string | null; // ローカルファイルパス
+	relativePath: string | null; // API配信用の相対パス
 	fileSize?: number; // 生成されたサムネイルのファイルサイズ（バイト）
 	error?: string;
 }
@@ -59,6 +61,7 @@ export class ThumbnailGenerator {
 				return {
 					success: true,
 					thumbnailPath,
+					relativePath: this.getThumbnailRelativePath(videoFilePath),
 					fileSize: stat.size,
 				};
 			}
@@ -89,6 +92,7 @@ export class ThumbnailGenerator {
 			return {
 				success: true,
 				thumbnailPath,
+				relativePath: this.getThumbnailRelativePath(videoFilePath),
 				fileSize: stat.size,
 			};
 		} catch (error) {
@@ -97,6 +101,7 @@ export class ThumbnailGenerator {
 			return {
 				success: false,
 				thumbnailPath: null,
+				relativePath: null,
 				error: error instanceof Error ? error.message : String(error),
 			};
 		}
@@ -133,14 +138,22 @@ export class ThumbnailGenerator {
 	}
 
 	/**
-	 * サムネイルファイルパスを生成
+	 * サムネイルファイルパスを生成（ハッシュベース）
 	 */
 	private generateThumbnailPath(videoFilePath: string): string {
-		const fileName = basename(videoFilePath);
-		const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf("."));
-		const thumbnailFileName = `${nameWithoutExt}.webp`;
+		// ファイルパスのハッシュを生成（特殊文字対応）
+		const hash = createHash("sha256").update(videoFilePath).digest("hex");
+		const thumbnailFileName = `${hash}.webp`;
 
 		return join(this.thumbnailBaseDir, thumbnailFileName);
+	}
+
+	/**
+	 * サムネイルの相対パス（API配信用）を取得
+	 */
+	getThumbnailRelativePath(videoFilePath: string): string {
+		const hash = createHash("sha256").update(videoFilePath).digest("hex");
+		return `${hash}.webp`;
 	}
 
 	/**

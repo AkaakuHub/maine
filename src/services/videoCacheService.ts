@@ -25,6 +25,7 @@ import { ScanResourceMonitor } from "@/services/scan/ScanResourceMonitor";
 import { ScanCheckpointManager } from "@/services/scan/ScanCheckpointManager";
 import { ScanProgressCalculator } from "@/services/scan/ScanProgressCalculator";
 import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";
+import { ThumbnailGenerator } from "@/services/ThumbnailGenerator";
 
 type SearchResult = {
 	success: boolean;
@@ -51,6 +52,7 @@ class VideoCacheService {
 	private progressCalculator: ScanProgressCalculator;
 	private streamProcessor: ScanStreamProcessor | null = null;
 	private ffprobeExtractor: FFprobeMetadataExtractor;
+	private thumbnailGenerator: ThumbnailGenerator;
 
 	// スキャン制御状態
 	private isPaused = false;
@@ -66,6 +68,7 @@ class VideoCacheService {
 		this.checkpointManager = new ScanCheckpointManager();
 		this.progressCalculator = new ScanProgressCalculator();
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
+		this.thumbnailGenerator = new ThumbnailGenerator("./data/thumbnails");
 		this.initializeStreamProcessor();
 		this.setupProgressListener();
 	}
@@ -297,6 +300,17 @@ class VideoCacheService {
 	): Promise<ProcessedVideoRecord[]> {
 		this.progressCalculator.resetPhaseTimer();
 
+		// メタデータフェーズ開始イベント
+		scanEventEmitter.emitScanProgress({
+			type: "phase",
+			scanId,
+			phase: "metadata",
+			progress: 0,
+			processedFiles: 0,
+			totalFiles: allVideoFiles.length,
+			message: "メタデータとサムネイル処理中...",
+		});
+
 		const concurrentOperations = this.scanSettings.maxConcurrentOperations;
 		const chunkSize = Math.ceil(allVideoFiles.length / concurrentOperations);
 
@@ -315,6 +329,18 @@ class VideoCacheService {
 				);
 				const parsedInfo = parseVideoFileName(videoFile.fileName);
 
+				// サムネイル生成（バッチ処理でも実行）
+				let thumbnailPath: string | null = null;
+				try {
+					const thumbnailResult =
+						await this.thumbnailGenerator.generateThumbnail(videoFile.filePath);
+					if (thumbnailResult.success) {
+						thumbnailPath = thumbnailResult.relativePath;
+					}
+				} catch (error) {
+					console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
+				}
+
 				records.push({
 					id: videoFile.filePath,
 					filePath: videoFile.filePath,
@@ -324,7 +350,7 @@ class VideoCacheService {
 					episode: this.extractEpisode(videoFile.fileName) ?? null,
 					year: parsedInfo.broadcastDate?.getFullYear() ?? null,
 					duration: metadata.duration,
-					thumbnailPath: null, // バッチ処理ではサムネイル生成しない
+					thumbnailPath,
 					lastModified: metadata.lastModified,
 				});
 			}
@@ -332,7 +358,20 @@ class VideoCacheService {
 		});
 
 		const chunkResults = await Promise.all(chunkPromises);
-		return chunkResults.flat();
+		const allResults = chunkResults.flat();
+
+		// メタデータ処理完了
+		scanEventEmitter.emitScanProgress({
+			type: "progress",
+			scanId,
+			phase: "metadata",
+			progress: 100,
+			processedFiles: allResults.length,
+			totalFiles: allVideoFiles.length,
+			message: `メタデータ処理完了: ${allResults.length}ファイル`,
+		});
+
+		return allResults;
 	}
 
 	private async performDatabaseUpdate(
@@ -340,6 +379,17 @@ class VideoCacheService {
 		scanId: string,
 	): Promise<void> {
 		this.progressCalculator.resetPhaseTimer();
+
+		// データベース更新フェーズ開始
+		scanEventEmitter.emitScanProgress({
+			type: "phase",
+			scanId,
+			phase: "database",
+			progress: 0,
+			processedFiles: allDbRecords.length,
+			totalFiles: allDbRecords.length,
+			message: "データベース更新中...",
+		});
 
 		await prisma.$transaction(
 			async (tx: Prisma.TransactionClient) => {

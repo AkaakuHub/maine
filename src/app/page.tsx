@@ -202,6 +202,7 @@ const HomeContent = () => {
 						viewMode={viewMode}
 						onShowSettings={handleShowSettings}
 						onViewModeChange={setViewMode}
+						onScanNavigate={() => router.push("/scan")}
 					/>
 
 					<TabNavigation

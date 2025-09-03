@@ -8,7 +8,9 @@ import {
 	Cpu,
 	Wifi,
 	RefreshCw,
+	Home,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ScanProgressBar } from "@/components/scan/ScanProgressBar";
 import { ScanControlButtons } from "@/components/scan/ScanControlButtons";
 import { ScanSettingsPanel } from "@/components/scan/ScanSettingsPanel";
@@ -21,12 +23,17 @@ import { cn } from "@/libs/utils";
  * スキャンの詳細な状態表示と制御機能を提供
  */
 export default function ScanManagementPage() {
+	const router = useRouter();
 	const scanProgress = useScanProgress();
 	const [isStartingScan, setIsStartingScan] = useState(false);
 
 	// スキャンを手動開始
 	const handleStartScan = async () => {
 		setIsStartingScan(true);
+
+		// 新しいスキャン開始前にスキャン状態をリセット
+		scanProgress.resetScanState();
+
 		try {
 			const response = await fetch("/api/scan/start", {
 				method: "POST",
@@ -48,16 +55,28 @@ export default function ScanManagementPage() {
 			{/* ヘッダー */}
 			<div className="border-b border-border bg-surface">
 				<div className="container mx-auto px-4 py-6">
-					<div className="flex items-center gap-3">
-						<Activity className="h-8 w-8 text-primary" />
-						<div>
-							<h1 className="text-2xl font-bold text-text-primary">
-								スキャン管理
-							</h1>
-							<p className="text-text-secondary">
-								ビデオファイルスキャンの詳細な監視と制御
-							</p>
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-3">
+							<Activity className="h-8 w-8 text-primary" />
+							<div>
+								<h1 className="text-2xl font-bold text-text-primary">
+									スキャン管理
+								</h1>
+								<p className="text-text-secondary">
+									ビデオファイルスキャンの詳細な監視と制御
+								</p>
+							</div>
 						</div>
+
+						{/* ホームボタン */}
+						<button
+							type="button"
+							onClick={() => router.push("/")}
+							className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
+							aria-label="ホーム"
+						>
+							<Home className="w-4 h-4 sm:w-5 sm:h-5" />
+						</button>
 					</div>
 				</div>
 			</div>
