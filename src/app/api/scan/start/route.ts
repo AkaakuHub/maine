@@ -1,0 +1,78 @@
+import { NextResponse } from "next/server";
+import { videoCacheService } from "@/services/videoCacheService";
+
+/**
+ * スキャン開始API
+ * POST /api/scan/start
+ *
+ * ビデオファイルの完全スキャンを開始します
+ */
+export async function POST() {
+	try {
+		console.log("🚀 Manual scan start requested via API");
+
+		// 既にスキャン中かチェック
+		const status = await videoCacheService.getUpdateStatus();
+		if (status.isUpdating) {
+			return NextResponse.json(
+				{
+					error: "Scan already in progress",
+					message: "スキャンは既に実行中です",
+					progress: status.progress,
+				},
+				{ status: 409 }, // Conflict
+			);
+		}
+
+		// スキャンを非同期で開始（ブロッキングしないように）
+		videoCacheService.manualRefresh().catch((error) => {
+			console.error("Background scan failed:", error);
+		});
+
+		return NextResponse.json({
+			success: true,
+			message: "スキャンを開始しました",
+			timestamp: new Date().toISOString(),
+		});
+	} catch (error) {
+		console.error("Scan start API error:", error);
+
+		return NextResponse.json(
+			{
+				error: "Failed to start scan",
+				message: "スキャンの開始に失敗しました",
+				details: error instanceof Error ? error.message : String(error),
+			},
+			{ status: 500 },
+		);
+	}
+}
+
+/**
+ * スキャン状態を取得
+ * GET /api/scan/start
+ */
+export async function GET() {
+	try {
+		const status = await videoCacheService.getUpdateStatus();
+
+		return NextResponse.json({
+			success: true,
+			isScanning: status.isUpdating,
+			progress: status.progress,
+			lastScanDate: status.lastScanDate,
+			daysSinceLastScan: status.daysSinceLastScan,
+			cacheSize: status.cacheSize,
+		});
+	} catch (error) {
+		console.error("Scan status API error:", error);
+
+		return NextResponse.json(
+			{
+				error: "Failed to get scan status",
+				details: error instanceof Error ? error.message : String(error),
+			},
+			{ status: 500 },
+		);
+	}
+}

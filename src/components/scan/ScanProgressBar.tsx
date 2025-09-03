@@ -11,10 +11,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/libs/utils";
 import { useScanProgress } from "@/hooks/useScanProgress";
+import { ScanControlButtons } from "./ScanControlButtons";
 
 interface ScanProgressBarProps {
 	className?: string;
 	showDetails?: boolean;
+	showControls?: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ interface ScanProgressBarProps {
 export function ScanProgressBar({
 	className,
 	showDetails = true,
+	showControls = false,
 }: ScanProgressBarProps) {
 	const scanProgress = useScanProgress();
 
@@ -126,11 +129,19 @@ export function ScanProgressBar({
 						</span>
 					</div>
 
-					{scanProgress.isScanning && (
-						<span className="text-text-secondary tabular-nums">
-							{Math.max(0, scanProgress.progress)}%
-						</span>
-					)}
+					<div className="flex items-center gap-3">
+						{/* スキャン制御ボタン */}
+						{showControls && (
+							<ScanControlButtons size="sm" showLabels={false} />
+						)}
+
+						{/* 進捗パーセンテージ */}
+						{scanProgress.isScanning && (
+							<span className="text-text-secondary tabular-nums">
+								{Math.max(0, scanProgress.progress)}%
+							</span>
+						)}
+					</div>
 				</div>
 
 				{/* 進捗バー */}

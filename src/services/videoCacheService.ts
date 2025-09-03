@@ -53,8 +53,23 @@ class VideoCacheService {
 	private cronJob: cron.ScheduledTask | null = null;
 	private initialized = false;
 
+	// スキャン制御状態
+	private currentScanId: string | null = null;
+	private scanControlState: {
+		isPaused: boolean;
+		isCancelled: boolean;
+		shouldStop: boolean;
+	} = {
+		isPaused: false,
+		isCancelled: false,
+		shouldStop: false,
+	};
+
 	constructor() {
 		this.initializePromise = this.initialize();
+
+		// スキャン制御イベントリスナーを設定
+		this.setupScanControlListeners();
 	}
 
 	private initializePromise: Promise<void>;
@@ -92,6 +107,92 @@ class VideoCacheService {
 	 */
 	private async ensureInitialized(): Promise<void> {
 		await this.initializePromise;
+	}
+
+	/**
+	 * スキャン制御イベントリスナーを設定
+	 */
+	private setupScanControlListeners(): void {
+		scanEventEmitter.on("scanControl", (controlEvent) => {
+			// 現在のスキャンに対する制御のみ処理
+			if (controlEvent.scanId !== this.currentScanId) {
+				console.log(
+					`🎛️ Ignoring control for different scan: ${controlEvent.scanId}`,
+				);
+				return;
+			}
+
+			console.log(
+				`🎛️ Scan Control received: ${controlEvent.type} for scan ${controlEvent.scanId}`,
+			);
+
+			switch (controlEvent.type) {
+				case "pause":
+					this.scanControlState.isPaused = true;
+					console.log("⏸️ Scan paused");
+					break;
+
+				case "resume":
+					this.scanControlState.isPaused = false;
+					console.log("▶️ Scan resumed");
+					break;
+
+				case "cancel":
+					this.scanControlState.isCancelled = true;
+					this.scanControlState.shouldStop = true;
+					console.log("❌ Scan cancelled");
+					break;
+			}
+		});
+	}
+
+	/**
+	 * スキャン制御状態をチェックし、必要に応じて待機またはエラーを投げる
+	 */
+	private async checkScanControl(scanId: string): Promise<void> {
+		// キャンセルチェック
+		if (this.scanControlState.isCancelled || this.scanControlState.shouldStop) {
+			throw new Error("Scan was cancelled by user");
+		}
+
+		// 一時停止チェック
+		while (this.scanControlState.isPaused) {
+			console.log("⏸️ Scan is paused, waiting...");
+
+			// 一時停止中のイベント送信
+			scanEventEmitter.emitScanProgress({
+				type: "progress",
+				scanId,
+				phase: "metadata", // 現在のフェーズを維持
+				progress: this.updateProgress,
+				processedFiles: 0,
+				totalFiles: 0,
+				message: "スキャンが一時停止中です",
+			});
+
+			// 500ms待機してから再チェック
+			await this.sleep(500);
+
+			// 一時停止中にキャンセルされた場合の処理
+			if (
+				this.scanControlState.isCancelled ||
+				this.scanControlState.shouldStop
+			) {
+				throw new Error("Scan was cancelled during pause");
+			}
+		}
+	}
+
+	/**
+	 * スキャン開始時に制御状態を初期化
+	 */
+	private resetScanControlState(scanId: string): void {
+		this.currentScanId = scanId;
+		this.scanControlState = {
+			isPaused: false,
+			isCancelled: false,
+			shouldStop: false,
+		};
 	}
 
 	/**
@@ -242,6 +343,9 @@ class VideoCacheService {
 			const scanId = this.generateScanId();
 			console.log(`スキャンID: ${scanId}`);
 
+			// 制御状態を初期化
+			this.resetScanControlState(scanId);
+
 			// 📡 スキャン開始イベント送信
 			scanEventEmitter.emitScanProgress({
 				type: "phase",
@@ -312,6 +416,9 @@ class VideoCacheService {
 
 			// ファイル情報をDBレコード形式に変換（メモリ上で処理）
 			for (let i = 0; i < allVideoFiles.length; i++) {
+				// 制御状態をチェック（一時停止・キャンセル）
+				await this.checkScanControl(scanId);
+
 				const videoFile = allVideoFiles[i];
 
 				try {
@@ -398,6 +505,9 @@ class VideoCacheService {
 				metadataCompleted: true,
 			});
 
+			// データベース処理開始前の制御チェック
+			await this.checkScanControl(scanId);
+
 			// 🔒 重要: トランザクション内でDBを安全に更新
 			console.log("データベース更新開始（トランザクション内）...");
 			await prisma.$transaction(
@@ -409,6 +519,9 @@ class VideoCacheService {
 					// 2. バッチインサート（50件ずつの適切なサイズで処理）
 					const BATCH_SIZE = 50;
 					for (let i = 0; i < allDbRecords.length; i += BATCH_SIZE) {
+						// トランザクション内での制御チェック（非同期処理のため）
+						await this.checkScanControl(scanId);
+
 						const batch = allDbRecords.slice(i, i + BATCH_SIZE);
 
 						await tx.videoMetadata.createMany({
@@ -469,10 +582,18 @@ class VideoCacheService {
 			);
 		} catch (error) {
 			// 🚨 エラーハンドリング強化
-			console.error("フルキャッシュ構築中にエラーが発生:", error);
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			const isCancelledError = errorMessage.includes("cancelled");
+
+			if (isCancelledError) {
+				console.log("❌ スキャンがユーザーによってキャンセルされました");
+			} else {
+				console.error("フルキャッシュ構築中にエラーが発生:", error);
+			}
 
 			// トランザクション外でエラーが発生した場合の処理
-			if (error instanceof Error) {
+			if (error instanceof Error && !isCancelledError) {
 				console.error("エラー詳細:", {
 					message: error.message,
 					stack: error.stack,
@@ -484,16 +605,18 @@ class VideoCacheService {
 
 			// 📡 エラーイベント送信（scanIdが利用可能な場合のみ）
 			try {
-				const errorScanId = this.generateScanId(); // フォールバックID生成
+				const currentScanId = this.currentScanId || this.generateScanId();
 				scanEventEmitter.emitScanProgress({
 					type: "error",
-					scanId: errorScanId,
+					scanId: currentScanId,
 					phase: "metadata",
 					progress: -1,
 					processedFiles: 0,
 					totalFiles: 0,
-					error: error instanceof Error ? error.message : String(error),
-					message: "スキャン処理中にエラーが発生しました",
+					error: errorMessage,
+					message: isCancelledError
+						? "スキャンがキャンセルされました"
+						: "スキャン処理中にエラーが発生しました",
 				});
 			} catch (eventError) {
 				console.warn("エラーイベント送信失敗:", eventError);
@@ -511,6 +634,7 @@ class VideoCacheService {
 		} finally {
 			// 🔒 確実にクリーンアップ
 			this.isUpdating = false;
+			this.currentScanId = null;
 
 			try {
 				await this.saveScanSettings();

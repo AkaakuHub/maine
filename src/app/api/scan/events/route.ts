@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import {
 	scanEventEmitter,
 	type ScanProgressEvent,
+	type ScanControlEvent,
 } from "@/services/scanEventEmitter";
 
 /**
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
 							timestamp: string;
 							message?: string;
 							activeConnections?: number;
+							scanId?: string;
 					  },
 			) => {
 				const message = `data: ${JSON.stringify(data)}\n\n`;
@@ -63,8 +65,19 @@ export async function GET(request: NextRequest) {
 				sendMessage(event);
 			};
 
+			// スキャン制御イベントのリスナー
+			const controlListener = (event: ScanControlEvent) => {
+				sendMessage({
+					type: `control_${event.type}`,
+					timestamp: event.timestamp.toISOString(),
+					message: `Scan ${event.type} command received`,
+					scanId: event.scanId,
+				});
+			};
+
 			// イベントリスナーを登録
 			scanEventEmitter.on("scanProgress", progressListener);
+			scanEventEmitter.on("scanControl", controlListener);
 
 			// 定期的なハートビート（30秒ごと）
 			const heartbeatInterval = setInterval(() => {
@@ -84,6 +97,7 @@ export async function GET(request: NextRequest) {
 			request.signal.addEventListener("abort", () => {
 				scanEventEmitter.removeConnection(connectionId);
 				scanEventEmitter.off("scanProgress", progressListener);
+				scanEventEmitter.off("scanControl", controlListener);
 				clearInterval(heartbeatInterval);
 
 				try {

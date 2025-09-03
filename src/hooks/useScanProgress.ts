@@ -4,7 +4,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
  * スキャン進捗イベントの型定義（フロントエンド用）
  */
 export interface ScanProgressEvent {
-	type: "progress" | "phase" | "complete" | "error" | "connected" | "heartbeat";
+	type:
+		| "progress"
+		| "phase"
+		| "complete"
+		| "error"
+		| "connected"
+		| "heartbeat"
+		| "control_pause"
+		| "control_resume"
+		| "control_cancel";
 	scanId?: string;
 	phase?: "discovery" | "metadata" | "database";
 	progress?: number; // 0-100
@@ -39,6 +48,12 @@ export interface ScanProgressState {
 	message: string | null;
 	error: string | null;
 
+	// 制御状態
+	isPaused: boolean;
+	canPause: boolean;
+	canResume: boolean;
+	canCancel: boolean;
+
 	// 完了状態
 	isComplete: boolean;
 	completedAt: Date | null;
@@ -67,6 +82,12 @@ export function useScanProgress() {
 		currentFile: null,
 		message: null,
 		error: null,
+
+		// 制御状態
+		isPaused: false,
+		canPause: false,
+		canResume: false,
+		canCancel: false,
 
 		// 完了状態
 		isComplete: false,
@@ -136,6 +157,11 @@ export function useScanProgress() {
 								newState.totalFiles = data.totalFiles || 0;
 								newState.message = data.message || null;
 								newState.isComplete = false;
+								// スキャン開始時に制御ボタンを有効化
+								newState.canPause = true;
+								newState.canCancel = true;
+								newState.canResume = false;
+								newState.isPaused = false;
 								break;
 
 							case "progress":
@@ -163,6 +189,35 @@ export function useScanProgress() {
 								newState.error = data.error || "Unknown error";
 								newState.message = data.message || "エラーが発生しました";
 								newState.progress = -1;
+								// エラー時は制御を無効化
+								newState.canPause = false;
+								newState.canResume = false;
+								newState.canCancel = false;
+								break;
+
+							case "control_pause":
+								newState.isPaused = true;
+								newState.canPause = false;
+								newState.canResume = true;
+								newState.canCancel = true;
+								newState.message = "スキャンが一時停止されました";
+								break;
+
+							case "control_resume":
+								newState.isPaused = false;
+								newState.canPause = true;
+								newState.canResume = false;
+								newState.canCancel = true;
+								newState.message = "スキャンが再開されました";
+								break;
+
+							case "control_cancel":
+								newState.isScanning = false;
+								newState.isPaused = false;
+								newState.canPause = false;
+								newState.canResume = false;
+								newState.canCancel = false;
+								newState.message = "スキャンがキャンセルされました";
 								break;
 						}
 
@@ -264,6 +319,10 @@ export function useScanProgress() {
 			currentFile: null,
 			message: null,
 			error: null,
+			isPaused: false,
+			canPause: false,
+			canResume: false,
+			canCancel: false,
 			isComplete: false,
 			completedAt: null,
 		}));
@@ -279,6 +338,66 @@ export function useScanProgress() {
 		};
 	}, [connect, disconnect]);
 
+	/**
+	 * スキャン制御コマンドを送信
+	 */
+	const sendScanControl = useCallback(
+		async (action: "pause" | "resume" | "cancel") => {
+			if (!state.scanId) {
+				console.warn("No active scan ID found");
+				return false;
+			}
+
+			try {
+				const response = await fetch("/api/scan/control", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						action,
+						scanId: state.scanId,
+					}),
+				});
+
+				if (!response.ok) {
+					const error = await response.json();
+					console.error(`Scan control ${action} failed:`, error);
+					return false;
+				}
+
+				const result = await response.json();
+				console.log(`🎛️ Scan control ${action} successful:`, result);
+				return true;
+			} catch (error) {
+				console.error(`Scan control ${action} request failed:`, error);
+				return false;
+			}
+		},
+		[state.scanId],
+	);
+
+	/**
+	 * スキャンを一時停止
+	 */
+	const pauseScan = useCallback(async () => {
+		return await sendScanControl("pause");
+	}, [sendScanControl]);
+
+	/**
+	 * スキャンを再開
+	 */
+	const resumeScan = useCallback(async () => {
+		return await sendScanControl("resume");
+	}, [sendScanControl]);
+
+	/**
+	 * スキャンをキャンセル
+	 */
+	const cancelScan = useCallback(async () => {
+		return await sendScanControl("cancel");
+	}, [sendScanControl]);
+
 	return {
 		...state,
 
@@ -287,6 +406,11 @@ export function useScanProgress() {
 		disconnect,
 		reconnect,
 		resetScanState,
+
+		// スキャン制御関数
+		pauseScan,
+		resumeScan,
+		cancelScan,
 
 		// ヘルパー
 		canReconnect: reconnectAttemptsRef.current < maxReconnectAttempts,
