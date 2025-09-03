@@ -4,6 +4,7 @@ import { parseVideoFileName } from "@/utils/videoFileNameParser";
 import { scanEventEmitter } from "@/services/scanEventEmitter";
 import type { ScanSettings } from "@/types/scanSettings";
 import { SCAN } from "@/utils/constants";
+import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";
 
 export interface ProcessedVideoRecord {
 	id: string;
@@ -13,6 +14,7 @@ export interface ProcessedVideoRecord {
 	fileSize: number;
 	episode: number | null;
 	year: number | null;
+	duration: number | null;
 	lastModified: Date;
 }
 
@@ -26,6 +28,8 @@ export interface VideoFile {
  * メモリ使用量を最小化しながら大量のファイルを効率的に処理
  */
 export class ScanStreamProcessor {
+	private ffprobeExtractor: FFprobeMetadataExtractor;
+
 	constructor(
 		private settings: ScanSettings,
 		private checkScanControl: (scanId: string) => Promise<void>,
@@ -45,7 +49,9 @@ export class ScanStreamProcessor {
 		},
 		private phaseStartTime: number | null,
 		private extractEpisode: (fileName: string) => number | undefined,
-	) {}
+	) {
+		this.ffprobeExtractor = new FFprobeMetadataExtractor();
+	}
 
 	/**
 	 * ストリーム処理による大量ファイル処理
@@ -71,7 +77,12 @@ export class ScanStreamProcessor {
 					// 制御状態をチェック（一時停止・キャンセル）
 					await self.checkScanControl(scanId);
 
-					// 既存のパーサーを使用して情報抽出
+					// FFprobeでメタデータを抽出
+					const metadata = await self.ffprobeExtractor.extractMetadata(
+						videoFile.filePath,
+					);
+
+					// 既存のパーサーを使用してタイトル情報抽出
 					const parsedInfo = parseVideoFileName(videoFile.fileName);
 
 					// DBレコードとして準備
@@ -80,10 +91,11 @@ export class ScanStreamProcessor {
 						filePath: videoFile.filePath,
 						fileName: videoFile.fileName,
 						title: parsedInfo.cleanTitle,
-						fileSize: 0, // ファイルサイズはffprobe導入時にまとめて取得予定
+						fileSize: metadata.fileSize,
 						episode: self.extractEpisode(videoFile.fileName) ?? null,
 						year: parsedInfo.broadcastDate?.getFullYear() ?? null,
-						lastModified: new Date(), // ffprobe導入時に実際の値を取得予定
+						duration: metadata.duration,
+						lastModified: metadata.lastModified,
 					};
 
 					processedCount++;

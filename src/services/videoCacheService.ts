@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { prisma } from "@/libs/prisma";
+import type { Prisma } from "@prisma/client";
 import { PrismaClient as SettingsPrismaClient } from "../../prisma/generated/settings";
 import {
 	normalizePath,
@@ -23,6 +24,8 @@ import {
 import { ScanResourceMonitor } from "@/services/scan/ScanResourceMonitor";
 import { ScanCheckpointManager } from "@/services/scan/ScanCheckpointManager";
 import { ScanProgressCalculator } from "@/services/scan/ScanProgressCalculator";
+import { ThumbnailGenerator } from "@/services/ThumbnailGenerator";
+import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";
 
 type SearchResult = {
 	success: boolean;
@@ -48,6 +51,8 @@ class VideoCacheService {
 	private checkpointManager: ScanCheckpointManager;
 	private progressCalculator: ScanProgressCalculator;
 	private streamProcessor: ScanStreamProcessor | null = null;
+	private thumbnailGenerator: ThumbnailGenerator;
+	private ffprobeExtractor: FFprobeMetadataExtractor;
 
 	// スキャン制御状態
 	private isPaused = false;
@@ -62,6 +67,8 @@ class VideoCacheService {
 		this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
 		this.checkpointManager = new ScanCheckpointManager();
 		this.progressCalculator = new ScanProgressCalculator();
+		this.thumbnailGenerator = new ThumbnailGenerator("./public/thumbnails");
+		this.ffprobeExtractor = new FFprobeMetadataExtractor();
 		this.initializeStreamProcessor();
 		this.setupProgressListener();
 	}
@@ -130,44 +137,6 @@ class VideoCacheService {
 			});
 		} catch (error) {
 			console.warn("スキャン設定保存エラー:", error);
-		}
-	}
-
-	private async loadScanSettings(): Promise<void> {
-		try {
-			const settings = await this.settingsDb.scanSettings.findUnique({
-				where: { id: "scan_settings" },
-			});
-
-			if (settings) {
-				this.scanSettings = {
-					batchSize: settings.batchSize,
-					progressUpdateInterval: settings.progressUpdateInterval,
-					sleepInterval: settings.sleepInterval,
-					processingPriority: settings.processingPriority as
-						| "low"
-						| "normal"
-						| "high",
-					maxConcurrentOperations: settings.maxConcurrentOperations,
-					memoryThresholdMB: settings.memoryThresholdMB,
-					autoPauseOnHighCPU: settings.autoPauseOnHighCPU,
-					autoPauseThreshold: settings.autoPauseThreshold,
-					autoPauseTimeRange: {
-						enabled: false,
-						startHour: settings.autoPauseStartHour,
-						endHour: settings.autoPauseEndHour,
-					},
-					enableDetailedLogging: settings.enableDetailedLogging,
-					showResourceMonitoring: settings.enableResourceMonitoring,
-					enablePerformanceMetrics: true,
-				};
-
-				// 依存モジュールを再初期化
-				this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
-				this.initializeStreamProcessor();
-			}
-		} catch (error) {
-			console.warn("スキャン設定読み込みエラー:", error);
 		}
 	}
 
@@ -343,16 +312,22 @@ class VideoCacheService {
 			const records: ProcessedVideoRecord[] = [];
 			for (const videoFile of chunk) {
 				await this.checkScanControl(scanId);
+
+				const metadata = await this.ffprobeExtractor.extractMetadata(
+					videoFile.filePath,
+				);
 				const parsedInfo = parseVideoFileName(videoFile.fileName);
+
 				records.push({
 					id: videoFile.filePath,
 					filePath: videoFile.filePath,
 					fileName: videoFile.fileName,
 					title: parsedInfo.cleanTitle,
-					fileSize: 0, // ファイルサイズはffprobe導入時にまとめて取得予定
+					fileSize: metadata.fileSize,
 					episode: this.extractEpisode(videoFile.fileName) ?? null,
 					year: parsedInfo.broadcastDate?.getFullYear() ?? null,
-					lastModified: new Date(), // ffprobe導入時に実際の値を取得予定
+					duration: metadata.duration,
+					lastModified: metadata.lastModified,
 				});
 			}
 			return records;
@@ -369,10 +344,21 @@ class VideoCacheService {
 		this.progressCalculator.resetPhaseTimer();
 
 		await prisma.$transaction(
-			async (tx) => {
+			async (tx: Prisma.TransactionClient) => {
 				await tx.videoMetadata.deleteMany({});
 				await tx.videoMetadata.createMany({
-					data: allDbRecords,
+					data: allDbRecords.map((record) => ({
+						id: record.id,
+						filePath: record.filePath,
+						fileName: record.fileName,
+						title: record.title,
+						fileSize: BigInt(record.fileSize),
+						episode: record.episode,
+						year: record.year,
+						duration: record.duration,
+						lastModified: record.lastModified,
+						metadata_extracted_at: record.duration ? new Date() : null,
+					})),
 				});
 			},
 			{ timeout: SCAN.TRANSACTION_TIMEOUT_MS },
@@ -482,7 +468,7 @@ class VideoCacheService {
 
 			return {
 				success: true,
-				videos: videos.map((v) => ({
+				videos: videos.map((v: Prisma.VideoMetadataGetPayload<object>) => ({
 					id: v.id,
 					title: v.title,
 					fileName: v.fileName,
@@ -491,6 +477,7 @@ class VideoCacheService {
 					lastModified: v.lastModified,
 					episode: v.episode ?? undefined,
 					year: v.year ?? undefined,
+					duration: v.duration ?? undefined,
 					watchProgress: 0,
 					watchTime: 0,
 					isLiked: false,
@@ -515,7 +502,7 @@ class VideoCacheService {
 				orderBy: { title: "asc" },
 			});
 
-			return videos.map((v) => ({
+			return videos.map((v: Prisma.VideoMetadataGetPayload<object>) => ({
 				id: v.id,
 				title: v.title,
 				fileName: v.fileName,
@@ -524,6 +511,7 @@ class VideoCacheService {
 				lastModified: v.lastModified,
 				episode: v.episode ?? undefined,
 				year: v.year ?? undefined,
+				duration: v.duration ?? undefined,
 				watchProgress: 0,
 				watchTime: 0,
 				isLiked: false,

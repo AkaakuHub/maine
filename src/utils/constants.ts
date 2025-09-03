@@ -66,6 +66,23 @@ export const SCAN = {
 	SCAN_ID_PREFIX: "scan_",
 } as const;
 
+// FFprobe/FFmpeg関連
+export const FFPROBE = {
+	// デフォルトサムネイル設定
+	DEFAULT_SEEK_TIME: 20, // 秒
+	DEFAULT_THUMBNAIL_QUALITY: 70, // WebP品質
+	DEFAULT_THUMBNAIL_WIDTH: 300, // ピクセル
+	MAX_THUMBNAIL_FILE_SIZE_KB: 100, // KB
+
+	// 並列処理設定
+	DEFAULT_METADATA_CONCURRENCY: 4,
+	DEFAULT_THUMBNAIL_CONCURRENCY: 2, // サムネイル生成は重い処理
+
+	// タイムアウト設定
+	FFPROBE_TIMEOUT_MS: 30000, // 30秒
+	FFMPEG_TIMEOUT_MS: 60000, // 60秒
+} as const;
+
 // API関連
 export const API = {
 	ENDPOINTS: {

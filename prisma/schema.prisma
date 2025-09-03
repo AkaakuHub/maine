@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,69 +7,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 動画の再生進捗とお気に入り情報のみを保存
 model VideoProgress {
-  id            String   @id @default(cuid())
-  filePath      String   @unique // 動画ファイルのパス（ユニークキー）
-  watchProgress Float    @default(0) // 再生進捗率 (0-100)
-  watchTime     Float?   // 現在の再生時間（秒）
-  isLiked       Boolean  @default(false) // お気に入り状態
-  likedAt       DateTime? // お気に入りに追加した日時
-  isInWatchlist Boolean  @default(false) // ウォッチリスト状態
-  watchlistAt   DateTime? // ウォッチリストに追加した日時
-  lastWatched   DateTime? // 最後に視聴した日時
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id            String    @id @default(cuid())
+  filePath      String    @unique
+  watchProgress Float     @default(0)
+  watchTime     Float?
+  isLiked       Boolean   @default(false)
+  likedAt       DateTime?
+  isInWatchlist Boolean   @default(false)
+  watchlistAt   DateTime?
+  lastWatched   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@map("video_progress")
 }
 
-// ビデオメタデータ（ファイル情報をDBに保存）
 model VideoMetadata {
-  id           String   @id @default(cuid())
-  filePath     String   @unique // 動画ファイルのパス
-  fileName     String   // ファイル名
-  title        String   // タイトル
-  fileSize     BigInt   @default(0) // ファイルサイズ
-  episode      Int?     // エピソード番号
-  year         Int?     // 年
-  lastModified DateTime // ファイル最終更新日時
-  scannedAt    DateTime @default(now()) // スキャン日時
-  updatedAt    DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  filePath              String    @unique
+  fileName              String
+  title                 String
+  fileSize              BigInt    @default(0)
+  episode               Int?
+  year                  Int?
+  lastModified          DateTime
+  scannedAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  duration              Int?
+  metadata_extracted_at DateTime?
+  thumbnail_path        String?
 
-  @@map("video_metadata")
   @@index([title])
   @@index([fileName])
   @@index([filePath])
+  @@map("video_metadata")
 }
 
-// スキャン管理情報
-model ScanSettings {
-  id             String   @id @default("scan_settings") // 単一レコード
-  lastFullScan   DateTime @default("1970-01-01T00:00:00.000Z") // 最後のフルスキャン日時
-  isScanning     Boolean  @default(false) // スキャン中フラグ
-  scanProgress   Float    @default(0) // スキャン進捗 (0-100)
-  totalFiles     Int      @default(0) // 総ファイル数
-  updatedAt      DateTime @updatedAt
+model ScanStatus {
+  id           String   @id @default("scan_status")
+  lastFullScan DateTime @default(dbgenerated("'1970-01-01 00:00:00 +00:00'"))
+  isScanning   Boolean  @default(false)
+  scanProgress Float    @default(0)
+  totalFiles   Int      @default(0)
+  updatedAt    DateTime @updatedAt
 
-  @@map("scan_settings")
+  @@map("scan_status")
 }
 
-// チェックポイント管理（中断からの復旧用）
 model ScanCheckpoint {
-  id                    String   @id @default("scan_checkpoint") // 単一レコード
-  scanId                String   // 現在のスキャンID（UUID）
-  scanType              String   // スキャンタイプ ("full" | "incremental")
-  phase                 String   // 現在のフェーズ ("discovery" | "metadata" | "database")
-  currentDirectoryIndex Int      @default(0) // 現在処理中のディレクトリインデックス
-  processedFiles        Int      @default(0) // 処理済みファイル数
-  totalFiles            Int      @default(0) // 総ファイル数
-  lastProcessedPath     String?  // 最後に処理したファイルパス
-  metadataCompleted     Boolean  @default(false) // メタデータ処理完了フラグ
-  startedAt             DateTime @default(now()) // スキャン開始時刻
-  lastCheckpointAt      DateTime @default(now()) // 最後のチェックポイント時刻
-  errorMessage          String?  // エラーメッセージ（エラー時）
-  isValid               Boolean  @default(true) // チェックポイント有効性
+  id                    String   @id @default("scan_checkpoint")
+  scanId                String
+  scanType              String
+  phase                 String
+  currentDirectoryIndex Int      @default(0)
+  processedFiles        Int      @default(0)
+  totalFiles            Int      @default(0)
+  lastProcessedPath     String?
+  metadataCompleted     Boolean  @default(false)
+  startedAt             DateTime @default(now())
+  lastCheckpointAt      DateTime @default(now())
+  errorMessage          String?
+  isValid               Boolean  @default(true)
 
   @@map("scan_checkpoint")
 }
