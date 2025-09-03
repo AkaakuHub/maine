@@ -2,7 +2,6 @@
 
 import { Search, X, SortAsc, SortDesc } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { SEARCH } from "@/utils/constants";
 import type { SortBy, SortOrder } from "@/stores/appStateStore";
 
 interface SearchSectionProps {
@@ -38,7 +37,7 @@ export function SearchSection({
 						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-secondary" />
 						<input
 							type="text"
-							placeholder={`動画タイトルやファイル名で検索... (${SEARCH.MIN_QUERY_LENGTH}文字以上)`}
+							placeholder="動画タイトルやファイル名で検索..."
 							value={searchTerm}
 							onChange={(e) => onSearchTermChange(e.target.value)}
 							onCompositionStart={() => onSetIsComposing(true)}
@@ -55,15 +54,7 @@ export function SearchSection({
 									<X className="h-4 w-4" />
 								</button>
 							)}
-							<Button
-								onClick={onSearch}
-								disabled={
-									!searchTerm.trim() ||
-									searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH
-								}
-								size="sm"
-								className="h-8"
-							>
+							<Button onClick={onSearch} size="sm" className="h-8">
 								検索
 							</Button>
 						</div>
@@ -96,16 +87,6 @@ export function SearchSection({
 						</button>
 					</div>
 				</div>
-
-				{/* 検索ヘルプメッセージ */}
-				{searchTerm &&
-					searchTerm.trim().length > 0 &&
-					searchTerm.trim().length < SEARCH.MIN_QUERY_LENGTH && (
-						<p className="mt-2 text-xs text-warning flex items-center gap-2">
-							<span className="w-1 h-1 bg-warning rounded-full" />
-							検索には{SEARCH.MIN_QUERY_LENGTH}文字以上入力してください
-						</p>
-					)}
 			</div>
 		</div>
 	);

@@ -47,6 +47,10 @@ interface AppStateStore {
 	handleTabChange: (resetSearch?: boolean) => void;
 	handleShowSettings: () => void;
 	handleCloseSettings: () => void;
+
+	// URL同期
+	initializeFromURL: (params: URLSearchParams) => void;
+	getSearchParams: () => URLSearchParams;
 }
 
 export const useAppStateStore = create<AppStateStore>((set, get) => ({
@@ -81,7 +85,14 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 	// Compound actions
 	handleSearch: () => {
 		const { searchTerm } = get();
-		set({ searchQuery: searchTerm, currentPage: 1, showAll: false });
+		const trimmedTerm = searchTerm.trim();
+
+		// 空白検索の場合は検索状態をクリア
+		if (!trimmedTerm) {
+			set({ searchQuery: "", currentPage: 1, showAll: false, searchTerm: "" });
+		} else {
+			set({ searchQuery: trimmedTerm, currentPage: 1, showAll: false });
+		}
 	},
 
 	handleClearSearch: () => {
@@ -121,4 +132,50 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 
 	handleShowSettings: () => set({ showSettings: true }),
 	handleCloseSettings: () => set({ showSettings: false }),
+
+	// URL同期メソッド
+	initializeFromURL: (params: URLSearchParams) => {
+		const searchQuery = params.get("search") || "";
+		const sortBy = (params.get("sortBy") as SortBy) || "title";
+		const sortOrder = (params.get("sortOrder") as SortOrder) || "asc";
+		const currentPage = Number.parseInt(params.get("page") || "1", 10);
+		const showAll = params.get("showAll") === "true";
+
+		set({
+			searchTerm: searchQuery,
+			searchQuery,
+			sortBy,
+			sortOrder,
+			currentPage: Math.max(1, currentPage),
+			showAll,
+		});
+	},
+
+	getSearchParams: () => {
+		const { searchQuery, sortBy, sortOrder, currentPage, showAll } = get();
+		const params = new URLSearchParams();
+
+		// searchQueryが空でない場合のみURLに含める
+		if (searchQuery?.trim()) {
+			params.set("search", searchQuery.trim());
+		}
+
+		if (sortBy !== "title") {
+			params.set("sortBy", sortBy);
+		}
+
+		if (sortOrder !== "asc") {
+			params.set("sortOrder", sortOrder);
+		}
+
+		if (currentPage > 1) {
+			params.set("page", currentPage.toString());
+		}
+
+		if (showAll) {
+			params.set("showAll", "true");
+		}
+
+		return params;
+	},
 }));

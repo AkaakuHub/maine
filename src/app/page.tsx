@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useVideos } from "@/hooks/useVideos";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
@@ -23,6 +24,9 @@ import { PAGINATION } from "@/utils/constants";
 const Home = () => {
 	// ネットワーク状態
 	const { isOffline } = useNetworkStatus();
+	const router = useRouter();
+	const searchParams = useSearchParams();
+	const isInitialized = useRef(false);
 
 	// グローバル状態管理 (Zustand)
 	const {
@@ -57,11 +61,37 @@ const Home = () => {
 		showSettings,
 		handleShowSettings,
 		handleCloseSettings,
+
+		// URL同期
+		initializeFromURL,
+		getSearchParams,
 	} = useAppStateStore();
 
 	// オフラインストレージのフック
 	const { cacheSize, storageEstimate, clearCache, refreshCachedVideos } =
 		useOfflineStorage();
+
+	// URL初期化: ページロード時にURLから状態を復元
+	useEffect(() => {
+		if (!isInitialized.current && searchParams) {
+			initializeFromURL(searchParams);
+			isInitialized.current = true;
+		}
+	}, [searchParams, initializeFromURL]);
+
+	// URL更新: 状態変更時にURLを更新（初期化後のみ）
+	useEffect(() => {
+		if (isInitialized.current) {
+			const params = getSearchParams();
+			const query = params.toString();
+			const currentQuery = searchParams?.toString() || "";
+
+			if (query !== currentQuery) {
+				const newUrl = query ? `/?${query}` : "/";
+				router.replace(newUrl, { scroll: false });
+			}
+		}
+	}, [getSearchParams, router, searchParams]);
 
 	// オフライン状態に応じたタブ自動切り替え
 	useEffect(() => {
@@ -69,6 +99,32 @@ const Home = () => {
 			setActiveTab("offline");
 		}
 	}, [isOffline, activeTab, setActiveTab]);
+
+	// 検索実行時の履歴管理（pushで新しい履歴エントリを作成）
+	const handleSearchWithHistory = () => {
+		handleSearch(); // Zustandストアの検索実行
+
+		// 検索実行時のみpushで履歴を追加
+		if (isInitialized.current) {
+			const trimmedSearchTerm = searchTerm.trim();
+
+			if (trimmedSearchTerm) {
+				// 検索語がある場合は履歴に追加
+				const params = new URLSearchParams();
+				params.set("search", trimmedSearchTerm);
+
+				if (sortBy !== "title") params.set("sortBy", sortBy);
+				if (sortOrder !== "asc") params.set("sortOrder", sortOrder);
+
+				const query = params.toString();
+				const newUrl = query ? `/?${query}` : "/";
+				router.push(newUrl, { scroll: false });
+			} else {
+				// 空検索の場合はトップページに戻る
+				router.push("/", { scroll: false });
+			}
+		}
+	};
 
 	// タブ変更処理
 	const handleTabChange = (tab: TabType) => {
@@ -179,7 +235,7 @@ const Home = () => {
 							sortOrder={sortOrder}
 							onSearchTermChange={setSearchTerm}
 							onSetIsComposing={setIsComposing}
-							onSearch={handleSearch}
+							onSearch={handleSearchWithHistory}
 							onClearSearch={handleClearSearch}
 							onSortByChange={setSortBy}
 							onSortOrderToggle={toggleSortOrder}
