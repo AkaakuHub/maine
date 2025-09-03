@@ -224,10 +224,22 @@ class VideoCacheService {
 		this.updateProgress = 0;
 		await this.saveScanSettings();
 
+		// チェックポイントから復旧可能かチェック
+		const existingCheckpoint = await this.getValidCheckpoint();
+		if (existingCheckpoint && existingCheckpoint.scanType === "full") {
+			console.log("前回の中断されたスキャンを検出しました。復旧が可能です。");
+			// TODO: 復旧処理を実装（今回は新規スキャンとして続行）
+			await this.invalidateCheckpoint();
+		}
+
 		try {
 			const videoDirectories = getVideoDirectories();
 			let totalFiles = 0;
 			let processedFiles = 0;
+
+			// 新しいスキャンID生成
+			const scanId = this.generateScanId();
+			console.log(`スキャンID: ${scanId}`);
 
 			// 現在のDBレコード数を記録（ロールバック時の参考用）
 			const initialRecordCount = await prisma.videoMetadata.count();
@@ -251,6 +263,15 @@ class VideoCacheService {
 			}
 
 			console.log(`発見したファイル数: ${allVideoFiles.length}`);
+
+			// 📝 チェックポイント保存: ファイル発見フェーズ完了
+			await this.saveCheckpoint({
+				scanId,
+				scanType: "full",
+				phase: "discovery",
+				processedFiles: 0,
+				totalFiles: allVideoFiles.length,
+			});
 
 			// 全データをメモリ上で準備（トランザクション前に完全に準備）
 			const allDbRecords: Array<{
@@ -295,9 +316,19 @@ class VideoCacheService {
 						);
 					}
 
-					// 軽い休憩（CPUを労る）
+					// 軽い休憩とチェックポイント保存（CPUを労る）
 					if (i % 100 === 0 && i > 0) {
 						await this.sleep(1);
+
+						// 📝 定期チェックポイント保存（100ファイルごと）
+						await this.saveCheckpoint({
+							scanId,
+							scanType: "full",
+							phase: "metadata",
+							processedFiles: processedFiles,
+							totalFiles: allVideoFiles.length,
+							lastProcessedPath: videoFile.filePath,
+						});
 					}
 				} catch (fileError) {
 					console.warn(`ファイル処理エラー: ${videoFile.fileName}`, fileError);
@@ -306,6 +337,16 @@ class VideoCacheService {
 
 			totalFiles = allDbRecords.length;
 			console.log(`メタデータ準備完了: ${totalFiles}レコード`);
+
+			// 📝 チェックポイント保存: メタデータフェーズ完了
+			await this.saveCheckpoint({
+				scanId,
+				scanType: "full",
+				phase: "metadata",
+				processedFiles: allDbRecords.length,
+				totalFiles: allDbRecords.length,
+				metadataCompleted: true,
+			});
 
 			// 🔒 重要: トランザクション内でDBを安全に更新
 			console.log("データベース更新開始（トランザクション内）...");
@@ -342,6 +383,9 @@ class VideoCacheService {
 					timeout: 600000,
 				},
 			);
+
+			// ✅ スキャン完了: チェックポイントを無効化
+			await this.invalidateCheckpoint();
 
 			this.lastFullScanTime = new Date();
 			this.updateProgress = 100;
@@ -686,6 +730,88 @@ class VideoCacheService {
 
 	private sleep(ms: number): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+
+	/**
+	 * チェックポイント管理メソッド群
+	 */
+
+	// チェックポイントを作成/更新
+	private async saveCheckpoint(checkpoint: {
+		scanId: string;
+		scanType: "full" | "incremental";
+		phase: "discovery" | "metadata" | "database";
+		currentDirectoryIndex?: number;
+		processedFiles: number;
+		totalFiles: number;
+		lastProcessedPath?: string;
+		metadataCompleted?: boolean;
+		errorMessage?: string;
+	}): Promise<void> {
+		await prisma.scanCheckpoint.upsert({
+			where: { id: "scan_checkpoint" },
+			update: {
+				...checkpoint,
+				lastCheckpointAt: new Date(),
+			},
+			create: {
+				id: "scan_checkpoint",
+				...checkpoint,
+				isValid: true,
+			},
+		});
+	}
+
+	// 有効なチェックポイントを取得
+	private async getValidCheckpoint(): Promise<{
+		scanId: string;
+		scanType: string;
+		phase: string;
+		currentDirectoryIndex: number;
+		processedFiles: number;
+		totalFiles: number;
+		lastProcessedPath: string | null;
+		metadataCompleted: boolean;
+		startedAt: Date;
+		lastCheckpointAt: Date;
+		errorMessage: string | null;
+	} | null> {
+		const checkpoint = await prisma.scanCheckpoint.findUnique({
+			where: { id: "scan_checkpoint" },
+		});
+
+		if (!checkpoint || !checkpoint.isValid) {
+			return null;
+		}
+
+		// 24時間以上古いチェックポイントは無効とする
+		const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+		if (checkpoint.lastCheckpointAt < twentyFourHoursAgo) {
+			await this.invalidateCheckpoint();
+			return null;
+		}
+
+		return checkpoint;
+	}
+
+	// チェックポイントを無効化
+	private async invalidateCheckpoint(): Promise<void> {
+		await prisma.scanCheckpoint.upsert({
+			where: { id: "scan_checkpoint" },
+			update: { isValid: false },
+			create: {
+				id: "scan_checkpoint",
+				scanId: "",
+				scanType: "full",
+				phase: "discovery",
+				isValid: false,
+			},
+		});
+	}
+
+	// 新しいスキャンID生成
+	private generateScanId(): string {
+		return `scan_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 	}
 
 	private extractEpisode(fileName: string): number | undefined {

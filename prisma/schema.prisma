@@ -57,3 +57,22 @@ model ScanSettings {
 
   @@map("scan_settings")
 }
+
+// チェックポイント管理（中断からの復旧用）
+model ScanCheckpoint {
+  id                    String   @id @default("scan_checkpoint") // 単一レコード
+  scanId                String   // 現在のスキャンID（UUID）
+  scanType              String   // スキャンタイプ ("full" | "incremental")
+  phase                 String   // 現在のフェーズ ("discovery" | "metadata" | "database")
+  currentDirectoryIndex Int      @default(0) // 現在処理中のディレクトリインデックス
+  processedFiles        Int      @default(0) // 処理済みファイル数
+  totalFiles            Int      @default(0) // 総ファイル数
+  lastProcessedPath     String?  // 最後に処理したファイルパス
+  metadataCompleted     Boolean  @default(false) // メタデータ処理完了フラグ
+  startedAt             DateTime @default(now()) // スキャン開始時刻
+  lastCheckpointAt      DateTime @default(now()) // 最後のチェックポイント時刻
+  errorMessage          String?  // エラーメッセージ（エラー時）
+  isValid               Boolean  @default(true) // チェックポイント有効性
+
+  @@map("scan_checkpoint")
+}

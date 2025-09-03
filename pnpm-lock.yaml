@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@prisma/client':
-        specifier: ^6.8.2
+        specifier: 6.8.2
         version: 6.8.2(prisma@6.8.2(typescript@5.8.3))(typescript@5.8.3)
       '@types/iconv-lite':
         specifier: ^0.0.1
