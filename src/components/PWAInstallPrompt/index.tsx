@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Download } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
 	prompt(): Promise<void>;
@@ -84,17 +84,15 @@ export default function PWAInstallPrompt({ className }: PWAInstallPromptProps) {
 	}
 
 	return (
-		<div className={`flex items-center gap-2 ${className}`}>
-			<button
-				type="button"
-				onClick={handleInstallClick}
-				className="px-3 py-1 text-sm bg-primary text-text rounded hover:bg-primary-hover transition-colors"
-			>
-				アプリをインストール
-			</button>
-			<span className="text-xs text-text-muted">
-				ホーム画面に追加してオフラインでも利用可能
-			</span>
-		</div>
+		<button
+			type="button"
+			onClick={handleInstallClick}
+			className={`flex items-center gap-2 px-3 py-2 text-sm bg-primary text-text-inverse rounded-lg hover:bg-primary-hover transition-all duration-200 ${className}`}
+			title="ホーム画面に追加してオフラインでも利用可能"
+		>
+			<Download className="h-4 w-4" />
+			<span className="hidden md:inline">アプリをインストール</span>
+			<span className="md:hidden">インストール</span>
+		</button>
 	);
 }
