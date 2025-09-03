@@ -199,21 +199,94 @@ export default function ScanManagementPage() {
 						{/* スキャン設定パネル */}
 						<ScanSettingsPanel />
 
-						{/* ログ表示エリア（将来の拡張用） */}
+						{/* リアルタイムスキャンログ */}
 						<div className="bg-surface rounded-lg border border-border p-6">
-							<h3 className="text-lg font-semibold text-text-primary mb-4">
-								スキャンログ
-							</h3>
-							<div className="bg-surface-elevated rounded-md p-4 font-mono text-sm text-text-secondary min-h-[200px]">
+							<div className="flex items-center justify-between mb-4">
+								<h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+									<Activity className="h-5 w-5" />
+									スキャンログ
+								</h3>
+								<div className="text-xs text-text-muted">リアルタイム更新</div>
+							</div>
+							<div className="bg-surface-elevated rounded-md p-4 font-mono text-sm min-h-[200px] max-h-[300px] overflow-y-auto">
 								{scanProgress.error ? (
-									<div className="text-error">Error: {scanProgress.error}</div>
-								) : scanProgress.message ? (
-									<div className="text-text-primary">
-										{new Date().toLocaleTimeString()}: {scanProgress.message}
+									<div className="space-y-1">
+										<div className="text-error flex items-center gap-2">
+											<span className="text-text-muted">
+												[{new Date().toLocaleTimeString()}]
+											</span>
+											<span className="text-error">ERROR:</span>
+											{scanProgress.error}
+										</div>
 									</div>
 								) : (
-									<div className="text-text-muted">
-										スキャンログがここに表示されます...
+									<div className="space-y-1">
+										{/* 基本進捗情報 */}
+										{scanProgress.message && (
+											<div className="text-text flex items-start gap-2">
+												<span className="text-text-muted text-xs mt-0.5">
+													[{new Date().toLocaleTimeString()}]
+												</span>
+												<span>{scanProgress.message}</span>
+											</div>
+										)}
+
+										{/* 詳細情報 */}
+										{scanProgress.isScanning && (
+											<>
+												{scanProgress.processingSpeed !== undefined &&
+													scanProgress.processingSpeed > 0 && (
+														<div className="text-text flex items-start gap-2 text-xs">
+															<span className="text-text-muted">
+																[{new Date().toLocaleTimeString()}]
+															</span>
+															<span>
+																処理速度:{" "}
+																{scanProgress.processingSpeed.toFixed(1)}{" "}
+																ファイル/秒
+															</span>
+														</div>
+													)}
+
+												{scanProgress.currentFile && (
+													<div className="text-text flex items-start gap-2 text-xs">
+														<span className="text-text-muted">
+															[{new Date().toLocaleTimeString()}]
+														</span>
+														<span className="truncate">
+															処理中: {scanProgress.currentFile}
+														</span>
+													</div>
+												)}
+
+												{scanProgress.phase && (
+													<div className="text-text flex items-start gap-2 text-xs">
+														<span className="text-text-muted">
+															[{new Date().toLocaleTimeString()}]
+														</span>
+														<span>
+															フェーズ: {scanProgress.phase}(
+															{scanProgress.processedFiles}/
+															{scanProgress.totalFiles})
+														</span>
+													</div>
+												)}
+											</>
+										)}
+
+										{/* 完了・アイドル状態 */}
+										{!scanProgress.isScanning && !scanProgress.error && (
+											<div className="text-text-muted flex items-start gap-2 text-xs">
+												<span className="text-text-muted">
+													[{new Date().toLocaleTimeString()}]
+												</span>
+												<span>
+													{scanProgress.isComplete
+														? `スキャン完了 - ${scanProgress.totalFiles}ファイル処理完了`
+														: "スキャン待機中..."}
+												</span>
+											</div>
+										)}
 									</div>
 								)}
 							</div>

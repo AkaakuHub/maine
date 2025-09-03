@@ -11,7 +11,7 @@ export interface ScanSettings {
 
 	// パフォーマンス設定
 	processingPriority: "low" | "normal" | "high"; // 処理優先度
-	maxConcurrentOperations: number; // 最大並行処理数（将来拡張用）
+	maxConcurrentOperations: number; // メタデータ処理の並列実行数
 	memoryThresholdMB: number; // メモリ使用量しきい値
 
 	// 一時停止設定

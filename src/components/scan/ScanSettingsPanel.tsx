@@ -366,7 +366,7 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 							min={SCAN_SETTINGS_CONSTRAINTS.batchSize.min}
 							max={SCAN_SETTINGS_CONSTRAINTS.batchSize.max}
 							unit="ファイル"
-							description="一度に処理するファイル数（将来の拡張用）"
+							description="動的バッチサイズ調整のベース値"
 						/>
 						<NumberInput
 							label="進捗更新間隔"
@@ -422,7 +422,7 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 							min={SCAN_SETTINGS_CONSTRAINTS.maxConcurrentOperations.min}
 							max={SCAN_SETTINGS_CONSTRAINTS.maxConcurrentOperations.max}
 							unit="個"
-							description="同時実行する処理の最大数（将来拡張用）"
+							description="メタデータ処理の並列実行数"
 						/>
 						<NumberInput
 							label="メモリしきい値"
@@ -431,7 +431,7 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 							min={SCAN_SETTINGS_CONSTRAINTS.memoryThresholdMB.min}
 							max={SCAN_SETTINGS_CONSTRAINTS.memoryThresholdMB.max}
 							unit="MB"
-							description="メモリ使用量の監視しきい値（将来拡張用）"
+							description="メモリ使用量の自動監視しきい値"
 						/>
 					</div>
 				</div>

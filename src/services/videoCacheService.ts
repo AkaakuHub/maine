@@ -759,97 +759,122 @@ class VideoCacheService {
 
 			console.log("ファイルメタデータ処理中...");
 
-			// ファイル情報をDBレコード形式に変換（メモリ上で処理）
-			for (let i = 0; i < allVideoFiles.length; i++) {
-				// 制御状態をチェック（一時停止・キャンセル）
-				await this.checkScanControl(scanId);
+			// 並列処理でファイル情報をDBレコード形式に変換
+			const concurrentOperations = this.scanSettings.maxConcurrentOperations;
+			console.log(
+				`🔧 Using ${concurrentOperations} concurrent operations for metadata processing`,
+			);
 
-				const videoFile = allVideoFiles[i];
+			// ファイルを並列処理用にチャンクに分割
+			const chunks: Array<Array<{ filePath: string; fileName: string }>> = [];
+			const chunkSize = Math.ceil(allVideoFiles.length / concurrentOperations);
 
-				try {
-					// 既存のパーサーを使用して情報抽出
-					const parsedInfo = parseVideoFileName(videoFile.fileName);
-
-					// DBレコードとして準備
-					allDbRecords.push({
-						id: videoFile.filePath,
-						filePath: videoFile.filePath,
-						fileName: videoFile.fileName,
-						title: parsedInfo.cleanTitle,
-						fileSize: 0, // ファイルサイズはstatが必要なため省略（HDDアクセス削減）
-						episode: this.extractEpisode(videoFile.fileName) ?? null,
-						year: parsedInfo.broadcastDate?.getFullYear() ?? null,
-						lastModified: new Date(), // 仮の値、実際のstatは重いため省略
-					});
-
-					processedFiles++;
-
-					// プログレス更新（準備フェーズとして50%まで）
-					if (allVideoFiles.length > 0) {
-						this.updateProgress = Math.floor(
-							(processedFiles / allVideoFiles.length) * 50,
-						);
-
-						// 📡 進捗イベント送信（設定間隔ごと）
-						if (
-							processedFiles % this.scanSettings.progressUpdateInterval ===
-							0
-						) {
-							// 処理ファイル数をウィンドウに追加
-							this.processedFilesInCurrentWindow +=
-								this.scanSettings.progressUpdateInterval;
-
-							const metrics = this.calculateProgressMetrics(
-								processedFiles,
-								allVideoFiles.length,
-							);
-							const memUsage = this.getMemoryUsage();
-
-							const metadataMessage = this.scanSettings.showResourceMonitoring
-								? `メタデータ処理中 (${processedFiles}/${allVideoFiles.length}) - Memory: ${memUsage.used}MB (${memUsage.usagePercent}%)`
-								: `メタデータ処理中 (${processedFiles}/${allVideoFiles.length})`;
-
-							scanEventEmitter.emitScanProgress({
-								type: "progress",
-								scanId,
-								phase: "metadata",
-								progress: Math.floor(
-									(processedFiles / allVideoFiles.length) * 50,
-								),
-								processedFiles,
-								totalFiles: allVideoFiles.length,
-								currentFile: videoFile.fileName,
-								message: metadataMessage,
-								processingSpeed: metrics.processingSpeed,
-								estimatedTimeRemaining: metrics.estimatedTimeRemaining,
-								phaseStartTime: this.phaseStartTime || undefined,
-								totalElapsedTime: metrics.totalElapsedTime,
-								currentPhaseElapsed: metrics.currentPhaseElapsed,
-							});
-						}
-					}
-
-					// 軽い休憩とチェックポイント保存（CPUを労る）
-					if (i % this.scanSettings.progressUpdateInterval === 0 && i > 0) {
-						await this.sleep(this.scanSettings.sleepInterval);
-
-						// システムリソースの監視とスマートな制御
-						await this.checkSystemResources(scanId);
-
-						// 📝 定期チェックポイント保存（設定間隔ごと）
-						await this.saveCheckpoint({
-							scanId,
-							scanType: "full",
-							phase: "metadata",
-							processedFiles: processedFiles,
-							totalFiles: allVideoFiles.length,
-							lastProcessedPath: videoFile.filePath,
-						});
-					}
-				} catch (fileError) {
-					console.warn(`ファイル処理エラー: ${videoFile.fileName}`, fileError);
-				}
+			for (let i = 0; i < allVideoFiles.length; i += chunkSize) {
+				chunks.push(allVideoFiles.slice(i, i + chunkSize));
 			}
+
+			// 並列処理でメタデータを抽出
+			const processChunk = async (
+				chunk: Array<{ filePath: string; fileName: string }>,
+				chunkIndex: number,
+			): Promise<
+				Array<{
+					id: string;
+					filePath: string;
+					fileName: string;
+					title: string;
+					fileSize: number;
+					episode: number | null;
+					year: number | null;
+					lastModified: Date;
+				}>
+			> => {
+				const chunkRecords: typeof allDbRecords = [];
+
+				for (let i = 0; i < chunk.length; i++) {
+					// 制御状態をチェック（一時停止・キャンセル）
+					await this.checkScanControl(scanId);
+
+					const videoFile = chunk[i];
+
+					try {
+						// 既存のパーサーを使用して情報抽出
+						const parsedInfo = parseVideoFileName(videoFile.fileName);
+
+						// DBレコードとして準備
+						chunkRecords.push({
+							id: videoFile.filePath,
+							filePath: videoFile.filePath,
+							fileName: videoFile.fileName,
+							title: parsedInfo.cleanTitle,
+							fileSize: 0, // ファイルサイズはstatが必要なため省略（HDDアクセス削減）
+							episode: this.extractEpisode(videoFile.fileName) ?? null,
+							year: parsedInfo.broadcastDate?.getFullYear() ?? null,
+							lastModified: new Date(), // 仮の値、実際のstatは重いため省略
+						});
+
+						processedFiles++;
+
+						// チャンク内でのプログレス更新
+						if (i % Math.max(Math.floor(chunk.length / 10), 1) === 0) {
+							console.log(
+								`📊 Chunk ${chunkIndex + 1}/${chunks.length}: ${i + 1}/${chunk.length} processed`,
+							);
+						}
+					} catch (fileError) {
+						console.warn(
+							`ファイル処理エラー (chunk ${chunkIndex}): ${videoFile.fileName}`,
+							fileError,
+						);
+					}
+				}
+
+				return chunkRecords;
+			};
+
+			// 全チャンクを並列実行
+			const chunkPromises = chunks.map((chunk, index) =>
+				processChunk(chunk, index),
+			);
+			const chunkResults = await Promise.all(chunkPromises);
+
+			// 結果をマージ
+			for (const chunkRecords of chunkResults) {
+				allDbRecords.push(...chunkRecords);
+			}
+
+			// 並列処理完了後の進捗更新
+			processedFiles = allDbRecords.length;
+			console.log(
+				`🎯 Parallel metadata processing completed: ${processedFiles} files processed using ${concurrentOperations} concurrent operations`,
+			);
+
+			// 📡 メタデータ処理完了の進捗イベント送信
+			const metadataMetrics = this.calculateProgressMetrics(
+				processedFiles,
+				allVideoFiles.length,
+			);
+			const memUsage = this.getMemoryUsage();
+
+			const metadataMessage = this.scanSettings.showResourceMonitoring
+				? `並列メタデータ処理完了 (${processedFiles}/${allVideoFiles.length}) - Memory: ${memUsage.used}MB (${memUsage.usagePercent}%) - Workers: ${concurrentOperations}`
+				: `並列メタデータ処理完了 (${processedFiles}/${allVideoFiles.length}) - Workers: ${concurrentOperations}`;
+
+			scanEventEmitter.emitScanProgress({
+				type: "progress",
+				scanId,
+				phase: "metadata",
+				progress: 50, // メタデータ処理完了で50%
+				processedFiles,
+				totalFiles: allVideoFiles.length,
+				currentFile: undefined,
+				message: metadataMessage,
+				processingSpeed: metadataMetrics.processingSpeed,
+				estimatedTimeRemaining: metadataMetrics.estimatedTimeRemaining,
+				phaseStartTime: this.phaseStartTime || undefined,
+				totalElapsedTime: metadataMetrics.totalElapsedTime,
+				currentPhaseElapsed: metadataMetrics.currentPhaseElapsed,
+			});
 
 			totalFiles = allDbRecords.length;
 			console.log(`メタデータ準備完了: ${totalFiles}レコード`);
