@@ -8,12 +8,11 @@ set -e
 echo "🎨 Tailwindデフォルト色の使用をチェック中..."
 
 # 色名定義
-COLORS="gray|red|blue|green|yellow|purple|pink|indigo|teal|cyan|orange|lime|emerald|sky|violet|fuchsia|rose|amber|zinc|neutral|stone|slate"
+COLORS="white|black|gray|red|blue|green|yellow|purple|pink|indigo|teal|cyan|orange|lime|emerald|sky|violet|fuchsia|rose|amber|zinc|neutral|stone|slate"
 
 # 禁止されている色クラスのパターン
 FORBIDDEN_PATTERNS=(
     # 基本色
-    "(bg|text|border)-(white|black)\b"
     "(bg|text|border)-($COLORS)-[0-9]+(/[0-9]+)?"
     
     # グラデーション色
