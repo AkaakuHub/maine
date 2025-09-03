@@ -1,6 +1,7 @@
 /**
  * スキャン設定の型定義
  */
+import { SCAN } from "@/utils/constants";
 
 export interface ScanSettings {
 	// 基本設定
@@ -29,23 +30,23 @@ export interface ScanSettings {
 }
 
 export const DEFAULT_SCAN_SETTINGS: ScanSettings = {
-	// 基本設定（安全な値）
-	batchSize: 50,
-	progressUpdateInterval: 100,
-	sleepInterval: 1,
+	// 基本設定（constants.tsから参照）
+	batchSize: SCAN.DEFAULT_BATCH_SIZE,
+	progressUpdateInterval: SCAN.DEFAULT_PROGRESS_UPDATE_INTERVAL,
+	sleepInterval: SCAN.DEFAULT_SLEEP_INTERVAL,
 
 	// パフォーマンス設定（バランス型）
 	processingPriority: "normal",
-	maxConcurrentOperations: 1,
-	memoryThresholdMB: 100,
+	maxConcurrentOperations: SCAN.MIN_CONCURRENT_OPERATIONS,
+	memoryThresholdMB: SCAN.DEFAULT_MEMORY_THRESHOLD_MB,
 
 	// 一時停止設定（無効）
 	autoPauseOnHighCPU: false,
-	autoPauseThreshold: 80,
+	autoPauseThreshold: SCAN.DEFAULT_AUTO_PAUSE_THRESHOLD,
 	autoPauseTimeRange: {
 		enabled: false,
-		startHour: 9, // 9時から
-		endHour: 18, // 18時まで
+		startHour: SCAN.DEFAULT_AUTO_PAUSE_START_HOUR,
+		endHour: SCAN.DEFAULT_AUTO_PAUSE_END_HOUR,
 	},
 
 	// デバッグ・監視設定（有効）
@@ -55,10 +56,22 @@ export const DEFAULT_SCAN_SETTINGS: ScanSettings = {
 };
 
 export const SCAN_SETTINGS_CONSTRAINTS = {
-	batchSize: { min: 1, max: 200 },
-	progressUpdateInterval: { min: 10, max: 1000 },
-	sleepInterval: { min: 0, max: 100 },
-	maxConcurrentOperations: { min: 1, max: 8 },
-	memoryThresholdMB: { min: 50, max: 1000 },
-	autoPauseThreshold: { min: 50, max: 95 },
+	batchSize: { min: SCAN.MIN_BATCH_SIZE, max: SCAN.MAX_BATCH_SIZE },
+	progressUpdateInterval: {
+		min: SCAN.MIN_PROGRESS_UPDATE_INTERVAL,
+		max: SCAN.MAX_PROGRESS_UPDATE_INTERVAL,
+	},
+	sleepInterval: { min: SCAN.MIN_SLEEP_INTERVAL, max: SCAN.MAX_SLEEP_INTERVAL },
+	maxConcurrentOperations: {
+		min: SCAN.MIN_CONCURRENT_OPERATIONS,
+		max: SCAN.MAX_CONCURRENT_OPERATIONS,
+	},
+	memoryThresholdMB: {
+		min: SCAN.MIN_MEMORY_THRESHOLD_MB,
+		max: SCAN.MAX_MEMORY_THRESHOLD_MB,
+	},
+	autoPauseThreshold: {
+		min: SCAN.MIN_AUTO_PAUSE_THRESHOLD,
+		max: SCAN.MAX_AUTO_PAUSE_THRESHOLD,
+	},
 } as const;

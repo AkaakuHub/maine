@@ -13,6 +13,7 @@ import { parseVideoFileName } from "@/utils/videoFileNameParser";
 import { scanEventEmitter } from "@/services/scanEventEmitter";
 import type { ScanSettings } from "@/types/scanSettings";
 import { DEFAULT_SCAN_SETTINGS } from "@/types/scanSettings";
+import { SCAN } from "@/utils/constants";
 
 // 既存のVideoScanServiceから型をimport
 // VideoFileInfo型は削除（DBベース移行でメモリキャッシュ不要）
@@ -76,6 +77,13 @@ class VideoCacheService {
 
 	// スキャン設定
 	private scanSettings: ScanSettings = DEFAULT_SCAN_SETTINGS;
+
+	// パフォーマンス監視
+	private memoryUsageHistory: number[] = [];
+	private lastCPUUsage: { user: number; system: number } = {
+		user: 0,
+		system: 0,
+	};
 
 	constructor() {
 		this.initializePromise = this.initialize();
@@ -248,8 +256,8 @@ class VideoCacheService {
 				processingSpeed = this.processedFilesInCurrentWindow / windowElapsed;
 			}
 
-			// 30秒経過したらウィンドウをリセット
-			if (windowElapsed >= 30) {
+			// 設定時間経過したらウィンドウをリセット
+			if (windowElapsed >= SCAN.PROGRESS_WINDOW_DURATION_SEC) {
 				this.progressWindowStartTime = now;
 				this.processedFilesInCurrentWindow = 0;
 			}
@@ -275,6 +283,228 @@ class VideoCacheService {
 	 */
 	private resetPhaseTimer(): void {
 		this.phaseStartTime = new Date();
+	}
+
+	/**
+	 * メモリ使用量を監視してパフォーマンス情報を取得
+	 */
+	private getMemoryUsage(): {
+		used: number;
+		free: number;
+		total: number;
+		usagePercent: number;
+	} {
+		const memUsage = process.memoryUsage();
+		const totalMemMB = Math.round(memUsage.rss / 1024 / 1024);
+		const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+		const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
+		const usagePercent = Math.round(
+			(memUsage.heapUsed / memUsage.heapTotal) * 100,
+		);
+
+		// 履歴を更新（直近SCAN.MEMORY_USAGE_HISTORY_SIZE回分を保持）
+		this.memoryUsageHistory.push(totalMemMB);
+		if (this.memoryUsageHistory.length > SCAN.MEMORY_USAGE_HISTORY_SIZE) {
+			this.memoryUsageHistory.shift();
+		}
+
+		return {
+			used: heapUsedMB,
+			free: heapTotalMB - heapUsedMB,
+			total: heapTotalMB,
+			usagePercent,
+		};
+	}
+
+	/**
+	 * 現在のシステム状況に基づいて最適なバッチサイズを計算
+	 */
+	private calculateOptimalBatchSize(): number {
+		const memUsage = this.getMemoryUsage();
+		const baseBatchSize = this.scanSettings.batchSize;
+
+		// メモリ使用率に基づいてバッチサイズを調整
+		if (memUsage.usagePercent > SCAN.MEMORY_HIGH_THRESHOLD) {
+			// メモリ使用率が高い場合はバッチサイズを削減
+			return Math.max(
+				Math.floor(baseBatchSize * SCAN.BATCH_SIZE_REDUCTION_RATIO),
+				SCAN.MIN_BATCH_SIZE,
+			);
+		}
+		if (memUsage.usagePercent < SCAN.MEMORY_LOW_THRESHOLD) {
+			// メモリに余裕がある場合はバッチサイズを増加
+			return Math.min(
+				Math.floor(baseBatchSize * SCAN.BATCH_SIZE_INCREASE_RATIO),
+				SCAN.MAX_BATCH_SIZE,
+			);
+		}
+
+		// 処理優先度による調整
+		switch (this.scanSettings.processingPriority) {
+			case "low":
+				return Math.max(
+					Math.floor(baseBatchSize * SCAN.LOW_PRIORITY_RATIO),
+					SCAN.MIN_BATCH_SIZE,
+				);
+			case "high":
+				return Math.min(
+					Math.floor(baseBatchSize * SCAN.HIGH_PRIORITY_RATIO),
+					SCAN.MAX_BATCH_SIZE,
+				);
+			default:
+				return baseBatchSize;
+		}
+	}
+
+	/**
+	 * メモリ使用量が設定しきい値を超えていないかチェック
+	 */
+	private checkMemoryThreshold(): boolean {
+		const memUsage = this.getMemoryUsage();
+		const thresholdMB = this.scanSettings.memoryThresholdMB;
+
+		if (memUsage.used > thresholdMB) {
+			console.warn(
+				`⚠️ Memory usage (${memUsage.used}MB) exceeds threshold (${thresholdMB}MB)`,
+			);
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * CPU使用率を取得（Node.js process.cpuUsage()を使用）
+	 */
+	private getCPUUsage(): number {
+		const currentUsage = process.cpuUsage(this.lastCPUUsage);
+		const totalUsage = currentUsage.user + currentUsage.system;
+
+		// マイクロ秒を秒に変換し、CPU使用率を計算
+		const totalTime = totalUsage / 1000000; // マイクロ秒 -> 秒
+		const cpuPercent = Math.min(totalTime * 100, 100); // 100%を上限
+
+		this.lastCPUUsage = process.cpuUsage();
+		return Math.round(cpuPercent);
+	}
+
+	/**
+	 * システムリソース状況を総合的にチェック
+	 */
+	private async checkSystemResources(scanId: string): Promise<void> {
+		// CPU使用率チェック
+		if (this.scanSettings.autoPauseOnHighCPU) {
+			const cpuUsage = this.getCPUUsage();
+
+			if (cpuUsage > this.scanSettings.autoPauseThreshold) {
+				console.warn(
+					`⚠️ High CPU usage detected (${cpuUsage}%), auto-pausing scan`,
+				);
+
+				// 自動一時停止
+				this.scanControlState.isPaused = true;
+
+				// 一時停止イベント送信
+				scanEventEmitter.emitScanControl({
+					type: "pause",
+					scanId,
+				});
+
+				// 一時停止状況をプログレスイベントとして送信
+				scanEventEmitter.emitScanProgress({
+					type: "progress",
+					scanId,
+					phase: "metadata",
+					progress: 0,
+					processedFiles: 0,
+					totalFiles: 0,
+					message: `高CPU使用率により自動一時停止 (CPU: ${cpuUsage}%)`,
+				});
+
+				// CPU使用率が下がるまで待機
+				while (
+					this.getCPUUsage() >
+					this.scanSettings.autoPauseThreshold *
+						SCAN.CPU_AUTO_RESUME_THRESHOLD_RATIO
+				) {
+					await this.sleep(SCAN.CPU_CHECK_INTERVAL_MS); // 設定間隔でチェック
+				}
+
+				// 自動再開
+				this.scanControlState.isPaused = false;
+				console.log("✅ CPU usage normalized, auto-resuming scan");
+
+				scanEventEmitter.emitScanControl({
+					type: "resume",
+					scanId,
+				});
+
+				// 再開状況をプログレスイベントとして送信
+				scanEventEmitter.emitScanProgress({
+					type: "progress",
+					scanId,
+					phase: "metadata",
+					progress: 0,
+					processedFiles: 0,
+					totalFiles: 0,
+					message: "CPU使用率が正常化したため自動再開",
+				});
+			}
+		}
+
+		// 時間帯による制御チェック
+		if (this.scanSettings.autoPauseTimeRange.enabled) {
+			const now = new Date();
+			const currentHour = now.getHours();
+			const { startHour, endHour } = this.scanSettings.autoPauseTimeRange;
+
+			const isInPauseRange =
+				startHour <= endHour
+					? currentHour >= startHour && currentHour < endHour
+					: currentHour >= startHour || currentHour < endHour;
+
+			if (isInPauseRange && !this.scanControlState.isPaused) {
+				console.log(
+					`⏰ Entering auto-pause time range (${startHour}:00-${endHour}:00)`,
+				);
+				this.scanControlState.isPaused = true;
+
+				scanEventEmitter.emitScanControl({
+					type: "pause",
+					scanId,
+				});
+
+				// 一時停止状況をプログレスイベントとして送信
+				scanEventEmitter.emitScanProgress({
+					type: "progress",
+					scanId,
+					phase: "metadata",
+					progress: 0,
+					processedFiles: 0,
+					totalFiles: 0,
+					message: `指定時間帯のため自動一時停止 (${startHour}:00-${endHour}:00)`,
+				});
+			} else if (!isInPauseRange && this.scanControlState.isPaused) {
+				console.log("⏰ Exiting auto-pause time range, resuming scan");
+				this.scanControlState.isPaused = false;
+
+				scanEventEmitter.emitScanControl({
+					type: "resume",
+					scanId,
+				});
+
+				// 再開状況をプログレスイベントとして送信
+				scanEventEmitter.emitScanProgress({
+					type: "progress",
+					scanId,
+					phase: "metadata",
+					progress: 0,
+					processedFiles: 0,
+					totalFiles: 0,
+					message: "指定時間帯が終了したため自動再開",
+				});
+			}
+		}
 	}
 
 	/**
@@ -573,6 +803,12 @@ class VideoCacheService {
 								processedFiles,
 								allVideoFiles.length,
 							);
+							const memUsage = this.getMemoryUsage();
+
+							const metadataMessage = this.scanSettings.showResourceMonitoring
+								? `メタデータ処理中 (${processedFiles}/${allVideoFiles.length}) - Memory: ${memUsage.used}MB (${memUsage.usagePercent}%)`
+								: `メタデータ処理中 (${processedFiles}/${allVideoFiles.length})`;
+
 							scanEventEmitter.emitScanProgress({
 								type: "progress",
 								scanId,
@@ -583,7 +819,7 @@ class VideoCacheService {
 								processedFiles,
 								totalFiles: allVideoFiles.length,
 								currentFile: videoFile.fileName,
-								message: `メタデータ処理中 (${processedFiles}/${allVideoFiles.length})`,
+								message: metadataMessage,
 								processingSpeed: metrics.processingSpeed,
 								estimatedTimeRemaining: metrics.estimatedTimeRemaining,
 								phaseStartTime: this.phaseStartTime || undefined,
@@ -596,6 +832,9 @@ class VideoCacheService {
 					// 軽い休憩とチェックポイント保存（CPUを労る）
 					if (i % this.scanSettings.progressUpdateInterval === 0 && i > 0) {
 						await this.sleep(this.scanSettings.sleepInterval);
+
+						// システムリソースの監視とスマートな制御
+						await this.checkSystemResources(scanId);
 
 						// 📝 定期チェックポイント保存（設定間隔ごと）
 						await this.saveCheckpoint({
@@ -657,11 +896,27 @@ class VideoCacheService {
 					await tx.videoMetadata.deleteMany({});
 					console.log("既存データクリア完了");
 
-					// 2. バッチインサート（50件ずつの適切なサイズで処理）
-					const BATCH_SIZE = 50;
+					// 2. 動的バッチインサート（メモリとパフォーマンス設定に基づく）
+					let BATCH_SIZE = this.calculateOptimalBatchSize();
+					console.log(`📊 Initial batch size: ${BATCH_SIZE}`);
+
 					for (let i = 0; i < allDbRecords.length; i += BATCH_SIZE) {
 						// トランザクション内での制御チェック（非同期処理のため）
 						await this.checkScanControl(scanId);
+
+						// メモリ使用量チェック（設定に基づく）
+						if (!this.checkMemoryThreshold()) {
+							// メモリしきい値を超えた場合の処理
+							if (this.scanSettings.showResourceMonitoring) {
+								console.warn(
+									"⚠️ Memory threshold exceeded, reducing batch size",
+								);
+							}
+							BATCH_SIZE = Math.max(
+								Math.floor(BATCH_SIZE * SCAN.BATCH_SIZE_REDUCTION_RATIO),
+								SCAN.MIN_BATCH_SIZE_AFTER_REDUCTION,
+							);
+						}
 
 						const batch = allDbRecords.slice(i, i + BATCH_SIZE);
 
@@ -675,12 +930,17 @@ class VideoCacheService {
 						);
 						this.updateProgress = 50 + dbProgress;
 
-						// 📡 データベース更新進捗イベント送信
+						// 📡 データベース更新進捗イベント送信（メモリ情報付き）
 						this.processedFilesInCurrentWindow += batch.length;
 						const dbMetrics = this.calculateProgressMetrics(
 							i + batch.length,
 							allDbRecords.length,
 						);
+						const memUsage = this.getMemoryUsage();
+
+						const progressMessage = this.scanSettings.showResourceMonitoring
+							? `データベース更新中 (${i + batch.length}/${allDbRecords.length}) - Memory: ${memUsage.used}MB (${memUsage.usagePercent}%) - Batch: ${BATCH_SIZE}`
+							: `データベース更新中 (${i + batch.length}/${allDbRecords.length})`;
 
 						scanEventEmitter.emitScanProgress({
 							type: "progress",
@@ -689,9 +949,7 @@ class VideoCacheService {
 							progress: 50 + dbProgress,
 							processedFiles: i + batch.length,
 							totalFiles: allDbRecords.length,
-							message: `データベース更新中 (${i + batch.length}/${
-								allDbRecords.length
-							})`,
+							message: progressMessage,
 							processingSpeed: dbMetrics.processingSpeed,
 							estimatedTimeRemaining: dbMetrics.estimatedTimeRemaining,
 							phaseStartTime: this.phaseStartTime || undefined,
@@ -707,8 +965,8 @@ class VideoCacheService {
 					console.log("全データベース保存完了");
 				},
 				{
-					// トランザクションタイムアウト: 10分（大量ファイル対応）
-					timeout: 600000,
+					// トランザクションタイムアウト（大量ファイル対応）
+					timeout: SCAN.TRANSACTION_TIMEOUT_MS,
 				},
 			);
 
@@ -1163,9 +1421,11 @@ class VideoCacheService {
 			return null;
 		}
 
-		// 24時間以上古いチェックポイントは無効とする
-		const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-		if (checkpoint.lastCheckpointAt < twentyFourHoursAgo) {
+		// 設定時間以上古いチェックポイントは無効とする
+		const expiredTime = new Date(
+			Date.now() - SCAN.CHECKPOINT_VALIDITY_HOURS * 60 * 60 * 1000,
+		);
+		if (checkpoint.lastCheckpointAt < expiredTime) {
 			await this.invalidateCheckpoint();
 			return null;
 		}
@@ -1190,7 +1450,7 @@ class VideoCacheService {
 
 	// 新しいスキャンID生成
 	private generateScanId(): string {
-		return `scan_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+		return `${SCAN.SCAN_ID_PREFIX}${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 	}
 
 	private extractEpisode(fileName: string): number | undefined {

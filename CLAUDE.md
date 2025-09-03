@@ -18,3 +18,6 @@
 - **Production**: Windows 11 
 - Database migrations and schema changes can be applied safely in development environment
 - Development and production databases are separate
+
+### マジックナンバー
+特定の数値など、マジックナンバーは全て`/src/utils/constants.ts`にまとめること
