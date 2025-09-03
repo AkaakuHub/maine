@@ -10,6 +10,7 @@ import {
 } from "@/libs/fileUtils";
 import type { VideoFileData } from "@/type";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
+import { scanEventEmitter } from "@/services/scanEventEmitter";
 
 // 既存のVideoScanServiceから型をimport
 // VideoFileInfo型は削除（DBベース移行でメモリキャッシュ不要）
@@ -241,6 +242,17 @@ class VideoCacheService {
 			const scanId = this.generateScanId();
 			console.log(`スキャンID: ${scanId}`);
 
+			// 📡 スキャン開始イベント送信
+			scanEventEmitter.emitScanProgress({
+				type: "phase",
+				scanId,
+				phase: "discovery",
+				progress: 0,
+				processedFiles: 0,
+				totalFiles: 0,
+				message: "スキャン開始 - ディレクトリを探索中...",
+			});
+
 			// 現在のDBレコード数を記録（ロールバック時の参考用）
 			const initialRecordCount = await prisma.videoMetadata.count();
 			console.log(`スキャン開始 - 既存レコード数: ${initialRecordCount}`);
@@ -263,6 +275,17 @@ class VideoCacheService {
 			}
 
 			console.log(`発見したファイル数: ${allVideoFiles.length}`);
+
+			// 📡 ディスカバリー完了イベント送信
+			scanEventEmitter.emitScanProgress({
+				type: "phase",
+				scanId,
+				phase: "metadata",
+				progress: 10,
+				processedFiles: 0,
+				totalFiles: allVideoFiles.length,
+				message: `${allVideoFiles.length}ファイルを発見 - メタデータ処理開始`,
+			});
 
 			// 📝 チェックポイント保存: ファイル発見フェーズ完了
 			await this.saveCheckpoint({
@@ -314,6 +337,22 @@ class VideoCacheService {
 						this.updateProgress = Math.floor(
 							(processedFiles / allVideoFiles.length) * 50,
 						);
+
+						// 📡 進捗イベント送信（100ファイルごと）
+						if (processedFiles % 100 === 0) {
+							scanEventEmitter.emitScanProgress({
+								type: "progress",
+								scanId,
+								phase: "metadata",
+								progress: Math.floor(
+									(processedFiles / allVideoFiles.length) * 50,
+								),
+								processedFiles,
+								totalFiles: allVideoFiles.length,
+								currentFile: videoFile.fileName,
+								message: `メタデータ処理中 (${processedFiles}/${allVideoFiles.length})`,
+							});
+						}
 					}
 
 					// 軽い休憩とチェックポイント保存（CPUを労る）
@@ -337,6 +376,17 @@ class VideoCacheService {
 
 			totalFiles = allDbRecords.length;
 			console.log(`メタデータ準備完了: ${totalFiles}レコード`);
+
+			// 📡 メタデータ処理完了イベント送信
+			scanEventEmitter.emitScanProgress({
+				type: "phase",
+				scanId,
+				phase: "database",
+				progress: 50,
+				processedFiles: totalFiles,
+				totalFiles: totalFiles,
+				message: "メタデータ処理完了 - データベース更新開始",
+			});
 
 			// 📝 チェックポイント保存: メタデータフェーズ完了
 			await this.saveCheckpoint({
@@ -371,6 +421,19 @@ class VideoCacheService {
 						);
 						this.updateProgress = 50 + dbProgress;
 
+						// 📡 データベース更新進捗イベント送信
+						scanEventEmitter.emitScanProgress({
+							type: "progress",
+							scanId,
+							phase: "database",
+							progress: 50 + dbProgress,
+							processedFiles: i + batch.length,
+							totalFiles: allDbRecords.length,
+							message: `データベース更新中 (${i + batch.length}/${
+								allDbRecords.length
+							})`,
+						});
+
 						console.log(
 							`DBバッチ保存: ${i + batch.length}/${allDbRecords.length}`,
 						);
@@ -389,6 +452,18 @@ class VideoCacheService {
 
 			this.lastFullScanTime = new Date();
 			this.updateProgress = 100;
+
+			// 📡 スキャン完了イベント送信
+			scanEventEmitter.emitScanProgress({
+				type: "complete",
+				scanId,
+				phase: "database",
+				progress: 100,
+				processedFiles: totalFiles,
+				totalFiles: totalFiles,
+				message: `スキャン完了 - ${totalFiles}ファイル処理完了`,
+			});
+
 			console.log(
 				`フルDBキャッシュ構築完了: ${totalFiles}ファイル（メモリ使用: 数KB）`,
 			);
@@ -407,12 +482,31 @@ class VideoCacheService {
 			// プログレス状態をエラー状態にリセット
 			this.updateProgress = -1; // エラー状態を示す特殊値
 
+			// 📡 エラーイベント送信（scanIdが利用可能な場合のみ）
+			try {
+				const errorScanId = this.generateScanId(); // フォールバックID生成
+				scanEventEmitter.emitScanProgress({
+					type: "error",
+					scanId: errorScanId,
+					phase: "metadata",
+					progress: -1,
+					processedFiles: 0,
+					totalFiles: 0,
+					error: error instanceof Error ? error.message : String(error),
+					message: "スキャン処理中にエラーが発生しました",
+				});
+			} catch (eventError) {
+				console.warn("エラーイベント送信失敗:", eventError);
+			}
+
 			// エラー情報を永続化
 			await this.saveScanSettings();
 
 			// エラーを再度投げて上位に伝達
 			throw new Error(
-				`ビデオスキャン処理が失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+				`ビデオスキャン処理が失敗しました: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
 			);
 		} finally {
 			// 🔒 確実にクリーンアップ
