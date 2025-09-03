@@ -11,15 +11,24 @@ export async function GET(request: NextRequest) {
 		const exactMatch = searchParams.get("exactMatch") === "true";
 
 		console.log("[API] Searching videos with query:", query);
+		console.log("[API] Query length:", query.length);
 		console.log("[API] Exact match:", exactMatch);
 
-		// exactMatchが要求された場合は、まずクエリなしで全ての動画を取得
-		const searchResult =
-			exactMatch && query
-				? await videoCacheService.searchVideos("") // 全ての動画を取得
-				: await videoCacheService.searchVideos(query);
+		// 常にsearchVideosを使用（空文字の場合は全件取得、クエリありの場合は検索）
+		const searchResult = await videoCacheService.searchVideos(query);
+
+		console.log("[API] Search result success:", searchResult.success);
+		console.log(
+			"[API] Search result videos count:",
+			searchResult.videos.length,
+		);
 
 		if (!searchResult.success) {
+			console.error(
+				"[API] Search failed:",
+				searchResult.message,
+				searchResult.error,
+			);
 			return NextResponse.json(
 				{ error: searchResult.message, details: searchResult.error },
 				{ status: 500 },

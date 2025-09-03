@@ -505,37 +505,90 @@ class VideoCacheService {
 
 	async searchVideos(query: string): Promise<SearchResult> {
 		try {
+			console.log(`[searchVideos] Query: "${query}"`);
+
+			// 基本的な検索をPrismaのfindManyで実行
+			const searchCondition =
+				query.trim() === ""
+					? {}
+					: {
+							OR: [
+								{ title: { contains: query } },
+								{ fileName: { contains: query } },
+								{ filePath: { equals: query } }, // 完全一致検索も追加
+							],
+						};
+
 			const videos = await prisma.videoMetadata.findMany({
-				where: {
-					OR: [
-						{ title: { contains: query } },
-						{ fileName: { contains: query } },
-					],
-				},
+				where: searchCondition,
 				orderBy: { title: "asc" },
 			});
 
+			console.log(
+				`[searchVideos] Found ${videos.length} videos matching query`,
+			);
+
+			// 各動画の進捗情報を個別に取得
+			const videosWithProgress = await Promise.all(
+				videos.map(async (v) => {
+					try {
+						const progress = await prisma.videoProgress.findUnique({
+							where: { filePath: v.filePath },
+						});
+
+						return {
+							id: v.id,
+							title: v.title,
+							fileName: v.fileName,
+							filePath: v.filePath,
+							fileSize: Number(v.fileSize),
+							fileModifiedAt: v.lastModified,
+							episode: v.episode ?? undefined,
+							year: v.year ?? undefined,
+							duration: v.duration ?? undefined,
+							thumbnailPath: v.thumbnail_path ?? undefined,
+							watchProgress: progress?.watchProgress ?? 0,
+							watchTime: progress?.watchTime ?? 0,
+							isLiked: progress?.isLiked ?? false,
+							lastWatched: progress?.lastWatched ?? undefined,
+						};
+					} catch (progressError) {
+						console.error(
+							`[searchVideos] Progress error for ${v.filePath}:`,
+							progressError,
+						);
+						return {
+							id: v.id,
+							title: v.title,
+							fileName: v.fileName,
+							filePath: v.filePath,
+							fileSize: Number(v.fileSize),
+							fileModifiedAt: v.lastModified,
+							episode: v.episode ?? undefined,
+							year: v.year ?? undefined,
+							duration: v.duration ?? undefined,
+							thumbnailPath: v.thumbnail_path ?? undefined,
+							watchProgress: 0,
+							watchTime: 0,
+							isLiked: false,
+							lastWatched: undefined,
+						};
+					}
+				}),
+			);
+
+			console.log(
+				`[searchVideos] Returning ${videosWithProgress.length} videos with progress`,
+			);
+
 			return {
 				success: true,
-				videos: videos.map((v: Prisma.VideoMetadataGetPayload<object>) => ({
-					id: v.id,
-					title: v.title,
-					fileName: v.fileName,
-					filePath: v.filePath,
-					fileSize: Number(v.fileSize),
-					fileModifiedAt: v.lastModified,
-					episode: v.episode ?? undefined,
-					year: v.year ?? undefined,
-					duration: v.duration ?? undefined,
-					thumbnailPath: v.thumbnail_path ?? undefined,
-					watchProgress: 0,
-					watchTime: 0,
-					isLiked: false,
-				})),
-				totalFound: videos.length,
-				message: `${videos.length}件の動画が見つかりました`,
+				videos: videosWithProgress,
+				totalFound: videosWithProgress.length,
+				message: `${videosWithProgress.length}件の動画が見つかりました`,
 			};
 		} catch (error) {
+			console.error("searchVideos error:", error);
 			return {
 				success: false,
 				videos: [],
@@ -548,25 +601,66 @@ class VideoCacheService {
 
 	async getAllVideos(): Promise<VideoFileData[]> {
 		try {
+			// まず基本的なVideoMetadataを取得
 			const videos = await prisma.videoMetadata.findMany({
 				orderBy: { title: "asc" },
 			});
 
-			return videos.map((v: Prisma.VideoMetadataGetPayload<object>) => ({
-				id: v.id,
-				title: v.title,
-				fileName: v.fileName,
-				filePath: v.filePath,
-				fileSize: Number(v.fileSize),
-				fileModifiedAt: v.lastModified,
-				episode: v.episode ?? undefined,
-				year: v.year ?? undefined,
-				duration: v.duration ?? undefined,
-				thumbnailPath: v.thumbnail_path ?? undefined,
-				watchProgress: 0,
-				watchTime: 0,
-				isLiked: false,
-			}));
+			console.log(`[getAllVideos] Found ${videos.length} videos in database`);
+
+			// 各動画の進捗情報を個別に取得
+			const videosWithProgress = await Promise.all(
+				videos.map(async (v) => {
+					try {
+						const progress = await prisma.videoProgress.findUnique({
+							where: { filePath: v.filePath },
+						});
+
+						return {
+							id: v.id,
+							title: v.title,
+							fileName: v.fileName,
+							filePath: v.filePath,
+							fileSize: Number(v.fileSize),
+							fileModifiedAt: v.lastModified,
+							episode: v.episode ?? undefined,
+							year: v.year ?? undefined,
+							duration: v.duration ?? undefined,
+							thumbnailPath: v.thumbnail_path ?? undefined,
+							watchProgress: progress?.watchProgress ?? 0,
+							watchTime: progress?.watchTime ?? 0,
+							isLiked: progress?.isLiked ?? false,
+							lastWatched: progress?.lastWatched ?? undefined,
+						};
+					} catch (progressError) {
+						console.error(
+							`[getAllVideos] Progress error for ${v.filePath}:`,
+							progressError,
+						);
+						return {
+							id: v.id,
+							title: v.title,
+							fileName: v.fileName,
+							filePath: v.filePath,
+							fileSize: Number(v.fileSize),
+							fileModifiedAt: v.lastModified,
+							episode: v.episode ?? undefined,
+							year: v.year ?? undefined,
+							duration: v.duration ?? undefined,
+							thumbnailPath: v.thumbnail_path ?? undefined,
+							watchProgress: 0,
+							watchTime: 0,
+							isLiked: false,
+							lastWatched: undefined,
+						};
+					}
+				}),
+			);
+
+			console.log(
+				`[getAllVideos] Returning ${videosWithProgress.length} videos with progress`,
+			);
+			return videosWithProgress;
 		} catch (error) {
 			console.error("動画取得エラー:", error);
 			return [];
