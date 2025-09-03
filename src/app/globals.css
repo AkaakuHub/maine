@@ -106,9 +106,14 @@ body {
 	--color-surface-pressed: #475569;
 }
 
-/* Smooth scrolling for better UX */
+/* Smooth scrolling for better UX + Prevent scrollbar layout shift */
 html {
 	scroll-behavior: smooth;
+	/* Modern solution: Reserve space for scrollbar to prevent layout shifts */
+	scrollbar-gutter: stable;
+	/* Fallback for older browsers: Calculate scrollbar width and add margin */
+	margin-left: calc(100vw - 100%);
+	overflow-x: hidden;
 }
 
 /* Custom scrollbar styling */
