@@ -17,6 +17,7 @@ import type { VideoFileData } from "@/type";
 import { cn, formatFileSize } from "@/libs/utils";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
+import { API } from "@/utils/constants";
 
 interface VideoListProps {
 	videos: VideoFileData[];
@@ -151,9 +152,18 @@ const VideoListItem = ({
 				<div className="flex items-center gap-4">
 					{/* サムネイル */}
 					<div className="relative w-28 h-16 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg overflow-hidden flex-shrink-0">
-						<div className="w-full h-full flex items-center justify-center">
-							<Play className="h-6 w-6 text-text-secondary group-hover:text-text transition-colors" />
-						</div>
+						{video.thumbnailPath ? (
+							<img
+								src={`${API.ENDPOINTS.THUMBNAILS}/${video.thumbnailPath}`}
+								alt={video.title}
+								className="w-full h-full object-cover"
+								loading="lazy"
+							/>
+						) : (
+							<div className="w-full h-full flex items-center justify-center">
+								<Play className="h-6 w-6 text-text-secondary group-hover:text-text transition-colors" />
+							</div>
+						)}
 
 						{/* ダウンロード進行状況オーバーレイ */}
 						{isCurrentlyDownloading &&
