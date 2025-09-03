@@ -96,6 +96,17 @@ export const API = {
 	TIMEOUT: 30000,
 } as const;
 
+// テーマ関連
+export const THEME = {
+	STORAGE_KEY: "theme-preference",
+	MODES: {
+		LIGHT: "light",
+		DARK: "dark",
+		SYSTEM: "system",
+	},
+	DEFAULT_MODE: "system",
+} as const;
+
 // 動画時間フォーマット関数
 export const formatDuration = (seconds: number): string => {
 	const hours = Math.floor(seconds / 3600);

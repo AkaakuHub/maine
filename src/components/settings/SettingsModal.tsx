@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, Settings, Database, SkipForward } from "lucide-react";
+import { X, Settings, Database, SkipForward, Palette } from "lucide-react";
 import ManualRefreshButton from "@/components/ManualRefreshButton";
 import { useVideoUpdater } from "@/hooks/useVideoUpdater";
 import { useChapterSkipStore } from "@/stores/chapterSkipStore";
@@ -9,6 +9,9 @@ import { SettingsSection } from "@/components/settings/SettingsSection";
 import { CacheStatsCard } from "@/components/settings/CacheStatsCard";
 import { SkipRuleForm } from "@/components/settings/SkipRuleForm";
 import { SkipRuleItem } from "@/components/settings/SkipRuleItem";
+import { useTheme } from "@/hooks/useTheme";
+import { THEME } from "@/utils/constants";
+import type { ThemeMode } from "@/types/theme";
 
 interface SettingsModalProps {
 	isOpen: boolean;
@@ -18,8 +21,9 @@ interface SettingsModalProps {
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 	const updateStatus = useVideoUpdater();
 	const chapterSkipStore = useChapterSkipStore();
+	const { theme, setTheme } = useTheme();
 	const [expandedSection, setExpandedSection] = useState<string | null>(
-		"system",
+		"appearance",
 	);
 	const modalRef = useRef<HTMLDivElement>(null);
 
@@ -91,6 +95,58 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 				{/* コンテンツ */}
 				<div className="flex-1 overflow-y-auto p-6">
 					<div className="space-y-6">
+						<SettingsSection
+							icon={Palette}
+							title="外観"
+							isExpanded={expandedSection === "appearance"}
+							onToggle={() => toggleSection("appearance")}
+						>
+							<div className="mb-4 text-sm text-text-secondary">
+								アプリの表示テーマを選択できます。システムの設定に従うか、ライト・ダークテーマを手動で選択できます。
+							</div>
+
+							<div className="space-y-3">
+								{[
+									{
+										value: THEME.MODES.SYSTEM,
+										label: "システムの設定に従う",
+										description: "OSの設定に従ってテーマが自動で切り替わります",
+									},
+									{
+										value: THEME.MODES.LIGHT,
+										label: "ライトテーマ",
+										description: "明るい背景色でUIを表示します",
+									},
+									{
+										value: THEME.MODES.DARK,
+										label: "ダークテーマ",
+										description: "暗い背景色でUIを表示します",
+									},
+								].map((option) => (
+									<label
+										key={option.value}
+										className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+									>
+										<input
+											type="radio"
+											name="theme"
+											value={option.value}
+											checked={theme === option.value}
+											onChange={() => setTheme(option.value as ThemeMode)}
+											className="mt-1 h-4 w-4 text-primary border-border focus:ring-primary focus:ring-2 focus:ring-offset-0"
+										/>
+										<div>
+											<div className="text-text font-medium">
+												{option.label}
+											</div>
+											<div className="text-text-secondary text-sm">
+												{option.description}
+											</div>
+										</div>
+									</label>
+								))}
+							</div>
+						</SettingsSection>
 						<SettingsSection
 							icon={Database}
 							title="システム管理"

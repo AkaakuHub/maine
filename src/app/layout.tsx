@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import UpdateIndicator from "@/components/UpdateIndicator";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -57,10 +58,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="ja" className="dark">
+		<html lang="ja">
 			<body className={`${inter.className} antialiased`}>
-				{children}
-				<UpdateIndicator />
+				<ThemeProvider>
+					{children}
+					<UpdateIndicator />
+				</ThemeProvider>
 			</body>
 		</html>
 	);
