@@ -44,6 +44,15 @@ export interface ScanState {
 	phaseStartTime?: Date;
 	totalElapsedTime?: number;
 	currentPhaseElapsed?: number;
+
+	// スキップ統計情報
+	skipStats?: {
+		totalFiles: number;
+		newFiles: number;
+		changedFiles: number;
+		unchangedFiles: number;
+		unchangedPercentage: number;
+	};
 }
 
 export interface ScanActions {
@@ -100,6 +109,8 @@ export const useScanStore = create<ScanStore>()(
 			phaseStartTime: undefined,
 			totalElapsedTime: undefined,
 			currentPhaseElapsed: undefined,
+
+			skipStats: undefined,
 
 			// アクション
 			setConnectionState: (connected, count) =>
@@ -230,6 +241,12 @@ export const useScanStore = create<ScanStore>()(
 								newState.canCancel = false;
 								newState.isPaused = false;
 								break;
+
+							case "scan_stats":
+								// スキップ統計情報を更新
+								newState.skipStats = event.skipStats;
+								newState.message = event.message || newState.message;
+								break;
 						}
 
 						return newState;
@@ -323,6 +340,7 @@ export const useScanProgress = () =>
 		phaseStartTime: state.phaseStartTime,
 		totalElapsedTime: state.totalElapsedTime,
 		currentPhaseElapsed: state.currentPhaseElapsed,
+		skipStats: state.skipStats,
 	}));
 
 export const useScanControls = () =>

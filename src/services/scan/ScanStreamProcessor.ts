@@ -191,7 +191,7 @@ export class ScanStreamProcessor {
 			await pipeline(fileStream, metadataTransform, collectStream);
 
 			console.log(
-				`🎯 Stream processing completed: ${results.length} files processed`,
+				`Stream processing completed: ${results.length} files processed`,
 			);
 
 			return results;

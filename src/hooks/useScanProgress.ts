@@ -34,9 +34,7 @@ export function useScanProgress() {
 			isConnectingRef.current ||
 			eventSourceRef.current?.readyState === EventSource.OPEN
 		) {
-			console.log(
-				"📡 SSE connection already exists or connecting, skipping...",
-			);
+			console.log("SSE connection already exists or connecting, skipping...");
 			return;
 		}
 
@@ -44,7 +42,7 @@ export function useScanProgress() {
 
 		// 既存接続をクリーンアップ
 		if (eventSourceRef.current) {
-			console.log("📡 Cleaning up existing SSE connection");
+			console.log("Cleaning up existing SSE connection");
 			eventSourceRef.current.close();
 			eventSourceRef.current = null;
 		}
@@ -52,12 +50,12 @@ export function useScanProgress() {
 		setConnectionState(false, 0);
 
 		try {
-			console.log("📡 Establishing new SSE connection...");
+			console.log("Establishing new SSE connection...");
 			const eventSource = new EventSource("/api/scan/events");
 			eventSourceRef.current = eventSource;
 
 			eventSource.onopen = () => {
-				console.log("📡 SSE connection established successfully");
+				console.log("SSE connection established successfully");
 				reconnectAttemptsRef.current = 0;
 				isConnectingRef.current = false;
 			};
@@ -66,7 +64,7 @@ export function useScanProgress() {
 				try {
 					const data: ScanProgressEvent = JSON.parse(event.data);
 					console.log(
-						"📡 SSE received:",
+						"SSE received:",
 						data.type,
 						data.scanId,
 						data.progress,
@@ -92,6 +90,7 @@ export function useScanProgress() {
 						case "progress":
 						case "complete":
 						case "error":
+						case "scan_stats":
 							updateProgress(data);
 							break;
 					}
@@ -101,7 +100,7 @@ export function useScanProgress() {
 			};
 
 			eventSource.onerror = (error) => {
-				console.warn("📡 SSE connection error:", error);
+				console.warn("SSE connection error:", error);
 				isConnectingRef.current = false;
 
 				setConnectionState(false, 0);
@@ -116,7 +115,7 @@ export function useScanProgress() {
 					reconnectAttemptsRef.current += 1;
 
 					console.log(
-						`📡 Attempting reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current})`,
+						`Attempting reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current})`,
 					);
 
 					reconnectTimeoutRef.current = setTimeout(() => {
@@ -138,7 +137,7 @@ export function useScanProgress() {
 	 * SSE接続を切断
 	 */
 	const disconnect = useCallback(() => {
-		console.log("📡 Disconnecting SSE connection...");
+		console.log("Disconnecting SSE connection...");
 
 		if (eventSourceRef.current) {
 			eventSourceRef.current.close();
@@ -154,7 +153,7 @@ export function useScanProgress() {
 		setConnectionState(false, 0);
 		setConnectionError(null);
 
-		console.log("📡 SSE connection disconnected");
+		console.log("SSE connection disconnected");
 	}, [setConnectionState, setConnectionError]);
 
 	/**

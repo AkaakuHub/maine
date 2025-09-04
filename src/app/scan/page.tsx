@@ -30,15 +30,15 @@ export default function ScanManagementPage() {
 	// スキャンを手動開始
 	const handleStartScan = async () => {
 		setIsStartingScan(true);
-		console.log("🚀 Starting manual scan...");
+		console.log("Starting manual scan...");
 
 		try {
 			// スキャン状態をリセット
-			console.log("🔄 Resetting scan state...");
+			console.log("Resetting scan state...");
 			scanProgress.resetScanState();
 
 			// スキャン開始リクエスト
-			console.log("📡 Sending scan start request...");
+			console.log("Sending scan start request...");
 			const response = await fetch("/api/scan/start", {
 				method: "POST",
 			});
@@ -48,7 +48,7 @@ export default function ScanManagementPage() {
 				console.error("Failed to start scan:", error);
 			} else {
 				const result = await response.json();
-				console.log("✅ Scan start request successful", {
+				console.log("Scan start request successful", {
 					activeConnections: result.activeConnections,
 				});
 			}
@@ -122,6 +122,55 @@ export default function ScanManagementPage() {
 
 							{/* 進捗バー */}
 							<ScanProgressBar showDetails={true} showControls={false} />
+
+							{/* スキップ統計情報 */}
+							{scanProgress.skipStats && (
+								<div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-md">
+									<h4 className="text-sm font-semibold text-text-primary mb-3">
+										差分スキャン統計
+									</h4>
+									<div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+										<div className="text-center p-2 bg-surface/50 rounded">
+											<div className="font-bold text-lg text-primary">
+												{scanProgress.skipStats.totalFiles}
+											</div>
+											<div className="text-text-secondary text-xs">
+												総ファイル数
+											</div>
+										</div>
+										<div className="text-center p-2 bg-surface/50 rounded">
+											<div className="font-bold text-lg text-success">
+												{scanProgress.skipStats.newFiles}
+											</div>
+											<div className="text-text-secondary text-xs">
+												新規ファイル
+											</div>
+										</div>
+										<div className="text-center p-2 bg-surface/50 rounded">
+											<div className="font-bold text-lg text-warning">
+												{scanProgress.skipStats.changedFiles}
+											</div>
+											<div className="text-text-secondary text-xs">
+												変更ファイル
+											</div>
+										</div>
+										<div className="text-center p-2 bg-surface/50 rounded">
+											<div className="font-bold text-lg text-text-secondary">
+												{scanProgress.skipStats.unchangedFiles}
+											</div>
+											<div className="text-text-secondary text-xs">
+												スキップ ({scanProgress.skipStats.unchangedPercentage}%)
+											</div>
+										</div>
+									</div>
+									{scanProgress.skipStats.unchangedPercentage > 0 && (
+										<div className="mt-3 text-center text-sm text-success">
+											{scanProgress.skipStats.unchangedPercentage}%
+											のファイルをスキップしました
+										</div>
+									)}
+								</div>
+							)}
 
 							{/* 制御ボタン */}
 							{(scanProgress.isScanning || scanProgress.isPaused) && (

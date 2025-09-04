@@ -28,7 +28,7 @@ export function useVideoUpdater() {
 
 	const checkForUpdates = async () => {
 		try {
-			console.log("🔄 useVideoUpdater: checkForUpdates called");
+			console.log("useVideoUpdater: checkForUpdates called");
 			const timestamp = Date.now();
 			const response = await fetch(`/api/admin/update-status?t=${timestamp}`, {
 				cache: "no-cache",

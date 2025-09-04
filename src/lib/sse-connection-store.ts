@@ -26,7 +26,8 @@ export interface ScanProgressEvent {
 		| "heartbeat"
 		| "control_pause"
 		| "control_resume"
-		| "control_cancel";
+		| "control_cancel"
+		| "scan_stats"; // 新しいイベント型
 	scanId?: string;
 	phase?: "discovery" | "metadata" | "database";
 	progress?: number; // 0-100
@@ -43,6 +44,14 @@ export interface ScanProgressEvent {
 	phaseStartTime?: string;
 	totalElapsedTime?: number;
 	currentPhaseElapsed?: number;
+	// スキップ統計情報
+	skipStats?: {
+		totalFiles: number;
+		newFiles: number;
+		changedFiles: number;
+		unchangedFiles: number; // スキップされたファイル数
+		unchangedPercentage: number;
+	};
 }
 
 export class SSEConnectionStore {

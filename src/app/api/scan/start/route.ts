@@ -10,7 +10,7 @@ import { sseStore } from "@/lib/sse-connection-store";
  */
 export async function POST() {
 	try {
-		console.log("🚀 Manual scan start requested via API");
+		console.log("Manual scan start requested via API");
 
 		// 既にスキャン中かチェック
 		const status = videoCacheService.getUpdateStatus();
@@ -27,7 +27,7 @@ export async function POST() {
 
 		// スキャンを開始（SSE接続は非同期で確立される）
 		console.log(
-			"🚀 Starting scan - SSE connections will receive progress asynchronously",
+			"Starting scan - SSE connections will receive progress asynchronously",
 		);
 		sseStore.getConnectionCount();
 		// Current active SSE connections

@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
 			// 現在のスキャン状態があれば送信
 			const currentState = sseStore.getCurrentScanState();
-			console.log("📡 Current scan state for new connection:", {
+			console.log("Current scan state for new connection:", {
 				hasLastEvent: !!currentState.lastEvent,
 				scanId: currentState.scanId,
 				connectionCount: currentState.connectionCount,

@@ -53,17 +53,27 @@ export class ThumbnailGenerator {
 			// サムネイルファイルパスを生成
 			const thumbnailPath = this.generateThumbnailPath(videoFilePath);
 
-			// 既にサムネイルが存在する場合はスキップ
+			// 既にサムネイルが存在する場合、ビデオファイルとの更新時刻を比較
 			if (existsSync(thumbnailPath)) {
-				const stat = await import("node:fs/promises").then((fs) =>
-					fs.stat(thumbnailPath),
+				const [thumbnailStat, videoStat] = await Promise.all([
+					import("node:fs/promises").then((fs) => fs.stat(thumbnailPath)),
+					import("node:fs/promises").then((fs) => fs.stat(videoFilePath)),
+				]);
+
+				// サムネイルがビデオファイルより新しい場合はスキップ
+				if (thumbnailStat.mtime >= videoStat.mtime) {
+					return {
+						success: true,
+						thumbnailPath,
+						relativePath: this.getThumbnailRelativePath(videoFilePath),
+						fileSize: thumbnailStat.size,
+					};
+				}
+
+				// サムネイルが古い場合は再生成（下に続く）
+				console.log(
+					`サムネイル更新: ${videoFilePath} (ビデオファイルが更新されました)`,
 				);
-				return {
-					success: true,
-					thumbnailPath,
-					relativePath: this.getThumbnailRelativePath(videoFilePath),
-					fileSize: stat.size,
-				};
 			}
 
 			// サムネイル保存ディレクトリを作成

@@ -142,6 +142,14 @@ export function ScanProgressBar({
 							{scanProgress.message ||
 								(scanProgress.isScanning ? "スキャン中..." : "待機中")}
 						</span>
+
+						{/* スキップ統計の簡易表示 */}
+						{scanProgress.skipStats &&
+							scanProgress.skipStats.unchangedFiles > 0 && (
+								<span className="text-xs text-success bg-success/10 px-2 py-1 rounded">
+									{scanProgress.skipStats.unchangedPercentage}% スキップ
+								</span>
+							)}
 					</div>
 
 					<div className="flex items-center gap-3">
