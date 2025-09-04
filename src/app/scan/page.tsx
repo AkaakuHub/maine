@@ -371,16 +371,20 @@ export default function ScanManagementPage() {
 										)}
 
 										{/* 完了・アイドル状態 */}
-										{!scanProgress.isScanning && !scanProgress.error && (
-											<div className="text-text-muted flex items-start gap-2 text-xs">
-												<span className="text-text-muted">[{currentTime}]</span>
-												<span>
-													{scanProgress.isComplete
-														? `スキャン完了 - ${scanProgress.totalFiles}ファイル処理完了`
-														: "スキャン待機中..."}
-												</span>
-											</div>
-										)}
+										{!scanProgress.isScanning &&
+											!scanProgress.error &&
+											!scanProgress.message && (
+												<div className="text-text-muted flex items-start gap-2 text-xs">
+													<span className="text-text-muted">
+														[{currentTime}]
+													</span>
+													<span>
+														{scanProgress.isComplete
+															? `スキャン完了 - ${scanProgress.totalFiles}ファイル処理完了`
+															: "スキャン待機中..."}
+													</span>
+												</div>
+											)}
 									</div>
 								)}
 							</div>
