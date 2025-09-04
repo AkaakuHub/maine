@@ -31,7 +31,7 @@ export function HeaderSection({
 								<Play className="w-4 h-4 sm:w-5 sm:h-5 text-text-inverse" />
 							</div>
 							<div>
-								<h1 className="text-lg sm:text-xl font-semibold text-text whitespace-nowrap">
+								<h1 className="text-md lg:text-xl font-semibold text-text whitespace-nowrap">
 									My Video Storage
 								</h1>
 							</div>
