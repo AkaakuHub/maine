@@ -130,38 +130,6 @@ export class ThumbnailGenerator {
 			};
 		}
 	}
-
-	/**
-	 * 複数ファイルのサムネイルを並列生成
-	 */
-	async generateBatchThumbnails(
-		videoFilePaths: string[],
-		concurrency = FFPROBE.DEFAULT_THUMBNAIL_CONCURRENCY,
-		options: ThumbnailOptions = {},
-	): Promise<ThumbnailResult[]> {
-		const results: ThumbnailResult[] = [];
-
-		// 並列処理でconcurrency数ずつ処理
-		for (let i = 0; i < videoFilePaths.length; i += concurrency) {
-			const batch = videoFilePaths.slice(i, i + concurrency);
-
-			const batchPromises = batch.map(async (filePath) => {
-				const metadata = await this.metadataExtractor.extractMetadata(filePath);
-				return this.generateThumbnail(filePath, metadata, options);
-			});
-
-			const batchResults = await Promise.all(batchPromises);
-			results.push(...batchResults);
-		}
-
-		const successCount = results.filter((r) => r.success).length;
-		console.log(
-			`🖼️ Thumbnail generation completed: ${successCount}/${videoFilePaths.length} successful`,
-		);
-
-		return results;
-	}
-
 	/**
 	 * サムネイルファイルパスを生成（ハッシュベース）
 	 */
