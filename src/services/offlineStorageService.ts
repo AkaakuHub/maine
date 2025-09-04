@@ -150,11 +150,6 @@ class OfflineStorageService {
 		if (!this.db) return [];
 
 		const allVideos = await this.db.getAll(STORE_NAME);
-		console.log(
-			"getAllCachedVideos: found videos:",
-			allVideos.map((v) => ({ id: v.id, filePath: v.filePath })),
-		);
-
 		return allVideos;
 	}
 
