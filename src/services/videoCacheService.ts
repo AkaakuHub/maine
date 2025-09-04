@@ -449,11 +449,14 @@ class VideoCacheService {
 				);
 				const parsedInfo = parseVideoFileName(videoFile.fileName);
 
-				// サムネイル生成（バッチ処理でも実行）
+				// サムネイル生成（既に取得したメタデータを使用）
 				let thumbnailPath: string | null = null;
 				try {
 					const thumbnailResult =
-						await this.thumbnailGenerator.generateThumbnail(videoFile.filePath);
+						await this.thumbnailGenerator.generateThumbnail(
+							videoFile.filePath,
+							metadata,
+						);
 					if (thumbnailResult.success) {
 						thumbnailPath = thumbnailResult.relativePath;
 					}

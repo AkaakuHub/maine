@@ -87,12 +87,14 @@ export class ScanStreamProcessor {
 						videoFile.filePath,
 					);
 
-					// サムネイル生成（メタデータ処理と並行して実行）
+					// サムネイル生成（既に取得したメタデータを使用）
 					let thumbnailPath: string | null = null;
 					try {
 						const thumbnailResult =
 							await self.thumbnailGenerator.generateThumbnail(
 								videoFile.filePath,
+								metadata, // 既に取得済みのメタデータを渡す
+								{}, // options
 							);
 						if (thumbnailResult.success) {
 							thumbnailPath = thumbnailResult.relativePath; // API配信用の相対パスをDB保存

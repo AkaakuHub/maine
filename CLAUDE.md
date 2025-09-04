@@ -18,7 +18,6 @@ devは私が建てているので勝手にサーバー起動をしないこと
 ### マジックナンバー
 特定の数値など、マジックナンバーは全て`/src/utils/constants.ts`にまとめること
 
-
 ### ファイル構成
 1つのファイルが長くなりすぎないよう、適切に分割すること
 
@@ -30,3 +29,4 @@ devは私が建てているので勝手にサーバー起動をしないこと
 - biome-ignoreなど、lint無効化は禁止
 - anyや、eslint-disableなどを使わずに、型安全に書くこと
 - SVG禁止。アイコンライブラリを使用
+- UIはなるべく`/Users/akaaku/dev/AkaakuHub/my-video-storage/src/components/ui`にあるコンポーネントを使用すること

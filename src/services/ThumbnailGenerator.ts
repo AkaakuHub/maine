@@ -5,11 +5,15 @@ import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { FFPROBE } from "@/utils/constants";
+import {
+	FFprobeMetadataExtractor,
+	type VideoMetadata,
+} from "./FFprobeMetadataExtractor";
 
 const execAsync = promisify(exec);
 
 export interface ThumbnailOptions {
-	seekTime?: number; // シーク時間（秒）デフォルト: 20秒
+	seekTime?: number; // 自動計算（33%地点）を使用
 	quality?: number; // WebP品質（0-100）デフォルト: 70
 	width?: number; // サムネイル幅（ピクセル）デフォルト: 300px（height自動調整）
 }
@@ -32,8 +36,14 @@ export class ThumbnailGenerator {
 	 */
 	private readonly thumbnailBaseDir: string;
 
+	/**
+	 * メタデータ抽出器
+	 */
+	private readonly metadataExtractor: FFprobeMetadataExtractor;
+
 	constructor(thumbnailBaseDir = "./thumbnails") {
 		this.thumbnailBaseDir = thumbnailBaseDir;
+		this.metadataExtractor = new FFprobeMetadataExtractor();
 	}
 
 	/**
@@ -41,11 +51,11 @@ export class ThumbnailGenerator {
 	 */
 	async generateThumbnail(
 		videoFilePath: string,
+		existingMetadata: VideoMetadata,
 		options: ThumbnailOptions = {},
 	): Promise<ThumbnailResult> {
 		try {
 			const {
-				seekTime = FFPROBE.DEFAULT_SEEK_TIME,
 				quality = FFPROBE.DEFAULT_THUMBNAIL_QUALITY,
 				width = FFPROBE.DEFAULT_THUMBNAIL_WIDTH,
 			} = options;
@@ -79,11 +89,15 @@ export class ThumbnailGenerator {
 			// サムネイル保存ディレクトリを作成
 			await this.ensureThumbnailDirectory(thumbnailPath);
 
+			// 動画の時間情報を取得して33%地点を計算
+			const duration = existingMetadata.duration || 1; // デフォルト1秒
+			const thumbnailPosition = Math.max(1, duration * 0.33);
+
 			// 計画書の最適コマンド: シーク+キーフレーム手法でWebP生成
 			const command = [
 				"ffmpeg",
 				"-y", // 上書き許可
-				`-ss ${this.formatSeekTime(seekTime)}`, // シーク時間
+				`-ss ${this.formatSeekTime(thumbnailPosition)}`, // 33%地点のシーク時間
 				`-i "${videoFilePath}"`, // 入力ファイル
 				`-vf "thumbnail=${width}"`, // キーフレーム選択とリサイズ
 				"-frames:v 1", // 1フレームのみ
@@ -131,9 +145,10 @@ export class ThumbnailGenerator {
 		for (let i = 0; i < videoFilePaths.length; i += concurrency) {
 			const batch = videoFilePaths.slice(i, i + concurrency);
 
-			const batchPromises = batch.map((filePath) =>
-				this.generateThumbnail(filePath, options),
-			);
+			const batchPromises = batch.map(async (filePath) => {
+				const metadata = await this.metadataExtractor.extractMetadata(filePath);
+				return this.generateThumbnail(filePath, metadata, options);
+			});
 
 			const batchResults = await Promise.all(batchPromises);
 			results.push(...batchResults);
