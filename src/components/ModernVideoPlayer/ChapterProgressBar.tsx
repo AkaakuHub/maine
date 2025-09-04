@@ -20,6 +20,7 @@ export default function ChapterProgressBar({
 	className = "",
 }: ChapterProgressBarProps) {
 	const [hoveredChapter, setHoveredChapter] = useState<number | null>(null);
+	const [isHovered, setIsHovered] = useState(false);
 
 	// 現在のチャプターを取得
 	const getCurrentChapter = () => {
@@ -42,25 +43,60 @@ export default function ChapterProgressBar({
 	};
 
 	if (chapters.length === 0) {
-		// チャプターがない場合は通常のシークバー
+		// チャプターがない場合も新しいスタイルのシークバー
+		const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
 		return (
 			<div className={cn("mb-3", className)}>
-				<input
-					type="range"
-					min={0}
-					max={duration || 0}
-					step={getSeekStep()}
-					value={currentTime}
-					onChange={handleSeekChange}
-					className="w-full h-2 bg-surface-hover rounded-lg appearance-none cursor-pointer slider progress-slider"
-				/>
+				<div className="relative w-full h-3 flex items-center">
+					{/* 背景バー */}
+					<div
+						className={cn(
+							"absolute w-full bg-surface-hover rounded-lg transition-all duration-150",
+							isHovered ? "h-2 top-0.5" : "h-1 top-1",
+						)}
+					/>
+
+					{/* プログレスバー */}
+					<div
+						className={cn(
+							"absolute bg-primary rounded-lg transition-all duration-150",
+							isHovered ? "h-2 top-0.5" : "h-1 top-1",
+						)}
+						style={{ width: `${progress}%` }}
+					/>
+
+					{/* プログレスバー右端の丸いつまみ */}
+					<div
+						className={cn(
+							"absolute bg-primary rounded-full shadow-lg transition-all duration-150 z-25",
+							isHovered ? "w-5 h-5 -top-1" : "w-3 h-3 top-0",
+						)}
+						style={{
+							left: `${progress}%`,
+							transform: "translateX(-50%)",
+						}}
+					/>
+
+					{/* 透明なシークバー */}
+					<input
+						type="range"
+						min={0}
+						max={duration || 0}
+						step={getSeekStep()}
+						value={currentTime}
+						onChange={handleSeekChange}
+						onMouseEnter={() => setIsHovered(true)}
+						onMouseLeave={() => setIsHovered(false)}
+						onMouseUp={(e) => e.currentTarget.blur()}
+						className="absolute inset-0 w-full h-3 bg-transparent appearance-none cursor-pointer z-30 opacity-0"
+					/>
+				</div>
 			</div>
 		);
 	}
 
 	const currentChapter = getCurrentChapter();
-
-	const isHovered = currentChapter && hoveredChapter === currentChapter.id;
 
 	return (
 		<div className={cn("mb-3", className)}>
@@ -143,7 +179,7 @@ export default function ChapterProgressBar({
 							<div
 								key={`divider-${chapter.id}`}
 								className={cn(
-									"absolute w-0.5 bg-text-inverse/60 rounded-full transition-all duration-150",
+									"absolute w-0.5 bg-text-secondary/60 rounded-full transition-all duration-150",
 									isHovered ? "h-2 top-0.5" : "h-1 top-1",
 								)}
 								style={{
