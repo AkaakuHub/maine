@@ -34,7 +34,6 @@ export function useScanProgress() {
 			isConnectingRef.current ||
 			eventSourceRef.current?.readyState === EventSource.OPEN
 		) {
-			console.log("SSE connection already exists or connecting, skipping...");
 			return;
 		}
 
@@ -42,7 +41,6 @@ export function useScanProgress() {
 
 		// 既存接続をクリーンアップ
 		if (eventSourceRef.current) {
-			console.log("Cleaning up existing SSE connection");
 			eventSourceRef.current.close();
 			eventSourceRef.current = null;
 		}
@@ -50,12 +48,10 @@ export function useScanProgress() {
 		setConnectionState(false, 0);
 
 		try {
-			console.log("Establishing new SSE connection...");
 			const eventSource = new EventSource("/api/scan/events");
 			eventSourceRef.current = eventSource;
 
 			eventSource.onopen = () => {
-				console.log("SSE connection established successfully");
 				reconnectAttemptsRef.current = 0;
 				isConnectingRef.current = false;
 			};
@@ -63,13 +59,6 @@ export function useScanProgress() {
 			eventSource.onmessage = (event) => {
 				try {
 					const data: ScanProgressEvent = JSON.parse(event.data);
-					console.log(
-						"SSE received:",
-						data.type,
-						data.scanId,
-						data.progress,
-						data.phase,
-					);
 
 					switch (data.type) {
 						case "connected":
@@ -114,10 +103,6 @@ export function useScanProgress() {
 					);
 					reconnectAttemptsRef.current += 1;
 
-					console.log(
-						`Attempting reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current})`,
-					);
-
 					reconnectTimeoutRef.current = setTimeout(() => {
 						connect();
 					}, delay);
@@ -137,8 +122,6 @@ export function useScanProgress() {
 	 * SSE接続を切断
 	 */
 	const disconnect = useCallback(() => {
-		console.log("Disconnecting SSE connection...");
-
 		if (eventSourceRef.current) {
 			eventSourceRef.current.close();
 			eventSourceRef.current = null;
@@ -152,8 +135,6 @@ export function useScanProgress() {
 		isConnectingRef.current = false;
 		setConnectionState(false, 0);
 		setConnectionError(null);
-
-		console.log("SSE connection disconnected");
 	}, [setConnectionState, setConnectionError]);
 
 	/**
@@ -200,8 +181,7 @@ export function useScanProgress() {
 					return false;
 				}
 
-				const result = await response.json();
-				console.log(`🎛️ Scan control ${action} successful:`, result);
+				await response.json();
 				return true;
 			} catch (error) {
 				console.error(`Scan control ${action} request failed:`, error);

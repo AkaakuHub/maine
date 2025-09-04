@@ -1,11 +1,7 @@
 # CLAUDE.md
 
-**Styling:**
-- Tailwind CSS with custom gradient backgrounds
-- Dark theme throughout
-- Responsive design with mobile-first approach
-
-## Development Notes
+# ルール
+devは私が建てているので勝手にサーバー起動をしないこと
 
 ### Package Manager
 - **ALWAYS use `pnpm` for package management** - never manually edit package.json
