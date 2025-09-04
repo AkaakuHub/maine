@@ -80,7 +80,7 @@ export function ScanControlButtons({
 					disabled={!scanProgress.canResume || loading !== null}
 					className={cn(
 						"flex items-center justify-center rounded-full transition-colors",
-						"bg-primary text-primary-foreground hover:bg-primary/90",
+						"bg-primary text-text-inverse hover:bg-primary/90",
 						"disabled:opacity-50 disabled:cursor-not-allowed",
 						sizeStyles[size],
 					)}
@@ -99,7 +99,7 @@ export function ScanControlButtons({
 					disabled={!scanProgress.canPause || loading !== null}
 					className={cn(
 						"flex items-center justify-center rounded-full transition-colors",
-						"bg-warning text-warning-foreground hover:bg-warning/90",
+						"bg-warning text-text-inverse hover:bg-warning/90",
 						"disabled:opacity-50 disabled:cursor-not-allowed",
 						sizeStyles[size],
 					)}
@@ -120,7 +120,7 @@ export function ScanControlButtons({
 				disabled={!scanProgress.canCancel || loading !== null}
 				className={cn(
 					"flex items-center justify-center rounded-full transition-colors",
-					"bg-error text-error-foreground hover:bg-error/90",
+					"bg-error text-text-inverse hover:bg-error/90",
 					"disabled:opacity-50 disabled:cursor-not-allowed",
 					sizeStyles[size],
 				)}

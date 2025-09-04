@@ -160,7 +160,7 @@ export function ScheduleSettings({
 														: [...settings.weeklyDays, index].sort();
 													updateSetting("weeklyDays", newDays);
 												}}
-												className={`p-2 text-xs rounded border transition-colors ${
+												className={`text-text-inverse p-2 text-xs rounded border transition-colors ${
 													settings.weeklyDays.includes(index)
 														? "bg-primary text-primary-foreground border-primary"
 														: "bg-surface-elevated text-text-secondary border-border hover:bg-surface-hover"

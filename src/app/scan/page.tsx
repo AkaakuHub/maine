@@ -117,7 +117,7 @@ export default function ScanManagementPage() {
 										type="button"
 										onClick={handleStartScan}
 										disabled={isStartingScan}
-										className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+										className="text-text-inverse flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
 									>
 										{isStartingScan ? (
 											<RefreshCw className="h-4 w-4 animate-spin" />
