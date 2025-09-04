@@ -96,6 +96,8 @@ export function useVideoPlayer() {
 							}));
 							console.log("番組情報を取得しました:", data.filePath);
 						}
+					} else {
+						console.log("番組情報が見つかりません:", filePath);
 					}
 				}
 			} catch (error) {

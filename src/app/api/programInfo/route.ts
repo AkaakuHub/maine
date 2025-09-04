@@ -20,10 +20,11 @@ export async function GET(request: NextRequest) {
 		const programInfoPath = generateProgramInfoPath(filePath);
 
 		if (!programInfoPath || !existsSync(programInfoPath)) {
-			return NextResponse.json(
-				{ error: "番組情報ファイルが見つかりません" },
-				{ status: 404 },
-			);
+			return NextResponse.json({
+				success: false,
+				programInfo: null,
+				message: "番組情報ファイルが見つかりません",
+			});
 		}
 
 		// テキストファイルを読み込み
