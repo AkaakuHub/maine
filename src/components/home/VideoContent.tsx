@@ -5,7 +5,7 @@ import VideoGridContainer from "@/components/VideoGridContainer";
 import VideoList from "@/components/VideoList";
 import EmptyState from "@/components/EmptyState";
 import LoadingState from "@/components/LoadingState";
-import { Button } from "@/components/ui/Button";
+import Button from "@/components/ui/Button";
 import type { VideoFileData } from "@/type";
 import type { ViewMode, TabType } from "@/stores/appStateStore";
 

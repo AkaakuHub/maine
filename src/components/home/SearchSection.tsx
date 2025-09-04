@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { Search, X, SortAsc, SortDesc, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { formatFileSize } from "@/libs/utils";
 import type { SortBy, SortOrder, TabType } from "@/stores/appStateStore";

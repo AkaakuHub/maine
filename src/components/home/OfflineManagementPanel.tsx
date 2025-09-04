@@ -1,7 +1,7 @@
 "use client";
 
 import { Download, RefreshCw, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import Button from "@/components/ui/Button";
 import { formatFileSize } from "@/libs/utils";
 import type { VideoFileData } from "@/type";
 
