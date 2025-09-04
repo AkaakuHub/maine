@@ -1,4 +1,3 @@
-import { ToggleLeft, ToggleRight } from "lucide-react";
 import {
 	type ScanScheduleSettings,
 	SCHEDULE_INTERVAL_LABELS,
@@ -38,22 +37,11 @@ export function ScheduleSettings({
 								指定した間隔で自動的にスキャンを実行します
 							</div>
 						</div>
-						<button
-							type="button"
-							onClick={() => updateSetting("enabled", !settings.enabled)}
-							className={`flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-200 font-medium ${
-								settings.enabled
-									? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
-									: "bg-surface-elevated text-text-secondary border border-border hover:bg-surface-hover"
-							}`}
-						>
-							{settings.enabled ? (
-								<ToggleRight className="h-5 w-5" />
-							) : (
-								<ToggleLeft className="h-5 w-5" />
-							)}
-							{settings.enabled ? "有効" : "無効"}
-						</button>
+						<ToggleButton
+							checked={settings.enabled}
+							onToggle={(checked) => updateSetting("enabled", checked)}
+							variant="checkbox"
+						/>
 					</div>
 
 					{/* スケジュール設定フォーム */}
