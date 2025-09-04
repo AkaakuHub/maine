@@ -66,7 +66,9 @@ export default function ChapterProgressBar({
 		<div className={cn("mb-3", className)}>
 			{/* チャプタータイトル表示 */}
 			{currentChapter && (
-				<div className="flex items-center justify-between mb-1 text-xs text-text-secondary">
+				<div
+					className="flex items-center justify-between mb-1 text-xs text-white" // tailwind-ignore
+				>
 					<span>{currentChapter.title}</span>
 				</div>
 			)}

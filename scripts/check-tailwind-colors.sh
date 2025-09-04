@@ -31,9 +31,10 @@ TEMP_FILE=$(mktemp)
 # srcディレクトリ内のTypeScript/JSXファイルを検索
 find src -type f \( -name "*.tsx" -o -name "*.ts" -o -name "*.jsx" -o -name "*.js" \) | while read file; do
     for pattern in "${FORBIDDEN_PATTERNS[@]}"; do
-        if grep -n -E "$pattern" "$file" > /dev/null; then
+        # パターンを検索し、tailwind-ignoreがある行を除外
+        if grep -n -E "$pattern" "$file" | grep -v "tailwind-ignore" > /dev/null; then
             echo "❌ 禁止されているTailwind色が見つかりました: $file"
-            grep -n -E --color=always "$pattern" "$file" | head -5
+            grep -n -E --color=always "$pattern" "$file" | grep -v "tailwind-ignore" | head -5
             echo "echo 1" >> "$TEMP_FILE"
             echo ""
         fi

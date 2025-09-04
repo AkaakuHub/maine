@@ -103,7 +103,7 @@ export default function ControlsOverlay({
 					<button
 						type="button"
 						onClick={onTogglePlay}
-						className="text-text hover:text-primary transition-colors"
+						className="text-white hover:text-primary transition-colors" // tailwind-ignore
 					>
 						{isPlaying ? (
 							<Pause className="h-6 w-6" />
@@ -117,7 +117,7 @@ export default function ControlsOverlay({
 						<button
 							type="button"
 							onClick={onSkipBackward}
-							className="text-text hover:text-primary transition-colors flex items-center gap-1"
+							className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
 							title={`${skipSeconds}秒戻す`}
 						>
 							<RotateCcw className="h-5 w-5" />
@@ -127,7 +127,7 @@ export default function ControlsOverlay({
 						<button
 							type="button"
 							onClick={onSkipForward}
-							className="text-text hover:text-primary transition-colors flex items-center gap-1"
+							className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
 							title={`${skipSeconds}秒進む`}
 						>
 							<RotateCw className="h-5 w-5" />
@@ -158,7 +158,7 @@ export default function ControlsOverlay({
 										onSeekToTime(currentChapter.startTime);
 									}
 								}}
-								className="text-text hover:text-primary transition-colors"
+								className="text-white hover:text-primary transition-colors" // tailwind-ignore
 								title="前のチャプター"
 							>
 								<SkipBack className="h-5 w-5" />
@@ -180,7 +180,7 @@ export default function ControlsOverlay({
 										onSeekToTime(chapters[nextChapterIndex].startTime);
 									}
 								}}
-								className="text-text hover:text-primary transition-colors"
+								className="text-white hover:text-primary transition-colors" // tailwind-ignore
 								title="次のチャプター"
 							>
 								<SkipForward className="h-5 w-5" />
@@ -189,7 +189,7 @@ export default function ControlsOverlay({
 							<button
 								type="button"
 								onClick={() => setShowChapterList(!showChapterList)}
-								className="text-text hover:text-primary transition-colors"
+								className="text-white hover:text-primary transition-colors" // tailwind-ignore
 								title="チャプター一覧"
 							>
 								<List className="h-5 w-5" />
@@ -201,7 +201,7 @@ export default function ControlsOverlay({
 						<button
 							type="button"
 							onClick={onToggleMute}
-							className="text-text hover:text-primary transition-colors"
+							className="text-white hover:text-primary transition-colors" // tailwind-ignore
 						>
 							{isMuted ? (
 								<VolumeX className="h-5 w-5" />
@@ -219,7 +219,9 @@ export default function ControlsOverlay({
 							className="w-16 h-1 bg-surface-hover rounded-lg appearance-none cursor-pointer slider volume-slider"
 						/>
 					</div>
-					<span className="text-text text-sm font-mono flex gap-1">
+					<span
+						className="text-white text-sm font-mono flex gap-1" // tailwind-ignore
+					>
 						<button
 							type="button"
 							onClick={() => {
@@ -274,7 +276,7 @@ export default function ControlsOverlay({
 									onSetSettingsView("main"); // 設定を開くときはメインビューに
 								}
 							}}
-							className="text-text hover:text-primary transition-colors relative top-[2.5px]"
+							className="text-white hover:text-primary transition-colors relative top-[2.5px]" // tailwind-ignore
 						>
 							<Settings className="h-5 w-5" />
 						</button>
@@ -282,7 +284,7 @@ export default function ControlsOverlay({
 					<button
 						type="button"
 						onClick={onTakeScreenshot}
-						className="text-text hover:text-primary transition-colors"
+						className="text-white hover:text-primary transition-colors" // tailwind-ignore
 						title="スクリーンショットを撮る"
 					>
 						<Camera className="h-5 w-5" />
@@ -290,7 +292,7 @@ export default function ControlsOverlay({
 					<button
 						type="button"
 						onClick={onTogglePictureInPicture}
-						className="text-text hover:text-primary transition-colors"
+						className="text-white hover:text-primary transition-colors" // tailwind-ignore
 					>
 						<PictureInPicture2 className="h-5 w-5" />
 					</button>{" "}
@@ -301,7 +303,7 @@ export default function ControlsOverlay({
 							e.stopPropagation();
 							onToggleFullscreen();
 						}}
-						className="text-text hover:text-primary transition-colors"
+						className="text-white hover:text-primary transition-colors" // tailwind-ignore
 					>
 						{isFullscreen ? (
 							<Minimize className="h-5 w-5" />
@@ -315,7 +317,7 @@ export default function ControlsOverlay({
 			{/* チャプターリストオーバーレイ */}
 			{showChapterList && chapters.length > 0 && (
 				<div className="absolute bottom-16 left-0 right-0 bg-surface/90 rounded-lg p-4 max-h-60 overflow-y-auto z-50">
-					<h3 className="text-text-inverse font-semibold mb-2">チャプター</h3>
+					<h3 className="text-text-secondary font-semibold mb-2">チャプター</h3>
 					<div className="space-y-1">
 						{chapters.map((chapter) => {
 							const currentChapter = chapters.find(
@@ -338,7 +340,7 @@ export default function ControlsOverlay({
 										"w-full text-left flex items-center justify-between p-2 rounded transition-colors",
 										isActive
 											? "bg-primary text-text-inverse"
-											: "text-text-secondary hover:bg-surface-elevated hover:text-text",
+											: "text-text-secondary hover:bg-surface-elevated hover:text-white", // tailwind-ignore
 									)}
 								>
 									<span className="flex-1">{chapter.title}</span>

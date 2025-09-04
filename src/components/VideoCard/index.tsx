@@ -103,7 +103,7 @@ const VideoCard = ({
 		<div
 			className={cn(
 				"group relative bg-surface/60 rounded-2xl overflow-hidden transition-all duration-300 ease-out",
-				"hover:z-10 hover:shadow-xl hover:shadow-black/25",
+				"hover:z-10 hover:shadow-xl",
 				"border border-border/30 hover:border-border/60",
 				"backdrop-blur-sm",
 				className,
