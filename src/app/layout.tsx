@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import UpdateIndicator from "@/components/UpdateIndicator";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
@@ -60,10 +59,7 @@ export default function RootLayout({
 	return (
 		<html lang="ja">
 			<body className={`${inter.className} antialiased`}>
-				<ThemeProvider>
-					{children}
-					<UpdateIndicator />
-				</ThemeProvider>
+				<ThemeProvider>{children}</ThemeProvider>
 			</body>
 		</html>
 	);
