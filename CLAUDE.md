@@ -32,3 +32,5 @@
 - anyは禁止
 - 型定義は厳密に行うこと
 - biome-ignoreなど、lint無効化は禁止
+- anyや、eslint-disableなどを使わずに、型安全に書くこと
+- SVG禁止。アイコンライブラリを使用

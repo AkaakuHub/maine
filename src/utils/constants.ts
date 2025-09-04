@@ -64,6 +64,15 @@ export const SCAN = {
 
 	// スキャンID生成
 	SCAN_ID_PREFIX: "scan_",
+
+	// スケジューラー設定
+	SCHEDULE_CHECK_INTERVAL_MS: 60000, // 1分間隔でスケジュールチェック
+	DEFAULT_SCHEDULE_HOUR: 3, // デフォルト実行時刻（3時）
+	DEFAULT_SCHEDULE_MINUTE: 0, // デフォルト実行分（0分）
+	DEFAULT_MAX_EXECUTION_TIME_MINUTES: 180, // デフォルト最大実行時間（3時間）
+	MIN_EXECUTION_TIME_MINUTES: 30, // 最小実行時間
+	MAX_EXECUTION_TIME_MINUTES: 720, // 最大実行時間（12時間）
+	DEFAULT_MONTHLY_DAY: 1, // デフォルト月次実行日（1日）
 } as const;
 
 // FFprobe/FFmpeg関連

@@ -27,7 +27,8 @@ export interface ScanProgressEvent {
 		| "control_pause"
 		| "control_resume"
 		| "control_cancel"
-		| "scan_stats"; // 新しいイベント型
+		| "scan_stats" // 差分スキャン統計
+		| "scheduler_status"; // スケジューラー状態
 	scanId?: string;
 	phase?: "discovery" | "metadata" | "database";
 	progress?: number; // 0-100

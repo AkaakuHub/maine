@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { ScanProgressBar } from "@/components/scan/ScanProgressBar";
 import { ScanControlButtons } from "@/components/scan/ScanControlButtons";
 import { ScanSettingsPanel } from "@/components/scan/ScanSettingsPanel";
+import { ScanSchedulePanel } from "@/components/scan/ScanSchedulePanel";
 import { useScanProgress } from "@/hooks/useScanProgress";
 import { cn } from "@/libs/utils";
 
@@ -274,6 +275,9 @@ export default function ScanManagementPage() {
 
 						{/* スキャン設定パネル */}
 						<ScanSettingsPanel />
+
+						{/* スケジュール設定パネル */}
+						<ScanSchedulePanel />
 
 						{/* リアルタイムスキャンログ */}
 						<div className="bg-surface rounded-lg border border-border p-6">

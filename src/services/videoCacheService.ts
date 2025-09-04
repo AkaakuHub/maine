@@ -26,6 +26,7 @@ import { ScanCheckpointManager } from "@/services/scan/ScanCheckpointManager";
 import { ScanProgressCalculator } from "@/services/scan/ScanProgressCalculator";
 import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";
 import { ThumbnailGenerator } from "@/services/ThumbnailGenerator";
+import { ScanScheduler } from "@/services/ScanScheduler";
 
 type SearchResult = {
 	success: boolean;
@@ -54,6 +55,9 @@ class VideoCacheService {
 	private ffprobeExtractor: FFprobeMetadataExtractor;
 	private thumbnailGenerator: ThumbnailGenerator;
 
+	// スケジューラー
+	private scheduler: ScanScheduler;
+
 	// スキャン制御状態
 	private isPaused = false;
 	private scanControl = {
@@ -69,7 +73,14 @@ class VideoCacheService {
 		this.progressCalculator = new ScanProgressCalculator();
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
 		this.thumbnailGenerator = new ThumbnailGenerator("./data/thumbnails");
+
+		// スケジューラー初期化
+		this.scheduler = new ScanScheduler();
+		this.scheduler.setScanExecutor(() => this.executeScheduledScan());
+		this.scheduler.setManualScanChecker(() => this.isUpdating);
+
 		this.initializeStreamProcessor();
+		this.initializeScheduler();
 	}
 
 	// Progress listenerは不要（SSE Connection Storeが直接ブロードキャスト）
@@ -869,6 +880,58 @@ class VideoCacheService {
 			progress: this.updateProgress,
 			scanId: this.currentScanId,
 		};
+	}
+
+	/**
+	 * スケジューラーを取得
+	 */
+	getScheduler(): ScanScheduler {
+		return this.scheduler;
+	}
+
+	/**
+	 * スケジューラー初期化
+	 */
+	private async initializeScheduler(): Promise<void> {
+		try {
+			// デフォルト設定でスケジューラーを開始
+			// 実際の設定は後でAPIから取得・更新される
+			console.log("スケジューラーを初期化中...");
+
+			// 設定が有効な場合のみスケジューラーを開始
+			const settings = this.scheduler.getSettings();
+			if (settings.enabled) {
+				await this.scheduler.start();
+			}
+
+			console.log("スケジューラー初期化完了");
+		} catch (error) {
+			console.error("スケジューラー初期化エラー:", error);
+		}
+	}
+
+	/**
+	 * スケジュールされたスキャン実行
+	 */
+	private async executeScheduledScan(): Promise<void> {
+		console.log("スケジュールされたスキャンを実行中...");
+
+		// 手動スキャンが実行中の場合はスキップ
+		if (this.isUpdating) {
+			console.log(
+				"手動スキャンが実行中のため、スケジュールされたスキャンをスキップ",
+			);
+			return;
+		}
+
+		try {
+			// 通常のスキャン実行
+			const result = await this.manualRefresh();
+			console.log("スケジュールされたスキャン完了:", result.message);
+		} catch (error) {
+			console.error("スケジュールされたスキャンでエラー:", error);
+			throw error;
+		}
 	}
 }
 
