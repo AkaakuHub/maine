@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Edit, Trash2, Check, X } from "lucide-react";
 import { cn } from "@/libs/utils";
+import { ToggleButton } from "@/components/ui/RadioGroup";
 import type { ChapterSkipRule } from "@/stores/chapterSkipStore";
 
 interface SkipRuleItemProps {
@@ -82,19 +83,12 @@ export function SkipRuleItem({
 				</>
 			) : (
 				<>
-					<button
-						type="button"
-						onClick={() => onToggle(rule.id)}
-						className={cn(
-							"w-5 h-5 rounded border-2 transition-colors flex items-center justify-center",
-							rule.enabled
-								? "bg-primary border-primary text-text-inverse"
-								: "border-text-secondary hover:border-primary",
-						)}
+					<ToggleButton
+						checked={rule.enabled}
+						onToggle={() => onToggle(rule.id)}
+						variant="checkbox"
 						title={rule.enabled ? "無効にする" : "有効にする"}
-					>
-						{rule.enabled && <Check className="w-3 h-3" />}
-					</button>
+					/>
 					<span
 						className={cn(
 							"flex-1 text-sm",

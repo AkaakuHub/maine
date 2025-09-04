@@ -6,6 +6,7 @@ import { useChapterSkipStore } from "@/stores/chapterSkipStore";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { SkipRuleForm } from "@/components/settings/SkipRuleForm";
 import { SkipRuleItem } from "@/components/settings/SkipRuleItem";
+import { ToggleButton } from "@/components/ui/RadioGroup";
 import { useTheme } from "@/hooks/useTheme";
 import { THEME } from "@/utils/constants";
 import type { ThemeMode } from "@/types/theme";
@@ -119,17 +120,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 										description: "暗い背景色でUIを表示します",
 									},
 								].map((option) => (
-									<label
+									<div
 										key={option.value}
 										className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+										onClick={() => setTheme(option.value as ThemeMode)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" || e.key === " ") {
+												e.preventDefault();
+												setTheme(option.value as ThemeMode);
+											}
+										}}
 									>
-										<input
-											type="radio"
-											name="theme"
-											value={option.value}
+										<ToggleButton
 											checked={theme === option.value}
-											onChange={() => setTheme(option.value as ThemeMode)}
-											className="mt-1 h-4 w-4 text-primary border-border focus:ring-primary focus:ring-2 focus:ring-offset-0"
+											onToggle={() => setTheme(option.value as ThemeMode)}
+											variant="radio"
+											className="mt-1"
 										/>
 										<div>
 											<div className="text-text font-medium">
@@ -139,7 +145,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 												{option.description}
 											</div>
 										</div>
-									</label>
+									</div>
 								))}
 							</div>
 						</SettingsSection>

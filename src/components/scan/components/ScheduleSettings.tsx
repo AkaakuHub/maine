@@ -5,6 +5,7 @@ import {
 	WEEKDAY_LABELS,
 	SCHEDULE_SETTINGS_CONSTRAINTS,
 } from "@/types/scanScheduleSettings";
+import { ToggleButton } from "@/components/ui/RadioGroup";
 import { formatTime } from "../utils/timeFormatters";
 
 interface ScheduleSettingsProps {
@@ -160,6 +161,7 @@ export function ScheduleSettings({
 														: [...settings.weeklyDays, index].sort();
 													updateSetting("weeklyDays", newDays);
 												}}
+												// ここはこのデザインが好き
 												className={`text-text-inverse p-2 text-xs rounded border transition-colors ${
 													settings.weeklyDays.includes(index)
 														? "bg-primary text-primary-foreground border-primary"
@@ -251,13 +253,10 @@ export function ScheduleSettings({
 									手動スキャンが実行中の場合、自動実行をスキップします
 								</div>
 							</div>
-							<input
-								type="checkbox"
+							<ToggleButton
 								checked={settings.skipIfRunning}
-								onChange={(e) =>
-									updateSetting("skipIfRunning", e.target.checked)
-								}
-								className="w-4 h-4 text-primary bg-surface-elevated border-border rounded focus:ring-primary focus:ring-2"
+								onToggle={(checked) => updateSetting("skipIfRunning", checked)}
+								variant="checkbox"
 							/>
 						</div>
 

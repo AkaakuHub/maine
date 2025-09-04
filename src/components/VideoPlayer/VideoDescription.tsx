@@ -117,7 +117,7 @@ export default function VideoDescription({
 									<button
 										type="button"
 										onClick={handleDownload}
-										className="text-text-inverse flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-text rounded-lg transition-colors"
+										className="text-text-inverse flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover rounded-lg transition-colors"
 									>
 										<Download className="h-4 w-4" />
 										ダウンロード

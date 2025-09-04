@@ -11,6 +11,7 @@ import {
 	Info,
 } from "lucide-react";
 import { cn } from "@/libs/utils";
+import { ToggleButton } from "@/components/ui/RadioGroup";
 import {
 	type ScanSettings,
 	DEFAULT_SCAN_SETTINGS,
@@ -250,22 +251,14 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 		onChange: (checked: boolean) => void;
 		description?: string;
 	}) => {
-		const checkboxId = `checkbox-input-${label.toLowerCase().replace(/\s+/g, "-")}`;
 		return (
 			<div className="space-y-2">
 				<div className="flex items-center justify-between">
-					<label
-						htmlFor={checkboxId}
-						className="text-sm font-medium text-text-primary"
-					>
-						{label}
-					</label>
-					<input
-						id={checkboxId}
-						type="checkbox"
+					<span className="text-sm font-medium text-text-primary">{label}</span>
+					<ToggleButton
 						checked={checked}
-						onChange={(e) => onChange(e.target.checked)}
-						className="w-4 h-4 text-primary bg-surface-elevated border-border rounded focus:ring-primary focus:ring-2"
+						onToggle={onChange}
+						variant="checkbox"
 					/>
 				</div>
 				{description && (
