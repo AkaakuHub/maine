@@ -136,7 +136,7 @@ const VideoListItem = ({
 	return (
 		<div
 			className={cn(
-				"group bg-surface/30 hover:bg-surface/50 backdrop-blur-sm rounded-xl border border-border-muted/50 hover:border-purple-400/30 transition-all duration-300",
+				"group bg-surface/30 hover:bg-surface/50 backdrop-blur-sm rounded-xl border border-border-muted/50 hover:border-primary/30 transition-all duration-300",
 				isDeleting && "opacity-50 pointer-events-none",
 			)}
 		>
@@ -151,7 +151,7 @@ const VideoListItem = ({
 			>
 				<div className="flex items-center gap-4">
 					{/* サムネイル */}
-					<div className="relative w-28 h-16 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg overflow-hidden flex-shrink-0">
+					<div className="relative w-28 h-16 bg-surface-variant rounded-lg overflow-hidden flex-shrink-0">
 						{video.thumbnailPath ? (
 							<img
 								src={`${API.ENDPOINTS.THUMBNAILS}/${video.thumbnailPath}`}
@@ -203,13 +203,13 @@ const VideoListItem = ({
 									parsedInfo.broadcastDate) && (
 									<div className="flex flex-wrap gap-2 mb-2">
 										{parsedInfo.broadcastStation && (
-											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-green-600 to-teal-600 text-text px-2 py-1 rounded-full">
+											<span className="inline-flex items-center gap-1 text-xs bg-success text-text-inverse px-2 py-1 rounded-full">
 												<Radio className="h-3 w-3" />
 												{parsedInfo.broadcastStation}
 											</span>
 										)}
 										{parsedInfo.weeklySchedule && (
-											<span className="inline-flex items-center gap-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-text px-2 py-1 rounded-full">
+											<span className="inline-flex items-center gap-1 text-xs bg-warning text-text-inverse px-2 py-1 rounded-full">
 												<Clock className="h-3 w-3" />
 												{parsedInfo.weeklySchedule}
 											</span>
@@ -326,7 +326,7 @@ const VideoListItem = ({
 							<div className="mt-3">
 								<div className="w-full h-1 bg-surface-elevated rounded-full overflow-hidden">
 									<div
-										className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+										className="h-full bg-primary transition-all duration-300"
 										style={{
 											width: `${Math.min(100, Math.max(0, watchProgressPercentage))}%`,
 										}}

@@ -38,9 +38,9 @@ const ConfirmDialog = ({
 	const getActionClasses = (variant = "secondary") => {
 		switch (variant) {
 			case "primary":
-				return "bg-gradient-to-r from-green-500 to-teal-500 text-text hover:from-green-600 hover:to-teal-600";
+				return "bg-success text-text-inverse hover:bg-success/90";
 			case "danger":
-				return "bg-gradient-to-r from-red-500 to-pink-500 text-text hover:from-red-600 hover:to-pink-600";
+				return "bg-error text-text-inverse hover:bg-error/90";
 			default:
 				return "bg-surface-elevated text-text hover:bg-surface-elevated";
 		}

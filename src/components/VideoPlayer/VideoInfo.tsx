@@ -36,10 +36,10 @@ export default function VideoInfo({
 		<div
 			className={
 				isDesktop
-					? "p-6 border-b border-purple-500/20"
+					? "p-6 border-b border-border"
 					: isResponsive
-						? "p-4 lg:p-6 border-b border-purple-500/20"
-						: "p-4 border-b border-purple-500/20"
+						? "p-4 lg:p-6 border-b border-border"
+						: "p-4 border-b border-border"
 			}
 		>
 			<h1
@@ -97,7 +97,7 @@ export default function VideoInfo({
 			>
 				{videoInfo.genre && (
 					<span
-						className={`bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-text font-medium ${
+						className={`bg-primary rounded-full text-text-inverse font-medium ${
 							isDesktop
 								? "px-3 py-1"
 								: isResponsive
@@ -110,7 +110,7 @@ export default function VideoInfo({
 				)}
 				{videoInfo.broadcastStation && (
 					<span
-						className={`bg-gradient-to-r from-green-600 to-teal-600 rounded-full text-text font-medium ${
+						className={`bg-success rounded-full text-text-inverse font-medium ${
 							isDesktop
 								? "px-3 py-1"
 								: isResponsive
@@ -123,7 +123,7 @@ export default function VideoInfo({
 				)}
 				{videoInfo.weeklySchedule && (
 					<span
-						className={`bg-gradient-to-r from-orange-600 to-red-600 rounded-full text-text font-medium ${
+						className={`bg-warning rounded-full text-text-inverse font-medium ${
 							isDesktop
 								? "px-3 py-1"
 								: isResponsive

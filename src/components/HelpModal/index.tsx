@@ -10,7 +10,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
 	return (
 		<div className="fixed inset-0 bg-overlay flex items-center justify-center z-[100000] p-4">
-			<div className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-purple-500/30 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+			<div className="bg-surface-variant border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
 				<div className="flex items-center justify-between mb-4">
 					<h3 className="text-text text-lg font-bold flex items-center gap-2">
 						<span className="text-2xl">⌨️</span>

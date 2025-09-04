@@ -84,7 +84,7 @@ export default function ControlsOverlay({
 	return (
 		<div
 			className={cn(
-				"absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-opacity duration-300 p-4",
+				"absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay via-overlay/50 to-transparent transition-opacity duration-300 p-4",
 				show ? "opacity-100" : "opacity-0",
 			)}
 		>

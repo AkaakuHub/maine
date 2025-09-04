@@ -121,7 +121,7 @@ const VideoCard = ({
 				className="block cursor-pointer w-full text-left border-0 bg-transparent p-0"
 			>
 				{/* サムネイル */}
-				<div className="relative aspect-video bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 overflow-hidden">
+				<div className="relative aspect-video bg-surface-variant overflow-hidden">
 					{video.thumbnailPath ? (
 						<img
 							src={`${API.ENDPOINTS.THUMBNAILS}/${video.thumbnailPath}`}

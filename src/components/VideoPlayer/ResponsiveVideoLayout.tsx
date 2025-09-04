@@ -77,7 +77,7 @@ export default function ResponsiveVideoLayout({
 				</div>
 
 				{/* コンテンツセクション - モバイル: 縦スタック, デスクトップ: サイドバー */}
-				<div className="flex-1 lg:w-96 lg:flex-initial lg:border-l lg:border-purple-500/20 bg-gradient-to-b from-slate-900/80 to-slate-800/80 lg:backdrop-blur-sm overflow-y-auto lg:max-h-full">
+				<div className="flex-1 lg:w-96 lg:flex-initial lg:border-l lg:border-border bg-surface-variant lg:backdrop-blur-sm overflow-y-auto lg:max-h-full">
 					{/* 動画情報 */}
 					<VideoInfo
 						videoInfo={videoInfo}

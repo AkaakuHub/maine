@@ -41,7 +41,7 @@ const LoadingSpinner = ({
 				{/* 中心のパルス */}
 				<div
 					className={cn(
-						"relative left-[3px] top-[2px] rounded-full animate-pulse bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400",
+						"relative left-[3px] top-[2px] rounded-full animate-pulse bg-primary",
 						dotSizeClasses[size],
 					)}
 				/>
@@ -53,7 +53,7 @@ const LoadingSpinner = ({
 					<div
 						key={`decoration-dot-${Date.now()}-${i}`}
 						className={cn(
-							"absolute rounded-full bg-gradient-to-r from-blue-400/60 to-purple-400/60",
+							"absolute rounded-full bg-primary/60",
 							size === "xl"
 								? "w-2 h-2"
 								: size === "lg"
@@ -108,7 +108,7 @@ const LoadingState = ({
 					centerContent: (
 						<div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
 							<LoadingSpinner size="xl" className="mb-8" />
-							<h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+							<h2 className="text-3xl font-bold mb-3 text-primary">
 								データベースを読み込み中
 							</h2>
 							<p className="text-text-secondary text-lg max-w-md">

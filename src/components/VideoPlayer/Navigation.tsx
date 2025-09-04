@@ -16,7 +16,7 @@ export default function Navigation({
 	onOpenSettings,
 }: NavigationProps) {
 	return (
-		<nav className="relative z-50 bg-gradient-to-r from-slate-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-sm border-b border-purple-500/20 h-16 flex-shrink-0">
+		<nav className="relative z-50 bg-surface/95 backdrop-blur-sm border-b border-border h-16 flex-shrink-0">
 			<div className="container mx-auto px-4 h-full">
 				<div className="flex items-center justify-between h-full">
 					<div className="flex items-center gap-3">

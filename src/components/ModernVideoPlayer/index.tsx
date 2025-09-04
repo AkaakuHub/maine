@@ -251,7 +251,7 @@ const ModernVideoPlayer = ({
 
 			{/* チャプタースキップ通知 */}
 			{skippedChapter && (
-				<div className="absolute top-4 left-1/2 text-center transform -translate-x-1/2 bg-gradient-to-r from-orange-500/90 to-red-500/90 text-text-inverse px-4 py-2 rounded-lg shadow-lg z-40 animate-fade-in">
+				<div className="absolute top-4 left-1/2 text-center transform -translate-x-1/2 bg-warning/90 text-text-inverse px-4 py-2 rounded-lg shadow-lg z-40 animate-fade-in">
 					<div className="text-xs font-semibold">
 						チャプターをスキップしました
 					</div>

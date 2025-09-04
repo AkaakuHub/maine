@@ -57,7 +57,7 @@ export default function SettingsMenu({
 	return (
 		<div
 			ref={settingsRef}
-			className="absolute bottom-8 right-0 bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-primary/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
+			className="absolute bottom-8 right-0 bg-surface-variant border border-primary/30 backdrop-blur-md rounded-lg p-3 min-w-48 shadow-2xl z-[99999]"
 		>
 			{settingsView === "main" && (
 				<div>
