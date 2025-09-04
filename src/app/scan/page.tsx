@@ -9,6 +9,7 @@ import {
 	Wifi,
 	RefreshCw,
 	Home,
+	Settings,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ScanProgressBar } from "@/components/scan/ScanProgressBar";
@@ -16,6 +17,7 @@ import { ScanControlButtons } from "@/components/scan/ScanControlButtons";
 import { ScanSettingsPanel } from "@/components/scan/ScanSettingsPanel";
 import { ScanSchedulePanel } from "@/components/scan/ScanSchedulePanel";
 import { SafeDateDisplay } from "@/components/common/SafeDateDisplay";
+import { SettingsModal } from "@/components/settings/SettingsModal";
 import { formatCurrentTime } from "@/utils/safeDateFormat";
 import { useScanProgress } from "@/hooks/useScanProgress";
 import { cn } from "@/libs/utils";
@@ -30,11 +32,17 @@ export default function ScanManagementPage() {
 	const scanProgress = useScanProgress();
 	const [isStartingScan, setIsStartingScan] = useState(false);
 	const [currentTime, setCurrentTime] = useState("");
+	const [showSettings, setShowSettings] = useState(false);
 
 	// 現在時刻の表示（hydration安全）
 	useEffect(() => {
 		setCurrentTime(formatCurrentTime());
 	}, []);
+
+	// 設定モーダルを表示
+	const onShowSettings = () => {
+		setShowSettings(true);
+	};
 
 	// スキャンを手動開始
 	const handleStartScan = async () => {
@@ -86,15 +94,25 @@ export default function ScanManagementPage() {
 							</div>
 						</div>
 
-						{/* ホームボタン */}
-						<button
-							type="button"
-							onClick={() => router.push("/")}
-							className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
-							aria-label="ホーム"
-						>
-							<Home className="w-4 h-4 sm:w-5 sm:h-5" />
-						</button>
+						<div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+							<button
+								type="button"
+								onClick={() => router.push("/")}
+								className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
+								aria-label="ホーム"
+							>
+								<Home className="w-4 h-4 sm:w-5 sm:h-5" />
+							</button>
+
+							<button
+								type="button"
+								onClick={onShowSettings}
+								className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
+								aria-label="設定"
+							>
+								<Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -497,6 +515,12 @@ export default function ScanManagementPage() {
 					</div>
 				</div>
 			</div>
+
+			{/* 設定モーダル */}
+			<SettingsModal
+				isOpen={showSettings}
+				onClose={() => setShowSettings(false)}
+			/>
 		</div>
 	);
 }
