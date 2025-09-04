@@ -30,11 +30,15 @@ export default function ScanManagementPage() {
 	// スキャンを手動開始
 	const handleStartScan = async () => {
 		setIsStartingScan(true);
-
-		// 新しいスキャン開始前にスキャン状態をリセット
-		scanProgress.resetScanState();
+		console.log("🚀 Starting manual scan...");
 
 		try {
+			// スキャン状態をリセット
+			console.log("🔄 Resetting scan state...");
+			scanProgress.resetScanState();
+
+			// スキャン開始リクエスト
+			console.log("📡 Sending scan start request...");
 			const response = await fetch("/api/scan/start", {
 				method: "POST",
 			});
@@ -42,6 +46,11 @@ export default function ScanManagementPage() {
 			if (!response.ok) {
 				const error = await response.json();
 				console.error("Failed to start scan:", error);
+			} else {
+				const result = await response.json();
+				console.log("✅ Scan start request successful", {
+					activeConnections: result.activeConnections,
+				});
 			}
 		} catch (error) {
 			console.error("Scan start request failed:", error);

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { scanEventEmitter } from "@/services/scanEventEmitter";
+import { sseStore } from "@/lib/sse-connection-store";
 
 /**
  * スキャン制御API
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// 現在のスキャン状態を確認
-		const currentState = scanEventEmitter.getCurrentScanState();
+		const currentState = sseStore.getCurrentScanState();
 		if (!currentState.scanId) {
 			return NextResponse.json(
 				{ error: "No active scan found" },
@@ -55,10 +55,15 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// 制御コマンドを送信
-		scanEventEmitter.emitScanControl({
-			type: action,
+		// 制御コマンドを送信（新しいアーキテクチャでは直接ブロードキャスト）
+		sseStore.broadcast({
+			type: `control_${action}` as
+				| "control_pause"
+				| "control_resume"
+				| "control_cancel",
 			scanId: scanId,
+			timestamp: new Date().toISOString(),
+			message: `Scan ${action} command received`,
 		});
 
 		console.log(`🎛️ Scan control API: ${action} for scan ${scanId}`);
@@ -88,13 +93,13 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
 	try {
-		const currentState = scanEventEmitter.getCurrentScanState();
+		const currentState = sseStore.getCurrentScanState();
 
 		return NextResponse.json({
 			success: true,
 			scanId: currentState.scanId,
 			hasActiveConnections: currentState.hasActiveConnections,
-			activeConnections: scanEventEmitter.getActiveConnectionCount(),
+			activeConnections: sseStore.getConnectionCount(),
 			lastEvent: currentState.lastEvent,
 		});
 	} catch (error) {

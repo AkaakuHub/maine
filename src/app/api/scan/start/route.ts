@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { videoCacheService } from "@/services/videoCacheService";
+import { sseStore } from "@/lib/sse-connection-store";
 
 /**
  * スキャン開始API
@@ -24,6 +25,13 @@ export async function POST() {
 			);
 		}
 
+		// スキャンを開始（SSE接続は非同期で確立される）
+		console.log(
+			"🚀 Starting scan - SSE connections will receive progress asynchronously",
+		);
+		const activeConnections = sseStore.getConnectionCount();
+		console.log(`📡 Current active SSE connections: ${activeConnections}`);
+
 		// スキャンを非同期で開始（ブロッキングしないように）
 		videoCacheService.manualRefresh().catch((error) => {
 			console.error("Background scan failed:", error);
@@ -33,6 +41,7 @@ export async function POST() {
 			success: true,
 			message: "スキャンを開始しました",
 			timestamp: new Date().toISOString(),
+			activeConnections: sseStore.getConnectionCount(),
 		});
 	} catch (error) {
 		console.error("Scan start API error:", error);

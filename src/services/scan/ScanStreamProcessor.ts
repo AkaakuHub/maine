@@ -1,7 +1,7 @@
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
-import { scanEventEmitter } from "@/services/scanEventEmitter";
+import { sseStore } from "@/lib/sse-connection-store";
 import type { ScanSettings } from "@/types/scanSettings";
 import { SCAN } from "@/utils/constants";
 import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";
@@ -145,7 +145,7 @@ export class ScanStreamProcessor {
 							allVideoFiles.length,
 						);
 
-						scanEventEmitter.emitScanProgress({
+						sseStore.broadcast({
 							type: "progress",
 							scanId,
 							phase: "metadata",
@@ -157,7 +157,7 @@ export class ScanStreamProcessor {
 							processingSpeed: progressMetrics.processingSpeed,
 							estimatedTimeRemaining: progressMetrics.estimatedTimeRemaining,
 							phaseStartTime: self.phaseStartTime
-								? new Date(self.phaseStartTime)
+								? new Date(self.phaseStartTime).toISOString()
 								: undefined,
 							totalElapsedTime: progressMetrics.totalElapsedTime,
 							currentPhaseElapsed: progressMetrics.currentPhaseElapsed,

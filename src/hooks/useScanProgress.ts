@@ -1,155 +1,65 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
+import { useScanStore } from "@/stores/scan-store";
+import type { ScanProgressEvent } from "@/lib/sse-connection-store";
 
 /**
- * スキャン進捗イベントの型定義（フロントエンド用）
- */
-export interface ScanProgressEvent {
-	type:
-		| "progress"
-		| "phase"
-		| "complete"
-		| "error"
-		| "connected"
-		| "heartbeat"
-		| "control_pause"
-		| "control_resume"
-		| "control_cancel";
-	scanId?: string;
-	phase?: "discovery" | "metadata" | "database";
-	progress?: number; // 0-100
-	processedFiles?: number;
-	totalFiles?: number;
-	currentFile?: string;
-	message?: string;
-	error?: string;
-	timestamp?: string;
-	connectionId?: string;
-	activeConnections?: number;
-
-	// 詳細プログレス情報
-	processingSpeed?: number; // ファイル/秒
-	estimatedTimeRemaining?: number; // 秒
-	phaseStartTime?: string;
-	totalElapsedTime?: number; // 秒
-	currentPhaseElapsed?: number; // 秒
-}
-
-/**
- * スキャン進捗の状態
- */
-export interface ScanProgressState {
-	// 接続状態
-	isConnected: boolean;
-	isConnecting: boolean;
-	connectionError: string | null;
-	lastHeartbeat: Date | null;
-
-	// スキャン状態
-	isScanning: boolean;
-	scanId: string | null;
-	phase: "discovery" | "metadata" | "database" | null;
-	progress: number; // 0-100
-	processedFiles: number;
-	totalFiles: number;
-	currentFile: string | null;
-	message: string | null;
-	error: string | null;
-
-	// 制御状態
-	isPaused: boolean;
-	canPause: boolean;
-	canResume: boolean;
-	canCancel: boolean;
-
-	// 完了状態
-	isComplete: boolean;
-	completedAt: Date | null;
-
-	// 詳細プログレス情報
-	processingSpeed?: number;
-	estimatedTimeRemaining?: number;
-	phaseStartTime?: Date;
-	totalElapsedTime?: number;
-	currentPhaseElapsed?: number;
-}
-
-/**
- * Server-Sent Events を使用したスキャン進捗追跡フック
+ * Zustandベースのスキャン進捗追跡フック
  *
- * リアルタイムでスキャン進捗を受信し、UI状態を管理します
+ * 新しいSSEConnectionStore + Zustandアーキテクチャを使用
+ * EventEmitterの代わりにReactiveな状態管理を提供
  */
 export function useScanProgress() {
-	const [state, setState] = useState<ScanProgressState>({
-		// 接続状態
-		isConnected: false,
-		isConnecting: false,
-		connectionError: null,
-		lastHeartbeat: null,
-
-		// スキャン状態
-		isScanning: false,
-		scanId: null,
-		phase: null,
-		progress: 0,
-		processedFiles: 0,
-		totalFiles: 0,
-		currentFile: null,
-		message: null,
-		error: null,
-
-		// 制御状態
-		isPaused: false,
-		canPause: false,
-		canResume: false,
-		canCancel: false,
-
-		// 完了状態
-		isComplete: false,
-		completedAt: null,
-
-		// 詳細プログレス情報
-		processingSpeed: undefined,
-		estimatedTimeRemaining: undefined,
-		phaseStartTime: undefined,
-		totalElapsedTime: undefined,
-		currentPhaseElapsed: undefined,
-	});
-
+	// EventSource管理用のref
 	const eventSourceRef = useRef<EventSource | null>(null);
 	const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const reconnectAttemptsRef = useRef(0);
+	const isConnectingRef = useRef(false); // 重複接続防止フラグ
+
 	const maxReconnectAttempts = 5;
+
+	// Zustand store から状態とアクションを安定して取得
+	const scanId = useScanStore((state) => state.scanId);
+	const setConnectionState = useScanStore((state) => state.setConnectionState);
+	const setConnectionError = useScanStore((state) => state.setConnectionError);
+	const setHeartbeat = useScanStore((state) => state.setHeartbeat);
+	const updateProgress = useScanStore((state) => state.updateProgress);
+	const resetScan = useScanStore((state) => state.resetScan);
 
 	/**
 	 * SSE接続を確立
 	 */
 	const connect = useCallback(() => {
+		// React StrictMode重複接続防止
+		if (
+			isConnectingRef.current ||
+			eventSourceRef.current?.readyState === EventSource.OPEN
+		) {
+			console.log(
+				"📡 SSE connection already exists or connecting, skipping...",
+			);
+			return;
+		}
+
+		isConnectingRef.current = true;
+
 		// 既存接続をクリーンアップ
 		if (eventSourceRef.current) {
+			console.log("📡 Cleaning up existing SSE connection");
 			eventSourceRef.current.close();
 			eventSourceRef.current = null;
 		}
 
-		setState((prev) => ({
-			...prev,
-			isConnecting: true,
-			connectionError: null,
-		}));
+		setConnectionState(false, 0);
 
 		try {
+			console.log("📡 Establishing new SSE connection...");
 			const eventSource = new EventSource("/api/scan/events");
 			eventSourceRef.current = eventSource;
 
 			eventSource.onopen = () => {
-				console.log("📡 SSE connection established");
+				console.log("📡 SSE connection established successfully");
 				reconnectAttemptsRef.current = 0;
-
-				setState((prev) => ({
-					...prev,
-					isConnected: true,
-					isConnecting: false,
-					connectionError: null,
-				}));
+				isConnectingRef.current = false;
 			};
 
 			eventSource.onmessage = (event) => {
@@ -163,118 +73,28 @@ export function useScanProgress() {
 						data.phase,
 					);
 
-					setState((prev) => {
-						const newState = { ...prev };
+					switch (data.type) {
+						case "connected":
+							setConnectionState(true, data.activeConnections || 1);
+							setConnectionError(null);
+							break;
 
-						switch (data.type) {
-							case "connected":
-								newState.isConnected = true;
-								newState.isConnecting = false;
-								break;
+						case "heartbeat":
+							if (data.timestamp) {
+								setHeartbeat(new Date(data.timestamp));
+							}
+							if (data.activeConnections !== undefined) {
+								setConnectionState(true, data.activeConnections);
+							}
+							break;
 
-							case "heartbeat":
-								newState.lastHeartbeat = new Date();
-								break;
-
-							case "phase":
-								newState.isScanning = true;
-								newState.scanId = data.scanId || null;
-								newState.phase = data.phase || null;
-								newState.progress = data.progress || 0;
-								newState.processedFiles = data.processedFiles || 0;
-								newState.totalFiles = data.totalFiles || 0;
-								newState.message = data.message || null;
-								newState.isComplete = false;
-								// 詳細プログレス情報を更新
-								newState.processingSpeed = data.processingSpeed;
-								newState.estimatedTimeRemaining = data.estimatedTimeRemaining;
-								newState.phaseStartTime = data.phaseStartTime
-									? new Date(data.phaseStartTime)
-									: undefined;
-								newState.totalElapsedTime = data.totalElapsedTime;
-								newState.currentPhaseElapsed = data.currentPhaseElapsed;
-								// スキャン開始時に制御ボタンを有効化
-								newState.canPause = true;
-								newState.canCancel = true;
-								newState.canResume = false;
-								newState.isPaused = false;
-								break;
-
-							case "progress":
-								newState.isScanning = true;
-								newState.scanId = data.scanId || prev.scanId;
-								newState.phase = data.phase || prev.phase;
-								newState.progress = data.progress || 0;
-								newState.processedFiles = data.processedFiles || 0;
-								newState.totalFiles = data.totalFiles || prev.totalFiles;
-								newState.currentFile = data.currentFile || null;
-								newState.message = data.message || null;
-								// 詳細プログレス情報を更新
-								newState.processingSpeed = data.processingSpeed;
-								newState.estimatedTimeRemaining = data.estimatedTimeRemaining;
-								newState.phaseStartTime = data.phaseStartTime
-									? new Date(data.phaseStartTime)
-									: undefined;
-								newState.totalElapsedTime = data.totalElapsedTime;
-								newState.currentPhaseElapsed = data.currentPhaseElapsed;
-								break;
-
-							case "complete":
-								newState.isScanning = false;
-								newState.progress = 100;
-								newState.isComplete = true;
-								newState.completedAt = new Date();
-								newState.message = data.message || "スキャン完了";
-								newState.currentFile = null;
-								// 詳細プログレス情報を更新（完了時）
-								newState.processingSpeed = data.processingSpeed;
-								newState.estimatedTimeRemaining = data.estimatedTimeRemaining;
-								newState.phaseStartTime = data.phaseStartTime
-									? new Date(data.phaseStartTime)
-									: undefined;
-								newState.totalElapsedTime = data.totalElapsedTime;
-								newState.currentPhaseElapsed = data.currentPhaseElapsed;
-								break;
-
-							case "error":
-								newState.isScanning = false;
-								newState.error = data.error || "Unknown error";
-								newState.message = data.message || "エラーが発生しました";
-								newState.progress = -1;
-								// エラー時は制御を無効化
-								newState.canPause = false;
-								newState.canResume = false;
-								newState.canCancel = false;
-								break;
-
-							case "control_pause":
-								newState.isPaused = true;
-								newState.canPause = false;
-								newState.canResume = true;
-								newState.canCancel = true;
-								newState.message = "スキャンが一時停止されました";
-								break;
-
-							case "control_resume":
-								newState.isPaused = false;
-								newState.canPause = true;
-								newState.canResume = false;
-								newState.canCancel = true;
-								newState.message = "スキャンが再開されました";
-								break;
-
-							case "control_cancel":
-								newState.isScanning = false;
-								newState.isPaused = false;
-								newState.canPause = false;
-								newState.canResume = false;
-								newState.canCancel = false;
-								newState.message = "スキャンがキャンセルされました";
-								break;
-						}
-
-						return newState;
-					});
+						case "phase":
+						case "progress":
+						case "complete":
+						case "error":
+							updateProgress(data);
+							break;
+					}
 				} catch (parseError) {
 					console.warn("Failed to parse SSE message:", parseError);
 				}
@@ -282,13 +102,10 @@ export function useScanProgress() {
 
 			eventSource.onerror = (error) => {
 				console.warn("📡 SSE connection error:", error);
+				isConnectingRef.current = false;
 
-				setState((prev) => ({
-					...prev,
-					isConnected: false,
-					isConnecting: false,
-					connectionError: "Connection lost",
-				}));
+				setConnectionState(false, 0);
+				setConnectionError("Connection lost");
 
 				// 自動再接続（指数バックオフ）
 				if (reconnectAttemptsRef.current < maxReconnectAttempts) {
@@ -306,27 +123,23 @@ export function useScanProgress() {
 						connect();
 					}, delay);
 				} else {
-					setState((prev) => ({
-						...prev,
-						connectionError: "Max reconnection attempts reached",
-					}));
+					setConnectionError("Max reconnection attempts reached");
 				}
 			};
 		} catch (error) {
 			console.error("Failed to establish SSE connection:", error);
-			setState((prev) => ({
-				...prev,
-				isConnected: false,
-				isConnecting: false,
-				connectionError: "Failed to connect",
-			}));
+			isConnectingRef.current = false;
+			setConnectionState(false, 0);
+			setConnectionError("Failed to connect");
 		}
-	}, []);
+	}, [setConnectionState, setConnectionError, setHeartbeat, updateProgress]);
 
 	/**
 	 * SSE接続を切断
 	 */
 	const disconnect = useCallback(() => {
+		console.log("📡 Disconnecting SSE connection...");
+
 		if (eventSourceRef.current) {
 			eventSourceRef.current.close();
 			eventSourceRef.current = null;
@@ -337,15 +150,12 @@ export function useScanProgress() {
 			reconnectTimeoutRef.current = null;
 		}
 
-		setState((prev) => ({
-			...prev,
-			isConnected: false,
-			isConnecting: false,
-			connectionError: null,
-		}));
+		isConnectingRef.current = false;
+		setConnectionState(false, 0);
+		setConnectionError(null);
 
 		console.log("📡 SSE connection disconnected");
-	}, []);
+	}, [setConnectionState, setConnectionError]);
 
 	/**
 	 * 手動再接続
@@ -357,51 +167,18 @@ export function useScanProgress() {
 	}, [connect, disconnect]);
 
 	/**
-	 * スキャン状態をリセット（新しいスキャン開始前など）
+	 * スキャン状態をリセット
 	 */
 	const resetScanState = useCallback(() => {
-		setState((prev) => ({
-			...prev,
-			isScanning: false,
-			scanId: null,
-			phase: null,
-			progress: 0,
-			processedFiles: 0,
-			totalFiles: 0,
-			currentFile: null,
-			message: null,
-			error: null,
-			isPaused: false,
-			canPause: false,
-			canResume: false,
-			canCancel: false,
-			isComplete: false,
-			completedAt: null,
-			// 詳細プログレス情報もリセット
-			processingSpeed: undefined,
-			estimatedTimeRemaining: undefined,
-			phaseStartTime: undefined,
-			totalElapsedTime: undefined,
-			currentPhaseElapsed: undefined,
-		}));
-	}, []);
-
-	// コンポーネントマウント時に接続開始
-	useEffect(() => {
-		connect();
-
-		// クリーンアップ
-		return () => {
-			disconnect();
-		};
-	}, [connect, disconnect]);
+		resetScan();
+	}, [resetScan]);
 
 	/**
 	 * スキャン制御コマンドを送信
 	 */
 	const sendScanControl = useCallback(
 		async (action: "pause" | "resume" | "cancel") => {
-			if (!state.scanId) {
+			if (!scanId) {
 				console.warn("No active scan ID found");
 				return false;
 			}
@@ -414,7 +191,7 @@ export function useScanProgress() {
 					},
 					body: JSON.stringify({
 						action,
-						scanId: state.scanId,
+						scanId: scanId,
 					}),
 				});
 
@@ -432,32 +209,44 @@ export function useScanProgress() {
 				return false;
 			}
 		},
-		[state.scanId],
+		[scanId],
 	);
 
 	/**
-	 * スキャンを一時停止
+	 * スキャン制御関数
 	 */
 	const pauseScan = useCallback(async () => {
 		return await sendScanControl("pause");
 	}, [sendScanControl]);
 
-	/**
-	 * スキャンを再開
-	 */
 	const resumeScan = useCallback(async () => {
 		return await sendScanControl("resume");
 	}, [sendScanControl]);
 
-	/**
-	 * スキャンをキャンセル
-	 */
 	const cancelScan = useCallback(async () => {
 		return await sendScanControl("cancel");
 	}, [sendScanControl]);
 
+	// コンポーネントマウント時に接続開始
+	useEffect(() => {
+		// React StrictMode対応: 少し遅延してから接続
+		const timer = setTimeout(() => {
+			connect();
+		}, 100);
+
+		// クリーンアップ
+		return () => {
+			clearTimeout(timer);
+			disconnect();
+		};
+	}, [connect, disconnect]);
+
+	// storeの全状態を返す + 制御関数
+	const storeState = useScanStore();
+
 	return {
-		...state,
+		// Zustand storeの状態
+		...storeState,
 
 		// 制御関数
 		connect,

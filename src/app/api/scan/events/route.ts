@@ -1,13 +1,9 @@
 import type { NextRequest } from "next/server";
-import {
-	scanEventEmitter,
-	type ScanProgressEvent,
-	type ScanControlEvent,
-} from "@/services/scanEventEmitter";
+import { sseStore } from "@/lib/sse-connection-store";
 
 /**
  * Server-Sent Events (SSE) API Route
- * スキャン進捗のリアルタイム配信
+ * 新しいSSEConnectionStoreを使用したリアルタイム配信
  */
 export async function GET(request: NextRequest) {
 	// SSE用のヘッダー設定
@@ -25,86 +21,62 @@ export async function GET(request: NextRequest) {
 			// 接続IDを生成
 			const connectionId = `conn_${Date.now()}_${Math.random().toString(36).substring(2)}`;
 
-			// 接続を登録
-			scanEventEmitter.addConnection(connectionId);
-			console.log("🔌 SSE connection registered:", connectionId);
-
-			// 初期メッセージを送信
-			const encoder = new TextEncoder();
-			const sendMessage = (
-				data:
-					| ScanProgressEvent
-					| {
-							type: string;
-							connectionId?: string;
-							timestamp: string;
-							message?: string;
-							activeConnections?: number;
-							scanId?: string;
-					  },
-			) => {
-				const message = `data: ${JSON.stringify(data)}\n\n`;
-				controller.enqueue(encoder.encode(message));
+			// 接続オブジェクトを作成
+			const connection = {
+				id: connectionId,
+				controller,
+				createdAt: new Date(),
+				lastHeartbeat: new Date(),
+				metadata: {
+					userAgent: request.headers.get("user-agent")?.slice(0, 50),
+				},
 			};
 
-			// 接続確立メッセージ
-			sendMessage({
+			// SSE Connection Storeに接続を登録
+			sseStore.addConnection(connection);
+			console.log("🔌 SSE connection registered:", connectionId, {
+				userAgent: connection.metadata.userAgent,
+				timestamp: new Date().toISOString(),
+			});
+
+			// 接続確立メッセージを送信
+			const encoder = new TextEncoder();
+			const connectMessage = `data: ${JSON.stringify({
 				type: "connected",
 				connectionId,
 				timestamp: new Date().toISOString(),
 				message: "SSE connection established",
-			});
+				activeConnections: sseStore.getConnectionCount(),
+			})}\n\n`;
+			controller.enqueue(encoder.encode(connectMessage));
 
 			// 現在のスキャン状態があれば送信
-			const currentState = scanEventEmitter.getCurrentScanState();
-			if (currentState.lastEvent) {
-				sendMessage(currentState.lastEvent);
-			}
-
-			// スキャン進捗イベントのリスナー
-			const progressListener = (event: ScanProgressEvent) => {
-				console.log(
-					"🔄 SSE sending progress event:",
-					event.type,
-					event.progress,
-				);
-				sendMessage(event);
-			};
-
-			// スキャン制御イベントのリスナー
-			const controlListener = (event: ScanControlEvent) => {
-				sendMessage({
-					type: `control_${event.type}`,
-					timestamp: event.timestamp.toISOString(),
-					message: `Scan ${event.type} command received`,
-					scanId: event.scanId,
-				});
-			};
-
-			// イベントリスナーを登録
-			scanEventEmitter.on("scanProgress", progressListener);
-			scanEventEmitter.on("scanControl", controlListener);
+			const currentState = sseStore.getCurrentScanState();
+			console.log("📡 Current scan state for new connection:", {
+				hasLastEvent: !!currentState.lastEvent,
+				scanId: currentState.scanId,
+				connectionCount: currentState.connectionCount,
+			});
 
 			// 定期的なハートビート（30秒ごと）
 			const heartbeatInterval = setInterval(() => {
 				try {
-					sendMessage({
-						type: "heartbeat",
-						timestamp: new Date().toISOString(),
-						activeConnections: scanEventEmitter.getActiveConnectionCount(),
-					});
-				} catch (_error) {
-					// 接続が切れた場合はハートビートを停止
+					sseStore.sendHeartbeat();
+				} catch (error) {
+					console.warn("❌ Heartbeat failed:", error);
 					clearInterval(heartbeatInterval);
 				}
 			}, 30000);
 
 			// 接続終了時のクリーンアップ
 			request.signal.addEventListener("abort", () => {
-				console.log("🔌 SSE connection disconnected:", connectionId);
-				scanEventEmitter.removeConnection(connectionId);
-				scanEventEmitter.off("scanProgress", progressListener);
-				scanEventEmitter.off("scanControl", controlListener);
+				console.log("🔌 SSE connection disconnected:", connectionId, {
+					reason: "client_abort",
+					timestamp: new Date().toISOString(),
+				});
+
+				// Connection Storeから削除
+				sseStore.removeConnection(connectionId);
 				clearInterval(heartbeatInterval);
 
 				try {

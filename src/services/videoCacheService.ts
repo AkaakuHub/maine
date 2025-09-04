@@ -11,7 +11,7 @@ import {
 } from "@/libs/fileUtils";
 import type { VideoFileData } from "@/type";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
-import { scanEventEmitter } from "@/services/scanEventEmitter";
+import { sseStore } from "@/lib/sse-connection-store";
 import type { ScanSettings } from "@/types/scanSettings";
 import { DEFAULT_SCAN_SETTINGS } from "@/types/scanSettings";
 import { SCAN } from "@/utils/constants";
@@ -70,16 +70,9 @@ class VideoCacheService {
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
 		this.thumbnailGenerator = new ThumbnailGenerator("./data/thumbnails");
 		this.initializeStreamProcessor();
-		this.setupProgressListener();
 	}
 
-	private setupProgressListener(): void {
-		scanEventEmitter.on("scanProgress", (data) => {
-			if (this.currentScanId === data.scanId) {
-				this.updateProgress = data.progress;
-			}
-		});
-	}
+	// Progress listenerは不要（SSE Connection Storeが直接ブロードキャスト）
 
 	private initializeStreamProcessor(): void {
 		this.streamProcessor = new ScanStreamProcessor(
@@ -175,7 +168,7 @@ class VideoCacheService {
 
 			return await this.performFullScan(scanId);
 		} catch (error) {
-			scanEventEmitter.emitScanProgress({
+			sseStore.broadcast({
 				type: "error",
 				scanId,
 				phase: "metadata",
@@ -265,7 +258,7 @@ class VideoCacheService {
 		videoDirectories: string[],
 		scanId: string,
 	): Promise<VideoFile[]> {
-		scanEventEmitter.emitScanProgress({
+		sseStore.broadcast({
 			type: "phase",
 			scanId,
 			phase: "discovery",
@@ -301,7 +294,7 @@ class VideoCacheService {
 		this.progressCalculator.resetPhaseTimer();
 
 		// メタデータフェーズ開始イベント
-		scanEventEmitter.emitScanProgress({
+		sseStore.broadcast({
 			type: "phase",
 			scanId,
 			phase: "metadata",
@@ -361,7 +354,7 @@ class VideoCacheService {
 		const allResults = chunkResults.flat();
 
 		// メタデータ処理完了
-		scanEventEmitter.emitScanProgress({
+		sseStore.broadcast({
 			type: "progress",
 			scanId,
 			phase: "metadata",
@@ -381,7 +374,7 @@ class VideoCacheService {
 		this.progressCalculator.resetPhaseTimer();
 
 		// データベース更新フェーズ開始
-		scanEventEmitter.emitScanProgress({
+		sseStore.broadcast({
 			type: "phase",
 			scanId,
 			phase: "database",
@@ -413,7 +406,7 @@ class VideoCacheService {
 			{ timeout: SCAN.TRANSACTION_TIMEOUT_MS },
 		);
 
-		scanEventEmitter.emitScanProgress({
+		sseStore.broadcast({
 			type: "complete",
 			scanId,
 			phase: "database",
