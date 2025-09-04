@@ -113,7 +113,9 @@ export default function ChapterProgressBar({
 			<div className="relative w-full h-3 flex items-center">
 				{/* 分割された背景バー */}
 				{chapters.map((chapter, index) => {
-					const isHovered = hoveredChapter === chapter.id;
+					const isHovered =
+						hoveredChapter !== null &&
+						String(hoveredChapter) === String(chapter.id);
 					const width =
 						((chapter.endTime - chapter.startTime) / duration) * 100;
 					const left = getChapterPosition(chapter);
@@ -122,8 +124,10 @@ export default function ChapterProgressBar({
 						<div
 							key={`bg-${chapter.id}`}
 							className={cn(
-								"absolute bg-surface-hover transition-all duration-150",
-								isHovered ? "h-2 top-0.5" : "h-1 top-1",
+								"absolute transition-all duration-150",
+								isHovered
+									? "bg-surface-elevated h-2 top-0.5"
+									: "bg-surface-hover h-1 top-1",
 								index === 0 ? "rounded-l-lg" : "",
 								index === chapters.length - 1 ? "rounded-r-lg" : "",
 							)}
@@ -137,7 +141,9 @@ export default function ChapterProgressBar({
 
 				{/* 分割されたプログレスバー */}
 				{chapters.map((chapter, index) => {
-					const isHovered = hoveredChapter === chapter.id;
+					const isHovered =
+						hoveredChapter !== null &&
+						String(hoveredChapter) === String(chapter.id);
 					const chapterLeft = getChapterPosition(chapter);
 					const chapterWidth =
 						((chapter.endTime - chapter.startTime) / duration) * 100;
@@ -174,7 +180,9 @@ export default function ChapterProgressBar({
 				{/* チャプター区切り線 */}
 				<div className="absolute inset-0 pointer-events-none z-20">
 					{chapters.map((chapter) => {
-						const isHovered = hoveredChapter === chapter.id;
+						const isHovered =
+							hoveredChapter !== null &&
+							String(hoveredChapter) === String(chapter.id);
 						return (
 							<div
 								key={`divider-${chapter.id}`}
@@ -195,7 +203,9 @@ export default function ChapterProgressBar({
 				<div
 					className={cn(
 						"absolute bg-primary rounded-full shadow-lg transition-all duration-150 z-25",
-						isHovered ? "w-5 h-5 -top-1" : "w-3 h-3 top-0",
+						currentChapter && hoveredChapter === currentChapter.id
+							? "w-5 h-5 -top-1"
+							: "w-3 h-3 top-0",
 					)}
 					style={{
 						left: `${(currentTime / duration) * 100}%`,
@@ -224,7 +234,7 @@ export default function ChapterProgressBar({
 								timeAtPosition <= chapter.endTime,
 						);
 
-						setHoveredChapter(hoveredChapterData?.id || null);
+						setHoveredChapter(hoveredChapterData?.id ?? null);
 					}}
 					onMouseLeave={() => setHoveredChapter(null)}
 					onMouseUp={(e) => e.currentTarget.blur()}
