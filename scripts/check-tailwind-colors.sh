@@ -13,16 +13,16 @@ COLORS="white|black|gray|red|blue|green|yellow|purple|pink|indigo|teal|cyan|oran
 # 禁止されている色クラスのパターン
 FORBIDDEN_PATTERNS=(
     # 基本色
-    "(bg|text|border)-($COLORS)-[0-9]+(/[0-9]+)?"
+    "(bg|text|border)-($COLORS)(-[0-9]+)?(/[0-9]+)?"
     
     # グラデーション色
-    "from-($COLORS)-[0-9]+(/[0-9]+)?"
-    "to-($COLORS)-[0-9]+(/[0-9]+)?"
-    "via-($COLORS)-[0-9]+(/[0-9]+)?"
+    "from-($COLORS)(-[0-9]+)?(/[0-9]+)?"
+    "to-($COLORS)(-[0-9]+)?(/[0-9]+)?"
+    "via-($COLORS)(-[0-9]+)?(/[0-9]+)?"
     
     # その他
-    "(ring|divide|outline)-($COLORS)-[0-9]+(/[0-9]+)?"
-    "(shadow)-($COLORS)-[0-9]+(/[0-9]+)?"
+    "(ring|divide|outline)-($COLORS)(-[0-9]+)?(/[0-9]+)?"
+    "(shadow)-($COLORS)(-[0-9]+)?(/[0-9]+)?"
 )
 
 ERRORS_FOUND=0
