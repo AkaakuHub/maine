@@ -12,6 +12,7 @@ import {
 import { cn } from "@/libs/utils";
 import { useScanProgress } from "@/hooks/useScanProgress";
 import { ScanControlButtons } from "./ScanControlButtons";
+import { SafeDateDisplay } from "@/components/common/SafeDateDisplay";
 
 // 時間をフォーマットするヘルパー関数
 const formatDuration = (seconds: number): string => {
@@ -272,7 +273,14 @@ export function ScanProgressBar({
 					{scanProgress.isComplete && scanProgress.completedAt && (
 						<div className="flex items-center gap-2 text-primary">
 							<CheckCircle className="h-4 w-4" />
-							<span>{scanProgress.completedAt.toLocaleTimeString()}に完了</span>
+							<span>
+								<SafeDateDisplay
+									date={scanProgress.completedAt}
+									format="time"
+									fallback="---"
+								/>
+								に完了
+							</span>
 						</div>
 					)}
 				</div>

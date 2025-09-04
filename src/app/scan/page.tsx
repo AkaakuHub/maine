@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	Activity,
 	Database,
@@ -15,6 +15,8 @@ import { ScanProgressBar } from "@/components/scan/ScanProgressBar";
 import { ScanControlButtons } from "@/components/scan/ScanControlButtons";
 import { ScanSettingsPanel } from "@/components/scan/ScanSettingsPanel";
 import { ScanSchedulePanel } from "@/components/scan/ScanSchedulePanel";
+import { SafeDateDisplay } from "@/components/common/SafeDateDisplay";
+import { formatCurrentTime } from "@/utils/safeDateFormat";
 import { useScanProgress } from "@/hooks/useScanProgress";
 import { cn } from "@/libs/utils";
 
@@ -27,6 +29,12 @@ export default function ScanManagementPage() {
 	const router = useRouter();
 	const scanProgress = useScanProgress();
 	const [isStartingScan, setIsStartingScan] = useState(false);
+	const [currentTime, setCurrentTime] = useState("");
+
+	// 現在時刻の表示（hydration安全）
+	useEffect(() => {
+		setCurrentTime(formatCurrentTime());
+	}, []);
 
 	// スキャンを手動開始
 	const handleStartScan = async () => {
@@ -293,7 +301,7 @@ export default function ScanManagementPage() {
 									<div className="space-y-1">
 										<div className="text-error flex items-center gap-2">
 											<span className="text-text-muted">
-												[{new Date().toLocaleTimeString()}]
+												<span className="text-text-muted">[{currentTime}]</span>
 											</span>
 											<span className="text-error">ERROR:</span>
 											{scanProgress.error}
@@ -305,7 +313,9 @@ export default function ScanManagementPage() {
 										{scanProgress.message && (
 											<div className="text-text flex items-start gap-2">
 												<span className="text-text-muted text-xs mt-0.5">
-													[{new Date().toLocaleTimeString()}]
+													<span className="text-text-muted">
+														[{currentTime}]
+													</span>
 												</span>
 												<span>{scanProgress.message}</span>
 											</div>
@@ -318,7 +328,9 @@ export default function ScanManagementPage() {
 													scanProgress.processingSpeed > 0 && (
 														<div className="text-text flex items-start gap-2 text-xs">
 															<span className="text-text-muted">
-																[{new Date().toLocaleTimeString()}]
+																<span className="text-text-muted">
+																	[{currentTime}]
+																</span>
 															</span>
 															<span>
 																処理速度:{" "}
@@ -331,7 +343,9 @@ export default function ScanManagementPage() {
 												{scanProgress.currentFile && (
 													<div className="text-text flex items-start gap-2 text-xs">
 														<span className="text-text-muted">
-															[{new Date().toLocaleTimeString()}]
+															<span className="text-text-muted">
+																[{currentTime}]
+															</span>
 														</span>
 														<span className="truncate">
 															処理中: {scanProgress.currentFile}
@@ -342,7 +356,9 @@ export default function ScanManagementPage() {
 												{scanProgress.phase && (
 													<div className="text-text flex items-start gap-2 text-xs">
 														<span className="text-text-muted">
-															[{new Date().toLocaleTimeString()}]
+															<span className="text-text-muted">
+																[{currentTime}]
+															</span>
 														</span>
 														<span>
 															フェーズ: {scanProgress.phase}(
@@ -357,9 +373,7 @@ export default function ScanManagementPage() {
 										{/* 完了・アイドル状態 */}
 										{!scanProgress.isScanning && !scanProgress.error && (
 											<div className="text-text-muted flex items-start gap-2 text-xs">
-												<span className="text-text-muted">
-													[{new Date().toLocaleTimeString()}]
-												</span>
+												<span className="text-text-muted">[{currentTime}]</span>
 												<span>
 													{scanProgress.isComplete
 														? `スキャン完了 - ${scanProgress.totalFiles}ファイル処理完了`
@@ -397,9 +411,12 @@ export default function ScanManagementPage() {
 									<span className="text-text-secondary">
 										最後のハートビート
 									</span>
-									<span className="text-sm text-text-muted">
-										{scanProgress.lastHeartbeat?.toLocaleTimeString() ?? "なし"}
-									</span>
+									<SafeDateDisplay
+										date={scanProgress.lastHeartbeat}
+										format="time"
+										fallback="なし"
+										className="text-sm text-text-muted"
+									/>
 								</div>
 
 								{scanProgress.connectionError && (
@@ -464,9 +481,11 @@ export default function ScanManagementPage() {
 								{scanProgress.completedAt && (
 									<div className="flex items-center justify-between">
 										<span className="text-text-secondary">完了時刻</span>
-										<span className="text-primary text-sm">
-											{scanProgress.completedAt.toLocaleString()}
-										</span>
+										<SafeDateDisplay
+											date={scanProgress.completedAt}
+											format="datetime"
+											className="text-primary text-sm"
+										/>
 									</div>
 								)}
 							</div>

@@ -17,6 +17,7 @@ import type { VideoFileData } from "@/type";
 import { cn, formatFileSize } from "@/libs/utils";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
+import { SafeDateDisplay } from "@/components/common/SafeDateDisplay";
 import { API } from "@/utils/constants";
 
 interface VideoListProps {
@@ -251,7 +252,11 @@ const VideoListItem = ({
 											<Clock className="h-3 w-3" />
 											<span>
 												最後に視聴:{" "}
-												{new Date(video.lastWatched).toLocaleDateString()}
+												<SafeDateDisplay
+													date={video.lastWatched}
+													format="date"
+													fallback="---"
+												/>
 											</span>
 										</div>
 									)}

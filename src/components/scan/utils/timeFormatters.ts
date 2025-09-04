@@ -1,3 +1,5 @@
+import { formatSafeDate } from "@/utils/safeDateFormat";
+
 export const formatTime = (hour: number, minute: number) => {
 	return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
 };
@@ -33,7 +35,7 @@ export const formatNextExecution = (nextExecution: Date | string | null) => {
 	const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
 
 	if (days > 0) {
-		return `${days}日${hours}時間${minutes}分後 (${executionDate.toLocaleDateString("ja-JP")} ${formatTime(executionDate.getHours(), executionDate.getMinutes())})`;
+		return `${days}日${hours}時間${minutes}分後 (${formatSafeDate(executionDate)} ${formatTime(executionDate.getHours(), executionDate.getMinutes())})`;
 	}
 
 	if (hours > 0) {

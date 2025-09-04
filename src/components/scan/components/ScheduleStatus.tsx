@@ -1,10 +1,7 @@
 import { Calendar, Loader2 } from "lucide-react";
 import type { SchedulerStatus } from "@/types/scanScheduleSettings";
-import {
-	formatTime,
-	formatNextExecution,
-	toSafeDate,
-} from "../utils/timeFormatters";
+import { SafeDateDisplay } from "@/components/common/SafeDateDisplay";
+import { toSafeDate } from "../utils/timeFormatters";
 
 interface ScheduleStatusProps {
 	status: SchedulerStatus;
@@ -31,7 +28,11 @@ export function ScheduleStatus({ status }: ScheduleStatusProps) {
 									次回実行予定
 								</div>
 								<div className="font-medium text-text">
-									{formatNextExecution(status.nextExecution)}
+									<SafeDateDisplay
+										date={status.nextExecution}
+										format="datetime"
+										fallback="読み込み中..."
+									/>
 								</div>
 							</div>
 							<Calendar className="h-5 w-5 text-text-muted mt-0.5" />
@@ -61,11 +62,11 @@ export function ScheduleStatus({ status }: ScheduleStatusProps) {
 											前回実行
 										</div>
 										<div className="font-medium text-text">
-											{safeLastExecution.toLocaleDateString("ja-JP")}{" "}
-											{formatTime(
-												safeLastExecution.getHours(),
-												safeLastExecution.getMinutes(),
-											)}
+											<SafeDateDisplay
+												date={safeLastExecution}
+												format="datetime"
+												fallback="読み込み中..."
+											/>
 										</div>
 									</div>
 									<div

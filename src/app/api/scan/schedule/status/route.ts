@@ -44,7 +44,7 @@ export async function GET() {
 			message: status.isEnabled
 				? status.isRunning
 					? "スケジューラー実行中"
-					: `次回実行: ${status.nextExecution?.toLocaleString("ja-JP") || "未設定"}`
+					: `次回実行: ${status.nextExecution ? "設定済み" : "未設定"}`
 				: "スケジューラー無効",
 		});
 	} catch (error) {
