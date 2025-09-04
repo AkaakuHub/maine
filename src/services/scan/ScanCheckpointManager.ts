@@ -65,9 +65,7 @@ export class ScanCheckpointManager {
 				},
 			});
 
-			console.log(
-				`✅ Checkpoint saved: ${phase} phase, ${processedFiles}/${totalFiles} files`,
-			);
+			// Checkpoint saved
 		} catch (error) {
 			console.error("チェックポイント保存エラー:", error);
 			throw error;
@@ -128,7 +126,7 @@ export class ScanCheckpointManager {
 			},
 		});
 
-		console.log("🗑️ Checkpoint invalidated");
+		// Checkpoint invalidated
 	}
 
 	/**

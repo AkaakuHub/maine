@@ -56,7 +56,7 @@ export class SSEConnectionStore {
 
 	private constructor() {
 		this.instanceId = `store_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-		console.log(`🏪 SSEConnectionStore created: ${this.instanceId}`);
+		// SSEConnectionStore created
 	}
 
 	static getInstance(): SSEConnectionStore {
@@ -71,29 +71,21 @@ export class SSEConnectionStore {
 	 */
 	addConnection(connection: SSEConnection): void {
 		if (this.connections.has(connection.id)) {
-			console.warn(
-				`🔌 Connection ${connection.id} already exists, skipping...`,
-			);
+			// Connection already exists
 			return;
 		}
 
 		this.connections.set(connection.id, connection);
-		console.log(
-			`🔌 Connection added: ${connection.id} (total: ${this.connections.size}) [Store: ${this.instanceId}]`,
-		);
+		// Connection added
 
 		// React StrictMode警告
 		if (this.connections.size > 1) {
-			console.warn(
-				`⚠️ Multiple connections detected (${this.connections.size}). This might be due to React StrictMode.`,
-			);
+			// Multiple connections detected (React StrictMode)
 		}
 
 		// 新しい接続に最新の進捗状態を送信
 		if (this.lastProgressEvent && this.currentScanId) {
-			console.log(
-				`📡 Sending latest progress to new connection: ${this.lastProgressEvent.type} ${this.lastProgressEvent.progress}%`,
-			);
+			// Sending latest progress to new connection
 			const eventToSend = this.lastProgressEvent;
 			setTimeout(() => {
 				this.sendToConnection(connection.id, eventToSend);
@@ -106,9 +98,7 @@ export class SSEConnectionStore {
 	 */
 	removeConnection(connectionId: string): void {
 		if (this.connections.delete(connectionId)) {
-			console.log(
-				`🔌 Connection removed: ${connectionId} (total: ${this.connections.size}) [Store: ${this.instanceId}]`,
-			);
+			// Connection removed
 		}
 	}
 
@@ -135,8 +125,8 @@ export class SSEConnectionStore {
 			connection.controller.enqueue(encoder.encode(data));
 			connection.lastHeartbeat = new Date();
 			return true;
-		} catch (error) {
-			console.warn(`❌ Failed to send to connection ${connectionId}:`, error);
+		} catch {
+			// Failed to send to connection
 			// 無効な接続を削除
 			this.removeConnection(connectionId);
 			return false;
@@ -148,13 +138,9 @@ export class SSEConnectionStore {
 	 */
 	broadcast(message: ScanProgressEvent): void {
 		if (this.connections.size === 0) {
-			console.log(
-				"📡 No active connections, progress stored for future connections",
-			);
+			// No active connections, progress stored for future connections
 		} else {
-			console.log(
-				`📡 Broadcasting to ${this.connections.size} connections [Store: ${this.instanceId}]`,
-			);
+			// Broadcasting to connections
 		}
 
 		// 最新の進捗を保存
@@ -168,18 +154,13 @@ export class SSEConnectionStore {
 		}
 
 		// 全接続にブロードキャスト
-		let successCount = 0;
 		const connectionIds = Array.from(this.connections.keys());
 
 		for (const connectionId of connectionIds) {
-			if (this.sendToConnection(connectionId, message)) {
-				successCount++;
-			}
+			this.sendToConnection(connectionId, message);
 		}
 
-		console.log(
-			`📡 Broadcast result: ${successCount}/${connectionIds.length} successful`,
-		);
+		// Broadcast completed
 	}
 
 	/**
@@ -199,9 +180,7 @@ export class SSEConnectionStore {
 	 * 接続数を取得
 	 */
 	getConnectionCount(): number {
-		console.log(
-			`📊 Connection count: ${this.connections.size} [Store: ${this.instanceId}]`,
-		);
+		// Connection count logged
 		return this.connections.size;
 	}
 
@@ -228,7 +207,7 @@ export class SSEConnectionStore {
 	clearScanState(): void {
 		this.currentScanId = null;
 		this.lastProgressEvent = null;
-		console.log("🧹 Scan state cleared");
+		// Scan state cleared
 	}
 
 	/**
@@ -240,7 +219,7 @@ export class SSEConnectionStore {
 
 		for (const [id, connection] of this.connections) {
 			if (now.getTime() - connection.lastHeartbeat.getTime() > timeoutMs) {
-				console.log(`🗑️ Cleaning up stale connection: ${id}`);
+				// Cleaning up stale connection
 				this.removeConnection(id);
 			}
 		}

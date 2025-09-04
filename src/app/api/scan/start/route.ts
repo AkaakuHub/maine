@@ -29,8 +29,8 @@ export async function POST() {
 		console.log(
 			"🚀 Starting scan - SSE connections will receive progress asynchronously",
 		);
-		const activeConnections = sseStore.getConnectionCount();
-		console.log(`📡 Current active SSE connections: ${activeConnections}`);
+		sseStore.getConnectionCount();
+		// Current active SSE connections
 
 		// スキャンを非同期で開始（ブロッキングしないように）
 		videoCacheService.manualRefresh().catch((error) => {

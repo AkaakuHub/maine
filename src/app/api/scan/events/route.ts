@@ -34,10 +34,7 @@ export async function GET(request: NextRequest) {
 
 			// SSE Connection Storeに接続を登録
 			sseStore.addConnection(connection);
-			console.log("🔌 SSE connection registered:", connectionId, {
-				userAgent: connection.metadata.userAgent,
-				timestamp: new Date().toISOString(),
-			});
+			// SSE connection registered
 
 			// 接続確立メッセージを送信
 			const encoder = new TextEncoder();
@@ -70,10 +67,7 @@ export async function GET(request: NextRequest) {
 
 			// 接続終了時のクリーンアップ
 			request.signal.addEventListener("abort", () => {
-				console.log("🔌 SSE connection disconnected:", connectionId, {
-					reason: "client_abort",
-					timestamp: new Date().toISOString(),
-				});
+				// SSE connection disconnected
 
 				// Connection Storeから削除
 				sseStore.removeConnection(connectionId);
@@ -89,7 +83,7 @@ export async function GET(request: NextRequest) {
 
 		cancel() {
 			// ストリーム終了時のクリーンアップ
-			console.log("📡 SSE stream cancelled");
+			// SSE stream cancelled
 		},
 	});
 
