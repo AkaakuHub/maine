@@ -1,7 +1,9 @@
 "use client";
 
+import type React from "react";
 import { Search, X, SortAsc, SortDesc, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { formatFileSize } from "@/libs/utils";
 import type { SortBy, SortOrder, TabType } from "@/stores/appStateStore";
 import type { VideoFileData } from "@/type";
@@ -55,31 +57,34 @@ export function SearchSection({
 			<div className="bg-surface-elevated rounded-lg p-4">
 				<div className="flex flex-col lg:flex-row gap-4">
 					{/* 検索入力 */}
-					<div className="relative flex-1">
-						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-secondary" />
-						<input
-							type="text"
+					<div className="flex-1">
+						<Input
 							placeholder="動画タイトルやファイル名で検索..."
 							value={searchTerm}
-							onChange={(e) => onSearchTermChange(e.target.value)}
+							onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+								onSearchTermChange(e.target.value)
+							}
 							onCompositionStart={() => onSetIsComposing(true)}
 							onCompositionEnd={() => onSetIsComposing(false)}
-							className="w-full pl-10 pr-24 py-3 bg-surface border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
+							variant="search"
+							leftIcon={<Search className="h-5 w-5" />}
+							rightContent={
+								<>
+									{searchTerm && (
+										<button
+											type="button"
+											onClick={onClearSearch}
+											className="p-1 text-text-secondary hover:text-text transition-colors rounded-md hover:bg-surface-elevated"
+										>
+											<X className="h-4 w-4" />
+										</button>
+									)}
+									<Button onClick={onSearch} size="sm" className="h-8">
+										検索
+									</Button>
+								</>
+							}
 						/>
-						<div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-							{searchTerm && (
-								<button
-									type="button"
-									onClick={onClearSearch}
-									className="p-1 text-text-secondary hover:text-text transition-colors rounded-md hover:bg-surface-elevated"
-								>
-									<X className="h-4 w-4" />
-								</button>
-							)}
-							<Button onClick={onSearch} size="sm" className="h-8">
-								検索
-							</Button>
-						</div>
 					</div>
 
 					{/* フィルター・ソートコントロール */}

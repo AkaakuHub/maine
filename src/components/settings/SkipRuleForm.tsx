@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { Input } from "@/components/ui/Input";
 
 interface SkipRuleFormProps {
 	onAdd: (pattern: string) => Promise<void>;
@@ -38,19 +39,15 @@ export function SkipRuleForm({ onAdd, isLoading }: SkipRuleFormProps) {
 				新しいスキップパターン
 			</label>
 			<div className="flex gap-2">
-				<input
-					id="new-pattern-input"
-					type="text"
-					value={pattern}
-					onChange={(e) => setPattern(e.target.value)}
-					placeholder="CM、OP、EDなど"
-					className="flex-1 px-3 py-2 text-sm text-text placeholder-text-muted bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-					onKeyDown={handleKeyDown}
-					autoComplete="off"
-					autoCorrect="off"
-					autoCapitalize="off"
-					spellCheck={false}
-				/>
+				<div className="flex-1">
+					<Input
+						id="new-pattern-input"
+						value={pattern}
+						onChange={(e) => setPattern(e.target.value)}
+						placeholder="CM、OP、EDなど"
+						onKeyDown={handleKeyDown}
+					/>
+				</div>
 				<button
 					type="button"
 					onClick={handleSubmit}
