@@ -44,8 +44,12 @@ export function SkipRuleForm({ onAdd, isLoading }: SkipRuleFormProps) {
 					value={pattern}
 					onChange={(e) => setPattern(e.target.value)}
 					placeholder="CM、OP、EDなど"
-					className="flex-1 px-3 py-2 text-sm bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+					className="flex-1 px-3 py-2 text-sm text-text placeholder-text-muted bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
 					onKeyDown={handleKeyDown}
+					autoComplete="off"
+					autoCorrect="off"
+					autoCapitalize="off"
+					spellCheck={false}
 				/>
 				<button
 					type="button"
