@@ -894,16 +894,9 @@ class VideoCacheService {
 	 */
 	private async initializeScheduler(): Promise<void> {
 		try {
-			// デフォルト設定でスケジューラーを開始
-			// 実際の設定は後でAPIから取得・更新される
 			console.log("スケジューラーを初期化中...");
-
-			// 設定が有効な場合のみスケジューラーを開始
-			const settings = this.scheduler.getSettings();
-			if (settings.enabled) {
-				await this.scheduler.start();
-			}
-
+			// DBから設定を読み込んで初期化
+			await this.scheduler.initializeFromDatabase();
 			console.log("スケジューラー初期化完了");
 		} catch (error) {
 			console.error("スケジューラー初期化エラー:", error);

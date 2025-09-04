@@ -17,6 +17,17 @@ import {
 export async function GET() {
 	try {
 		const scheduler = videoCacheService.getScheduler();
+
+		// DBから最新設定を確実に読み込み（オプションとして）
+		try {
+			await scheduler.loadSettingsFromDatabase();
+		} catch (dbError) {
+			console.warn(
+				"DB設定読み込み中にエラー（メモリ上の設定を使用）:",
+				dbError,
+			);
+		}
+
 		const settings = scheduler.getSettings();
 		const status = scheduler.getStatus();
 

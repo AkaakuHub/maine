@@ -55,3 +55,23 @@ model ScanSettings {
 
   @@map("scan_settings")
 }
+
+// スキャンスケジュール設定
+model ScanScheduleSettings {
+  id                        String   @id @default("scan_schedule_settings")
+  enabled                   Boolean  @default(false)
+  cronPattern               String?
+  interval                  String   @default("weekly") // "daily" | "weekly" | "monthly" | "custom"
+  intervalHours             Int      @default(168)
+  executionTimeHour         Int      @default(3)
+  executionTimeMinute       Int      @default(0)
+  weeklyDays                String   @default("[0]") // JSON array of numbers
+  monthlyDay                Int      @default(1)
+  skipIfRunning             Boolean  @default(true)
+  maxExecutionTimeMinutes   Int      @default(180)
+  onlyWhenIdle              Boolean  @default(false)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("scan_schedule_settings")
+}

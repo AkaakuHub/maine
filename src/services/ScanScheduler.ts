@@ -9,6 +9,7 @@ import {
 	DEFAULT_SCHEDULE_SETTINGS,
 } from "@/types/scanScheduleSettings";
 import { sseStore } from "@/lib/sse-connection-store";
+import { ScanSchedulePersistenceService } from "./ScanSchedulePersistenceService";
 
 /**
  * スケジューラーサービス
@@ -31,6 +32,13 @@ export class ScanScheduler {
 
 	// 手動スキャン状態チェック関数（外部から注入）
 	private manualScanChecker: (() => boolean) | null = null;
+
+	// DB永続化サービス
+	private persistenceService: ScanSchedulePersistenceService;
+
+	constructor() {
+		this.persistenceService = new ScanSchedulePersistenceService();
+	}
 
 	/**
 	 * スケジューラーを開始（Cronライブラリ版）
@@ -92,6 +100,14 @@ export class ScanScheduler {
 		const wasEnabled = this.settings.enabled;
 		this.settings = { ...newSettings };
 
+		try {
+			// DBに設定を保存
+			await this.persistenceService.saveSettings(this.settings);
+		} catch (error) {
+			console.error("設定のDB保存に失敗しました:", error);
+			// DB保存に失敗してもメモリ上の設定更新は継続
+		}
+
 		// スケジューラーの状態を調整
 		if (this.settings.enabled && !wasEnabled) {
 			// 無効→有効: スケジューラー開始
@@ -109,6 +125,37 @@ export class ScanScheduler {
 			interval: this.settings.interval,
 			cronPattern: this.settings.enabled ? this.generateCronPattern() : null,
 		});
+	}
+
+	/**
+	 * DBから設定を読み込んで初期化
+	 */
+	async initializeFromDatabase(): Promise<void> {
+		console.log("DBからスケジュール設定を読み込み中...");
+		this.settings = await this.persistenceService.loadSettings();
+
+		// 設定が有効な場合はスケジューラーを開始
+		if (this.settings.enabled) {
+			await this.start();
+		}
+
+		console.log("スケジュール設定の初期化が完了しました:", {
+			enabled: this.settings.enabled,
+			interval: this.settings.interval,
+		});
+	}
+
+	/**
+	 * 現在の設定をDBから再読み込み
+	 */
+	async loadSettingsFromDatabase(): Promise<ScanScheduleSettings> {
+		try {
+			this.settings = await this.persistenceService.loadSettings();
+			return this.settings;
+		} catch (error) {
+			console.error("設定の読み込みでエラー:", error);
+			return this.settings; // 既存設定を返す
+		}
 	}
 
 	/**
