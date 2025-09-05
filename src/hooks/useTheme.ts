@@ -15,7 +15,24 @@ export function useTheme(): UseThemeReturn {
 		return THEME.DEFAULT_MODE as ThemeMode;
 	});
 
-	const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
+	const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(() => {
+		// SSRとの整合性を保つため、初期状態をダークに設定
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(THEME.STORAGE_KEY) as ThemeMode;
+			const currentTheme =
+				saved && Object.values(THEME.MODES).includes(saved)
+					? saved
+					: (THEME.DEFAULT_MODE as ThemeMode);
+
+			if (currentTheme === "system") {
+				return window.matchMedia("(prefers-color-scheme: dark)").matches
+					? "dark"
+					: "light";
+			}
+			return currentTheme;
+		}
+		return "dark";
+	});
 
 	const updateResolvedTheme = useCallback((currentTheme: ThemeMode) => {
 		if (currentTheme === "system") {

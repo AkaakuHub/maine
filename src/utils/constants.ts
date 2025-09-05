@@ -107,13 +107,13 @@ export const API = {
 
 // テーマ関連
 export const THEME = {
-	STORAGE_KEY: "theme-preference",
+	STORAGE_KEY: "theme",
 	MODES: {
 		LIGHT: "light",
 		DARK: "dark",
 		SYSTEM: "system",
 	},
-	DEFAULT_MODE: "system",
+	DEFAULT_MODE: "dark",
 } as const;
 
 // 動画時間フォーマット関数

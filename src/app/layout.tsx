@@ -58,6 +58,25 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="ja">
+			<head>
+				<script
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+					dangerouslySetInnerHTML={{
+						__html: `
+							try {
+								const theme = localStorage.getItem('theme') || 'dark';
+								if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+									document.documentElement.classList.add('dark');
+								} else {
+									document.documentElement.classList.remove('dark');
+								}
+							} catch (_) {
+								document.documentElement.classList.add('dark');
+							}
+						`,
+					}}
+				/>
+			</head>
 			<body className={`${inter.className} antialiased`}>
 				<ThemeProvider>{children}</ThemeProvider>
 			</body>

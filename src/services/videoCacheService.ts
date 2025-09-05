@@ -41,6 +41,8 @@ type SearchResult = {
  * 機能別にモジュール化されたコンポーネントを使用
  */
 class VideoCacheService {
+	private static instance: VideoCacheService | null = null;
+
 	private isUpdating = false;
 	private updateProgress = -1;
 	private currentScanId: string | null = null;
@@ -66,7 +68,7 @@ class VideoCacheService {
 		scanId: null as string | null,
 	};
 
-	constructor() {
+	private constructor() {
 		this.settingsDb = new SettingsPrismaClient();
 		this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
 		this.checkpointManager = new ScanCheckpointManager();
@@ -80,7 +82,22 @@ class VideoCacheService {
 		this.scheduler.setManualScanChecker(() => this.isUpdating);
 
 		this.initializeStreamProcessor();
-		this.initializeScheduler();
+
+		// ビルド時はスケジューラー初期化をスキップ
+		// Next.jsのビルドプロセスや静的生成では実行しない
+		if (
+			typeof window !== "undefined" ||
+			process.env.NODE_ENV === "development"
+		) {
+			this.initializeScheduler();
+		}
+	}
+
+	static getInstance(): VideoCacheService {
+		if (!VideoCacheService.instance) {
+			VideoCacheService.instance = new VideoCacheService();
+		}
+		return VideoCacheService.instance;
 	}
 
 	// Progress listenerは不要（SSE Connection Storeが直接ブロードキャスト）
@@ -931,4 +948,4 @@ class VideoCacheService {
 	}
 }
 
-export const videoCacheService = new VideoCacheService();
+export const videoCacheService = VideoCacheService.getInstance();

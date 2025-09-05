@@ -5,7 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const port = process.env.PORT || 3000;
-const dev = process.env.NODE_ENV !== 'production';
+// 本番環境固定（HTTPS必須）
+const dev = false;
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
