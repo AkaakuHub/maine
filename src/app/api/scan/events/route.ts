@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { sseStore } from "@/lib/sse-connection-store";
+import { sseStore } from "@/libs/sse-connection-store";
 
 /**
  * Server-Sent Events (SSE) API Route

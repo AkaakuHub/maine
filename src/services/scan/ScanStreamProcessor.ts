@@ -1,7 +1,7 @@
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
-import { sseStore } from "@/lib/sse-connection-store";
+import { sseStore } from "@/libs/sse-connection-store";
 import type { ScanSettings } from "@/types/scanSettings";
 import { SCAN } from "@/utils/constants";
 import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";

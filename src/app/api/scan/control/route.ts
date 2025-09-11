@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { sseStore } from "@/lib/sse-connection-store";
+import { sseStore } from "@/libs/sse-connection-store";
 
 /**
  * スキャン制御API

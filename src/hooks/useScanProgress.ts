@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useScanStore } from "@/stores/scan-store";
-import type { ScanProgressEvent } from "@/lib/sse-connection-store";
+import type { ScanProgressEvent } from "@/libs/sse-connection-store";
 
 /**
  * Zustandベースのスキャン進捗追跡フック

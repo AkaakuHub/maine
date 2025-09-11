@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { videoCacheService } from "@/services/videoCacheService";
-import { sseStore } from "@/lib/sse-connection-store";
+import { sseStore } from "@/libs/sse-connection-store";
 
 /**
  * スキャン開始API

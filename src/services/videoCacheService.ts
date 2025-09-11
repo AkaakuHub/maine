@@ -11,7 +11,7 @@ import {
 } from "@/libs/fileUtils";
 import type { VideoFileData } from "@/type";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
-import { sseStore } from "@/lib/sse-connection-store";
+import { sseStore } from "@/libs/sse-connection-store";
 import type { ScanSettings } from "@/types/scanSettings";
 import { DEFAULT_SCAN_SETTINGS } from "@/types/scanSettings";
 import { SCAN } from "@/utils/constants";

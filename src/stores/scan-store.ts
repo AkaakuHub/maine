@@ -7,7 +7,7 @@
 
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import type { ScanProgressEvent } from "@/lib/sse-connection-store";
+import type { ScanProgressEvent } from "@/libs/sse-connection-store";
 
 export interface ScanState {
 	// 接続状態
