@@ -7,6 +7,7 @@ import type { VideoFileData } from "@/type";
 import { useVideoProgress } from "./useVideoProgress";
 import { useOfflineStorage } from "./useOfflineStorage";
 import { useNetworkStatus } from "./useNetworkStatus";
+import { useNavigationRefresh } from "@/contexts/NavigationRefreshContext";
 import { API } from "@/utils/constants";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
 import {
@@ -21,6 +22,7 @@ export function useVideoPlayer() {
 	const explicitOfflineMode = searchParams.get("offline") === "true";
 	const { isOnline } = useNetworkStatus();
 	const { getCachedVideoUrl } = useOfflineStorage();
+	const { triggerVideoRefresh } = useNavigationRefresh();
 
 	// オフラインモードの判定: 明示的なオフラインモード or ネットワーク切断時
 	const isOfflineMode = explicitOfflineMode || !isOnline;
@@ -402,10 +404,12 @@ export function useVideoPlayer() {
 	);
 
 	const handleGoBack = () => {
+		triggerVideoRefresh();
 		router.back();
 	};
 
 	const handleGoHome = () => {
+		triggerVideoRefresh();
 		router.push("/");
 	};
 

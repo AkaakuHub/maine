@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { NavigationRefreshProvider } from "@/contexts/NavigationRefreshContext";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -78,7 +79,9 @@ export default function RootLayout({
 				/>
 			</head>
 			<body className={`${inter.className} antialiased`}>
-				<ThemeProvider>{children}</ThemeProvider>
+				<ThemeProvider>
+					<NavigationRefreshProvider>{children}</NavigationRefreshProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);

@@ -9,6 +9,7 @@ import { useWarningDialog } from "@/hooks/useWarningDialog";
 import { useOfflineVideoManagement } from "@/hooks/useOfflineVideoManagement";
 import { useVideoActions } from "@/hooks/useVideoActions";
 import { useAppStateStore, type TabType } from "@/stores/appStateStore";
+import { useNavigationRefresh } from "@/contexts/NavigationRefreshContext";
 import { HeaderSection } from "@/components/home/HeaderSection";
 import { TabNavigation } from "@/components/home/TabNavigation";
 import { SearchSection } from "@/components/home/SearchSection";
@@ -27,6 +28,7 @@ const HomeContent = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const isInitialized = useRef(false);
+	const { shouldRefreshVideos, consumeRefresh } = useNavigationRefresh();
 
 	// グローバル状態管理 (Zustand)
 	const {
@@ -166,6 +168,14 @@ const HomeContent = () => {
 		loadAll: showAll,
 		enabled: !isOffline, // オフライン時は無効化
 	});
+
+	// 動画ページから戻ってきた際に進捗情報を更新するためのリフレッシュ処理
+	useEffect(() => {
+		if (activeTab === "streaming" && shouldRefreshVideos) {
+			refetchVideos();
+			consumeRefresh();
+		}
+	}, [activeTab, shouldRefreshVideos, refetchVideos, consumeRefresh]);
 
 	// エラーハンドリングとコンテンツ状態
 	const { handleRetry, hasContent } = useVideoActions({

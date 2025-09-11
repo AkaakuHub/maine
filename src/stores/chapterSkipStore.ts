@@ -1,12 +1,5 @@
 import { create } from "zustand";
-
-export interface ChapterSkipRule {
-	id: string;
-	pattern: string;
-	enabled: boolean;
-	createdAt: Date;
-	updatedAt: Date;
-}
+import type { ChapterSkipRule } from "@/types/Settings";
 
 interface ChapterSkipStore {
 	rules: ChapterSkipRule[];
