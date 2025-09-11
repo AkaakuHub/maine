@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Edit, Trash2, Check, X } from "lucide-react";
 import { cn } from "@/libs/utils";
 import { ToggleButton } from "@/components/ui/RadioGroup";
-import type { ChapterSkipRule } from "@/stores/chapterSkipStore";
+import type { ChapterSkipRule } from "@/types/Settings";
 
 interface SkipRuleItemProps {
 	rule: ChapterSkipRule;

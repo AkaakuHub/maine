@@ -16,7 +16,7 @@ import { cn } from "@/libs/utils";
 import type { SettingsView } from "./types";
 import { useChapterSkipStore } from "@/stores/chapterSkipStore";
 import { useState } from "react";
-import type { ChapterSkipRule } from "@/stores/chapterSkipStore";
+import type { ChapterSkipRule } from "@/types/Settings";
 
 interface SettingsMenuProps {
 	show: boolean;
