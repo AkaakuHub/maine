@@ -18,9 +18,17 @@ pre-commit:
       skip:
         - merge
         - rebase
+    knip:
+      glob: "**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: pnpm run knip
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
 
 commit-msg:
-  skip: merge
+  skip: []
+  parallel: true
   commands:
     commitlint:
       run: pnpm commitlint --edit {1}
