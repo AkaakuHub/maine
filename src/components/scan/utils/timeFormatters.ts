@@ -7,10 +7,25 @@ export const formatTime = (hour: number, minute: number) => {
 export const toSafeDate = (dateInput: Date | string | null): Date | null => {
 	if (!dateInput) return null;
 
-	const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+	let date: Date;
 
-	// Check if the date is valid
-	if (Number.isNaN(date.getTime())) return null;
+	if (typeof dateInput === "string") {
+		// Handle ISO string format specifically
+		if (dateInput.includes("T") || dateInput.includes("Z")) {
+			date = new Date(dateInput);
+		} else {
+			// Try to parse as regular date string
+			date = new Date(dateInput);
+		}
+	} else {
+		date = dateInput;
+	}
+
+	// Check if the date is valid using Number.isNaN for safety
+	if (Number.isNaN(date.getTime())) {
+		console.warn("[toSafeDate] Invalid date detected:", dateInput);
+		return null;
+	}
 
 	return date;
 };

@@ -28,11 +28,16 @@ export function ScheduleStatus({ status }: ScheduleStatusProps) {
 									次回実行予定
 								</div>
 								<div className="font-medium text-text">
-									<SafeDateDisplay
-										date={status.nextExecution}
-										format="datetime"
-										fallback="読み込み中..."
-									/>
+									{status.nextExecution ? (
+										<SafeDateDisplay
+											date={status.nextExecution}
+											format="datetime"
+										/>
+									) : (
+										<span className="text-text-muted">
+											次回実行は未設定です
+										</span>
+									)}
 								</div>
 							</div>
 							<Calendar className="h-5 w-5 text-text-muted mt-0.5" />
@@ -62,11 +67,14 @@ export function ScheduleStatus({ status }: ScheduleStatusProps) {
 											前回実行
 										</div>
 										<div className="font-medium text-text">
-											<SafeDateDisplay
-												date={safeLastExecution}
-												format="datetime"
-												fallback="読み込み中..."
-											/>
+											{safeLastExecution ? (
+												<SafeDateDisplay
+													date={safeLastExecution}
+													format="datetime"
+												/>
+											) : (
+												<span className="text-text-muted">実行履歴なし</span>
+											)}
 										</div>
 									</div>
 									<div

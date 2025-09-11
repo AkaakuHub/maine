@@ -18,6 +18,9 @@ export async function GET() {
 	try {
 		const scheduler = videoCacheService.getScheduler();
 
+		// Debug logging for production issues
+		console.log("[Schedule API Debug] Starting GET request");
+
 		// DBから最新設定を確実に読み込み（オプションとして）
 		try {
 			await scheduler.loadSettingsFromDatabase();
@@ -30,6 +33,19 @@ export async function GET() {
 
 		const settings = scheduler.getSettings();
 		const status = scheduler.getStatus();
+
+		// Debug logging for production issues
+		console.log("[Schedule API Debug] Response data:", {
+			settings,
+			status: {
+				...status,
+				nextExecutionType: typeof status.nextExecution,
+				nextExecutionValid:
+					status.nextExecution instanceof Date &&
+					!Number.isNaN(status.nextExecution.getTime()),
+				nextExecutionString: status.nextExecution?.toISOString(),
+			},
+		});
 
 		return NextResponse.json({
 			success: true,
