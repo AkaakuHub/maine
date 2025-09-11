@@ -156,7 +156,7 @@ export default function ScanManagementPage() {
 									<h4 className="text-sm font-semibold text-text-primary mb-3">
 										差分スキャン統計
 									</h4>
-									<div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+									<div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
 										<div className="text-center p-2 bg-surface/50 rounded">
 											<div className="font-bold text-lg text-primary">
 												{scanProgress.skipStats.totalFiles}
@@ -189,11 +189,32 @@ export default function ScanManagementPage() {
 												スキップ ({scanProgress.skipStats.unchangedPercentage}%)
 											</div>
 										</div>
+										{scanProgress.skipStats.deletedFiles > 0 && (
+											<div className="text-center p-2 bg-surface/50 rounded">
+												<div className="font-bold text-lg text-error">
+													{scanProgress.skipStats.deletedFiles}
+												</div>
+												<div className="text-text-secondary text-xs">
+													削除ファイル
+												</div>
+											</div>
+										)}
 									</div>
-									{scanProgress.skipStats.unchangedPercentage > 0 && (
-										<div className="mt-3 text-center text-sm text-success">
-											{scanProgress.skipStats.unchangedPercentage}%
-											のファイルをスキップしました
+									{(scanProgress.skipStats.unchangedPercentage > 0 ||
+										scanProgress.skipStats.deletedFiles > 0) && (
+										<div className="mt-3 text-center text-sm space-y-1">
+											{scanProgress.skipStats.unchangedPercentage > 0 && (
+												<div className="text-success">
+													{scanProgress.skipStats.unchangedPercentage}%
+													のファイルをスキップしました
+												</div>
+											)}
+											{scanProgress.skipStats.deletedFiles > 0 && (
+												<div className="text-error">
+													{scanProgress.skipStats.deletedFiles}
+													件のファイルを削除しました
+												</div>
+											)}
 										</div>
 									)}
 								</div>

@@ -51,6 +51,7 @@ export interface ScanProgressEvent {
 		newFiles: number;
 		changedFiles: number;
 		unchangedFiles: number; // スキップされたファイル数
+		deletedFiles: number; // 削除されたファイル数
 		unchangedPercentage: number;
 	};
 }

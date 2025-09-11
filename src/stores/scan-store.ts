@@ -51,6 +51,7 @@ export interface ScanState {
 		newFiles: number;
 		changedFiles: number;
 		unchangedFiles: number;
+		deletedFiles: number;
 		unchangedPercentage: number;
 	};
 }

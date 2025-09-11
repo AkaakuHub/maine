@@ -335,27 +335,9 @@ class VideoCacheService {
 			- 未変更ファイル: ${unchangedFiles.length} (スキップ)
 			- 新規ファイル: ${newFiles.length}`);
 
-		// スキップ統計をSSEで送信
-		const unchangedPercentage =
-			allVideoFiles.length > 0
-				? Math.round((unchangedFiles.length / allVideoFiles.length) * 100)
-				: 0;
-
-		sseStore.broadcast({
-			type: "scan_stats",
-			scanId,
-			skipStats: {
-				totalFiles: allVideoFiles.length,
-				newFiles: newFiles.length,
-				changedFiles: changedFiles.length - newFiles.length, // 既存ファイルの変更分のみ
-				unchangedFiles: unchangedFiles.length,
-				unchangedPercentage,
-			},
-			message: `差分スキャン結果: ${unchangedFiles.length}ファイル（${unchangedPercentage}%）をスキップ`,
-		});
-
 		// Phase 2: メタデータ処理（変更ファイルのみ処理）
 		let processedDbRecords: ProcessedVideoRecord[] = [];
+		let deletedFilesCount = 0;
 
 		if (changedFiles.length > 0) {
 			if (ScanStreamProcessor.shouldUseStreamProcessing(changedFiles.length)) {
@@ -386,9 +368,29 @@ class VideoCacheService {
 		);
 
 		// Phase 3: データベース更新
-		await this.performDatabaseUpdate(allDbRecords, scanId);
+		deletedFilesCount = await this.performDatabaseUpdate(allDbRecords, scanId);
 
 		await this.checkpointManager.invalidateCheckpoint();
+
+		// スキップ統計をSSEで送信
+		const unchangedPercentage =
+			allVideoFiles.length > 0
+				? Math.round((unchangedFiles.length / allVideoFiles.length) * 100)
+				: 0;
+
+		sseStore.broadcast({
+			type: "scan_stats",
+			scanId,
+			skipStats: {
+				totalFiles: allVideoFiles.length,
+				newFiles: newFiles.length,
+				changedFiles: changedFiles.length,
+				unchangedFiles: unchangedFiles.length,
+				deletedFiles: deletedFilesCount,
+				unchangedPercentage,
+			},
+			message: `差分スキャン結果: ${unchangedFiles.length}ファイル（${unchangedPercentage}%）をスキップ`,
+		});
 
 		return {
 			success: true,
@@ -517,7 +519,7 @@ class VideoCacheService {
 	private async performDatabaseUpdate(
 		allDbRecords: ProcessedVideoRecord[],
 		scanId: string,
-	): Promise<void> {
+	): Promise<number> {
 		this.progressCalculator.resetPhaseTimer();
 
 		// データベース更新フェーズ開始
@@ -530,6 +532,8 @@ class VideoCacheService {
 			totalFiles: allDbRecords.length,
 			message: "データベース更新中...",
 		});
+
+		let deletedFilePaths: string[] = [];
 
 		await prisma.$transaction(
 			async (tx: Prisma.TransactionClient) => {
@@ -545,7 +549,7 @@ class VideoCacheService {
 				const currentFilePaths = new Set(allDbRecords.map((r) => r.filePath));
 
 				// 3. 削除されたファイルを特定
-				const deletedFilePaths = [...existingFilePaths].filter(
+				deletedFilePaths = [...existingFilePaths].filter(
 					(path) => !currentFilePaths.has(path),
 				);
 
@@ -602,6 +606,8 @@ class VideoCacheService {
 			totalFiles: allDbRecords.length,
 			message: `スキャン完了: ${allDbRecords.length}ファイル処理完了`,
 		});
+
+		return deletedFilePaths.length;
 	}
 
 	private async scanDirectory(directory: string): Promise<VideoFile[]> {
