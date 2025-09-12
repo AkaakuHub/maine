@@ -14,6 +14,11 @@ import { ScanSchedulePersistenceService } from "./ScanSchedulePersistenceService
 /**
  * スケジューラーサービス
  */
+// Next.js環境でのグローバルインスタンス管理
+declare global {
+	var __scanScheduler: ScanScheduler | undefined;
+}
+
 export class ScanScheduler {
 	private cronJob: CronJob | null = null;
 	private settings: ScanScheduleSettings = DEFAULT_SCHEDULE_SETTINGS;
@@ -36,8 +41,18 @@ export class ScanScheduler {
 	// DB永続化サービス
 	private persistenceService: ScanSchedulePersistenceService;
 
-	constructor() {
+	private constructor() {
 		this.persistenceService = new ScanSchedulePersistenceService();
+	}
+
+	/**
+	 * グローバルインスタンスを取得（シングルトン）
+	 */
+	static getInstance(): ScanScheduler {
+		if (!globalThis.__scanScheduler) {
+			globalThis.__scanScheduler = new ScanScheduler();
+		}
+		return globalThis.__scanScheduler;
 	}
 
 	/**
@@ -131,12 +146,39 @@ export class ScanScheduler {
 	 * DBから設定を読み込んで初期化
 	 */
 	async initializeFromDatabase(): Promise<void> {
+		// 多重初期化を防止（実際のcronJobの有無でチェック）
+		if (this.cronJob) {
+			console.log("スケジューラーは既に初期化済みです（cronJobが存在）");
+			return;
+		}
+
+		// ビルド時は初期化をスキップ
+		const isBuildTime =
+			process.env.NEXT_PHASE === "phase-production-build" ||
+			process.env.NEXT_PHASE === "PHASE_PRODUCTION_BUILD";
+
+		if (isBuildTime) {
+			console.log("ビルド時はスケジューラー初期化をスキップします");
+			return;
+		}
+
 		console.log("DBからスケジュール設定を読み込み中...");
-		this.settings = await this.persistenceService.loadSettings();
+		const loadedSettings = await this.persistenceService.loadSettings();
+
+		console.log("DBから読み込んだ設定:", {
+			enabled: loadedSettings.enabled,
+			interval: loadedSettings.interval,
+			executionTime: loadedSettings.executionTime,
+		});
+
+		this.settings = loadedSettings;
 
 		// 設定が有効な場合はスケジューラーを開始
 		if (this.settings.enabled) {
+			console.log("スケジューラーを開始します...");
 			await this.start();
+		} else {
+			console.log("スケジュールは無効です");
 		}
 
 		console.log("スケジュール設定の初期化が完了しました:", {

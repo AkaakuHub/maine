@@ -57,8 +57,9 @@ class VideoCacheService {
 	private ffprobeExtractor: FFprobeMetadataExtractor;
 	private thumbnailGenerator: ThumbnailGenerator;
 
-	// スケジューラー
-	private scheduler: ScanScheduler;
+	// スケジューラー（レイジー初期化）
+	private scheduler: ScanScheduler | null = null;
+	private schedulerInitialized = false;
 
 	// スキャン制御状態
 	private isPaused = false;
@@ -76,21 +77,7 @@ class VideoCacheService {
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
 		this.thumbnailGenerator = new ThumbnailGenerator("./data/thumbnails");
 
-		// スケジューラー初期化
-		this.scheduler = new ScanScheduler();
-		this.scheduler.setScanExecutor(() => this.executeScheduledScan());
-		this.scheduler.setManualScanChecker(() => this.isUpdating);
-
 		this.initializeStreamProcessor();
-
-		// ビルド時はスケジューラー初期化をスキップ
-		// Next.jsのビルドプロセスや静的生成では実行しない
-		if (
-			typeof window !== "undefined" ||
-			process.env.NODE_ENV === "development"
-		) {
-			this.initializeScheduler();
-		}
 	}
 
 	static getInstance(): VideoCacheService {
@@ -909,23 +896,30 @@ class VideoCacheService {
 	}
 
 	/**
-	 * スケジューラーを取得
+	 * スケジューラーを取得（レイジー初期化）
 	 */
 	getScheduler(): ScanScheduler {
+		if (!this.scheduler) {
+			this.scheduler = ScanScheduler.getInstance();
+			this.scheduler.setScanExecutor(() => this.executeScheduledScan());
+			this.scheduler.setManualScanChecker(() => this.isUpdating);
+		}
 		return this.scheduler;
 	}
 
 	/**
-	 * スケジューラー初期化
+	 * スケジューラーを必要な時だけ初期化
 	 */
-	private async initializeScheduler(): Promise<void> {
-		try {
-			console.log("スケジューラーを初期化中...");
-			// DBから設定を読み込んで初期化
-			await this.scheduler.initializeFromDatabase();
-			console.log("スケジューラー初期化完了");
-		} catch (error) {
-			console.error("スケジューラー初期化エラー:", error);
+	async initializeSchedulerIfNeeded(): Promise<void> {
+		if (typeof window === "undefined" && !this.schedulerInitialized) {
+			console.log("🚀 VideoCacheService: スケジューラーを遅延初期化します");
+			try {
+				await this.getScheduler().initializeFromDatabase();
+				this.schedulerInitialized = true;
+				console.log("✅ スケジューラーの遅延初期化が完了しました");
+			} catch (error) {
+				console.error("❌ スケジューラー初期化エラー:", error);
+			}
 		}
 	}
 

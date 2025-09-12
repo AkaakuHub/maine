@@ -10,6 +10,8 @@ import { videoCacheService } from "@/services/videoCacheService";
  */
 export async function GET() {
 	try {
+		// スケジューラーの遅延初期化を確実に実行
+		await videoCacheService.initializeSchedulerIfNeeded();
 		const scheduler = videoCacheService.getScheduler();
 		const status = scheduler.getStatus();
 		const settings = scheduler.getSettings();

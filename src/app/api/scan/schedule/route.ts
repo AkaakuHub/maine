@@ -16,6 +16,8 @@ import {
  */
 export async function GET() {
 	try {
+		// スケジューラーの遅延初期化を確実に実行
+		await videoCacheService.initializeSchedulerIfNeeded();
 		const scheduler = videoCacheService.getScheduler();
 
 		// Debug logging for production issues
@@ -86,6 +88,7 @@ export async function POST(request: NextRequest) {
 		const settings: ScanScheduleSettings = body;
 
 		// スケジューラーに設定を適用
+		await videoCacheService.initializeSchedulerIfNeeded();
 		const scheduler = videoCacheService.getScheduler();
 		await scheduler.updateSettings(settings);
 
@@ -116,6 +119,7 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE() {
 	try {
+		await videoCacheService.initializeSchedulerIfNeeded();
 		const scheduler = videoCacheService.getScheduler();
 
 		// 無効化された設定で更新
