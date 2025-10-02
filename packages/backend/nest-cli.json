@@ -5,7 +5,9 @@
 	"monorepo": true,
 	"compilerOptions": {
 		"deleteOutDir": true,
-		"tsConfigPath": "tsconfig.json"
+		"tsConfigPath": "tsconfig.json",
+		"builder": "webpack",
+		"webpackConfigPath": "./webpack.config.js"
 	},
 	"projects": {
 		"backend": {
@@ -15,7 +17,9 @@
 			"sourceRoot": "src",
 			"compilerOptions": {
 				"deleteOutDir": true,
-				"tsConfigPath": "tsconfig.json"
+				"tsConfigPath": "tsconfig.json",
+				"builder": "webpack",
+				"webpackConfigPath": "./webpack.config.js"
 			}
 		}
 	}
