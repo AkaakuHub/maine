@@ -8,7 +8,7 @@ async function bootstrap() {
 
 	// CORS設定
 	app.enableCors({
-		origin: ["http://localhost:3000"], // フロントエンドのURL
+		origin: ["http://localhost:3000", "http://localhost:3001"], // フロントエンドとSwagger UIのURL
 		credentials: true,
 	});
 
@@ -29,11 +29,11 @@ async function bootstrap() {
 		.addTag("videos")
 		.build();
 
-	const document = SwaggerModule.createDocument(app, config);
-	SwaggerModule.setup("api/docs", app, document);
-
 	// プレフィックスを追加してAPIパスを統一
 	app.setGlobalPrefix("api");
+
+	const document = SwaggerModule.createDocument(app, config);
+	SwaggerModule.setup("api/docs", app, document);
 
 	await app.listen(process.env.PORT ?? 3001);
 	console.log(
