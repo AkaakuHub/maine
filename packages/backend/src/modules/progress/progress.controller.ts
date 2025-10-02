@@ -41,10 +41,7 @@ export class ProgressController {
 				});
 			}
 
-			return {
-				success: true,
-				data: result.data,
-			};
+			return result;
 		} catch (error) {
 			this.logger.error("Error fetching video progress:", error);
 			if (error instanceof BadRequestException) {
@@ -73,10 +70,7 @@ export class ProgressController {
 				});
 			}
 
-			return {
-				success: true,
-				data: result.data,
-			};
+			return result;
 		} catch (error) {
 			this.logger.error("Error updating video:", error);
 			if (error instanceof BadRequestException) {

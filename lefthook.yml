@@ -11,7 +11,7 @@ pre-commit:
       skip:
         - merge
         - rebase
-    lslint:
+    lint:
       glob: "**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
       run: pnpm run lint
       stage_fixed: true

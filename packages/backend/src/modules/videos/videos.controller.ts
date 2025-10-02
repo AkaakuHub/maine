@@ -52,7 +52,6 @@ export class VideosController {
 			}
 
 			// 完全マッチが要求された場合は、ファイルパスで厳密にフィルタリング
-			let filteredVideos = searchResult.videos;
 			if (query.exactMatch && query.search) {
 				this.logger.log(`Exact match query: "${query.search}"`);
 				this.logger.log(`Query length: ${query.search.length}`);
@@ -66,19 +65,23 @@ export class VideosController {
 					);
 				});
 
-				filteredVideos = searchResult.videos.filter(
+				const filteredVideos = searchResult.videos.filter(
 					(video) => video.filePath === query.search,
 				);
 				this.logger.log(
 					`Exact match filtered videos: ${filteredVideos.length}`,
 				);
+
+				// フィルタリング結果でsearchResultを更新
+				return {
+					...searchResult,
+					videos: filteredVideos,
+					totalFound: filteredVideos.length,
+					message: `${filteredVideos.length}件の動画が見つかりました`,
+				};
 			}
 
-			return {
-				videos: filteredVideos,
-				total: filteredVideos.length,
-				message: searchResult.message,
-			};
+			return searchResult;
 		} catch (error) {
 			this.logger.error("Video search error:", error);
 			if (error instanceof BadRequestException) {

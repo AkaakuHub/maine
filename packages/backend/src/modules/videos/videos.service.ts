@@ -1,6 +1,6 @@
 import { PAGINATION } from "@my-video-storage/shared-utils";
 import { Injectable, Logger } from "@nestjs/common";
-import type { Prisma, VideoMetadata } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
 
 export interface VideoData {
@@ -16,6 +16,11 @@ export interface VideoData {
 	scannedAt: Date;
 	thumbnailPath: string | undefined | null;
 	metadataExtractedAt: Date | null;
+	// 再生進捗情報（DBから取得、デフォルト値0）
+	watchProgress: number;
+	watchTime: number;
+	isLiked: boolean;
+	lastWatched?: Date | null;
 }
 
 type SearchResult = {
@@ -56,11 +61,67 @@ export class VideosService {
 
 			this.logger.log(`Found ${videos.length} videos`);
 
+			// 各動画の進捗情報を個別に取得
+			const videosWithProgress = await Promise.all(
+				videos.map(async (v) => {
+					try {
+						const progress = await this.prisma.videoProgress.findUnique({
+							where: { filePath: v.filePath },
+						});
+						return {
+							id: v.id,
+							title: v.title,
+							fileName: v.fileName,
+							filePath: v.filePath,
+							fileSize: v.fileSize ? Number(v.fileSize) : 0,
+							lastModified: v.lastModified,
+							episode: v.episode,
+							year: v.year ? v.year.toString() : null,
+							duration: v.duration,
+							scannedAt: v.scannedAt,
+							thumbnailPath: v.thumbnail_path,
+							metadataExtractedAt: v.metadata_extracted_at,
+							watchProgress: progress?.watchProgress ?? 0,
+							watchTime: progress?.watchTime ?? 0,
+							isLiked: progress?.isLiked ?? false,
+							lastWatched: progress?.lastWatched ?? undefined,
+						};
+					} catch (progressError) {
+						this.logger.error(
+							`Progress error for ${v.filePath}:`,
+							progressError,
+						);
+						return {
+							id: v.id,
+							title: v.title,
+							fileName: v.fileName,
+							filePath: v.filePath,
+							fileSize: v.fileSize ? Number(v.fileSize) : 0,
+							lastModified: v.lastModified,
+							episode: v.episode,
+							year: v.year ? v.year.toString() : null,
+							duration: v.duration,
+							scannedAt: v.scannedAt,
+							thumbnailPath: v.thumbnail_path,
+							metadataExtractedAt: v.metadata_extracted_at,
+							watchProgress: 0,
+							watchTime: 0,
+							isLiked: false,
+							lastWatched: undefined,
+						};
+					}
+				}),
+			);
+
+			this.logger.log(
+				`Returning ${videosWithProgress.length} videos with progress`,
+			);
+
 			return {
 				success: true,
-				videos: videos.map(this.transformVideoData),
-				totalFound: videos.length,
-				message: `${videos.length}件の動画が見つかりました`,
+				videos: videosWithProgress,
+				totalFound: videosWithProgress.length,
+				message: `${videosWithProgress.length}件の動画が見つかりました`,
 			};
 		} catch (error) {
 			this.logger.error("Error searching videos:", error);
@@ -86,27 +147,57 @@ export class VideosService {
 				return null;
 			}
 
-			return this.transformVideoData(video);
+			// progressデータも取得
+			try {
+				const progress = await this.prisma.videoProgress.findUnique({
+					where: { filePath: video.filePath },
+				});
+
+				return {
+					id: video.id,
+					title: video.title,
+					fileName: video.fileName,
+					filePath: video.filePath,
+					fileSize: video.fileSize ? Number(video.fileSize) : 0,
+					lastModified: video.lastModified,
+					episode: video.episode,
+					year: video.year ? video.year.toString() : null,
+					duration: video.duration,
+					scannedAt: video.scannedAt,
+					thumbnailPath: video.thumbnail_path,
+					metadataExtractedAt: video.metadata_extracted_at,
+					watchProgress: progress?.watchProgress ?? 0,
+					watchTime: progress?.watchTime ?? 0,
+					isLiked: progress?.isLiked ?? false,
+					lastWatched: progress?.lastWatched ?? undefined,
+				};
+			} catch (progressError) {
+				this.logger.error(
+					`Progress error for ${video.filePath}:`,
+					progressError,
+				);
+				return {
+					id: video.id,
+					title: video.title,
+					fileName: video.fileName,
+					filePath: video.filePath,
+					fileSize: video.fileSize ? Number(video.fileSize) : 0,
+					lastModified: video.lastModified,
+					episode: video.episode,
+					year: video.year ? video.year.toString() : null,
+					duration: video.duration,
+					scannedAt: video.scannedAt,
+					thumbnailPath: video.thumbnail_path,
+					metadataExtractedAt: video.metadata_extracted_at,
+					watchProgress: 0,
+					watchTime: 0,
+					isLiked: false,
+					lastWatched: undefined,
+				};
+			}
 		} catch (error) {
 			this.logger.error("Error getting video:", error);
 			throw error;
 		}
-	}
-
-	private transformVideoData(video: VideoMetadata): VideoData {
-		return {
-			id: video.id,
-			title: video.title,
-			filePath: video.filePath,
-			fileName: video.fileName,
-			fileSize: video.fileSize ? Number(video.fileSize) : 0,
-			duration: video.duration,
-			episode: video.episode,
-			year: video.year ? video.year.toString() : null,
-			lastModified: video.lastModified,
-			scannedAt: video.scannedAt,
-			thumbnailPath: video.thumbnail_path,
-			metadataExtractedAt: video.metadata_extracted_at,
-		};
 	}
 }
