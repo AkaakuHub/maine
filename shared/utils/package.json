@@ -15,6 +15,7 @@
 	"scripts": {
 		"build": "tsc --build && tsc --project tsconfig.cjs.json && mv dist/cjs/index.js dist/index.cjs && rm -rf dist/cjs",
 		"watch": "tsc --build --watch",
-		"clean": "rm -rf dist"
+		"clean": "rm -rf dist",
+		"typecheck": "tsc --noEmit"
 	}
 }

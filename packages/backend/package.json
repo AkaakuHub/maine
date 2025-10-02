@@ -13,6 +13,7 @@
 		"start:debug": "nest start --debug --watch",
 		"start:prod": "node dist/packages/backend/src/main.js",
 		"lint": "biome lint ./src",
+		"typecheck": "tsc --noEmit",
 		"lint:fix": "biome lint --write ./src",
 		"test": "jest",
 		"test:watch": "jest --watch",

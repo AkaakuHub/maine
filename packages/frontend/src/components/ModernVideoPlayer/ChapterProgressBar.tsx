@@ -51,12 +51,20 @@ export default function ChapterProgressBar({
 		onSeekStart();
 	};
 
-	// シーク終了ハンドラー
-	const handleSeekEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const time = Number.parseFloat(e.target.value);
+	// シーク終了ハンドラー（マウス用）
+	const handleSeekEnd = (e: React.MouseEvent<HTMLInputElement>) => {
+		const time = Number.parseFloat(e.currentTarget.value);
 		onSeekEnd(time);
 		// シーク後は即座にフォーカスを外して、キーボードイベントを親に委ねる
-		e.target.blur();
+		e.currentTarget.blur();
+	};
+
+	// シーク終了ハンドラー（タッチ用）
+	const handleSeekEndTouch = (e: React.TouchEvent<HTMLInputElement>) => {
+		const time = Number.parseFloat(e.currentTarget.value);
+		onSeekEnd(time);
+		// シーク後は即座にフォーカスを外して、キーボードイベントを親に委ねる
+		e.currentTarget.blur();
 	};
 
 	if (chapters.length === 0) {
@@ -108,7 +116,7 @@ export default function ChapterProgressBar({
 						onMouseDown={handleSeekStart}
 						onMouseUp={handleSeekEnd}
 						onTouchStart={handleSeekStart}
-						onTouchEnd={handleSeekEnd}
+						onTouchEnd={handleSeekEndTouch}
 						onMouseEnter={() => setIsHovered(true)}
 						onMouseLeave={() => setIsHovered(false)}
 						className="absolute inset-0 w-full h-3 bg-transparent appearance-none cursor-pointer z-30 opacity-0"
@@ -249,7 +257,7 @@ export default function ChapterProgressBar({
 					onMouseDown={handleSeekStart}
 					onMouseUp={handleSeekEnd}
 					onTouchStart={handleSeekStart}
-					onTouchEnd={handleSeekEnd}
+					onTouchEnd={handleSeekEndTouch}
 					onMouseMove={(e) => {
 						const rect = e.currentTarget.getBoundingClientRect();
 						const x = e.clientX - rect.left;
