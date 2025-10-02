@@ -63,7 +63,7 @@ export default function ResponsiveVideoLayout({
 	return (
 		<div className="h-[calc(100vh-64px)]">
 			{/* レスポンシブなメインコンテンツ */}
-			<div className="flex flex-col lg:flex-row lg:h-full min-h-0 overflow-y-scroll lg:overflow-y-auto">
+			<div className="flex flex-col lg:flex-row lg:h-full min-h-0 overflow-y-scroll lg:overflow-y-auto hidden-scrollbar">
 				{/* 動画プレイヤーセクション - モバイル: full width, デスクトップ: flex-1 */}
 				<div className="w-full lg:flex-1 flex flex-col min-h-0">
 					<div className="flex-1 min-h-0 lg:max-h-full">
