@@ -36,7 +36,7 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 				// srcからfilePathを抽出
 				const url = new URL(src, window.location.origin);
 				const filePath = decodeURIComponent(
-					url.pathname.replace("/video/", ""),
+					url.pathname.replace(/^\/api\/video\//, "/"),
 				);
 
 				const response = await fetch(
