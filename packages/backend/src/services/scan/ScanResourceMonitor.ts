@@ -1,5 +1,5 @@
-import type { ScanSettings } from "@/types/scanSettings";
-import { SCAN } from "@/utils/constants";
+import type { ScanSettings } from "../../types/scanSettings";
+import { SCAN } from "../../utils/constants";
 
 export interface MemoryUsage {
 	used: number;

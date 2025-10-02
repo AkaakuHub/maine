@@ -7,8 +7,8 @@ import {
 	type ScanScheduleSettings,
 	type SchedulerStatus,
 	DEFAULT_SCHEDULE_SETTINGS,
-} from "@/types/scanScheduleSettings";
-import { sseStore } from "@/libs/sse-connection-store";
+} from "../types/scanScheduleSettings";
+import { sseStore } from "../libs/sse-connection-store";
 import { ScanSchedulePersistenceService } from "./ScanSchedulePersistenceService";
 
 /**

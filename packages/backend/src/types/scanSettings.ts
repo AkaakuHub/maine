@@ -1,7 +1,7 @@
 /**
  * スキャン設定の型定義
  */
-import { SCAN } from "@/utils/constants";
+import { SCAN } from "../utils/constants";
 
 export interface ScanSettings {
 	// 基本設定

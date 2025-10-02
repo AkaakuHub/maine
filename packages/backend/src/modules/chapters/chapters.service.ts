@@ -1,7 +1,7 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { Injectable, Logger } from "@nestjs/common";
-import { findFileInVideoDirectories } from "@/libs/fileUtils";
+import { findFileInVideoDirectories } from "../../libs/fileUtils";
 
 const execAsync = promisify(exec);
 

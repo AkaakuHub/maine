@@ -1,4 +1,4 @@
-import { SCAN } from "@/utils/constants";
+import { SCAN } from "../../utils/constants";
 
 export interface ProgressMetrics {
 	processingSpeed: number; // ファイル/秒

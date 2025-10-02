@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Res } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
-import { sseStore } from "../../libs/sse-connection-store";
+import { sseStore } from "../../common/sse/sse-connection.store";
 import { videoCacheService } from "../../services/videoCacheService";
 
 @ApiTags("scan")

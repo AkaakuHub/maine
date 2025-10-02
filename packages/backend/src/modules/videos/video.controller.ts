@@ -11,7 +11,7 @@ import {
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
 import type { Response } from "express";
-import { findFileInVideoDirectories } from "@/libs/fileUtils";
+import { findFileInVideoDirectories } from "../../libs/fileUtils";
 
 @ApiTags("video")
 @Controller("video")

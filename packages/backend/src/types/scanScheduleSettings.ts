@@ -1,7 +1,7 @@
 /**
  * スキャンスケジュール設定の型定義
  */
-import { SCAN } from "@/utils/constants";
+import { SCAN } from "../utils/constants";
 
 /**
  * スキャンスケジュール設定（Cronライブラリ対応版）

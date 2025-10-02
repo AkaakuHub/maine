@@ -6,7 +6,7 @@ import { PrismaClient as SettingsPrismaClient } from "../../prisma/generated/set
 import {
 	type ScanScheduleSettings,
 	DEFAULT_SCHEDULE_SETTINGS,
-} from "@/types/scanScheduleSettings";
+} from "../types/scanScheduleSettings";
 
 export class ScanSchedulePersistenceService {
 	private settingsDb: SettingsPrismaClient;

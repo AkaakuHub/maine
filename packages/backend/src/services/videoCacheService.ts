@@ -8,25 +8,25 @@ import {
 	isVideoFile,
 	getVideoDirectories,
 	directoryExists,
-} from "@/libs/fileUtils";
-import type { VideoFileData } from "@/type";
-import { parseVideoFileName } from "@/utils/videoFileNameParser";
-import { sseStore } from "@/libs/sse-connection-store";
-import type { ScanSettings } from "@/types/scanSettings";
-import { DEFAULT_SCAN_SETTINGS } from "@/types/scanSettings";
-import { SCAN } from "@/utils/constants";
+} from "../libs/fileUtils";
+import type { VideoFileData } from "../type";
+import { parseVideoFileName } from "../utils/videoFileNameParser";
+import { sseStore } from "../common/sse/sse-connection.store";
+import type { ScanSettings } from "../types/scanSettings";
+import { DEFAULT_SCAN_SETTINGS } from "../types/scanSettings";
+import { SCAN } from "../utils/constants";
 
 import {
 	ScanStreamProcessor,
 	type VideoFile,
 	type ProcessedVideoRecord,
-} from "@/services/scan/ScanStreamProcessor";
-import { ScanResourceMonitor } from "@/services/scan/ScanResourceMonitor";
-import { ScanCheckpointManager } from "@/services/scan/ScanCheckpointManager";
-import { ScanProgressCalculator } from "@/services/scan/ScanProgressCalculator";
-import { FFprobeMetadataExtractor } from "@/services/FFprobeMetadataExtractor";
-import { ThumbnailGenerator } from "@/services/ThumbnailGenerator";
-import { ScanScheduler } from "@/services/ScanScheduler";
+} from "./scan/ScanStreamProcessor";
+import { ScanResourceMonitor } from "./scan/ScanResourceMonitor";
+import { ScanCheckpointManager } from "./scan/ScanCheckpointManager";
+import { ScanProgressCalculator } from "./scan/ScanProgressCalculator";
+import { FFprobeMetadataExtractor } from "./FFprobeMetadataExtractor";
+import { ThumbnailGenerator } from "./ThumbnailGenerator";
+import { ScanScheduler } from "./ScanScheduler";
 
 type SearchResult = {
 	success: boolean;

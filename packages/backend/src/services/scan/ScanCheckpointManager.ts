@@ -1,5 +1,5 @@
-import { prisma } from "@/libs/prisma";
-import { SCAN } from "@/utils/constants";
+import { prisma } from "../../libs/prisma";
+import { SCAN } from "../../utils/constants";
 
 export type ScanPhase = "discovery" | "metadata" | "database";
 export type ScanType = "full" | "incremental";

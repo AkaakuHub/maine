@@ -4,7 +4,7 @@ import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { FFPROBE } from "@/utils/constants";
+import { FFPROBE } from "../utils/constants";
 import type { VideoMetadata } from "./FFprobeMetadataExtractor";
 
 const execAsync = promisify(exec);
