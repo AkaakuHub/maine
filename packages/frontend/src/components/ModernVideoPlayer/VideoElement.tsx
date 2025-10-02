@@ -31,7 +31,10 @@ export default function VideoElement({
 			<video
 				ref={videoRef}
 				src={src}
-				className={cn("w-full h-full object-contain", isFullscreen && "flex-1")}
+				className={cn(
+					"w-full h-full object-contain min-h-[300px]",
+					isFullscreen && "flex-1",
+				)}
 				onClick={(e) => {
 					onVideoTap(e);
 					// シングルタップの場合は通常の再生/一時停止
