@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { prisma } from "@/libs/prisma";
 import type { Prisma } from "@prisma/client";
-import { PrismaClient as SettingsPrismaClient } from "../../prisma/generated/settings";
+import { PrismaClient as SettingsPrismaClient } from "../../packages/backend/prisma/generated/settings";
 import {
 	normalizePath,
 	isVideoFile,

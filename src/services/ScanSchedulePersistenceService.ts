@@ -2,7 +2,7 @@
  * スキャンスケジュール設定の永続化サービス
  * DB操作とTypeScript型の相互変換を管理
  */
-import { PrismaClient as SettingsPrismaClient } from "../../prisma/generated/settings";
+import { PrismaClient as SettingsPrismaClient } from "./../../packages/backend/prisma/generated/settings";
 import {
 	type ScanScheduleSettings,
 	DEFAULT_SCHEDULE_SETTINGS,

@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../prisma/generated/settings";
+import { PrismaClient } from "../../packages/backend/prisma/generated/settings";
 
 const globalForSettingsPrisma = globalThis as unknown as {
 	settingsPrisma: PrismaClient | undefined;
