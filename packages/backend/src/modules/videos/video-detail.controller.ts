@@ -132,7 +132,7 @@ export class VideoDetailController {
 			}
 
 			// 環境変数から動画ディレクトリを取得
-			const videoDirectories = process.env.VIDEO_DIRECTORIES?.split(",") || [
+			const videoDirectories = process.env.VIDEO_DIRECTORY?.split(",") || [
 				"/Users/akaaku/Movies/yt-dlp-data",
 			];
 
