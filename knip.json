@@ -1,5 +1,5 @@
 {
   "entry": ["src/app/globals.css"],
   "project": ["src/**/*.ts*"],
-  "ignore": ["**/*.d.ts", "**/fixtures", "**/prisma/generated/**", "**/node_modules/**","**/frontend/public/**"]
+  "ignore": ["**/*.d.ts", "**/fixtures", "**/prisma/generated/**", "**/node_modules/**","**/frontend/public/**", "**/webpack.config.js", "knip.json"]
 }
