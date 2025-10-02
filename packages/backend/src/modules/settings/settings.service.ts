@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaClient } from "../../../../../shared/prisma/generated/settings";
+import { PrismaClient } from "../../../prisma/generated/settings";
 
 const globalForSettingsPrisma = globalThis as unknown as {
 	settingsPrisma: PrismaClient | undefined;

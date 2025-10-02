@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaClient as SettingsPrismaClient } from "../../../../../shared/prisma/generated/settings";
+import { PrismaClient as SettingsPrismaClient } from "../../../prisma/generated/settings";
 
 export interface TimeRange {
 	enabled: boolean;

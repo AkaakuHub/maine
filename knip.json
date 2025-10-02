@@ -1,5 +1,5 @@
 {
   "entry": ["src/app/globals.css"],
   "project": ["src/**/*.ts*"],
-  "ignore": ["**/*.d.ts", "**/fixtures"]
+  "ignore": ["**/*.d.ts", "**/fixtures", "**/prisma/generated/**", "**/node_modules/**"]
 }

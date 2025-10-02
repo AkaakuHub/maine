@@ -77,9 +77,15 @@ coverage
 esm
 
 dev.db
+dev.db-journal
 settings.db
 junit.xml
 /output.txt
+
+# Backend Prisma database files
+packages/backend/prisma/dev.db
+packages/backend/prisma/settings.db
+packages/backend/prisma/*.db.backup
 
 # サムネイルデータ  
 /data/
@@ -92,6 +98,5 @@ package.copy.json
 
 *.tgz
 /prisma/*.db-journal
-# shared/prismaはバージョン管理するが、generatedは無視
-/shared/prisma/generated
+packages/backend/prisma/generated/*
 # /shared/prisma/migrations
