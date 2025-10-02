@@ -92,5 +92,6 @@ package.copy.json
 
 *.tgz
 /prisma/*.db-journal
-/prisma/migrations
-/prisma/generated
+# shared/prismaはバージョン管理するが、generatedは無視
+/shared/prisma/generated
+# /shared/prisma/migrations

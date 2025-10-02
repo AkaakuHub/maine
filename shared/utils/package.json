@@ -1,0 +1,10 @@
+{
+	"name": "@my-video-storage/shared-utils",
+	"version": "1.0.0",
+	"description": "Shared utilities for My Video Storage",
+	"main": "index.ts",
+	"types": "index.ts",
+	"exports": {
+		".": "./index.ts"
+	}
+}

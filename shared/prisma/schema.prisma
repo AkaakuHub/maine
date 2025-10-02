@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model VideoProgress {
+  id            String    @id @default(cuid())
+  filePath      String    @unique
+  watchProgress Float     @default(0)
+  watchTime     Float?
+  isLiked       Boolean   @default(false)
+  likedAt       DateTime?
+  isInWatchlist Boolean   @default(false)
+  watchlistAt   DateTime?
+  lastWatched   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("video_progress")
+}
+
+model VideoMetadata {
+  id                    String    @id @default(cuid())
+  filePath              String    @unique
+  fileName              String
+  title                 String
+  fileSize              BigInt    @default(0)
+  episode               Int?
+  year                  Int?
+  lastModified          DateTime
+  scannedAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  duration              Int?
+  metadata_extracted_at DateTime?
+  thumbnail_path        String?
+
+  @@index([title])
+  @@index([fileName])
+  @@index([filePath])
+  @@map("video_metadata")
+}
+
+model ScanStatus {
+  id           String   @id @default("scan_status")
+  lastFullScan DateTime @default(dbgenerated("'1970-01-01 00:00:00 +00:00'"))
+  isScanning   Boolean  @default(false)
+  scanProgress Float    @default(0)
+  totalFiles   Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@map("scan_status")
+}
+
+model ScanCheckpoint {
+  id                    String   @id @default("scan_checkpoint")
+  scanId                String
+  scanType              String
+  phase                 String
+  currentDirectoryIndex Int      @default(0)
+  processedFiles        Int      @default(0)
+  totalFiles            Int      @default(0)
+  lastProcessedPath     String?
+  metadataCompleted     Boolean  @default(false)
+  startedAt             DateTime @default(now())
+  lastCheckpointAt      DateTime @default(now())
+  errorMessage          String?
+  isValid               Boolean  @default(true)
+
+  @@map("scan_checkpoint")
+}
