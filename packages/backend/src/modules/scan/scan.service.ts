@@ -1,5 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
 import { SCAN } from "@my-video-storage/shared-utils";
+import { Injectable, Logger } from "@nestjs/common";
 import type { ScanSettings } from "./scan-settings.service";
 
 export interface ScanStatus {
@@ -30,7 +30,6 @@ export class ScanService {
 		scanId: "",
 	};
 
-	
 	async getScanStatus(): Promise<ScanStatus> {
 		return {
 			isScanning: this.currentScan.isScanning,
@@ -59,7 +58,7 @@ export class ScanService {
 		this.executeScan().catch((error) => {
 			this.logger.error("Background scan failed:", error);
 			this.currentScan.isScanning = false;
-			this.currentScan.message = `スキャン失敗: ${error.message}`;
+			this.currentScan.message = `スキャン失敗: ${error instanceof Error ? error.message : String(error)}`;
 		});
 
 		return { activeConnections: 0 }; // SSE実装後に更新
@@ -166,7 +165,7 @@ export class ScanService {
 		} catch (error) {
 			this.logger.error("Scan failed:", error);
 			this.currentScan.isScanning = false;
-			this.currentScan.message = `スキャン失敗: ${error.message}`;
+			this.currentScan.message = `スキャン失敗: ${error instanceof Error ? error.message : String(error)}`;
 			throw error;
 		}
 	}

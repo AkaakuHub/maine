@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import { ProgramInfoService } from './program-info.service';
-import { ProgramInfoController } from './program-info.controller';
+import { Module } from "@nestjs/common";
+import { ProgramInfoController } from "./program-info.controller";
+import { ProgramInfoService } from "./program-info.service";
 
 @Module({
 	controllers: [ProgramInfoController],

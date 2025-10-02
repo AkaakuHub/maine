@@ -1,18 +1,16 @@
+import { Controller, Get, Head, Req } from "@nestjs/common";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
+import type { Request } from "express";
 import {
-	Controller,
-	Get,
-	Req,
-	Head,
-} from '@nestjs/common';
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
-import type { Request } from 'express';
-import { sseStore, type SSEConnection } from '../../common/sse/sse-connection.store';
+	type SSEConnection,
+	sseStore,
+} from "../../common/sse/sse-connection.store";
 
-@ApiTags('scan')
-@Controller('scan')
+@ApiTags("scan")
+@Controller("scan")
 export class SseController {
-	@Get('events')
-	@ApiResponse({ status: 200, description: 'SSEイベントストリーム' })
+	@Get("events")
+	@ApiResponse({ status: 200, description: "SSEイベントストリーム" })
 	async getScanEvents(@Req() request: Request) {
 		// SSE用のヘッダー設定
 		const responseHeaders = new Headers({
@@ -100,8 +98,8 @@ export class SseController {
 				};
 
 				// リクエスト終了時のイベントリスナー
-				request.on('close', cleanup);
-				request.on('end', cleanup);
+				request.on("close", cleanup);
+				request.on("end", cleanup);
 			},
 
 			cancel() {
@@ -113,8 +111,8 @@ export class SseController {
 		return new Response(stream, { headers: responseHeaders });
 	}
 
-	@Head('events')
-	@ApiResponse({ status: 200, description: 'SSE健全性チェック' })
+	@Head("events")
+	@ApiResponse({ status: 200, description: "SSE健全性チェック" })
 	async healthCheck() {
 		const headers = new Headers({
 			"Cache-Control": "no-cache",

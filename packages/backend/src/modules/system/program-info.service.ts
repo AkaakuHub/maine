@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import iconv from 'iconv-lite';
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { Injectable, Logger } from "@nestjs/common";
+import iconv from "iconv-lite";
 
 @Injectable()
 export class ProgramInfoService {
@@ -19,7 +19,7 @@ export class ProgramInfoService {
 				return {
 					success: false,
 					programInfo: null,
-					error: 'ファイルパスが指定されていません',
+					error: "ファイルパスが指定されていません",
 				};
 			}
 
@@ -30,21 +30,21 @@ export class ProgramInfoService {
 				return {
 					success: false,
 					programInfo: null,
-					message: '番組情報ファイルが見つかりません',
+					message: "番組情報ファイルが見つかりません",
 				};
 			}
 
 			// テキストファイルを読み込み
 			// 元がShift_JISのため、iconv-liteを使用
-			let programInfo = '';
+			let programInfo = "";
 			const buffer = await readFile(programInfoPath);
 			try {
-				programInfo = iconv.decode(buffer, 'shift_jis');
+				programInfo = iconv.decode(buffer, "shift_jis");
 			} catch {
 				return {
 					success: false,
 					programInfo: null,
-					error: '番組情報ファイルのデコードに失敗しました',
+					error: "番組情報ファイルのデコードに失敗しました",
 				};
 			}
 
@@ -54,11 +54,11 @@ export class ProgramInfoService {
 				filePath: programInfoPath,
 			};
 		} catch (error) {
-			this.logger.error('番組情報の取得エラー:', error);
+			this.logger.error("番組情報の取得エラー:", error);
 			return {
 				success: false,
 				programInfo: null,
-				error: '番組情報の取得に失敗しました',
+				error: "番組情報の取得に失敗しました",
 			};
 		}
 	}
@@ -66,8 +66,8 @@ export class ProgramInfoService {
 	private generateProgramInfoPath(videoFilePath: string): string | null {
 		try {
 			// 動画ファイルの拡張子を取得
-			const videoExtensions = ['.mp4', '.mkv', '.avi', '.mov', '.ts', '.m2ts'];
-			let foundExtension = '';
+			const videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".ts", ".m2ts"];
+			let foundExtension = "";
 
 			for (const ext of videoExtensions) {
 				if (videoFilePath.toLowerCase().endsWith(ext)) {
@@ -90,7 +90,7 @@ export class ProgramInfoService {
 
 			return programInfoPath;
 		} catch (error) {
-			this.logger.error('番組情報パスの生成エラー:', error);
+			this.logger.error("番組情報パスの生成エラー:", error);
 			return null;
 		}
 	}

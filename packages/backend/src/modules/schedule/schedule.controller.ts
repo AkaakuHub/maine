@@ -1,16 +1,16 @@
 import {
-	Controller,
-	Get,
-	Post,
-	Delete,
-	Body,
 	BadRequestException,
-	Logger,
+	Body,
+	Controller,
+	Delete,
+	Get,
 	Inject,
+	Logger,
+	Post,
 } from "@nestjs/common";
-import { ApiTags, ApiResponse } from "@nestjs/swagger";
-import { ScanSchedulerService } from "../scan/scan-scheduler.service";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { ScanScheduleSettings } from "../../../../../shared/types/scan-schedule-settings";
+import { ScanSchedulerService } from "../scan/scan-scheduler.service";
 
 interface ValidationResult {
 	isValid: boolean;
@@ -45,7 +45,8 @@ export class ScheduleController {
 	private readonly logger = new Logger(ScheduleController.name);
 
 	constructor(
-		@Inject(ScanSchedulerService) private readonly scanScheduler: ScanSchedulerService,
+		@Inject(ScanSchedulerService)
+		private readonly scanScheduler: ScanSchedulerService,
 	) {}
 
 	@Get()
@@ -61,7 +62,10 @@ export class ScheduleController {
 			try {
 				await this.scanScheduler.loadSettingsFromDatabase();
 			} catch (dbError) {
-				this.logger.warn("DB設定読み込み中にエラー（メモリ上の設定を使用）:", dbError);
+				this.logger.warn(
+					"DB設定読み込み中にエラー（メモリ上の設定を使用）:",
+					dbError,
+				);
 			}
 
 			const settings = this.scanScheduler.getSettings();
@@ -198,7 +202,8 @@ export class ScheduleController {
 			typeof settingsObj.intervalHours !== "number" ||
 			settingsObj.intervalHours <
 				SCHEDULE_SETTINGS_CONSTRAINTS.intervalHours.min ||
-			settingsObj.intervalHours > SCHEDULE_SETTINGS_CONSTRAINTS.intervalHours.max
+			settingsObj.intervalHours >
+				SCHEDULE_SETTINGS_CONSTRAINTS.intervalHours.max
 		) {
 			return {
 				isValid: false,

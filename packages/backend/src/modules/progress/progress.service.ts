@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import type { PrismaService } from "../../common/database/prisma.service";
+import { PrismaService } from "../../common/database/prisma.service";
 
 @Injectable()
 export class ProgressService {
@@ -12,7 +12,7 @@ export class ProgressService {
 			if (!filePath) {
 				return {
 					success: false,
-					error: 'File path is required',
+					error: "File path is required",
 				};
 			}
 
@@ -52,10 +52,10 @@ export class ProgressService {
 				data: videoProgress,
 			};
 		} catch (error) {
-			this.logger.error('Error fetching video progress:', error);
+			this.logger.error("Error fetching video progress:", error);
 			return {
 				success: false,
-				error: 'Failed to fetch video progress',
+				error: "Failed to fetch video progress",
 			};
 		}
 	}
@@ -68,12 +68,13 @@ export class ProgressService {
 		isInWatchlist?: boolean;
 	}) {
 		try {
-			const { filePath, watchTime, watchProgress, isLiked, isInWatchlist } = data;
+			const { filePath, watchTime, watchProgress, isLiked, isInWatchlist } =
+				data;
 
 			if (!filePath) {
 				return {
 					success: false,
-					error: 'File path is required',
+					error: "File path is required",
 				};
 			}
 
@@ -92,23 +93,23 @@ export class ProgressService {
 			};
 
 			// 視聴時間と進捗の更新
-			if (typeof watchTime === 'number') {
+			if (typeof watchTime === "number") {
 				updateData.watchTime = watchTime;
 				updateData.lastWatched = new Date();
 			}
 
-			if (typeof watchProgress === 'number') {
+			if (typeof watchProgress === "number") {
 				updateData.watchProgress = Math.max(0, Math.min(100, watchProgress));
 			}
 
 			// ライク状態の更新
-			if (typeof isLiked === 'boolean') {
+			if (typeof isLiked === "boolean") {
 				updateData.isLiked = isLiked;
 				updateData.likedAt = isLiked ? new Date() : null;
 			}
 
 			// ウォッチリスト状態の更新
-			if (typeof isInWatchlist === 'boolean') {
+			if (typeof isInWatchlist === "boolean") {
 				updateData.isInWatchlist = isInWatchlist;
 				updateData.watchlistAt = isInWatchlist ? new Date() : null;
 			}
@@ -138,10 +139,10 @@ export class ProgressService {
 				data: updatedVideo,
 			};
 		} catch (error) {
-			this.logger.error('Error updating video:', error);
+			this.logger.error("Error updating video:", error);
 			return {
 				success: false,
-				error: 'Failed to update video',
+				error: "Failed to update video",
 			};
 		}
 	}

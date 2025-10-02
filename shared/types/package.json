@@ -2,9 +2,19 @@
 	"name": "@my-video-storage/shared-types",
 	"version": "1.0.0",
 	"description": "Shared types for My Video Storage",
-	"main": "index.ts",
-	"types": "index.ts",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
-		".": "./index.ts"
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsc --build",
+		"watch": "tsc --build --watch",
+		"clean": "rm -rf dist"
 	}
 }

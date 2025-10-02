@@ -8,20 +8,16 @@
 		"shared/*"
 	],
 	"scripts": {
-		"dev": "pnpm db:setup && next dev",
-		"dev:backend": "cd packages/backend && pnpm run start:dev",
-		"dev:force": "next dev",
-		"build": "pnpm db:setup && next build",
-		"build:backend": "cd packages/backend && pnpm run build",
+		"dev": "next dev",
+		"dev:backend": "pnpm build:shared && cd packages/backend && pnpm run start:dev",
+		"build": "next build",
+		"build:shared": "pnpm --filter '@my-video-storage/shared-*' run build",
+		"build:backend": "pnpm build:shared && cd packages/backend && pnpm run build",
 		"start": "pnpm run build && node server.js",
-		"start:backend": "cd packages/backend && pnpm run start:prod",
+		"start:backend": "pnpm build:shared && cd packages/backend && pnpm run start:prod",
 		"lint": "pnpm biome lint ./src",
 		"knip": "knip --fix --files",
-		"format": "pnpm biome format --write ./src",
-		"db:setup": "cd shared/prisma && prisma generate && pnpm --filter frontend prisma migrate deploy",
-		"db:migrate": "cd shared/prisma && prisma migrate dev",
-		"db:studio": "cd shared/prisma && prisma studio",
-		"db:reset": "cd shared/prisma && prisma migrate reset --force"
+		"format": "pnpm biome format --write ./src"
 	},
 	"dependencies": {
 		"@prisma/client": "6.8.2",

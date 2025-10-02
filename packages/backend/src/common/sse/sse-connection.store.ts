@@ -187,7 +187,10 @@ export class SSEConnectionStore {
 export const sseStore = SSEConnectionStore.getInstance();
 
 if (typeof window === "undefined") {
-	setInterval(() => {
-		sseStore.cleanup();
-	}, 5 * 60 * 1000);
+	setInterval(
+		() => {
+			sseStore.cleanup();
+		},
+		5 * 60 * 1000,
+	);
 }

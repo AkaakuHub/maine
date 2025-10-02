@@ -1,17 +1,17 @@
+import { createReadStream, statSync } from "node:fs";
+import { join } from "node:path";
 import {
+	BadRequestException,
 	Controller,
 	Get,
-	Param,
-	Res,
-	Query,
-	NotFoundException,
-	BadRequestException,
 	Logger,
-} from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import type { Response } from 'express';
-import { statSync, createReadStream } from 'node:fs';
-import { join } from 'node:path';
+	NotFoundException,
+	Param,
+	Query,
+	Res,
+} from "@nestjs/common";
+import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import type { Response } from "express";
 
 interface FileValidation {
 	isValid: boolean;
@@ -20,34 +20,38 @@ interface FileValidation {
 	error?: string;
 }
 
-@ApiTags('videos')
-@Controller('video')
+@ApiTags("videos")
+@Controller("video")
 export class VideoDetailController {
 	private readonly logger = new Logger(VideoDetailController.name);
 
-	@Get(':filePath')
-	@ApiQuery({ name: 'download', required: false, description: 'ダウンロードモード' })
-	@ApiResponse({ status: 200, description: '動画ファイル配信' })
-	@ApiResponse({ status: 400, description: '無効なリクエスト' })
-	@ApiResponse({ status: 404, description: 'ファイルが見つからない' })
+	@Get(":filePath")
+	@ApiQuery({
+		name: "download",
+		required: false,
+		description: "ダウンロードモード",
+	})
+	@ApiResponse({ status: 200, description: "動画ファイル配信" })
+	@ApiResponse({ status: 400, description: "無効なリクエスト" })
+	@ApiResponse({ status: 404, description: "ファイルが見つからない" })
 	async getVideo(
-		@Param('filePath') filePath: string,
-		@Query('download') download?: string,
+		@Param("filePath") filePath: string,
+		@Query("download") download?: string,
 		@Res() response?: Response,
 	) {
 		try {
 			const decodedPath = decodeURIComponent(filePath);
-			const isDownload = download === 'true';
+			const isDownload = download === "true";
 
 			// 複数のビデオディレクトリからファイルを検索
 			const fileValidation = await this.findFileInVideoDirectories(decodedPath);
 
 			if (!fileValidation.isValid || !fileValidation.exists) {
-				throw new NotFoundException('Video file not found');
+				throw new NotFoundException("Video file not found");
 			}
 
 			if (!fileValidation.fullPath) {
-				throw new BadRequestException('Invalid file path validation');
+				throw new BadRequestException("Invalid file path validation");
 			}
 
 			const stat = statSync(fileValidation.fullPath);
@@ -56,21 +60,30 @@ export class VideoDetailController {
 			const range = response?.req.headers.range;
 
 			if (range) {
-				const parts = range.replace(/bytes=/, '').split('-');
+				const parts = range.replace(/bytes=/, "").split("-");
 				const start = Number.parseInt(parts[0], 10);
 				const end = parts[1] ? Number.parseInt(parts[1], 10) : stat.size - 1;
 				const chunksize = end - start + 1;
 
-				const stream = createReadStream(fileValidation.fullPath, { start, end });
+				const stream = createReadStream(fileValidation.fullPath, {
+					start,
+					end,
+				});
 
 				if (response) {
 					response.status(206);
-					response.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
-					response.setHeader('Accept-Ranges', 'bytes');
-					response.setHeader('Content-Length', chunksize.toString());
-					response.setHeader('Content-Type', 'video/mp4');
+					response.setHeader(
+						"Content-Range",
+						`bytes ${start}-${end}/${stat.size}`,
+					);
+					response.setHeader("Accept-Ranges", "bytes");
+					response.setHeader("Content-Length", chunksize.toString());
+					response.setHeader("Content-Type", "video/mp4");
 					if (isDownload) {
-						response.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filePath)}"`);
+						response.setHeader(
+							"Content-Disposition",
+							`attachment; filename="${encodeURIComponent(filePath)}"`,
+						);
 					}
 				}
 
@@ -81,43 +94,53 @@ export class VideoDetailController {
 
 			if (response) {
 				response.status(200);
-				response.setHeader('Content-Type', 'video/mp4');
-				response.setHeader('Content-Length', stat.size.toString());
-				response.setHeader('Accept-Ranges', 'bytes');
+				response.setHeader("Content-Type", "video/mp4");
+				response.setHeader("Content-Length", stat.size.toString());
+				response.setHeader("Accept-Ranges", "bytes");
 				if (isDownload) {
-					response.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filePath)}"`);
+					response.setHeader(
+						"Content-Disposition",
+						`attachment; filename="${encodeURIComponent(filePath)}"`,
+					);
 				}
 			}
 
 			return fileStream;
 		} catch (error) {
-			this.logger.error('Error serving video file:', error);
-			if (error instanceof NotFoundException || error instanceof BadRequestException) {
+			this.logger.error("Error serving video file:", error);
+			if (
+				error instanceof NotFoundException ||
+				error instanceof BadRequestException
+			) {
 				throw error;
 			}
-			throw new BadRequestException('Failed to serve video file');
+			throw new BadRequestException("Failed to serve video file");
 		}
 	}
 
-	private async findFileInVideoDirectories(filePath: string): Promise<FileValidation> {
+	private async findFileInVideoDirectories(
+		filePath: string,
+	): Promise<FileValidation> {
 		try {
 			// セキュリティ: パストラバーサル攻撃を防ぐ
-			if (filePath.includes('..') || filePath.includes('~')) {
+			if (filePath.includes("..") || filePath.includes("~")) {
 				return {
 					isValid: false,
 					exists: false,
-					error: 'Invalid file path',
+					error: "Invalid file path",
 				};
 			}
 
 			// 環境変数から動画ディレクトリを取得
-			const videoDirectories = process.env.VIDEO_DIRECTORIES?.split(',') || ['/Users/akaaku/Movies/yt-dlp-data'];
+			const videoDirectories = process.env.VIDEO_DIRECTORIES?.split(",") || [
+				"/Users/akaaku/Movies/yt-dlp-data",
+			];
 
 			if (videoDirectories.length === 0) {
 				return {
 					isValid: false,
 					exists: false,
-					error: 'No video directories configured',
+					error: "No video directories configured",
 				};
 			}
 
@@ -126,7 +149,7 @@ export class VideoDetailController {
 				const fullPath = join(baseDir, filePath);
 
 				try {
-					const fs = require('node:fs');
+					const fs = require("node:fs");
 					await fs.promises.access(fullPath);
 
 					return {
@@ -142,14 +165,14 @@ export class VideoDetailController {
 			return {
 				isValid: true,
 				exists: false,
-				error: 'File not found in any video directory',
+				error: "File not found in any video directory",
 			};
 		} catch (error) {
-			this.logger.error('Error validating file path:', error);
+			this.logger.error("Error validating file path:", error);
 			return {
 				isValid: false,
 				exists: false,
-				error: 'Error validating file path',
+				error: "Error validating file path",
 			};
 		}
 	}

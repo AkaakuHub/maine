@@ -1,13 +1,6 @@
-import {
-	Controller,
-	Get,
-	Post,
-	Put,
-	Body,
-	Logger,
-} from "@nestjs/common";
-import { ApiTags, ApiResponse } from "@nestjs/swagger";
-import type { ScanSettingsService } from "./scan-settings.service";
+import { Body, Controller, Get, Logger, Post, Put } from "@nestjs/common";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ScanSettingsService } from "./scan-settings.service";
 import type { ScanSettings } from "./scan-settings.service";
 
 @ApiTags("scan")
@@ -42,7 +35,8 @@ export class ScanSettingsController {
 		try {
 			this.logger.log("Updating scan settings");
 
-			const result = await this.scanSettingsService.updateScanSettings(settings);
+			const result =
+				await this.scanSettingsService.updateScanSettings(settings);
 
 			return {
 				success: true,
@@ -65,7 +59,8 @@ export class ScanSettingsController {
 		try {
 			this.logger.log("Resetting scan settings to default");
 
-			const defaultSettings = await this.scanSettingsService.resetScanSettings();
+			const defaultSettings =
+				await this.scanSettingsService.resetScanSettings();
 
 			return {
 				success: true,

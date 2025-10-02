@@ -1,7 +1,7 @@
-import { Injectable, Logger } from "@nestjs/common";
-import type { PrismaService } from "../../common/database/prisma.service";
 import { PAGINATION } from "@my-video-storage/shared-utils";
-import type { VideoMetadata, Prisma } from "@prisma/client";
+import { Injectable, Logger } from "@nestjs/common";
+import type { Prisma, VideoMetadata } from "@prisma/client";
+import { PrismaService } from "../../common/database/prisma.service";
 
 export interface VideoData {
 	id: string;

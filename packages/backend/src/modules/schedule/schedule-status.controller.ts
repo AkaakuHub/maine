@@ -1,10 +1,5 @@
-import {
-	Controller,
-	Get,
-	Logger,
-	Inject,
-} from "@nestjs/common";
-import { ApiTags, ApiResponse } from "@nestjs/swagger";
+import { Controller, Get, Inject, Logger } from "@nestjs/common";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ScanSchedulerService } from "../scan/scan-scheduler.service";
 
 @ApiTags("schedule")
@@ -13,7 +8,8 @@ export class ScheduleStatusController {
 	private readonly logger = new Logger(ScheduleStatusController.name);
 
 	constructor(
-		@Inject(ScanSchedulerService) private readonly scanScheduler: ScanSchedulerService,
+		@Inject(ScanSchedulerService)
+		private readonly scanScheduler: ScanSchedulerService,
 	) {}
 
 	@Get()

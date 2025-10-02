@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import { mkdir } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { exec } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { promisify } from "node:util";
+import { Injectable, Logger } from "@nestjs/common";
 
 const execAsync = promisify(exec);
 
@@ -44,8 +44,8 @@ export class ThumbnailGeneratorService {
 	private readonly logger = new Logger(ThumbnailGeneratorService.name);
 	private readonly thumbnailBaseDir: string;
 
-	constructor(thumbnailBaseDir = './data/thumbnails') {
-		this.thumbnailBaseDir = thumbnailBaseDir;
+	constructor() {
+		this.thumbnailBaseDir = "./data/thumbnails";
 	}
 
 	async generateThumbnail(
@@ -84,16 +84,16 @@ export class ThumbnailGeneratorService {
 			const thumbnailPosition = Math.max(1, duration * 0.33);
 
 			const command = [
-				'ffmpeg',
-				'-y',
+				"ffmpeg",
+				"-y",
 				`-ss ${this.formatSeekTime(thumbnailPosition)}`,
 				`-i "${videoFilePath}"`,
 				`-vf "thumbnail=${width}"`,
-				'-frames:v 1',
-				'-f webp',
+				"-frames:v 1",
+				"-f webp",
 				`-quality ${quality}`,
 				`"${thumbnailPath}"`,
-			].join(' ');
+			].join(" ");
 
 			await execAsync(command);
 
@@ -106,7 +106,10 @@ export class ThumbnailGeneratorService {
 				fileSize: stat.size,
 			};
 		} catch (error) {
-			this.logger.error(`Thumbnail generation failed for: ${videoFilePath}`, error);
+			this.logger.error(
+				`Thumbnail generation failed for: ${videoFilePath}`,
+				error,
+			);
 
 			return {
 				success: false,
@@ -118,14 +121,14 @@ export class ThumbnailGeneratorService {
 	}
 
 	private generateThumbnailPath(videoFilePath: string): string {
-		const hash = createHash('sha256').update(videoFilePath).digest('hex');
+		const hash = createHash("sha256").update(videoFilePath).digest("hex");
 		const thumbnailFileName = `${hash}.webp`;
 
 		return join(this.thumbnailBaseDir, thumbnailFileName);
 	}
 
 	getThumbnailRelativePath(videoFilePath: string): string {
-		const hash = createHash('sha256').update(videoFilePath).digest('hex');
+		const hash = createHash("sha256").update(videoFilePath).digest("hex");
 		return `${hash}.webp`;
 	}
 
@@ -134,7 +137,7 @@ export class ThumbnailGeneratorService {
 		const minutes = Math.floor((seconds % 3600) / 60);
 		const secs = seconds % 60;
 
-		return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toFixed(1).padStart(4, '0')}`;
+		return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toFixed(1).padStart(4, "0")}`;
 	}
 
 	private async ensureThumbnailDirectory(thumbnailPath: string): Promise<void> {
@@ -150,7 +153,7 @@ export class ThumbnailGeneratorService {
 
 	static async isFFmpegAvailable(): Promise<boolean> {
 		try {
-			await execAsync('ffmpeg -version');
+			await execAsync("ffmpeg -version");
 			return true;
 		} catch {
 			return false;
@@ -167,7 +170,7 @@ export class ThumbnailGeneratorService {
 	}
 
 	private async stat(path: string): Promise<{ size: number; mtime: Date }> {
-		const fs = await import('node:fs/promises');
+		const fs = await import("node:fs/promises");
 		const stat = await fs.stat(path);
 		return {
 			size: stat.size,
@@ -187,7 +190,7 @@ export class FFprobeMetadataExtractorService {
 				this.extractFFprobeMetadata(filePath),
 			]);
 
-			const fileName = filePath.split('/').pop() || filePath;
+			const fileName = filePath.split("/").pop() || filePath;
 
 			return {
 				filePath,
@@ -204,7 +207,7 @@ export class FFprobeMetadataExtractorService {
 
 			try {
 				const fileStat = await this.stat(filePath);
-				const fileName = filePath.split('/').pop() || filePath;
+				const fileName = filePath.split("/").pop() || filePath;
 
 				return {
 					filePath,
@@ -290,7 +293,7 @@ export class FFprobeMetadataExtractorService {
 
 	static async isFFprobeAvailable(): Promise<boolean> {
 		try {
-			await execAsync('ffprobe -version');
+			await execAsync("ffprobe -version");
 			return true;
 		} catch {
 			return false;
@@ -298,7 +301,7 @@ export class FFprobeMetadataExtractorService {
 	}
 
 	private async stat(path: string): Promise<{ size: number; mtime: Date }> {
-		const fs = await import('node:fs/promises');
+		const fs = await import("node:fs/promises");
 		const stat = await fs.stat(path);
 		return {
 			size: stat.size,

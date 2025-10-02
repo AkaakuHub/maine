@@ -1,16 +1,16 @@
 import {
+	BadRequestException,
+	Body,
 	Controller,
 	Get,
+	Logger,
 	Post,
 	Put,
 	Query,
-	Body,
-	BadRequestException,
-	Logger,
 } from "@nestjs/common";
-import { ApiTags, ApiResponse, ApiQuery } from "@nestjs/swagger";
-import type { ProgressService } from "./progress.service";
+import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { UpdateProgressDto } from "./dto/update-progress.dto";
+import { ProgressService } from "./progress.service";
 
 @ApiTags("progress")
 @Controller("progress")
@@ -33,11 +33,11 @@ export class ProgressController {
 			const result = await this.progressService.getVideoProgress(filePath);
 
 			if (!result.success) {
-				if (result.error?.includes('required')) {
+				if (result.error?.includes("required")) {
 					throw new BadRequestException({ error: result.error });
 				}
 				throw new BadRequestException({
-					error: result.error || 'Failed to fetch video progress',
+					error: result.error || "Failed to fetch video progress",
 				});
 			}
 
@@ -46,12 +46,12 @@ export class ProgressController {
 				data: result.data,
 			};
 		} catch (error) {
-			this.logger.error('Error fetching video progress:', error);
+			this.logger.error("Error fetching video progress:", error);
 			if (error instanceof BadRequestException) {
 				throw error;
 			}
 			throw new BadRequestException({
-				error: 'Failed to fetch video progress',
+				error: "Failed to fetch video progress",
 			});
 		}
 	}
@@ -65,11 +65,11 @@ export class ProgressController {
 			const result = await this.progressService.updateVideoProgress(updateData);
 
 			if (!result.success) {
-				if (result.error?.includes('required')) {
+				if (result.error?.includes("required")) {
 					throw new BadRequestException({ error: result.error });
 				}
 				throw new BadRequestException({
-					error: result.error || 'Failed to update video',
+					error: result.error || "Failed to update video",
 				});
 			}
 
@@ -78,12 +78,12 @@ export class ProgressController {
 				data: result.data,
 			};
 		} catch (error) {
-			this.logger.error('Error updating video:', error);
+			this.logger.error("Error updating video:", error);
 			if (error instanceof BadRequestException) {
 				throw error;
 			}
 			throw new BadRequestException({
-				error: 'Failed to update video',
+				error: "Failed to update video",
 			});
 		}
 	}

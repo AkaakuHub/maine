@@ -1,14 +1,14 @@
 import {
+	BadRequestException,
 	Controller,
 	Get,
-	Query,
-	BadRequestException,
 	Logger,
+	Query,
 	Res,
 } from "@nestjs/common";
+import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
-import { ApiTags, ApiResponse, ApiQuery } from "@nestjs/swagger";
-import type { ChaptersService } from "./chapters.service";
+import { ChaptersService } from "./chapters.service";
 
 @ApiTags("chapters")
 @Controller("chapters")
@@ -57,10 +57,9 @@ export class ChaptersController {
 			}
 
 			// チャプター情報を抽出
-			const chapters =
-				await this.chaptersService.extractVideoChapters(
-					fileValidation.fullPath || decodedPath,
-				);
+			const chapters = await this.chaptersService.extractVideoChapters(
+				fileValidation.fullPath || decodedPath,
+			);
 
 			if (format === "webvtt") {
 				// WebVTT形式で返す（HTML5 video要素用）

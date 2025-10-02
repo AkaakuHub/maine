@@ -1,6 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { CronJob } from "cron";
-import type { ScanScheduleSettings, SchedulerStatus } from "../../../../../shared/types/scan-schedule-settings";
+import type {
+	ScanScheduleSettings,
+	SchedulerStatus,
+} from "../../../../../shared/types/scan-schedule-settings";
 
 /**
  * デフォルトスケジュール設定
@@ -148,7 +151,9 @@ export class ScanSchedulerService {
 	 */
 	async initializeSchedulerIfNeeded(): Promise<void> {
 		if (typeof window === "undefined" && !this.cronJob) {
-			this.logger.log("🚀 ScanSchedulerService: スケジューラーを遅延初期化します");
+			this.logger.log(
+				"🚀 ScanSchedulerService: スケジューラーを遅延初期化します",
+			);
 			try {
 				await this.initializeFromDatabase();
 				this.logger.log("✅ スケジューラーの遅延初期化が完了しました");
@@ -267,7 +272,9 @@ export class ScanSchedulerService {
 
 		// 手動スキャンが実行中の場合はスキップ
 		if (this.manualScanChecker?.()) {
-			this.logger.log("手動スキャンが実行中のため、スケジュールされたスキャンをスキップ");
+			this.logger.log(
+				"手動スキャンが実行中のため、スケジュールされたスキャンをスキップ",
+			);
 			return;
 		}
 

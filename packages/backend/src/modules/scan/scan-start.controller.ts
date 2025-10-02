@@ -1,12 +1,6 @@
-import {
-	Controller,
-	Get,
-	Post,
-	Res,
-	Logger,
-} from "@nestjs/common";
-import { ApiTags, ApiResponse } from "@nestjs/swagger";
-import type { Response } from 'express';
+import { Controller, Get, Logger, Post, Res } from "@nestjs/common";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
+import type { Response } from "express";
 import { sseStore } from "../../common/sse/sse-connection.store";
 
 interface UpdateStatus {
@@ -22,7 +16,6 @@ export class ScanStartController {
 	private isUpdating = false;
 	private updateProgress = -1;
 
-	
 	@Post("start")
 	@ApiResponse({ status: 200, description: "スキャン開始" })
 	@ApiResponse({ status: 409, description: "スキャン実行中" })
@@ -101,7 +94,10 @@ export class ScanStartController {
 		};
 	}
 
-	private async manualRefresh(): Promise<{ success: boolean; message: string }> {
+	private async manualRefresh(): Promise<{
+		success: boolean;
+		message: string;
+	}> {
 		try {
 			this.isUpdating = true;
 			this.updateProgress = 0;
@@ -113,7 +109,7 @@ export class ScanStartController {
 			// 簡易的なスキャン実行（実際にはもっと複雑な処理）
 			for (let i = 0; i <= 100; i += 10) {
 				this.updateProgress = i;
-				await new Promise(resolve => setTimeout(resolve, 100)); // 模擬的な処理時間
+				await new Promise((resolve) => setTimeout(resolve, 100)); // 模擬的な処理時間
 
 				// SSEで進捗を送信
 				sseStore.broadcast({

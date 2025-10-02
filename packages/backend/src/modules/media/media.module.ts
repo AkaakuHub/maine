@@ -1,6 +1,9 @@
-import { Module } from '@nestjs/common';
-import { ThumbnailsController } from './thumbnails.controller';
-import { ThumbnailGeneratorService, FFprobeMetadataExtractorService } from './thumbnail-generator.service';
+import { Module } from "@nestjs/common";
+import {
+	FFprobeMetadataExtractorService,
+	ThumbnailGeneratorService,
+} from "./thumbnail-generator.service";
+import { ThumbnailsController } from "./thumbnails.controller";
 
 @Module({
 	controllers: [ThumbnailsController],

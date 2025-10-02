@@ -1,14 +1,14 @@
 import {
+	BadRequestException,
 	Controller,
 	Get,
-	Query,
-	Param,
-	BadRequestException,
 	Logger,
+	Param,
+	Query,
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse } from "@nestjs/swagger";
 import type { SearchVideosDto } from "./dto/search-videos.dto";
-import type { VideosService } from "./videos.service";
+import { VideosService } from "./videos.service";
 
 @Controller("videos")
 export class VideosController {

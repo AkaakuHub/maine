@@ -1,13 +1,6 @@
-import {
-	Controller,
-	Get,
-	Post,
-	Body,
-	Res,
-	Logger,
-} from "@nestjs/common";
-import { ApiTags, ApiResponse } from "@nestjs/swagger";
-import type { Response } from 'express';
+import { Body, Controller, Get, Logger, Post, Res } from "@nestjs/common";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
+import type { Response } from "express";
 import { sseStore } from "../../common/sse/sse-connection.store";
 
 interface ControlRequestBody {
@@ -24,9 +17,14 @@ export class ScanControlController {
 	@ApiResponse({ status: 200, description: "スキャン制御コマンド送信" })
 	@ApiResponse({ status: 400, description: "無効なリクエスト" })
 	@ApiResponse({ status: 404, description: "スキャンが見つからない" })
-	async controlScan(@Body() body: ControlRequestBody, @Res({ passthrough: true }) response: Response) {
+	async controlScan(
+		@Body() body: ControlRequestBody,
+		@Res({ passthrough: true }) response: Response,
+	) {
 		try {
-			this.logger.log(`Scan control command: ${body.action} for scan ${body.scanId}`);
+			this.logger.log(
+				`Scan control command: ${body.action} for scan ${body.scanId}`,
+			);
 
 			// バリデーション
 			if (!body.action || !body.scanId) {
@@ -37,7 +35,9 @@ export class ScanControlController {
 			// アクションのバリデーション
 			if (!["pause", "resume", "cancel"].includes(body.action)) {
 				response.status(400);
-				return { error: "Invalid action. Must be 'pause', 'resume', or 'cancel'" };
+				return {
+					error: "Invalid action. Must be 'pause', 'resume', or 'cancel'",
+				};
 			}
 
 			// 現在のスキャン状態を確認

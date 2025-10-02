@@ -76,7 +76,9 @@ export class ScanSettingsService {
 	/**
 	 * スキャン設定を更新
 	 */
-	async updateScanSettings(newSettings: Partial<ScanSettings>): Promise<ScanSettings> {
+	async updateScanSettings(
+		newSettings: Partial<ScanSettings>,
+	): Promise<ScanSettings> {
 		this.scanSettings = { ...this.scanSettings, ...newSettings };
 		await this.saveScanSettings();
 		this.logger.log("Scan settings updated");
@@ -107,7 +109,10 @@ export class ScanSettingsService {
 					batchSize: savedSettings.batchSize,
 					progressUpdateInterval: savedSettings.progressUpdateInterval,
 					sleepInterval: savedSettings.sleepInterval,
-					processingPriority: savedSettings.processingPriority as "low" | "normal" | "high",
+					processingPriority: savedSettings.processingPriority as
+						| "low"
+						| "normal"
+						| "high",
 					maxConcurrentOperations: savedSettings.maxConcurrentOperations,
 					memoryThresholdMB: savedSettings.memoryThresholdMB,
 					autoPauseOnHighCPU: savedSettings.autoPauseOnHighCPU,
