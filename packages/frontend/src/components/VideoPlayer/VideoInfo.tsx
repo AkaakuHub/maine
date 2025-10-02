@@ -38,8 +38,8 @@ export default function VideoInfo({
 				isDesktop
 					? "p-6 border-b border-border"
 					: isResponsive
-						? "p-4 lg:p-6 border-b border-border"
-						: "p-4 border-b border-border"
+						? "p-4 lg:p-6  border-border"
+						: "p-4 border-border"
 			}
 		>
 			<h1
