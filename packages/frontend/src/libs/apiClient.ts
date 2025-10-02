@@ -1,6 +1,7 @@
 "use client";
 
 import type { VideoFileData } from "@/type";
+import { createApiUrl } from "@/utils/api";
 
 interface APIClientOptions {
 	isOffline: boolean;
@@ -23,7 +24,7 @@ class APIClient {
 		}
 
 		// オンライン時はAPIから取得
-		const response = await fetch("/api/videos");
+		const response = await fetch(createApiUrl("/videos"));
 		if (!response.ok) {
 			throw new Error("動画の取得に失敗しました");
 		}
@@ -41,7 +42,7 @@ class APIClient {
 		}
 
 		// オンライン時はストリーミングURL
-		return `/api/video/${encodeURIComponent(filePath)}`;
+		return createApiUrl(`/video/${encodeURIComponent(filePath)}`);
 	}
 
 	async saveProgress(filePath: string, progress: number): Promise<void> {
@@ -55,7 +56,7 @@ class APIClient {
 		}
 
 		// オンライン時はAPIに送信
-		const response = await fetch("/api/progress", {
+		const response = await fetch(createApiUrl("/progress"), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -79,7 +80,7 @@ class APIClient {
 
 		// オンライン時はAPIから取得
 		const response = await fetch(
-			`/api/progress?filePath=${encodeURIComponent(filePath)}`,
+			createApiUrl(`/progress?filePath=${encodeURIComponent(filePath)}`),
 		);
 		if (!response.ok) {
 			return 0;

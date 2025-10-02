@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -11,8 +11,8 @@
 
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # local env files
 .env.local
@@ -88,7 +88,7 @@ packages/backend/prisma/settings.db
 packages/backend/prisma/*.db.backup
 
 # サムネイルデータ  
-/data/
+packages/backend/data/
 
 .envrc.local
 

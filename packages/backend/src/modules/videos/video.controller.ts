@@ -51,7 +51,9 @@ export class VideoController {
 				this.logger.error("Invalid file path:", validation.error);
 
 				const statusCode =
-					validation.error === "動画ディレクトリが設定されていません" ? 500 : 403;
+					validation.error === "動画ディレクトリが設定されていません"
+						? 500
+						: 403;
 				response.status(statusCode);
 				return response.send(validation.error || "無効なファイルパスです");
 			}
