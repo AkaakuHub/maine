@@ -1,5 +1,11 @@
 import { Transform } from "class-transformer";
-import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+	IsBoolean,
+	IsEnum,
+	IsNumber,
+	IsOptional,
+	IsString,
+} from "class-validator";
 
 export class SearchVideosDto {
 	@IsString()
@@ -11,6 +17,21 @@ export class SearchVideosDto {
 	@IsOptional()
 	@Transform(({ value }) => value === "true")
 	exactMatch?: boolean;
+
+	@IsBoolean()
+	@IsOptional()
+	@Transform(({ value }) => value === "true")
+	loadAll?: boolean;
+
+	@IsString()
+	@IsOptional()
+	@IsEnum(["title", "fileName", "createdAt", "updatedAt", "duration"])
+	sortBy?: string;
+
+	@IsString()
+	@IsOptional()
+	@IsEnum(["asc", "desc"])
+	sortOrder?: string;
 
 	@IsNumber()
 	@IsOptional()
