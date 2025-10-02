@@ -1,6 +1,6 @@
-import { Controller, Get, Head, Req } from "@nestjs/common";
+import { Controller, Get, Head, Res } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import type { Request } from "express";
+import type { Response } from "express";
 import {
 	type SSEConnection,
 	sseStore,
@@ -11,15 +11,20 @@ import {
 export class SseController {
 	@Get("events")
 	@ApiResponse({ status: 200, description: "SSEイベントストリーム" })
-	async getScanEvents(@Req() request: Request) {
-		// SSE用のヘッダー設定
-		const responseHeaders = new Headers({
+	async getScanEvents(@Res() response: Response) {
+		// SSE用のヘッダー設定 - Next.js APIと全く同じ
+		const responseHeaders = {
 			"Content-Type": "text/event-stream",
 			"Cache-Control": "no-cache, no-transform",
 			Connection: "keep-alive",
 			"Access-Control-Allow-Origin": "*",
 			"Access-Control-Allow-Headers": "Cache-Control",
-		});
+		};
+
+		// レスポンスヘッダーを設定
+		for (const [key, value] of Object.entries(responseHeaders)) {
+			response.setHeader(key, value);
+		}
 
 		// ReadableStreamを使用してSSEストリームを作成
 		const stream = new ReadableStream({
@@ -34,13 +39,13 @@ export class SseController {
 					createdAt: new Date(),
 					lastHeartbeat: new Date(),
 					metadata: {
-						userAgent: request.headers["user-agent"]?.slice(0, 50),
+						userAgent: response.req.headers["user-agent"]?.slice(0, 50),
 					},
 				};
 
 				// SSE Connection Storeに接続を登録
 				sseStore.addConnection(connection);
-				// SSE connection registered
+				console.log("SSE connection registered");
 
 				// 接続確立メッセージを送信
 				const encoder = new TextEncoder();
@@ -48,7 +53,7 @@ export class SseController {
 					type: "connected",
 					connectionId,
 					timestamp: new Date().toISOString(),
-					message: "SSE接続が確立されました",
+					message: "SSE connection established",
 					activeConnections: sseStore.getConnectionCount(),
 				})}\n\n`;
 				controller.enqueue(encoder.encode(connectMessage));
@@ -72,9 +77,8 @@ export class SseController {
 				}, 30000);
 
 				// 接続終了時のクリーンアップ
-				if (request.destroyed) {
-					// SSE connection disconnected
-
+				response.req.on("close", () => {
+					console.log("SSE connection disconnected");
 					// Connection Storeから削除
 					sseStore.removeConnection(connectionId);
 					clearInterval(heartbeatInterval);
@@ -84,43 +88,45 @@ export class SseController {
 					} catch (_error) {
 						// 既に閉じられている場合は無視
 					}
-				}
-
-				// Expressリクエストの場合のクリーンアップ
-				const cleanup = () => {
-					sseStore.removeConnection(connectionId);
-					clearInterval(heartbeatInterval);
-					try {
-						controller.close();
-					} catch (_error) {
-						// 既に閉じられている場合は無視
-					}
-				};
-
-				// リクエスト終了時のイベントリスナー
-				request.on("close", cleanup);
-				request.on("end", cleanup);
+				});
 			},
 
 			cancel() {
 				// ストリーム終了時のクリーンアップ
-				// SSE stream cancelled
+				console.log("SSE stream cancelled");
 			},
 		});
 
-		return new Response(stream, { headers: responseHeaders });
+		// Express ResponseにReadableStreamを直接設定
+		// Next.jsの new Response(stream, { headers }) と同等の処理
+		response.status(200);
+
+		// ストリームのデータをレスポンスに書き込み
+		const reader = stream.getReader();
+
+		const pump = async () => {
+			try {
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) {
+						response.end();
+						break;
+					}
+					response.write(Buffer.from(value));
+				}
+			} catch (error) {
+				console.error("Stream error:", error);
+				response.end();
+			}
+		};
+
+		pump();
 	}
 
 	@Head("events")
 	@ApiResponse({ status: 200, description: "SSE健全性チェック" })
-	async healthCheck() {
-		const headers = new Headers({
-			"Cache-Control": "no-cache",
-		});
-
-		return new Response(null, {
-			status: 200,
-			headers,
-		});
+	async healthCheck(@Res() response: Response) {
+		response.setHeader("Cache-Control", "no-cache");
+		response.status(200).end();
 	}
 }

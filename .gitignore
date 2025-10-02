@@ -100,3 +100,5 @@ package.copy.json
 /prisma/*.db-journal
 packages/backend/prisma/generated/*
 # /shared/prisma/migrations
+
+/temp

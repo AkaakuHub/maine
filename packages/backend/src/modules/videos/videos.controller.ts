@@ -3,13 +3,13 @@ import {
 	Controller,
 	Get,
 	Logger,
-	Param,
 	Query,
 } from "@nestjs/common";
-import { ApiQuery, ApiResponse } from "@nestjs/swagger";
+import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { SearchVideosDto } from "./dto/search-videos.dto";
 import { VideosService } from "./videos.service";
 
+@ApiTags("videos")
 @Controller("videos")
 export class VideosController {
 	private readonly logger = new Logger(VideosController.name);
@@ -86,34 +86,6 @@ export class VideosController {
 			}
 			throw new BadRequestException({
 				error: "Internal server error",
-				details: error instanceof Error ? error.message : "Unknown error",
-			});
-		}
-	}
-
-	@Get(":filePath")
-	@ApiResponse({ status: 200, description: "動画詳細情報" })
-	async getVideo(@Param("filePath") filePath: string) {
-		try {
-			this.logger.log(`Getting video: ${filePath}`);
-
-			const video = await this.videosService.getVideo(filePath);
-
-			if (!video) {
-				throw new BadRequestException({
-					error: "Video not found",
-					details: `Video with file path "${filePath}" not found`,
-				});
-			}
-
-			return video;
-		} catch (error) {
-			this.logger.error("Get video error:", error);
-			if (error instanceof BadRequestException) {
-				throw error;
-			}
-			throw new BadRequestException({
-				error: "Failed to get video",
 				details: error instanceof Error ? error.message : "Unknown error",
 			});
 		}
