@@ -7,8 +7,36 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": []
+		"ignore": [
+			"node_modules/**",
+			"dist/**",
+			"build/**",
+			".next/**",
+			"*.min.js",
+			"*.d.ts"
+		]
 	},
+	"overrides": [
+		{
+			"include": [
+				"**/*.controller.ts",
+				"**/*.service.ts",
+				"**/*.module.ts",
+				"**/*.guard.ts",
+				"**/*.interceptor.ts",
+				"**/*.pipe.ts",
+				"**/*.filter.ts"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"useImportType": "off",
+						"useExportType": "off"
+					}
+				}
+			}
+		}
+	],
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab"
@@ -20,6 +48,10 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"style": {
+				"useImportType": "error",
+				"useExportType": "error"
+			},
 			"correctness": {
 				"noUnusedVariables": {
 					"level": "error",
@@ -35,6 +67,9 @@
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double"
+		},
+		"parser": {
+			"unsafeParameterDecoratorsEnabled": true
 		}
 	}
 }

@@ -3,54 +3,34 @@
 	"name": "my-video-storage",
 	"version": "0.1.0",
 	"private": true,
+	"workspaces": [
+		"packages/*",
+		"shared/*"
+	],
 	"scripts": {
-		"dev": "pnpm db:setup && next dev",
-		"dev:force": "next dev",
-		"build": "pnpm db:setup && next build",
-		"start": "pnpm run build && node server.js",
-		"lint": "pnpm biome lint ./src",
+		"dev": "pnpm --filter @my-video-storage/frontend dev",
+		"dev:backend": "pnpm build:shared && pnpm --filter @my-video-storage/backend start:dev",
+		"build": "pnpm build:shared && pnpm --filter @my-video-storage/frontend build",
+		"build:shared": "pnpm --filter '@my-video-storage/shared-*' run build",
+		"build:backend": "pnpm build:shared && pnpm --filter @my-video-storage/backend build",
+		"start": "pnpm --filter @my-video-storage/frontend start",
+		"start:backend": "pnpm build:shared && pnpm --filter @my-video-storage/backend start:prod",
+		"lint": "pnpm -r lint",
 		"knip": "knip --fix --files",
-		"format": "pnpm biome format --write ./src",
-		"db:setup": "prisma generate && prisma migrate deploy",
-		"db:migrate": "prisma migrate dev",
-		"db:studio": "prisma studio",
-		"db:reset": "prisma migrate reset --force"
-	},
-	"dependencies": {
-		"@prisma/client": "6.8.2",
-		"@types/iconv-lite": "^0.0.1",
-		"clsx": "^2.1.1",
-		"cron": "^4.3.3",
-		"iconv-lite": "^0.6.3",
-		"idb": "^8.0.3",
-		"lucide-react": "^0.511.0",
-		"next": "15.3.3",
-		"next-pwa": "^5.6.0",
-		"node-cron": "^4.2.1",
-		"prisma": "^6.8.2",
-		"react": "^19.1.0",
-		"react-dom": "^19.1.0",
-		"react-intersection-observer": "^9.16.0",
-		"tailwind-merge": "^3.3.0",
-		"zustand": "^5.0.8"
+		"format": "pnpm -r format",
+		"typecheck": "pnpm -r typecheck"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.27.4",
-		"@babel/preset-env": "^7.27.2",
 		"@biomejs/biome": "1.9.4",
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
-		"@tailwindcss/postcss": "^4.1.8",
-		"@types/node": "^22.15.29",
-		"@types/node-cron": "^3.0.11",
-		"@types/react": "^19.1.6",
-		"@types/react-dom": "^19.1.5",
-		"babel-loader": "^10.0.0",
-		"globals": "^16.2.0",
 		"knip": "^5.60.2",
 		"lefthook": "^1.11.13",
-		"sharp": "^0.34.2",
-		"tailwindcss": "^4.1.8",
 		"typescript": "^5.8.3"
-	}
+	},
+	"engines": {
+		"node": ">=18.0.0",
+		"pnpm": ">=8.0.0"
+	},
+	"packageManager": "pnpm@8.15.6"
 }
