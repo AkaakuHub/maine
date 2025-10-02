@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Download, Radio, MoreHorizontal, Trash2 } from "lucide-react";
 import type { VideoFileData } from "@/type";
 import { cn, formatFileSize } from "@/libs/utils";
-import { formatDuration, API } from "@/utils/constants";
+import { formatDuration } from "@/utils/constants";
+import { createApiUrl } from "@/utils/api";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
@@ -124,7 +125,7 @@ const VideoCard = ({
 				<div className="relative aspect-video bg-surface-variant overflow-hidden">
 					{video.thumbnailPath ? (
 						<img
-							src={`${API.ENDPOINTS.THUMBNAILS}/${video.thumbnailPath}`}
+							src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
 							alt={video.title}
 							className="w-full h-full object-cover"
 							loading="lazy"

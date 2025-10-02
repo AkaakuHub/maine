@@ -19,6 +19,7 @@ import { ScanSchedulePanel } from "@/components/scan/ScanSchedulePanel";
 import { SafeDateDisplay } from "@/components/common/SafeDateDisplay";
 import { SettingsModal } from "@/components/settings/SettingsModal";
 import { formatCurrentTime } from "@/utils/safeDateFormat";
+import { createApiUrl } from "@/utils/api";
 import { useScanProgress } from "@/hooks/useScanProgress";
 import { cn } from "@/libs/utils";
 
@@ -56,7 +57,7 @@ export default function ScanManagementPage() {
 
 			// スキャン開始リクエスト
 			console.log("Sending scan start request...");
-			const response = await fetch("/api/scan/start", {
+			const response = await fetch(createApiUrl("/scan/start"), {
 				method: "POST",
 			});
 

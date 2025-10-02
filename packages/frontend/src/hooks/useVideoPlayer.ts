@@ -8,7 +8,7 @@ import { useVideoProgress } from "./useVideoProgress";
 import { useOfflineStorage } from "./useOfflineStorage";
 import { useNetworkStatus } from "./useNetworkStatus";
 import { useNavigationRefresh } from "@/contexts/NavigationRefreshContext";
-import { API } from "@/utils/constants";
+import { createApiUrl } from "@/utils/api";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
 import {
 	offlineStorageService,
@@ -80,7 +80,7 @@ export function useVideoPlayer() {
 
 			try {
 				const response = await fetch(
-					`${API.ENDPOINTS.PROGRAM_INFO}?filePath=${encodeURIComponent(filePath)}`,
+					createApiUrl(`/programInfo?filePath=${encodeURIComponent(filePath)}`),
 				);
 
 				if (response.ok) {
@@ -243,9 +243,11 @@ export function useVideoPlayer() {
 				} else {
 					// ストリーミングモード: APIから動画データを取得
 					const response = await fetch(
-						`${API.ENDPOINTS.VIDEOS}?search=${encodeURIComponent(
-							decodedPath,
-						)}&exactMatch=true`,
+						createApiUrl(
+							`/videos?search=${encodeURIComponent(
+								decodedPath,
+							)}&exactMatch=true`,
+						),
 					);
 
 					if (response.ok) {
@@ -315,7 +317,7 @@ export function useVideoPlayer() {
 
 					// ストリーミング用のビデオソースを設定
 					setVideoSrc(
-						`${API.ENDPOINTS.VIDEO_STREAM}/${encodeURIComponent(decodedPath)}`,
+						createApiUrl(`/video/${encodeURIComponent(decodedPath)}`),
 					);
 
 					// 番組情報を取得
@@ -368,9 +370,7 @@ export function useVideoPlayer() {
 					duration: "不明",
 				});
 
-				setVideoSrc(
-					`${API.ENDPOINTS.VIDEO_STREAM}/${encodeURIComponent(decodedPath)}`,
-				);
+				setVideoSrc(createApiUrl(`/video/${encodeURIComponent(decodedPath)}`));
 
 				// 番組情報を取得
 				await fetchProgramInfo(decodedPath);
@@ -473,9 +473,9 @@ export function useVideoPlayer() {
 
 		try {
 			// ダウンロードリンクを作成
-			const downloadUrl = `${API.ENDPOINTS.VIDEO_STREAM}/${encodeURIComponent(
-				videoData.filePath,
-			)}?download=true`;
+			const downloadUrl = createApiUrl(
+				`/video/${encodeURIComponent(videoData.filePath)}?download=true`,
+			);
 			const link = document.createElement("a");
 			link.href = downloadUrl;
 			link.download = videoData.filePath.split(/[/\\]/).pop() || "video.mp4";

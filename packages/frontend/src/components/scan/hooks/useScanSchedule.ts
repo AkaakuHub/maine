@@ -6,6 +6,7 @@ import {
 } from "@/types/scanScheduleSettings";
 import type { Message } from "../types";
 import { toSafeDate } from "../utils/timeFormatters";
+import { createApiUrl } from "@/utils/api";
 
 export function useScanSchedule() {
 	const [settings, setSettings] = useState<ScanScheduleSettings>(
@@ -20,7 +21,7 @@ export function useScanSchedule() {
 	const loadData = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const response = await fetch("/api/scan/schedule");
+			const response = await fetch(createApiUrl("/scan/schedule"));
 			if (response.ok) {
 				const data = await response.json();
 				setSettings(data.settings);
@@ -66,7 +67,7 @@ export function useScanSchedule() {
 		setIsSaving(true);
 		setMessage(null);
 		try {
-			const response = await fetch("/api/scan/schedule", {
+			const response = await fetch(createApiUrl("/scan/schedule"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(settings),

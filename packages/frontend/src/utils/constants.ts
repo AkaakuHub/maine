@@ -92,19 +92,6 @@ export const FFPROBE = {
 	FFMPEG_TIMEOUT_MS: 60000, // 60秒
 } as const;
 
-// API関連
-export const API = {
-	ENDPOINTS: {
-		VIDEOS: "/api/videos",
-		GET_VIDEO: "/api/getVideo",
-		VIDEO_STREAM: "/api/video",
-		PROGRESS: "/api/progress",
-		PROGRAM_INFO: "/api/programInfo",
-		THUMBNAILS: "/api/thumbnails",
-	},
-	TIMEOUT: 30000,
-} as const;
-
 // テーマ関連
 export const THEME = {
 	STORAGE_KEY: "theme",

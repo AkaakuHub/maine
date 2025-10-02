@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { VideoChapter } from "@/services/chapterService";
 import { useChapterSkipStore } from "@/stores/chapterSkipStore";
+import { createApiUrl } from "@/utils/api";
 
 interface UseVideoChaptersProps {
 	src: string;
@@ -35,11 +36,11 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 				// srcからfilePathを抽出
 				const url = new URL(src, window.location.origin);
 				const filePath = decodeURIComponent(
-					url.pathname.replace("/api/video/", ""),
+					url.pathname.replace("/video/", ""),
 				);
 
 				const response = await fetch(
-					`/api/chapters?filePath=${encodeURIComponent(filePath)}`,
+					createApiUrl(`/chapters?filePath=${encodeURIComponent(filePath)}`),
 				);
 
 				if (response.ok) {

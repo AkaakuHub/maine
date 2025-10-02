@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { VideoFileData } from "@/type";
-import { API } from "@/utils/constants";
+import { createApiUrl } from "@/utils/api";
 
 interface UseVideosFilters {
 	search?: string;
@@ -109,10 +109,10 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 			setLoading(true);
 			setError(null);
 
-			const url = `${API.ENDPOINTS.VIDEOS}?${searchParams}`;
+			const url = createApiUrl(`/videos?${searchParams}`);
 
 			const response = await fetch(url, {
-				signal: AbortSignal.timeout(API.TIMEOUT),
+				signal: AbortSignal.timeout(30000),
 			});
 
 			if (!response.ok) {

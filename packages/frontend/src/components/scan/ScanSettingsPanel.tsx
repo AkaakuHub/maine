@@ -17,6 +17,7 @@ import {
 	DEFAULT_SCAN_SETTINGS,
 	SCAN_SETTINGS_CONSTRAINTS,
 } from "@/types/scanSettings";
+import { createApiUrl } from "@/utils/api";
 
 interface ScanSettingsPanelProps {
 	className?: string;
@@ -40,7 +41,7 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 	const loadSettings = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const response = await fetch("/api/scan/settings");
+			const response = await fetch(createApiUrl("/scan/settings"));
 			if (response.ok) {
 				const data = await response.json();
 				setSettings(data.settings);
@@ -66,7 +67,7 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 		setIsSaving(true);
 		setMessage(null);
 		try {
-			const response = await fetch("/api/scan/settings", {
+			const response = await fetch(createApiUrl("/scan/settings"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(settings),
@@ -93,7 +94,7 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 		setIsLoading(true);
 		setMessage(null);
 		try {
-			const response = await fetch("/api/scan/settings", {
+			const response = await fetch(createApiUrl("/scan/settings"), {
 				method: "PUT",
 			});
 

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { API } from "@/utils/constants";
+import { createApiUrl } from "@/utils/api";
 
 interface UpdateProgressParams {
 	filePath: string;
@@ -36,13 +36,13 @@ export function useProgress(): UseProgressReturn {
 				setLoading(true);
 				setError(null);
 
-				const response = await fetch(API.ENDPOINTS.PROGRESS, {
+				const response = await fetch(createApiUrl("/progress"), {
 					method: "PUT",
 					headers: {
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify(params),
-					signal: AbortSignal.timeout(API.TIMEOUT),
+					signal: AbortSignal.timeout(30000),
 				});
 
 				if (!response.ok) {
@@ -74,9 +74,9 @@ export function useProgress(): UseProgressReturn {
 				setError(null);
 
 				const response = await fetch(
-					`${API.ENDPOINTS.PROGRESS}?filePath=${encodeURIComponent(filePath)}`,
+					createApiUrl(`/progress?filePath=${encodeURIComponent(filePath)}`),
 					{
-						signal: AbortSignal.timeout(API.TIMEOUT),
+						signal: AbortSignal.timeout(30000),
 					},
 				);
 

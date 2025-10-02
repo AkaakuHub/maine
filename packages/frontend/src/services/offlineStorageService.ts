@@ -2,6 +2,7 @@
 
 import { openDB, type IDBPDatabase } from "idb";
 import type { VideoFileData } from "@/type";
+import { createApiUrl } from "@/utils/api";
 
 export interface CachedVideo {
 	id: string;
@@ -64,7 +65,7 @@ class OfflineStorageService {
 
 		try {
 			const response = await fetch(
-				`/api/video/${encodeURIComponent(filePath)}`,
+				createApiUrl(`/video/${encodeURIComponent(filePath)}`),
 				{
 					signal: abortSignal,
 				},

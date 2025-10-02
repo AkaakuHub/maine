@@ -18,7 +18,7 @@ import { cn, formatFileSize } from "@/libs/utils";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
 import { parseVideoFileName } from "@/utils/videoFileNameParser";
 import { SafeDateDisplay } from "@/components/common/SafeDateDisplay";
-import { API } from "@/utils/constants";
+import { createApiUrl } from "@/utils/api";
 
 interface VideoListProps {
 	videos: VideoFileData[];
@@ -155,7 +155,7 @@ const VideoListItem = ({
 					<div className="relative w-28 h-16 bg-surface-variant rounded-lg overflow-hidden flex-shrink-0">
 						{video.thumbnailPath ? (
 							<img
-								src={`${API.ENDPOINTS.THUMBNAILS}/${video.thumbnailPath}`}
+								src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
 								alt={video.title}
 								className="w-full h-full object-cover"
 								loading="lazy"

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { ChapterSkipRule } from "@/types/Settings";
+import { createApiUrl } from "@/utils/api";
 
 interface ChapterSkipStore {
 	rules: ChapterSkipRule[];
@@ -24,7 +25,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 		try {
 			set({ isLoading: true, error: null });
 
-			const response = await fetch("/api/settings/chapter-skip");
+			const response = await fetch(createApiUrl("/settings/chapter-skip"));
 			const data = await response.json();
 
 			if (!response.ok) {
@@ -43,7 +44,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 		try {
 			set({ error: null });
 
-			const response = await fetch("/api/settings/chapter-skip", {
+			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ pattern, enabled }),
@@ -70,7 +71,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 		try {
 			set({ error: null });
 
-			const response = await fetch("/api/settings/chapter-skip", {
+			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ id, ...updates }),
@@ -95,7 +96,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 			set({ error: null });
 
 			const response = await fetch(
-				`/api/settings/chapter-skip?id=${encodeURIComponent(id)}`,
+				createApiUrl(`/settings/chapter-skip?id=${encodeURIComponent(id)}`),
 				{
 					method: "DELETE",
 				},

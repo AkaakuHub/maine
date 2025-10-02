@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useScanStore } from "@/stores/scan-store";
 import type { ScanProgressEvent } from "@/libs/sse-connection-store";
+import { createApiUrl } from "@/utils/api";
 
 /**
  * Zustandベースのスキャン進捗追跡フック
@@ -48,7 +49,7 @@ export function useScanProgress() {
 		setConnectionState(false, 0);
 
 		try {
-			const eventSource = new EventSource("/api/scan/events");
+			const eventSource = new EventSource(createApiUrl("/scan/events"));
 			eventSourceRef.current = eventSource;
 
 			eventSource.onopen = () => {
@@ -164,7 +165,7 @@ export function useScanProgress() {
 			}
 
 			try {
-				const response = await fetch("/api/scan/control", {
+				const response = await fetch(createApiUrl("/scan/control"), {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",

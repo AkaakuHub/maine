@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from "react";
-import { API } from "@/utils/constants";
+import { createApiUrl } from "@/utils/api";
 
 interface ProgressData {
 	filePath: string;
@@ -52,7 +52,7 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 				type: "application/json",
 			});
 
-			return navigator.sendBeacon(API.ENDPOINTS.PROGRESS, blob);
+			return navigator.sendBeacon(createApiUrl("/progress"), blob);
 		} catch (error) {
 			console.error("Failed to send progress with sendBeacon:", error);
 			return false;
@@ -63,7 +63,7 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 	const sendProgressWithFetch = useCallback(
 		async (data: ProgressData): Promise<boolean> => {
 			try {
-				const response = await fetch(API.ENDPOINTS.PROGRESS, {
+				const response = await fetch(createApiUrl("/progress"), {
 					method: "PUT",
 					headers: {
 						"Content-Type": "application/json",
