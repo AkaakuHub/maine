@@ -1,24 +1,8 @@
 import { createReadStream, statSync } from "node:fs";
-import { promises as fs } from "node:fs";
-import { resolve } from "node:path";
-import {
-	BadRequestException,
-	Controller,
-	Get,
-	Logger,
-	NotFoundException,
-	Query,
-	Res,
-} from "@nestjs/common";
+import { Controller, Get, Logger, Query, Res } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
-
-interface FileValidation {
-	isValid: boolean;
-	fullPath: string;
-	exists: boolean;
-	error?: string;
-}
+import { findFileInVideoDirectories } from "../../libs/fileUtils";
 
 @ApiTags("getVideo")
 @Controller("getVideo")
@@ -42,32 +26,28 @@ export class GetVideoController {
 	) {
 		try {
 			if (!filePath) {
-				throw new BadRequestException("ファイルパスが必要です");
+				response.status(400);
+				return response.send("File path is required");
 			}
 
 			// セキュアなファイルパス検証（複数ディレクトリ対応）
-			const validation = await this.findFileInVideoDirectories(filePath);
+			const validation = await findFileInVideoDirectories(filePath);
 			if (!validation.isValid) {
 				this.logger.error("Invalid file path:", validation.error);
 
 				const statusCode =
-					validation.error === "動画ディレクトリが設定されていません"
-						? 500
-						: 403;
+					validation.error === "No video directories configured" ? 500 : 403;
 				response.status(statusCode);
-				return response.send(validation.error || "無効なファイルパスです");
+				return response.send(validation.error || "Invalid file path");
 			}
 
 			// ファイルが存在するか確認
 			if (!validation.exists) {
 				response.status(404);
-				return response.send("ファイルが見つかりません");
+				return response.send("File not found");
 			}
 
 			// ファイルをストリームとして返す
-			if (!validation.fullPath) {
-				throw new BadRequestException("ファイルパスの検証に失敗しました");
-			}
 			const stat = statSync(validation.fullPath);
 
 			// Range requestsのサポート（動画の途中再生など）
@@ -102,102 +82,8 @@ export class GetVideoController {
 			return fileStream.pipe(response);
 		} catch (error) {
 			this.logger.error("Error serving video file:", error);
-			if (
-				error instanceof BadRequestException ||
-				error instanceof NotFoundException
-			) {
-				throw error;
-			}
 			response.status(500);
 			return response.send("Internal server error");
-		}
-	}
-
-	private async findFileInVideoDirectories(
-		filePath: string,
-	): Promise<FileValidation> {
-		const videoDirectories = this.getVideoDirectories();
-
-		if (videoDirectories.length === 0) {
-			return {
-				isValid: false,
-				fullPath: "",
-				exists: false,
-				error: "動画ディレクトリが設定されていません",
-			};
-		}
-
-		// 各ディレクトリでファイルを検索
-		for (const videoDirectory of videoDirectories) {
-			// セキュリティチェック: パストラバーサル攻撃を防ぐ
-			const fullPath = this.sanitizePath(filePath, videoDirectory);
-
-			if (!fullPath) {
-				continue; // 無効なパスはスキップ
-			}
-
-			// ファイルの存在確認
-			const exists = await this.fileExists(fullPath);
-
-			if (exists) {
-				return {
-					isValid: true,
-					fullPath,
-					exists: true,
-				};
-			}
-		}
-
-		return {
-			isValid: false,
-			fullPath: "",
-			exists: false,
-			error: "設定された動画ディレクトリにファイルが見つかりません",
-		};
-	}
-
-	/**
-	 * 環境変数からビデオディレクトリのリストを取得
-	 */
-	private getVideoDirectories(): string[] {
-		const videoDirectories = process.env.VIDEO_DIRECTORY || "";
-
-		if (!videoDirectories) {
-			return [];
-		}
-
-		// カンマ区切りで分割し、空白をトリム
-		// 引用符も削除する（Windowsパス対応）
-		return videoDirectories
-			.split(",")
-			.map((dir) => dir.trim().replace(/^["']|["']$/g, "")) // 先頭と末尾の引用符を削除
-			.filter((dir) => dir.length > 0);
-	}
-
-	/**
-	 * 相対パスを安全に処理（ディレクトリトラバーサル攻撃防止）
-	 */
-	private sanitizePath(userPath: string, basePath: string): string | null {
-		const resolvedPath = resolve(basePath, userPath);
-		const normalizedBasePath = resolve(basePath);
-
-		// ベースパス外へのアクセスを防ぐ
-		if (!resolvedPath.startsWith(normalizedBasePath)) {
-			return null;
-		}
-
-		return resolvedPath;
-	}
-
-	/**
-	 * ファイルの存在確認
-	 */
-	private async fileExists(filePath: string): Promise<boolean> {
-		try {
-			const stats = await fs.stat(filePath);
-			return stats.isFile();
-		} catch {
-			return false;
 		}
 	}
 }
