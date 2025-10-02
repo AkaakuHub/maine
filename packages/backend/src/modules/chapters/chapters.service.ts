@@ -1,8 +1,7 @@
 import { exec } from "node:child_process";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { promisify } from "node:util";
 import { Injectable, Logger } from "@nestjs/common";
+import { findFileInVideoDirectories } from "@/libs/fileUtils";
 
 const execAsync = promisify(exec);
 
@@ -117,44 +116,7 @@ export class ChaptersService {
 	 */
 	async validateFileExists(filePath: string): Promise<FilePathValidation> {
 		try {
-			const videoDirectories = this.getVideoDirectories();
-
-			if (videoDirectories.length === 0) {
-				return {
-					isValid: false,
-					fullPath: "",
-					exists: false,
-					error: "No video directories configured",
-				};
-			}
-
-			// 各ディレクトリでファイルを検索
-			for (const videoDirectory of videoDirectories) {
-				// セキュリティチェック: パストラバーサル攻撃を防ぐ
-				const fullPath = this.sanitizePath(filePath, videoDirectory);
-
-				if (!fullPath) {
-					continue; // 無効なパスはスキップ
-				}
-
-				// ファイルの存在確認
-				const exists = await this.fileExists(fullPath);
-
-				if (exists) {
-					return {
-						isValid: true,
-						fullPath,
-						exists: true,
-					};
-				}
-			}
-
-			return {
-				isValid: false,
-				fullPath: "",
-				exists: false,
-				error: "File not found in any configured video directory",
-			};
+			return await findFileInVideoDirectories(filePath);
 		} catch (error) {
 			this.logger.error("Error validating file:", error);
 			return {
@@ -163,51 +125,6 @@ export class ChaptersService {
 				exists: false,
 				error: "ファイルパスの検証エラー",
 			};
-		}
-	}
-
-	/**
-	 * 動画ディレクトリ設定を取得
-	 */
-	private getVideoDirectories(): string[] {
-		const videoDirectories = process.env.VIDEO_DIRECTORIES || "";
-
-		if (!videoDirectories) {
-			return [];
-		}
-
-		// カンマ区切りで分割し、空白をトリム
-		// 引用符も削除する（Windowsパス対応）
-		return videoDirectories
-			.split(",")
-			.map((dir) => dir.trim().replace(/^["']|["']$/g, ""))
-			.filter((dir) => dir.length > 0);
-	}
-
-	/**
-	 * パスのセキュリティチェック
-	 */
-	private sanitizePath(userPath: string, basePath: string): string | null {
-		const resolvedPath = path.resolve(basePath, userPath);
-		const normalizedBasePath = path.resolve(basePath);
-
-		// ベースパス外へのアクセスを防ぐ
-		if (!resolvedPath.startsWith(normalizedBasePath)) {
-			return null;
-		}
-
-		return resolvedPath;
-	}
-
-	/**
-	 * ファイルの存在確認
-	 */
-	private async fileExists(filePath: string): Promise<boolean> {
-		try {
-			const stats = await fs.stat(filePath);
-			return stats.isFile();
-		} catch {
-			return false;
 		}
 	}
 }
