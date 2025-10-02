@@ -1,13 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useProgress } from "./useProgress";
 import { useBeforeUnload } from "./useBeforeUnload";
-
-interface VideoProgressData {
-	filePath: string;
-	watchTime?: number;
-	watchProgress?: number;
-	isLiked?: boolean;
-}
+import type { VideoProgressData } from "@/types/progress";
 
 interface UseVideoProgressOptions {
 	filePath: string;

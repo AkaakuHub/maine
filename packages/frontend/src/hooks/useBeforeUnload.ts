@@ -1,26 +1,20 @@
 import { useEffect, useCallback, useRef } from "react";
 import { createApiUrl } from "@/utils/api";
-
-interface ProgressData {
-	filePath: string;
-	watchTime?: number;
-	watchProgress?: number;
-	isLiked?: boolean;
-}
+import type { VideoProgressData } from "@/types/progress";
 
 interface UseBeforeUnloadOptions {
-	onBeforeUnload?: (data: ProgressData) => void;
+	onBeforeUnload?: (data: VideoProgressData) => void;
 	enableLocalStorageBackup?: boolean;
 }
 
 export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 	const { onBeforeUnload, enableLocalStorageBackup = true } = options;
-	const lastProgressDataRef = useRef<ProgressData | null>(null);
+	const lastProgressDataRef = useRef<VideoProgressData | null>(null);
 	const hasUnsavedChangesRef = useRef(false);
 
 	// 進捗データを更新する関数
 	const updateProgressData = useCallback(
-		(data: ProgressData) => {
+		(data: VideoProgressData) => {
 			lastProgressDataRef.current = data;
 			hasUnsavedChangesRef.current = true;
 
@@ -46,22 +40,25 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 	);
 
 	// sendBeacon APIで確実に進捗を送信する関数
-	const sendProgressWithBeacon = useCallback((data: ProgressData): boolean => {
-		try {
-			const blob = new Blob([JSON.stringify(data)], {
-				type: "application/json",
-			});
+	const sendProgressWithBeacon = useCallback(
+		(data: VideoProgressData): boolean => {
+			try {
+				const blob = new Blob([JSON.stringify(data)], {
+					type: "application/json",
+				});
 
-			return navigator.sendBeacon(createApiUrl("/progress"), blob);
-		} catch (error) {
-			console.error("Failed to send progress with sendBeacon:", error);
-			return false;
-		}
-	}, []);
+				return navigator.sendBeacon(createApiUrl("/progress"), blob);
+			} catch (error) {
+				console.error("Failed to send progress with sendBeacon:", error);
+				return false;
+			}
+		},
+		[],
+	);
 
 	// 通常のfetch APIで進捗を送信する関数（フォールバック）
 	const sendProgressWithFetch = useCallback(
-		async (data: ProgressData): Promise<boolean> => {
+		async (data: VideoProgressData): Promise<boolean> => {
 			try {
 				const response = await fetch(createApiUrl("/progress"), {
 					method: "PUT",
@@ -114,7 +111,7 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 	}, []);
 
 	// LocalStorageからバックアップを復元する関数
-	const restoreFromBackup = useCallback((): ProgressData | null => {
+	const restoreFromBackup = useCallback((): VideoProgressData | null => {
 		if (!enableLocalStorageBackup) return null;
 
 		try {
@@ -146,7 +143,11 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 			// 保存されていない変更がある場合は確認ダイアログを表示
 			if (hasUnsavedChangesRef.current) {
 				event.preventDefault();
-				event.returnValue = ""; // Chrome requires returnValue to be set
+				// Note: returnValue is deprecated but still needed for some browsers
+				if ("returnValue" in event) {
+					(event as BeforeUnloadEvent & { returnValue: string }).returnValue =
+						"";
+				}
 			}
 		};
 

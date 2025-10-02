@@ -1,21 +1,6 @@
 import { useState, useCallback } from "react";
 import { createApiUrl } from "@/utils/api";
-
-interface UpdateProgressParams {
-	filePath: string;
-	watchTime?: number;
-	watchProgress?: number;
-	isLiked?: boolean;
-}
-
-interface ProgressData {
-	filePath: string;
-	watchTime?: number | null;
-	watchProgress: number;
-	isLiked: boolean;
-	likedAt?: Date | null;
-	lastWatched?: Date | null;
-}
+import type { ProgressData, UpdateProgressParams } from "@/types/progress";
 
 interface UseProgressReturn {
 	updateProgress: (
