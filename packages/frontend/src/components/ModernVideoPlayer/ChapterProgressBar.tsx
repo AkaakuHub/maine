@@ -7,7 +7,10 @@ interface ChapterProgressBarProps {
 	currentTime: number;
 	chapters: VideoChapter[];
 	onSeek: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onSeekStart: () => void;
+	onSeekEnd: (time: number) => void;
 	getSeekStep: () => number;
+	isSeeking?: boolean;
 	className?: string;
 }
 
@@ -16,7 +19,10 @@ export default function ChapterProgressBar({
 	currentTime,
 	chapters,
 	onSeek,
+	onSeekStart,
+	onSeekEnd,
 	getSeekStep,
+	isSeeking = false,
 	className = "",
 }: ChapterProgressBarProps) {
 	const [hoveredChapter, setHoveredChapter] = useState<number | null>(null);
@@ -38,6 +44,17 @@ export default function ChapterProgressBar({
 	// range input の onChange ハンドラー
 	const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		onSeek(e);
+	};
+
+	// シーク開始ハンドラー
+	const handleSeekStart = () => {
+		onSeekStart();
+	};
+
+	// シーク終了ハンドラー
+	const handleSeekEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const time = Number.parseFloat(e.target.value);
+		onSeekEnd(time);
 		// シーク後は即座にフォーカスを外して、キーボードイベントを親に委ねる
 		e.target.blur();
 	};
@@ -60,7 +77,8 @@ export default function ChapterProgressBar({
 					{/* プログレスバー */}
 					<div
 						className={cn(
-							"absolute bg-primary rounded-lg transition-all duration-150",
+							"absolute bg-primary rounded-lg",
+							isSeeking ? "" : "transition-all duration-150",
 							isHovered ? "h-2 top-0.5" : "h-1 top-1",
 						)}
 						style={{ width: `${progress}%` }}
@@ -69,7 +87,8 @@ export default function ChapterProgressBar({
 					{/* プログレスバー右端の丸いつまみ */}
 					<div
 						className={cn(
-							"absolute bg-primary rounded-full shadow-lg transition-all duration-150 z-25",
+							"absolute bg-primary rounded-full shadow-lg z-25",
+							isSeeking ? "" : "transition-all duration-150",
 							isHovered ? "w-5 h-5 -top-1" : "w-3 h-3 top-0",
 						)}
 						style={{
@@ -86,9 +105,12 @@ export default function ChapterProgressBar({
 						step={getSeekStep()}
 						value={currentTime}
 						onChange={handleSeekChange}
+						onMouseDown={handleSeekStart}
+						onMouseUp={handleSeekEnd}
+						onTouchStart={handleSeekStart}
+						onTouchEnd={handleSeekEnd}
 						onMouseEnter={() => setIsHovered(true)}
 						onMouseLeave={() => setIsHovered(false)}
-						onMouseUp={(e) => e.currentTarget.blur()}
 						className="absolute inset-0 w-full h-3 bg-transparent appearance-none cursor-pointer z-30 opacity-0"
 					/>
 				</div>
@@ -164,7 +186,8 @@ export default function ChapterProgressBar({
 						<div
 							key={`progress-${chapter.id}`}
 							className={cn(
-								"absolute bg-primary transition-all duration-150",
+								"absolute bg-primary",
+								isSeeking ? "" : "transition-all duration-150",
 								isHovered ? "h-2 top-0.5" : "h-1 top-1",
 								index === 0 ? "rounded-l-lg" : "",
 								index === chapters.length - 1 ? "rounded-r-lg" : "",
@@ -187,7 +210,8 @@ export default function ChapterProgressBar({
 							<div
 								key={`divider-${chapter.id}`}
 								className={cn(
-									"absolute w-0.5 bg-text-secondary/60 rounded-full transition-all duration-150",
+									"absolute w-0.5 bg-text-secondary/60 rounded-full",
+									isSeeking ? "" : "transition-all duration-150",
 									isHovered ? "h-2 top-0.5" : "h-1 top-1",
 								)}
 								style={{
@@ -202,7 +226,8 @@ export default function ChapterProgressBar({
 				{/* プログレスバー右端の丸いつまみ */}
 				<div
 					className={cn(
-						"absolute bg-primary rounded-full shadow-lg transition-all duration-150 z-25",
+						"absolute bg-primary rounded-full shadow-lg z-25",
+						isSeeking ? "" : "transition-all duration-150",
 						currentChapter && hoveredChapter === currentChapter.id
 							? "w-5 h-5 -top-1"
 							: "w-3 h-3 top-0",
@@ -221,6 +246,10 @@ export default function ChapterProgressBar({
 					step={getSeekStep()}
 					value={currentTime}
 					onChange={handleSeekChange}
+					onMouseDown={handleSeekStart}
+					onMouseUp={handleSeekEnd}
+					onTouchStart={handleSeekStart}
+					onTouchEnd={handleSeekEnd}
 					onMouseMove={(e) => {
 						const rect = e.currentTarget.getBoundingClientRect();
 						const x = e.clientX - rect.left;
@@ -237,7 +266,6 @@ export default function ChapterProgressBar({
 						setHoveredChapter(hoveredChapterData?.id ?? null);
 					}}
 					onMouseLeave={() => setHoveredChapter(null)}
-					onMouseUp={(e) => e.currentTarget.blur()}
 					className="absolute inset-0 w-full h-3 bg-transparent appearance-none cursor-pointer z-30 opacity-0"
 				/>
 			</div>

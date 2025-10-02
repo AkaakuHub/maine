@@ -61,8 +61,11 @@ const ModernVideoPlayer = ({
 		currentTime,
 		duration,
 		isBuffering,
+		isSeeking,
 		togglePlay,
 		handleSeek,
+		handleSeekStart,
+		handleSeekEnd,
 		getSeekStep,
 	} = useVideoElement({
 		videoRef,
@@ -277,6 +280,9 @@ const ModernVideoPlayer = ({
 				chapters={chapters}
 				getSeekStep={getSeekStep}
 				onSeek={handleSeek}
+				onSeekStart={handleSeekStart}
+				onSeekEnd={handleSeekEnd}
+				isSeeking={isSeeking}
 				onSeekToTime={seekToTime}
 				onTogglePlay={togglePlay}
 				onSkipBackward={skipBackward}

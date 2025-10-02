@@ -36,6 +36,9 @@ interface ControlsOverlayProps {
 	chapters: VideoChapter[];
 	getSeekStep: () => number;
 	onSeek: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onSeekStart: () => void;
+	onSeekEnd: (time: number) => void;
+	isSeeking?: boolean;
 	onSeekToTime: (time: number) => void;
 	onTogglePlay: () => void;
 	onSkipBackward: () => void;
@@ -66,6 +69,9 @@ export default function ControlsOverlay({
 	chapters,
 	getSeekStep,
 	onSeek,
+	onSeekStart,
+	onSeekEnd,
+	isSeeking,
 	onSeekToTime,
 	onTogglePlay,
 	onSkipBackward,
@@ -94,7 +100,10 @@ export default function ControlsOverlay({
 				currentTime={currentTime}
 				chapters={chapters}
 				onSeek={onSeek}
+				onSeekStart={onSeekStart}
+				onSeekEnd={onSeekEnd}
 				getSeekStep={getSeekStep}
+				isSeeking={isSeeking}
 			/>
 
 			{/* 下部コントロール */}

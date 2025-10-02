@@ -15,11 +15,11 @@ interface VideoElementState {
 	currentTime: number;
 	duration: number;
 	isBuffering: boolean;
-}
-
-interface VideoElementHandlers {
+	isSeeking: boolean;
 	togglePlay: () => void;
 	handleSeek: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	handleSeekStart: () => void;
+	handleSeekEnd: (time: number) => void;
 	getSeekStep: () => number;
 }
 
@@ -30,11 +30,13 @@ export function useVideoElement({
 	playbackRate,
 	isMuted,
 	onTimeUpdate,
-}: UseVideoElementProps): VideoElementState & VideoElementHandlers {
+}: UseVideoElementProps): VideoElementState {
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
 	const [isBuffering, setIsBuffering] = useState(false);
+	const [isSeeking, setIsSeeking] = useState(false);
+	const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
 
 	// 再生/一時停止
 	const togglePlay = useCallback(() => {
@@ -49,15 +51,45 @@ export function useVideoElement({
 		}
 	}, [videoRef]);
 
-	// シーク
-	const handleSeek = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
+	// シーク開始
+	const handleSeekStart = useCallback(() => {
+		if (!videoRef.current) return;
+
+		setIsSeeking(true);
+		// 再生中だった場合、一時停止して黒い暗転を防ぐ
+		if (isPlaying) {
+			setWasPlayingBeforeSeek(true);
+			videoRef.current.pause();
+		} else {
+			setWasPlayingBeforeSeek(false);
+		}
+	}, [videoRef, isPlaying]);
+
+	// シーク中（プレビュー表示のみ）
+	const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		const time = Number.parseFloat(e.target.value);
+		// シーク中は表示用の時間だけ更新
+		setCurrentTime(time);
+	}, []);
+
+	// シーク終了（実際の動画位置を更新）
+	const handleSeekEnd = useCallback(
+		(time: number) => {
 			if (!videoRef.current) return;
-			const time = Number.parseFloat(e.target.value);
+
+			// 実際に動画の再生位置を更新
 			videoRef.current.currentTime = time;
-			setCurrentTime(time);
+			setIsSeeking(false);
+
+			// シーク前に再生していた場合は再開
+			if (wasPlayingBeforeSeek) {
+				videoRef.current.play().catch(() => {
+					// ブラウザの自動再生ポリシーにより失敗する場合があります
+				});
+				setWasPlayingBeforeSeek(false);
+			}
 		},
-		[videoRef],
+		[videoRef, wasPlayingBeforeSeek],
 	);
 
 	// 動画の長さに応じてシークバーのstep値を計算
@@ -80,7 +112,10 @@ export function useVideoElement({
 
 		const handleTimeUpdate = () => {
 			const current = video.currentTime;
-			setCurrentTime(current);
+			// シーク中以外は現在時刻を更新
+			if (!isSeeking) {
+				setCurrentTime(current);
+			}
 
 			if (current >= video.duration) {
 				setIsPlaying(false);
@@ -126,15 +161,26 @@ export function useVideoElement({
 			video.removeEventListener("waiting", handleWaiting);
 			video.removeEventListener("canplay", handleCanPlay);
 		};
-	}, [videoRef, onTimeUpdate, initialTime, playbackRate, volume, isMuted]);
+	}, [
+		videoRef,
+		onTimeUpdate,
+		initialTime,
+		playbackRate,
+		volume,
+		isMuted,
+		isSeeking,
+	]);
 
 	return {
 		isPlaying,
 		currentTime,
 		duration,
 		isBuffering,
+		isSeeking,
 		togglePlay,
 		handleSeek,
+		handleSeekStart,
+		handleSeekEnd,
 		getSeekStep,
 	};
 }
