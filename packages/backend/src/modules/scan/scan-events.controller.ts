@@ -48,7 +48,7 @@ export class SseController {
 					type: "connected",
 					connectionId,
 					timestamp: new Date().toISOString(),
-					message: "SSE connection established",
+					message: "SSE接続が確立されました",
 					activeConnections: sseStore.getConnectionCount(),
 				})}\n\n`;
 				controller.enqueue(encoder.encode(connectMessage));

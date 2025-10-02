@@ -12,7 +12,7 @@ export class ProgressService {
 			if (!filePath) {
 				return {
 					success: false,
-					error: "File path is required",
+					error: "ファイルパスが必要です",
 				};
 			}
 
@@ -55,7 +55,7 @@ export class ProgressService {
 			this.logger.error("Error fetching video progress:", error);
 			return {
 				success: false,
-				error: "Failed to fetch video progress",
+				error: "動画進捗の取得に失敗しました",
 			};
 		}
 	}
@@ -74,7 +74,7 @@ export class ProgressService {
 			if (!filePath) {
 				return {
 					success: false,
-					error: "File path is required",
+					error: "ファイルパスが必要です",
 				};
 			}
 
@@ -142,7 +142,7 @@ export class ProgressService {
 			this.logger.error("Error updating video:", error);
 			return {
 				success: false,
-				error: "Failed to update video",
+				error: "動画の更新に失敗しました",
 			};
 		}
 	}

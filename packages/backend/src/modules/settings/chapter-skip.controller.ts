@@ -62,19 +62,19 @@ export class ChapterSkipController {
 			// バリデーション
 			if (!body.pattern || typeof body.pattern !== "string") {
 				throw new BadRequestException({
-					error: "Pattern is required and must be a string",
+					error: "パターンが必要で文字列である必要があります",
 				});
 			}
 
 			if (body.pattern.length < 1) {
 				throw new BadRequestException({
-					error: "Pattern must be at least 1 character long",
+					error: "パターンは1文字以上である必要があります",
 				});
 			}
 
 			if (body.pattern.length > 200) {
 				throw new BadRequestException({
-					error: "Pattern must be less than 200 characters",
+					error: "パターンは200文字未満である必要があります",
 				});
 			}
 
@@ -113,26 +113,26 @@ export class ChapterSkipController {
 			if (body.pattern !== undefined) {
 				if (typeof body.pattern !== "string") {
 					throw new BadRequestException({
-						error: "Pattern must be a string",
+						error: "パターンは文字列である必要があります",
 					});
 				}
 
 				if (body.pattern.length < 1) {
 					throw new BadRequestException({
-						error: "Pattern must be at least 1 character long",
+						error: "パターンは1文字以上である必要があります",
 					});
 				}
 
 				if (body.pattern.length > 200) {
 					throw new BadRequestException({
-						error: "Pattern must be less than 200 characters",
+						error: "パターンは200文字未満である必要があります",
 					});
 				}
 			}
 
 			if (body.enabled !== undefined && typeof body.enabled !== "boolean") {
 				throw new BadRequestException({
-					error: "Enabled must be a boolean",
+					error: "有効フラグはboolean型である必要があります",
 				});
 			}
 

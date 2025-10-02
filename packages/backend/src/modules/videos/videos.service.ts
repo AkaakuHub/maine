@@ -60,9 +60,7 @@ export class VideosService {
 				success: true,
 				videos: videos.map(this.transformVideoData),
 				totalFound: videos.length,
-				message: query
-					? `Found ${videos.length} videos matching "${query}"`
-					: `Found ${videos.length} videos`,
+				message: `${videos.length}件の動画が見つかりました`,
 			};
 		} catch (error) {
 			this.logger.error("Error searching videos:", error);
@@ -70,8 +68,8 @@ export class VideosService {
 				success: false,
 				videos: [],
 				totalFound: 0,
-				message: "Failed to search videos",
-				error: error instanceof Error ? error.message : "Unknown error",
+				message: "動画の検索に失敗しました",
+				error: error instanceof Error ? error.message : "不明なエラー",
 			};
 		}
 	}

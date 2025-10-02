@@ -23,8 +23,8 @@ export class ScanSettingsController {
 			this.logger.error("Failed to get scan settings:", error);
 			return {
 				success: false,
-				error: "Failed to get scan settings",
-				details: error instanceof Error ? error.message : "Unknown error",
+				error: "スキャン設定の取得に失敗しました",
+				details: error instanceof Error ? error.message : "不明なエラー",
 			};
 		}
 	}
@@ -40,15 +40,15 @@ export class ScanSettingsController {
 
 			return {
 				success: true,
-				message: "Scan settings updated successfully",
+				message: "スキャン設定が正常に更新されました",
 				settings: result,
 			};
 		} catch (error) {
 			this.logger.error("Failed to update scan settings:", error);
 			return {
 				success: false,
-				error: "Failed to update scan settings",
-				details: error instanceof Error ? error.message : "Unknown error",
+				error: "スキャン設定の更新に失敗しました",
+				details: error instanceof Error ? error.message : "不明なエラー",
 			};
 		}
 	}
@@ -64,15 +64,15 @@ export class ScanSettingsController {
 
 			return {
 				success: true,
-				message: "Scan settings reset to default",
+				message: "スキャン設定がデフォルトにリセットされました",
 				settings: defaultSettings,
 			};
 		} catch (error) {
 			this.logger.error("Failed to reset scan settings:", error);
 			return {
 				success: false,
-				error: "Failed to reset scan settings",
-				details: error instanceof Error ? error.message : "Unknown error",
+				error: "スキャン設定のリセットに失敗しました",
+				details: error instanceof Error ? error.message : "不明なエラー",
 			};
 		}
 	}

@@ -76,7 +76,7 @@ export class ChaptersService {
 			this.logger.log(`Found ${chapters.length} chapters`);
 			return chapters;
 		} catch (error) {
-			this.logger.error("Failed to extract video chapters:", error);
+		this.logger.error("Failed to extract video chapters:", error);
 			return [];
 		}
 	}
@@ -161,7 +161,7 @@ export class ChaptersService {
 				isValid: false,
 				fullPath: "",
 				exists: false,
-				error: "Error validating file path",
+				error: "ファイルパスの検証エラー",
 			};
 		}
 	}

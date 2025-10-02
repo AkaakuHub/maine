@@ -172,7 +172,7 @@ export class VideoDetailController {
 			return {
 				isValid: false,
 				exists: false,
-				error: "Error validating file path",
+				error: "ファイルパスの検証エラー",
 			};
 		}
 	}

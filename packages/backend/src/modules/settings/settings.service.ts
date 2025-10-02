@@ -28,7 +28,7 @@ export class SettingsService {
 			this.logger.error("Failed to fetch chapter skip rules", error);
 			return {
 				success: false,
-				error: "Failed to fetch chapter skip rules",
+				error: "チャプタースキップルールの取得に失敗しました",
 				rules: [],
 			};
 		}
@@ -46,7 +46,7 @@ export class SettingsService {
 			if (existingRule) {
 				return {
 					success: false,
-					error: "Pattern already exists",
+					error: "パターンは既に存在します",
 					rule: null,
 				};
 			}
@@ -63,7 +63,7 @@ export class SettingsService {
 			this.logger.error("Failed to create chapter skip rule", error);
 			return {
 				success: false,
-				error: "Failed to create chapter skip rule",
+				error: "チャプタースキップルールの作成に失敗しました",
 				rule: null,
 			};
 		}
@@ -84,7 +84,7 @@ export class SettingsService {
 				if (existingRule) {
 					return {
 						success: false,
-						error: "Pattern already exists",
+						error: "パターンは既に存在します",
 						rule: null,
 					};
 				}
@@ -116,7 +116,7 @@ export class SettingsService {
 			this.logger.error(`Failed to update chapter skip rule: ${id}`, error);
 			return {
 				success: false,
-				error: "Failed to update chapter skip rule",
+				error: "チャプタースキップルールの更新に失敗しました",
 				rule: null,
 			};
 		}
@@ -133,7 +133,7 @@ export class SettingsService {
 			this.logger.error(`Failed to delete chapter skip rule: ${id}`, error);
 			return {
 				success: false,
-				error: "Failed to delete chapter skip rule",
+				error: "チャプタースキップルールの削除に失敗しました",
 			};
 		}
 	}
@@ -160,7 +160,7 @@ export class SettingsService {
 			this.logger.error("Failed to fetch user settings", error);
 			return {
 				success: false,
-				error: "Failed to fetch user settings",
+				error: "ユーザー設定の取得に失敗しました",
 				chapterSkipEnabled: true,
 				skipNotificationShow: true,
 			};
@@ -187,7 +187,7 @@ export class SettingsService {
 			this.logger.error("Failed to update user settings", error);
 			return {
 				success: false,
-				error: "Failed to update user settings",
+				error: "ユーザー設定の更新に失敗しました",
 				chapterSkipEnabled: true,
 				skipNotificationShow: true,
 			};

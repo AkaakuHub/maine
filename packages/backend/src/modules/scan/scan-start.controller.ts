@@ -28,7 +28,7 @@ export class ScanStartController {
 			if (status.isUpdating) {
 				response.status(409); // Conflict
 				return {
-					error: "Scan already in progress",
+					error: "スキャンは既に実行中です",
 					message: "スキャンは既に実行中です",
 					progress: status.progress,
 				};
@@ -57,7 +57,7 @@ export class ScanStartController {
 
 			response.status(500);
 			return {
-				error: "Failed to start scan",
+				error: "スキャンの開始に失敗しました",
 				message: "スキャンの開始に失敗しました",
 				details: error instanceof Error ? error.message : String(error),
 			};
@@ -80,7 +80,7 @@ export class ScanStartController {
 			console.error("Scan status API error:", error);
 
 			return {
-				error: "Failed to get scan status",
+				error: "スキャン状態の取得に失敗しました",
 				details: error instanceof Error ? error.message : String(error),
 			};
 		}
@@ -144,7 +144,7 @@ export class ScanStartController {
 			// エラー通知
 			sseStore.broadcast({
 				type: "error",
-				message: `スキャンエラー: ${error instanceof Error ? error.message : "Unknown error"}`,
+				message: `スキャンエラー: ${error instanceof Error ? error.message : "不明なエラー"}`,
 				timestamp: new Date().toISOString(),
 			});
 

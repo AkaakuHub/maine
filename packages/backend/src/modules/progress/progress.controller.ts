@@ -37,7 +37,7 @@ export class ProgressController {
 					throw new BadRequestException({ error: result.error });
 				}
 				throw new BadRequestException({
-					error: result.error || "Failed to fetch video progress",
+					error: result.error || "動画進捗の取得に失敗しました",
 				});
 			}
 
@@ -69,7 +69,7 @@ export class ProgressController {
 					throw new BadRequestException({ error: result.error });
 				}
 				throw new BadRequestException({
-					error: result.error || "Failed to update video",
+					error: result.error || "動画の更新に失敗しました",
 				});
 			}
 

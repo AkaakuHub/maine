@@ -61,7 +61,7 @@ export class ScheduleStatusController {
 			return {
 				success: false,
 				error: "スケジューラー状態の取得に失敗しました",
-				details: error instanceof Error ? error.message : "Unknown error",
+				details: error instanceof Error ? error.message : "不明なエラー",
 			};
 		}
 	}

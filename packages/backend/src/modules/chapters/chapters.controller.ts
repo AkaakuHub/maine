@@ -41,7 +41,7 @@ export class ChaptersController {
 		try {
 			if (!filePath) {
 				throw new BadRequestException({
-					error: "File path is required",
+					error: "ファイルパスが必要です",
 				});
 			}
 
@@ -52,7 +52,7 @@ export class ChaptersController {
 				await this.chaptersService.validateFileExists(decodedPath);
 			if (!fileValidation.isValid || !fileValidation.exists) {
 				throw new BadRequestException({
-					error: "Video file not found",
+					error: "動画ファイルが見つかりません",
 				});
 			}
 
@@ -90,7 +90,7 @@ export class ChaptersController {
 				throw error;
 			}
 			throw new BadRequestException({
-				error: "Failed to extract video chapters",
+				error: "動画チャプターの抽出に失敗しました",
 			});
 		}
 	}

@@ -83,7 +83,7 @@ export class ScheduleController {
 			return {
 				success: false,
 				error: "スケジュール設定の取得に失敗しました",
-				details: error instanceof Error ? error.message : "Unknown error",
+				details: error instanceof Error ? error.message : "不明なエラー",
 			};
 		}
 	}
@@ -123,7 +123,7 @@ export class ScheduleController {
 			return {
 				success: false,
 				error: "スケジュール設定の保存に失敗しました",
-				details: error instanceof Error ? error.message : "Unknown error",
+				details: error instanceof Error ? error.message : "不明なエラー",
 			};
 		}
 	}
@@ -159,7 +159,7 @@ export class ScheduleController {
 			return {
 				success: false,
 				error: "スケジュールの無効化に失敗しました",
-				details: error instanceof Error ? error.message : "Unknown error",
+				details: error instanceof Error ? error.message : "不明なエラー",
 			};
 		}
 	}

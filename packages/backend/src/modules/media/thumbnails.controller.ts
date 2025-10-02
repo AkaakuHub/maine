@@ -22,7 +22,7 @@ export class ThumbnailsController {
 			// セキュリティ: パストラバーサル攻撃を防ぐ
 			if (thumbnailPath.includes("..") || thumbnailPath.includes("~")) {
 				response.status(400);
-				return { error: "Invalid path" };
+				return { error: "無効なパスです" };
 			}
 
 			// サムネイルファイルの絶対パス（バックエンド専用ディレクトリ）
@@ -36,13 +36,13 @@ export class ThumbnailsController {
 			// ファイル存在チェック
 			if (!existsSync(fullThumbnailPath)) {
 				response.status(404);
-				return { error: "Thumbnail not found" };
+				return { error: "サムネイルが見つかりません" };
 			}
 
 			// WebPファイルかチェック
 			if (!fullThumbnailPath.toLowerCase().endsWith(".webp")) {
 				response.status(400);
-				return { error: "Only WebP thumbnails are supported" };
+				return { error: "WebP形式のサムネイルのみサポートしています" };
 			}
 
 			// ファイル読み取り
@@ -66,7 +66,7 @@ export class ThumbnailsController {
 
 			response.status(500);
 			return {
-				error: "Failed to serve thumbnail",
+				error: "サムネイルの配信に失敗しました",
 				details: error instanceof Error ? error.message : String(error),
 			};
 		}

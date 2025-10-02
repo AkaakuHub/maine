@@ -74,13 +74,13 @@ export class ScanService {
 				if (this.currentScan.isScanning) {
 					this.currentScan.isScanning = false;
 					this.currentScan.message = "スキャンがキャンセルされました";
-					return { message: "Scan cancelled successfully" };
+					return { message: "スキャンが正常にキャンセルされました" };
 				}
 				break;
 			case "pause":
 				if (this.currentScan.isScanning) {
 					this.currentScan.message = "スキャンが一時停止されました";
-					return { message: "Scan paused successfully" };
+					return { message: "スキャンが正常に一時停止されました" };
 				}
 				break;
 			case "resume":
@@ -88,7 +88,7 @@ export class ScanService {
 					this.currentScan.isScanning = true;
 					this.currentScan.message = "スキャンが再開されました";
 					// 実際の再開ロジックは後で実装
-					return { message: "Scan resumed successfully" };
+					return { message: "スキャンが正常に再開されました" };
 				}
 				break;
 		}

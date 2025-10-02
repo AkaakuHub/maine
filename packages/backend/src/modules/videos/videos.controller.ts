@@ -102,7 +102,7 @@ export class VideosController {
 			if (!video) {
 				throw new BadRequestException({
 					error: "Video not found",
-					details: `Video with path "${filePath}" not found`,
+					details: `Video with file path "${filePath}" not found`,
 				});
 			}
 

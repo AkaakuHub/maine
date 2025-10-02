@@ -42,7 +42,7 @@ export class VideoController {
 	) {
 		try {
 			if (!filePath) {
-				throw new BadRequestException("File path is required");
+				throw new BadRequestException("ファイルパスが必要です");
 			}
 
 			// セキュアなファイルパス検証（複数ディレクトリ対応）
@@ -51,20 +51,20 @@ export class VideoController {
 				this.logger.error("Invalid file path:", validation.error);
 
 				const statusCode =
-					validation.error === "No video directories configured" ? 500 : 403;
+					validation.error === "動画ディレクトリが設定されていません" ? 500 : 403;
 				response.status(statusCode);
-				return response.send(validation.error || "Invalid file path");
+				return response.send(validation.error || "無効なファイルパスです");
 			}
 
 			// ファイルが存在するか確認
 			if (!validation.exists) {
 				response.status(404);
-				return response.send("File not found");
+				return response.send("ファイルが見つかりません");
 			}
 
 			// ファイルをストリームとして返す
 			if (!validation.fullPath) {
-				throw new BadRequestException("File path validation failed");
+				throw new BadRequestException("ファイルパスの検証に失敗しました");
 			}
 			const stat = statSync(validation.fullPath);
 
@@ -121,7 +121,7 @@ export class VideoController {
 				isValid: false,
 				fullPath: "",
 				exists: false,
-				error: "No video directories configured",
+				error: "動画ディレクトリが設定されていません",
 			};
 		}
 
@@ -150,7 +150,7 @@ export class VideoController {
 			isValid: false,
 			fullPath: "",
 			exists: false,
-			error: "File not found in any configured video directory",
+			error: "設定された動画ディレクトリにファイルが見つかりません",
 		};
 	}
 
