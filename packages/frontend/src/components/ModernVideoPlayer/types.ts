@@ -23,6 +23,7 @@ export interface DocumentWithFullscreen extends Document {
 export interface ModernVideoPlayerProps {
 	src: string;
 	title?: string;
+	thumbnailPath?: string;
 	onBack?: () => void;
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
 	initialTime?: number;

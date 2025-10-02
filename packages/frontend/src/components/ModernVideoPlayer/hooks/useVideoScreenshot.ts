@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { formatDuration } from "@/libs/utils";
 import type { HTMLVideoElementWithFullscreen } from "../types";
 
@@ -7,10 +7,6 @@ interface UseVideoScreenshotProps {
 	autoDownloadScreenshot: boolean;
 	title?: string;
 	currentTime: number;
-}
-
-interface VideoScreenshotState {
-	thumbnailUrl: string | null;
 }
 
 interface VideoScreenshotHandlers {
@@ -22,85 +18,7 @@ export function useVideoScreenshot({
 	autoDownloadScreenshot,
 	title,
 	currentTime,
-}: UseVideoScreenshotProps): VideoScreenshotState & VideoScreenshotHandlers {
-	const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
-
-	// 動画の特定位置のフレームをキャプチャしてサムネイルを生成
-	const generateVideoThumbnail = useCallback(
-		(timePosition = 0.01): Promise<string | null> => {
-			return new Promise((resolve) => {
-				if (!videoRef.current || videoRef.current.readyState < 2) {
-					console.warn("Video not ready for thumbnail capture");
-					resolve(null);
-					return;
-				}
-
-				const video = videoRef.current;
-				const canvas = document.createElement("canvas");
-				const ctx = canvas.getContext("2d");
-
-				if (!ctx) {
-					console.error("Canvas context not available");
-					resolve(null);
-					return;
-				}
-
-				// キャンバスのサイズを動画に合わせる
-				canvas.width = video.videoWidth || 640;
-				canvas.height = video.videoHeight || 360;
-
-				// 現在の再生位置を保存
-				const originalTime = video.currentTime;
-				const originalPaused = video.paused;
-
-				// サムネイル用の時間位置に移動（デフォルトは動画の1%の位置）
-				const targetTime = Math.min(
-					video.duration * timePosition,
-					video.duration - 0.1, // 最後から0.1秒前まで
-				);
-
-				const onSeeked = () => {
-					try {
-						// フレームをキャンバスに描画
-						ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-						// DataURLとして画像を取得
-						const thumbnailDataUrl = canvas.toDataURL("image/jpeg", 0.8);
-
-						// 元の位置に戻す
-						video.currentTime = originalTime;
-						if (!originalPaused) {
-							video.play().catch(() => {
-								// エラーを無視
-							});
-						}
-
-						resolve(thumbnailDataUrl);
-					} catch (error) {
-						console.error("Error generating thumbnail:", error);
-						// 元の位置に戻す
-						video.currentTime = originalTime;
-						if (!originalPaused) {
-							video.play().catch(() => {
-								// エラーを無視
-							});
-						}
-						resolve(null);
-					} finally {
-						video.removeEventListener("seeked", onSeeked);
-					}
-				};
-
-				// seekedイベントをリスニング
-				video.addEventListener("seeked", onSeeked, { once: true });
-
-				// 指定位置にシーク
-				video.currentTime = targetTime;
-			});
-		},
-		[videoRef],
-	);
-
+}: UseVideoScreenshotProps): VideoScreenshotHandlers {
 	// スクリーンショット取得機能（現在のフレーム）
 	const takeScreenshot = useCallback(async () => {
 		if (!videoRef.current || videoRef.current.readyState < 2) {
@@ -170,33 +88,7 @@ export function useVideoScreenshot({
 		}
 	}, [videoRef, autoDownloadScreenshot, title, currentTime]);
 
-	// 動画のメタデータが読み込まれた際にサムネイルを生成
-	useEffect(() => {
-		const video = videoRef.current;
-		if (!video) return;
-
-		const handleLoadedMetadata = async () => {
-			// サムネイルを生成（動画の1%の位置）
-			const thumbnail = await generateVideoThumbnail(0.01);
-			if (thumbnail) {
-				setThumbnailUrl(thumbnail);
-			}
-		};
-
-		// メタデータが既に読み込まれている場合は即座に実行
-		if (video.readyState >= 1) {
-			handleLoadedMetadata();
-		} else {
-			video.addEventListener("loadedmetadata", handleLoadedMetadata);
-		}
-
-		return () => {
-			video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-		};
-	}, [videoRef, generateVideoThumbnail]);
-
 	return {
-		thumbnailUrl,
 		takeScreenshot,
 	};
 }

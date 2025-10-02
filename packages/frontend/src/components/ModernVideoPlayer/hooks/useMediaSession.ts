@@ -4,7 +4,7 @@ import type { HTMLVideoElementWithFullscreen } from "../types";
 interface UseMediaSessionProps {
 	title?: string;
 	src: string;
-	thumbnailUrl: string | null;
+	thumbnailPath?: string;
 	duration: number;
 	currentTime: number;
 	playbackRate: number;
@@ -17,7 +17,7 @@ interface UseMediaSessionProps {
 export function useMediaSession({
 	title,
 	src,
-	thumbnailUrl,
+	thumbnailPath,
 	duration,
 	currentTime,
 	playbackRate,
@@ -85,10 +85,10 @@ export function useMediaSession({
 					title || src.split("/").pop()?.split(".")[0] || "無題の動画";
 
 				// サムネイルの有無に応じてartworkを設定
-				const artwork = thumbnailUrl
+				const artwork = thumbnailPath
 					? [
 							{
-								src: thumbnailUrl,
+								src: thumbnailPath,
 								sizes: "640x360",
 								type: "image/jpeg",
 							},
@@ -112,7 +112,7 @@ export function useMediaSession({
 				// Media Session metadata update failed
 			}
 		}
-	}, [thumbnailUrl, title, src]);
+	}, [thumbnailPath, title, src]);
 
 	// Media Session API の位置情報を更新
 	useEffect(() => {

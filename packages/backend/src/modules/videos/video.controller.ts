@@ -89,7 +89,8 @@ export class VideoController {
 					"Content-Length": chunksize.toString(),
 					"Content-Type": "video/mp4",
 					"Cache-Control": "public, max-age=31536000",
-					"Access-Control-Allow-Origin": "*",
+					"Access-Control-Allow-Origin": "http://localhost:3000",
+					"Access-Control-Allow-Credentials": "true",
 				});
 
 				// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
@@ -119,7 +120,8 @@ export class VideoController {
 				"Content-Type": "video/mp4",
 				"Accept-Ranges": "bytes",
 				"Cache-Control": "public, max-age=31536000",
-				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Origin": "http://localhost:3000",
+				"Access-Control-Allow-Credentials": "true",
 			});
 
 			// ダウンロードモードの場合はContent-Dispositionヘッダーを追加

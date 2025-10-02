@@ -6,10 +6,12 @@ import VideoInfo from "./VideoInfo";
 import RelatedVideos from "./RelatedVideos";
 import HelpModal from "@/components/HelpModal";
 import type { VideoInfoType } from "@/types/VideoInfo";
+import type { VideoFileData } from "@/type";
 
 interface ResponsiveVideoLayoutProps {
 	videoSrc: string;
 	videoInfo: VideoInfoType;
+	videoData: VideoFileData;
 	onBack: () => void;
 	isLiked: boolean;
 	isInWatchlist: boolean;
@@ -26,6 +28,7 @@ interface ResponsiveVideoLayoutProps {
 export default function ResponsiveVideoLayout({
 	videoSrc,
 	videoInfo,
+	videoData,
 	onBack,
 	isLiked,
 	isInWatchlist,
@@ -67,6 +70,7 @@ export default function ResponsiveVideoLayout({
 						<ModernVideoPlayer
 							src={videoSrc}
 							title={videoInfo.fullTitle}
+							thumbnailPath={videoData?.thumbnailPath}
 							onBack={onBack}
 							onTimeUpdate={onTimeUpdate}
 							initialTime={initialTime}

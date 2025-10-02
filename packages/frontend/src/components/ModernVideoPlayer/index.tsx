@@ -29,6 +29,7 @@ import { useMediaSession } from "./hooks/useMediaSession";
 const ModernVideoPlayer = ({
 	src,
 	title,
+	thumbnailPath,
 	onTimeUpdate,
 	initialTime = 0,
 	className = "",
@@ -97,7 +98,7 @@ const ModernVideoPlayer = ({
 		containerRef,
 	});
 
-	const { thumbnailUrl, takeScreenshot } = useVideoScreenshot({
+	const { takeScreenshot } = useVideoScreenshot({
 		videoRef,
 		autoDownloadScreenshot,
 		title,
@@ -174,7 +175,7 @@ const ModernVideoPlayer = ({
 	useMediaSession({
 		title,
 		src,
-		thumbnailUrl,
+		thumbnailPath,
 		duration,
 		currentTime,
 		playbackRate,

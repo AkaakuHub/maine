@@ -99,7 +99,7 @@ export default function PlayPage() {
 		);
 	}
 
-	if (isLoading || !videoSrc) {
+	if (isLoading || !videoSrc || !videoData) {
 		return <LoadingScreen />;
 	}
 
@@ -117,6 +117,7 @@ export default function PlayPage() {
 			<ResponsiveVideoLayout
 				videoSrc={videoSrc}
 				videoInfo={videoInfo}
+				videoData={videoData}
 				onBack={handleGoBack}
 				isLiked={isLiked}
 				isInWatchlist={isInWatchlist}
