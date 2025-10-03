@@ -56,6 +56,14 @@ pre-commit:
         - merge
         - rebase
 
+    format-vr:
+      glob: "packages/vr/Assets/Scripts/**/*.cs"
+      run: cd packages/vr && dotnet csharpier .
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+
 commit-msg:
   skip: []
   parallel: true
