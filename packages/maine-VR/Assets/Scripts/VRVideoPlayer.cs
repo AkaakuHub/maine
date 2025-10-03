@@ -94,7 +94,84 @@ public class VRVideoPlayer : MonoBehaviour
 
     private void Start()
     {
+        CleanupTempDirectory();
         InitializeVideoPlayer();
+    }
+
+    private void CleanupTempDirectory()
+    {
+        try
+        {
+            string tempDir = Path.Combine(Application.persistentDataPath, "temp");
+
+            if (Directory.Exists(tempDir))
+            {
+                Debug.Log($"[VRVideoPlayer] Cleaning up temporary directory: {tempDir}");
+
+                string[] tempFiles = Directory.GetFiles(tempDir, "streaming_video_*.mp4");
+                int cleanedCount = 0;
+
+                foreach (string file in tempFiles)
+                {
+                    try
+                    {
+                        FileInfo fileInfo = new FileInfo(file);
+
+                        // 削除前にファイルが使用中でないかチェック
+                        if (!IsFileInUse(file))
+                        {
+                            fileInfo.Delete();
+                            cleanedCount++;
+                            Debug.Log($"[VRVideoPlayer] Cleaned up temporary file: {Path.GetFileName(file)}");
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[VRVideoPlayer] Skipping file in use: {Path.GetFileName(file)}");
+                        }
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogWarning($"[VRVideoPlayer] Failed to delete {Path.GetFileName(file)}: {e.Message}");
+                    }
+                }
+
+                if (cleanedCount > 0)
+                {
+                    Debug.Log($"[VRVideoPlayer] Cleanup complete: {cleanedCount} temporary files deleted");
+                }
+                else
+                {
+                    Debug.Log("[VRVideoPlayer] No temporary files to clean");
+                }
+            }
+            else
+            {
+                Debug.Log($"[VRVideoPlayer] Temporary directory does not exist: {tempDir}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[VRVideoPlayer] Error during cleanup: {e.Message}");
+        }
+    }
+
+    private bool IsFileInUse(string filePath)
+    {
+        try
+        {
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                return fs.Length == 0;
+            }
+        }
+        catch (System.IO.IOException)
+        {
+            return true;
+        }
+        catch (System.Exception)
+        {
+            return false;
+        }
     }
 
     private string CreateApiUrl(string path)
@@ -211,8 +288,8 @@ public class VRVideoPlayer : MonoBehaviour
 
         try
         {
-            // Create temporary directory in project folder
-            string tempDir = Path.Combine(Application.dataPath, "temp");
+            // Create temp subdirectory in Unity's cache path
+            string tempDir = Path.Combine(Application.persistentDataPath, "temp");
             if (!Directory.Exists(tempDir))
             {
                 Directory.CreateDirectory(tempDir);
