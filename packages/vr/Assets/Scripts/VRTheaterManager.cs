@@ -141,7 +141,9 @@ public class VRTheaterManager : MonoBehaviour
 
         if (screenObject == null)
         {
-            Debug.LogWarning("[VRTheaterManager] VideoScreen not found in scene. Creating new one.");
+            Debug.LogWarning(
+                "[VRTheaterManager] VideoScreen not found in scene. Creating new one."
+            );
             screenObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
             screenObject.name = "VideoScreen";
             screenObject.transform.position = screenPosition;

@@ -58,7 +58,7 @@ pre-commit:
 
     format-vr:
       glob: "packages/vr/Assets/Scripts/**/*.cs"
-      run: cd packages/vr && dotnet csharpier .
+      run: cd packages/vr/Assets/Scripts && dotnet csharpier format .
       stage_fixed: true
       skip:
         - merge

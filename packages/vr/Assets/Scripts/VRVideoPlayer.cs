@@ -1,30 +1,47 @@
-using UnityEngine;
-using UnityEngine.Video;
-using UnityEngine.Networking;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System;
+using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.Video;
 
 public class VRVideoPlayer : MonoBehaviour
 {
     [Header("Video Settings")]
-    [SerializeField] private string filePath = "";
-    [SerializeField] private string apiBaseUrl = "http://localhost:3001";
-    [SerializeField] private Renderer screenRenderer;
-    [SerializeField] private bool autoPlay = true;
-    [SerializeField] private bool loop = true;
+    [SerializeField]
+    private string filePath = "";
+
+    [SerializeField]
+    private string apiBaseUrl = "http://localhost:3001";
+
+    [SerializeField]
+    private Renderer screenRenderer;
+
+    [SerializeField]
+    private bool autoPlay = true;
+
+    [SerializeField]
+    private bool loop = true;
 
     [Header("Audio Settings")]
-    [SerializeField] [Range(0, 1)] private float volume = 1f;
+    [SerializeField]
+    [Range(0, 1)]
+    private float volume = 1f;
 
     [Header("Video Quality")]
-    [SerializeField] private int renderTextureWidth = 1920;
-    [SerializeField] private int renderTextureHeight = 1080;
+    [SerializeField]
+    private int renderTextureWidth = 1920;
+
+    [SerializeField]
+    private int renderTextureHeight = 1080;
 
     [Header("Network Settings")]
-    [SerializeField] private float connectionTimeout = 30f;
-    [SerializeField] private bool useExactMatch = true;
+    [SerializeField]
+    private float connectionTimeout = 30f;
+
+    [SerializeField]
+    private bool useExactMatch = true;
 
     private VideoPlayer videoPlayer;
     private RenderTexture renderTexture;
@@ -37,8 +54,10 @@ public class VRVideoPlayer : MonoBehaviour
     public bool IsBuffering { get; private set; }
     public bool IsPrepared { get; private set; }
     public bool IsLoading { get; private set; }
-    public double CurrentTime => videoPlayer != null && videoPlayer.isPrepared ? videoPlayer.time : 0;
-    public double Duration => videoPlayer != null && videoPlayer.isPrepared ? videoPlayer.length : 0;
+    public double CurrentTime =>
+        videoPlayer != null && videoPlayer.isPrepared ? videoPlayer.time : 0;
+    public double Duration =>
+        videoPlayer != null && videoPlayer.isPrepared ? videoPlayer.length : 0;
     public float Progress => Duration > 0 ? (float)(CurrentTime / Duration) : 0;
 
     public event System.Action OnVideoStarted;
@@ -122,22 +141,30 @@ public class VRVideoPlayer : MonoBehaviour
                         {
                             fileInfo.Delete();
                             cleanedCount++;
-                            Debug.Log($"[VRVideoPlayer] Cleaned up temporary file: {Path.GetFileName(file)}");
+                            Debug.Log(
+                                $"[VRVideoPlayer] Cleaned up temporary file: {Path.GetFileName(file)}"
+                            );
                         }
                         else
                         {
-                            Debug.LogWarning($"[VRVideoPlayer] Skipping file in use: {Path.GetFileName(file)}");
+                            Debug.LogWarning(
+                                $"[VRVideoPlayer] Skipping file in use: {Path.GetFileName(file)}"
+                            );
                         }
                     }
                     catch (System.Exception e)
                     {
-                        Debug.LogWarning($"[VRVideoPlayer] Failed to delete {Path.GetFileName(file)}: {e.Message}");
+                        Debug.LogWarning(
+                            $"[VRVideoPlayer] Failed to delete {Path.GetFileName(file)}: {e.Message}"
+                        );
                     }
                 }
 
                 if (cleanedCount > 0)
                 {
-                    Debug.Log($"[VRVideoPlayer] Cleanup complete: {cleanedCount} temporary files deleted");
+                    Debug.Log(
+                        $"[VRVideoPlayer] Cleanup complete: {cleanedCount} temporary files deleted"
+                    );
                 }
                 else
                 {
@@ -159,7 +186,14 @@ public class VRVideoPlayer : MonoBehaviour
     {
         try
         {
-            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None))
+            using (
+                FileStream fs = new FileStream(
+                    filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.None
+                )
+            )
             {
                 return fs.Length == 0;
             }
@@ -182,7 +216,8 @@ public class VRVideoPlayer : MonoBehaviour
 
     public void SetVideoPath(string path)
     {
-        if (string.IsNullOrEmpty(path)) return;
+        if (string.IsNullOrEmpty(path))
+            return;
 
         filePath = path;
         Debug.Log($"[VRVideoPlayer] Video path set: {path}");
@@ -238,7 +273,9 @@ public class VRVideoPlayer : MonoBehaviour
 
             if (request.result == UnityWebRequest.Result.Success)
             {
-                VideoSearchResponse response = JsonUtility.FromJson<VideoSearchResponse>(request.downloadHandler.text);
+                VideoSearchResponse response = JsonUtility.FromJson<VideoSearchResponse>(
+                    request.downloadHandler.text
+                );
                 Debug.Log($"[VRVideoPlayer] API response success: {response.success}");
                 Debug.Log($"[VRVideoPlayer] Video count: {response.videos?.Length ?? 0}");
 
@@ -262,7 +299,9 @@ public class VRVideoPlayer : MonoBehaviour
                 {
                     Debug.LogError($"[VRVideoPlayer] Video not found in database: {filePath}");
                     Debug.LogError($"[VRVideoPlayer] Response success: {response.success}");
-                    Debug.LogError($"[VRVideoPlayer] Videos array: {(response.videos != null ? response.videos.Length : 0)}");
+                    Debug.LogError(
+                        $"[VRVideoPlayer] Videos array: {(response.videos != null ? response.videos.Length : 0)}"
+                    );
                     OnError?.Invoke($"Video not found: {filePath}");
                     yield break;
                 }
@@ -296,7 +335,10 @@ public class VRVideoPlayer : MonoBehaviour
             }
 
             // Create temporary file for streaming
-            currentTempPath = Path.Combine(tempDir, $"streaming_video_{System.DateTime.Now.Ticks}.mp4");
+            currentTempPath = Path.Combine(
+                tempDir,
+                $"streaming_video_{System.DateTime.Now.Ticks}.mp4"
+            );
 
             // Open connection to video server
             using (UnityWebRequest request = UnityWebRequest.Get(videoUrl))
@@ -309,7 +351,9 @@ public class VRVideoPlayer : MonoBehaviour
 
                 if (request.result != UnityWebRequest.Result.Success)
                 {
-                    Debug.LogError($"[VRVideoPlayer] Failed to connect to video server: {request.error}");
+                    Debug.LogError(
+                        $"[VRVideoPlayer] Failed to connect to video server: {request.error}"
+                    );
                     OnError?.Invoke($"Connection failed: {request.error}");
                     yield break;
                 }
@@ -335,7 +379,9 @@ public class VRVideoPlayer : MonoBehaviour
                     if (rangeParts.Length >= 2)
                     {
                         long.TryParse(rangeParts[1], out fileSize);
-                        Debug.Log($"[VRVideoPlayer] Total file size from Content-Range: {fileSize} bytes");
+                        Debug.Log(
+                            $"[VRVideoPlayer] Total file size from Content-Range: {fileSize} bytes"
+                        );
                     }
                 }
 
@@ -349,21 +395,35 @@ public class VRVideoPlayer : MonoBehaviour
                 Debug.Log($"[VRVideoPlayer] Final file size: {fileSize} bytes");
 
                 // Create file and write initial chunk
-                using (FileStream fileStream = new FileStream(currentTempPath, FileMode.Create, FileAccess.Write))
+                using (
+                    FileStream fileStream = new FileStream(
+                        currentTempPath,
+                        FileMode.Create,
+                        FileAccess.Write
+                    )
+                )
                 {
                     fileStream.Write(request.downloadHandler.data);
                 }
 
                 // Log first chunk info
-                Debug.Log($"[VRVideoPlayer] First chunk received: {request.downloadHandler.data.Length} bytes");
+                Debug.Log(
+                    $"[VRVideoPlayer] First chunk received: {request.downloadHandler.data.Length} bytes"
+                );
                 if (request.downloadHandler.data.Length >= 16)
                 {
-                    string firstChunkHex = BitConverter.ToString(request.downloadHandler.data, 0, 16).Replace("-", " ");
+                    string firstChunkHex = BitConverter
+                        .ToString(request.downloadHandler.data, 0, 16)
+                        .Replace("-", " ");
                     Debug.Log($"[VRVideoPlayer] First chunk header: {firstChunkHex}");
 
                     if (request.downloadHandler.data.Length >= 8)
                     {
-                        string firstChunkFtyp = System.Text.Encoding.ASCII.GetString(request.downloadHandler.data, 4, 4);
+                        string firstChunkFtyp = System.Text.Encoding.ASCII.GetString(
+                            request.downloadHandler.data,
+                            4,
+                            4
+                        );
                         Debug.Log($"[VRVideoPlayer] First chunk type: {firstChunkFtyp}");
                     }
                 }
@@ -378,7 +438,10 @@ public class VRVideoPlayer : MonoBehaviour
 
                     using (UnityWebRequest chunkRequest = UnityWebRequest.Get(videoUrl))
                     {
-                        chunkRequest.SetRequestHeader("Range", $"bytes={currentSize}-{currentSize + nextChunkSize - 1}");
+                        chunkRequest.SetRequestHeader(
+                            "Range",
+                            $"bytes={currentSize}-{currentSize + nextChunkSize - 1}"
+                        );
                         chunkRequest.downloadHandler = new DownloadHandlerBuffer();
 
                         yield return chunkRequest.SendWebRequest();
@@ -386,13 +449,23 @@ public class VRVideoPlayer : MonoBehaviour
                         if (chunkRequest.result == UnityWebRequest.Result.Success)
                         {
                             int chunkSize = chunkRequest.downloadHandler.data.Length;
-                            Debug.Log($"[VRVideoPlayer] Downloading chunk: {chunkSize} bytes, range {currentSize}-{currentSize + chunkSize - 1}");
+                            Debug.Log(
+                                $"[VRVideoPlayer] Downloading chunk: {chunkSize} bytes, range {currentSize}-{currentSize + chunkSize - 1}"
+                            );
 
                             // Verify file exists before appending
                             bool fileExistsBefore = File.Exists(currentTempPath);
-                            long fileSizeBefore = fileExistsBefore ? new FileInfo(currentTempPath).Length : 0;
+                            long fileSizeBefore = fileExistsBefore
+                                ? new FileInfo(currentTempPath).Length
+                                : 0;
 
-                            using (FileStream fileStream = new FileStream(currentTempPath, FileMode.Append, FileAccess.Write))
+                            using (
+                                FileStream fileStream = new FileStream(
+                                    currentTempPath,
+                                    FileMode.Append,
+                                    FileAccess.Write
+                                )
+                            )
                             {
                                 fileStream.Write(chunkRequest.downloadHandler.data);
                                 fileStream.Flush(); // Force write to disk
@@ -411,11 +484,15 @@ public class VRVideoPlayer : MonoBehaviour
                             Debug.Log($"  - Append successful: {fileSizeAfter == expectedSize}");
 
                             currentSize += chunkSize;
-                            Debug.Log($"[VRVideoPlayer] Downloaded {currentSize}/{fileSize} bytes ({(float)currentSize/fileSize*100:F1}%)");
+                            Debug.Log(
+                                $"[VRVideoPlayer] Downloaded {currentSize}/{fileSize} bytes ({(float)currentSize / fileSize * 100:F1}%)"
+                            );
                         }
                         else
                         {
-                            Debug.LogError($"[VRVideoPlayer] Chunk download failed: {chunkRequest.error}");
+                            Debug.LogError(
+                                $"[VRVideoPlayer] Chunk download failed: {chunkRequest.error}"
+                            );
                             break;
                         }
                     }
@@ -440,7 +517,13 @@ public class VRVideoPlayer : MonoBehaviour
                     try
                     {
                         byte[] header = new byte[16];
-                        using (FileStream fs = new FileStream(currentTempPath, FileMode.Open, FileAccess.Read))
+                        using (
+                            FileStream fs = new FileStream(
+                                currentTempPath,
+                                FileMode.Open,
+                                FileAccess.Read
+                            )
+                        )
                         {
                             fs.Read(header, 0, 16);
                         }
@@ -469,7 +552,9 @@ public class VRVideoPlayer : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError($"[VRVideoPlayer] File not found after download: {currentTempPath}");
+                    Debug.LogError(
+                        $"[VRVideoPlayer] File not found after download: {currentTempPath}"
+                    );
                 }
             }
 
@@ -578,7 +663,8 @@ public class VRVideoPlayer : MonoBehaviour
 
     public void Pause()
     {
-        if (videoPlayer == null || !IsPlaying) return;
+        if (videoPlayer == null || !IsPlaying)
+            return;
 
         try
         {
@@ -596,7 +682,8 @@ public class VRVideoPlayer : MonoBehaviour
 
     public void Stop()
     {
-        if (videoPlayer == null) return;
+        if (videoPlayer == null)
+            return;
 
         try
         {
@@ -615,7 +702,8 @@ public class VRVideoPlayer : MonoBehaviour
 
     public void SeekTo(double time)
     {
-        if (videoPlayer == null || !videoPlayer.canSetTime) return;
+        if (videoPlayer == null || !videoPlayer.canSetTime)
+            return;
 
         try
         {
@@ -720,7 +808,9 @@ public class VRVideoPlayer : MonoBehaviour
             // 毎秒デバッグ情報を表示
             if (Time.frameCount % 60 == 0) // 1秒に1回
             {
-                Debug.Log($"[VRVideoPlayer] Status: Playing, Time: {CurrentTime:F1}s/{Duration:F1}s, Progress: {Progress:P1}");
+                Debug.Log(
+                    $"[VRVideoPlayer] Status: Playing, Time: {CurrentTime:F1}s/{Duration:F1}s, Progress: {Progress:P1}"
+                );
             }
         }
     }
@@ -752,8 +842,11 @@ public class VRVideoPlayer : MonoBehaviour
 
     // Public data access methods
     public string GetVideoTitle() => currentVideoData?.title ?? "Unknown";
+
     public string GetVideoFilePath() => currentVideoData?.filePath ?? "";
+
     public float GetVideoDuration() => currentVideoData?.duration ?? 0f;
+
     public bool IsVideoLiked() => currentVideoData?.isLiked ?? false;
 
     // Debug information
@@ -764,15 +857,15 @@ public class VRVideoPlayer : MonoBehaviour
             return "VideoPlayer: Not initialized";
         }
 
-        return $"VideoPlayer:\n" +
-               $"  URL: {videoPlayer.url}\n" +
-               $"  Prepared: {videoPlayer.isPrepared}\n" +
-               $"  Playing: {videoPlayer.isPlaying}\n" +
-               $"  Duration: {videoPlayer.length:F2}s\n" +
-               $"  Current Time: {videoPlayer.time:F2}s\n" +
-               $"  Loop: {videoPlayer.isLooping}\n" +
-               $"  File Path: {filePath}\n" +
-               $"  Title: {GetVideoTitle()}";
+        return $"VideoPlayer:\n"
+            + $"  URL: {videoPlayer.url}\n"
+            + $"  Prepared: {videoPlayer.isPrepared}\n"
+            + $"  Playing: {videoPlayer.isPlaying}\n"
+            + $"  Duration: {videoPlayer.length:F2}s\n"
+            + $"  Current Time: {videoPlayer.time:F2}s\n"
+            + $"  Loop: {videoPlayer.isLooping}\n"
+            + $"  File Path: {filePath}\n"
+            + $"  Title: {GetVideoTitle()}";
     }
 
     private void CleanupTempFile()

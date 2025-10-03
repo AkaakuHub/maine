@@ -5,33 +5,66 @@ using UnityEngine.UI;
 public class VRUIController : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Canvas uiCanvas;
-    [SerializeField] private Transform canvasTransform;
-    [SerializeField] private readonly float uiDistance = 2.0f;
-    [SerializeField] private readonly Vector3 uiOffset = new Vector3(0, 0.5f, 0);
+    [SerializeField]
+    private Canvas uiCanvas;
+
+    [SerializeField]
+    private Transform canvasTransform;
+
+    [SerializeField]
+    private readonly float uiDistance = 2.0f;
+
+    [SerializeField]
+    private readonly Vector3 uiOffset = new Vector3(0, 0.5f, 0);
 
     [Header("Control Buttons")]
-    [SerializeField] private Button playPauseButton;
-    [SerializeField] private Button stopButton;
-    [SerializeField] private Button volumeUpButton;
-    [SerializeField] private Button volumeDownButton;
-    [SerializeField] private Button seekBackwardButton;
-    [SerializeField] private Button seekForwardButton;
+    [SerializeField]
+    private Button playPauseButton;
+
+    [SerializeField]
+    private Button stopButton;
+
+    [SerializeField]
+    private Button volumeUpButton;
+
+    [SerializeField]
+    private Button volumeDownButton;
+
+    [SerializeField]
+    private Button seekBackwardButton;
+
+    [SerializeField]
+    private Button seekForwardButton;
 
     [Header("Display Elements")]
-    [SerializeField] private TextMeshProUGUI currentTimeText;
-    [SerializeField] private TextMeshProUGUI durationText;
-    [SerializeField] private TextMeshProUGUI statusText;
-    [SerializeField] private Slider progressBar;
-    [SerializeField] private Slider volumeSlider;
+    [SerializeField]
+    private TextMeshProUGUI currentTimeText;
+
+    [SerializeField]
+    private TextMeshProUGUI durationText;
+
+    [SerializeField]
+    private TextMeshProUGUI statusText;
+
+    [SerializeField]
+    private Slider progressBar;
+
+    [SerializeField]
+    private Slider volumeSlider;
 
     [Header("Exact Match Settings")]
-    [SerializeField] private Toggle exactMatchToggle;
+    [SerializeField]
+    private Toggle exactMatchToggle;
 
     [Header("UI Settings")]
-    [SerializeField] private bool autoShowOnStart = true;
-    [SerializeField] private readonly float hideDelay = 5.0f;
-    [SerializeField] private readonly Vector3 canvasScale = new Vector3(0.001f, 0.001f, 0.001f);
+    [SerializeField]
+    private bool autoShowOnStart = true;
+
+    [SerializeField]
+    private readonly float hideDelay = 5.0f;
+
+    [SerializeField]
+    private readonly Vector3 canvasScale = new Vector3(0.001f, 0.001f, 0.001f);
 
     private bool isVisible = true;
     private float hideTimer;
@@ -129,7 +162,8 @@ public class VRUIController : MonoBehaviour
             var eventTrigger = progressBar.GetComponent<UnityEngine.EventSystems.EventTrigger>();
             if (eventTrigger == null)
             {
-                eventTrigger = progressBar.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+                eventTrigger =
+                    progressBar.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
             }
         }
 
@@ -138,7 +172,8 @@ public class VRUIController : MonoBehaviour
             var eventTrigger = volumeSlider.GetComponent<UnityEngine.EventSystems.EventTrigger>();
             if (eventTrigger == null)
             {
-                eventTrigger = volumeSlider.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+                eventTrigger =
+                    volumeSlider.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
             }
         }
     }
@@ -438,7 +473,10 @@ public class VRUIController : MonoBehaviour
 
         if (VRVideoPlayer.Instance != null)
         {
-            var currentVolume = VRVideoPlayer.Instance.audioSource != null ? VRVideoPlayer.Instance.audioSource.volume : 0f;
+            var currentVolume =
+                VRVideoPlayer.Instance.audioSource != null
+                    ? VRVideoPlayer.Instance.audioSource.volume
+                    : 0f;
             VRVideoPlayer.Instance.SetVolume(Mathf.Min(1f, currentVolume + 0.1f));
         }
     }
@@ -449,7 +487,10 @@ public class VRUIController : MonoBehaviour
 
         if (VRVideoPlayer.Instance != null)
         {
-            var currentVolume = VRVideoPlayer.Instance.audioSource != null ? VRVideoPlayer.Instance.audioSource.volume : 0f;
+            var currentVolume =
+                VRVideoPlayer.Instance.audioSource != null
+                    ? VRVideoPlayer.Instance.audioSource.volume
+                    : 0f;
             VRVideoPlayer.Instance.SetVolume(Mathf.Max(0f, currentVolume - 0.1f));
         }
     }
