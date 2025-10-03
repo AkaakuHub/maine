@@ -3,6 +3,8 @@ using UnityEngine.Video;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System;
 
 public class VRVideoPlayer : MonoBehaviour
 {
@@ -43,7 +45,7 @@ public class VRVideoPlayer : MonoBehaviour
     public event System.Action OnVideoPaused;
     public event System.Action OnVideoStopped;
     public event System.Action OnVideoEnded;
-    public event System.Action<double> OnTimeUpdated;
+    public System.Action<double> OnTimeUpdated;
     public event System.Action<string> OnError;
     public event System.Action OnLoadingStart;
     public event System.Action OnLoadingComplete;
@@ -86,7 +88,6 @@ public class VRVideoPlayer : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            return;
         }
     }
 
@@ -134,7 +135,7 @@ public class VRVideoPlayer : MonoBehaviour
 
         string encodedPath = System.Uri.EscapeDataString(filePath);
         string searchUrl;
-        
+
         if (useExactMatch)
         {
             searchUrl = CreateApiUrl($"videos?search={encodedPath}&exactMatch=true");
@@ -150,7 +151,7 @@ public class VRVideoPlayer : MonoBehaviour
         {
             request.timeout = (int)connectionTimeout;
 
-            Debug.Log($"[VRVideoPlayer] Sending API request...");
+            Debug.Log("[VRVideoPlayer] Sending API request...");
             yield return request.SendWebRequest();
 
             Debug.Log($"[VRVideoPlayer] API response result: {request.result}");
@@ -174,8 +175,10 @@ public class VRVideoPlayer : MonoBehaviour
                     string actualFilePath = currentVideoData.filePath;
                     string encodedActualPath = System.Uri.EscapeDataString(actualFilePath);
                     videoUrl = CreateApiUrl($"video/{encodedActualPath}");
-                    Debug.Log($"[VRVideoPlayer] Streaming URL: {videoUrl}");
-                    SetupVideoPlayer();
+                    Debug.Log($"[VRVideoPlayer] Video URL: {videoUrl}");
+
+                    // Use custom streaming implementation
+                    StartCoroutine(CustomVideoStreaming());
                 }
                 else
                 {
@@ -200,8 +203,93 @@ public class VRVideoPlayer : MonoBehaviour
         Debug.Log($"[VRVideoPlayer] Video data loading completed. Loading: {IsLoading}");
     }
 
-    
-    private void SetupVideoPlayer()
+    private IEnumerator CustomVideoStreaming()
+    {
+        Debug.Log("[VRVideoPlayer] Starting custom video streaming...");
+        OnLoadingStart?.Invoke();
+
+        try
+        {
+            // Create temporary file for streaming
+            string tempPath = Path.Combine(Application.temporaryCachePath, $"streaming_video_{System.DateTime.Now.Ticks}.mp4");
+
+            // Open connection to video server
+            using (UnityWebRequest request = UnityWebRequest.Get(videoUrl))
+            {
+                request.SetRequestHeader("Range", "bytes=0-1048575"); // Start with 1MB
+                request.downloadHandler = new DownloadHandlerBuffer();
+
+                Debug.Log($"[VRVideoPlayer] Requesting first chunk: {videoUrl}");
+                yield return request.SendWebRequest();
+
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError($"[VRVideoPlayer] Failed to connect to video server: {request.error}");
+                    OnError?.Invoke($"Connection failed: {request.error}");
+                    yield break;
+                }
+
+                // Get file size from headers
+                long fileSize = request.GetResponseHeader("Content-Length") != null
+                    ? long.Parse(request.GetResponseHeader("Content-Length"))
+                    : 0;
+
+                Debug.Log($"[VRVideoPlayer] File size: {fileSize} bytes");
+
+                // Create file and write initial chunk
+                using (FileStream fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
+                {
+                    fileStream.Write(request.downloadHandler.data);
+                }
+
+                // Continue streaming the rest of the file
+                long currentSize = request.downloadHandler.data.Length;
+
+                while (currentSize < fileSize)
+                {
+                    long remaining = fileSize - currentSize;
+                    long nextChunkSize = Math.Min(1048576, remaining); // 1MB chunks
+
+                    using (UnityWebRequest chunkRequest = UnityWebRequest.Get(videoUrl))
+                    {
+                        chunkRequest.SetRequestHeader("Range", $"bytes={currentSize}-{currentSize + nextChunkSize - 1}");
+                        chunkRequest.downloadHandler = new DownloadHandlerBuffer();
+
+                        yield return chunkRequest.SendWebRequest();
+
+                        if (chunkRequest.result == UnityWebRequest.Result.Success)
+                        {
+                            using (FileStream fileStream = new FileStream(tempPath, FileMode.Append, FileAccess.Write))
+                            {
+                                fileStream.Write(chunkRequest.downloadHandler.data);
+                            }
+
+                            currentSize += chunkRequest.downloadHandler.data.Length;
+                            Debug.Log($"[VRVideoPlayer] Downloaded {currentSize}/{fileSize} bytes ({(float)currentSize/fileSize*100:F1}%)");
+                        }
+                        else
+                        {
+                            Debug.LogError($"[VRVideoPlayer] Chunk download failed: {chunkRequest.error}");
+                            break;
+                        }
+                    }
+
+                    yield return null; // Yield to avoid frame drops
+                }
+
+                Debug.Log($"[VRVideoPlayer] Download complete: {currentSize} bytes");
+            }
+
+            // Setup local file playback
+            SetupLocalVideoPlayer(tempPath);
+        }
+        finally
+        {
+            OnLoadingComplete?.Invoke();
+        }
+    }
+
+    private void SetupLocalVideoPlayer(string localPath)
     {
         try
         {
@@ -210,17 +298,17 @@ public class VRVideoPlayer : MonoBehaviour
             renderTexture.name = "VideoRenderTexture";
             renderTexture.Create();
 
-            // Setup VideoPlayer
+            // Setup VideoPlayer with local file
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
             videoPlayer.playOnAwake = false;
             videoPlayer.source = VideoSource.Url;
-            videoPlayer.url = videoUrl;
+            videoPlayer.url = "file://" + localPath; // Use local file protocol
             videoPlayer.renderMode = VideoRenderMode.RenderTexture;
             videoPlayer.targetTexture = renderTexture;
             videoPlayer.isLooping = loop;
             videoPlayer.playbackSpeed = 1f;
 
-            // Optimize for 40Mbps streaming
+            // Optimize for local playback
             videoPlayer.controlledAudioTrackCount = 1;
 
             // Setup audio
@@ -249,18 +337,18 @@ public class VRVideoPlayer : MonoBehaviour
                 material.mainTexture = renderTexture;
             }
 
-            Debug.Log($"[VRVideoPlayer] Video player setup complete: {videoUrl}");
+            Debug.Log($"[VRVideoPlayer] Local video player setup complete: {localPath}");
             Debug.Log($"[VRVideoPlayer] VideoPlayer created: {videoPlayer != null}");
             Debug.Log($"[VRVideoPlayer] RenderTexture created: {renderTexture != null}");
             Debug.Log($"[VRVideoPlayer] AudioSource created: {audioSource != null}");
 
             // Prepare the video for playback
-            Debug.Log("[VRVideoPlayer] Starting video preparation...");
+            Debug.Log("[VRVideoPlayer] Starting local video preparation...");
             videoPlayer.Prepare();
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[VRVideoPlayer] Failed to setup video player: {e.Message}");
+            Debug.LogError($"[VRVideoPlayer] Failed to setup local video player: {e.Message}");
             OnError?.Invoke($"Setup failed: {e.Message}");
         }
     }
@@ -353,15 +441,6 @@ public class VRVideoPlayer : MonoBehaviour
         SeekTo(progress * Duration);
     }
 
-    public void SetExactMatch(bool value)
-    {
-        useExactMatch = value;
-        Debug.Log($"[VRVideoPlayer] Exact match set to: {value}");
-    }
-
-
-
-
     public void SetVolume(float newVolume)
     {
         volume = Mathf.Clamp01(newVolume);
@@ -369,6 +448,12 @@ public class VRVideoPlayer : MonoBehaviour
         {
             audioSource.volume = volume;
         }
+    }
+
+    public void SetExactMatch(bool value)
+    {
+        useExactMatch = value;
+        Debug.Log($"[VRVideoPlayer] Exact match set to: {value}");
     }
 
     public void SetScreenRenderer(Renderer renderer)
@@ -462,21 +547,10 @@ public class VRVideoPlayer : MonoBehaviour
             renderTexture.Release();
             Destroy(renderTexture);
         }
-    }
 
-    private void OnApplicationPause(bool pauseStatus)
-    {
-        if (pauseStatus && IsPlaying)
+        if (audioSource != null)
         {
-            Pause();
-        }
-    }
-
-    private void OnApplicationFocus(bool hasFocus)
-    {
-        if (!hasFocus && IsPlaying)
-        {
-            Pause();
+            Destroy(audioSource);
         }
     }
 
