@@ -265,6 +265,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1076407588}
+  - component: {fileID: 1076407589}
   m_Layer: 0
   m_Name: VRVideoPlayer
   m_TagString: Untagged
@@ -287,6 +288,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1076407589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076407587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93b66c6afa2434d86b447c19f0e50b49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  filePath: 
+  apiBaseUrl: http://localhost:3001
+  screenRenderer: {fileID: 0}
+  autoPlay: 1
+  loop: 1
+  volume: 1
+  renderTextureWidth: 1920
+  renderTextureHeight: 1080
+  connectionTimeout: 30
+  audioSource: {fileID: 0}
 --- !u!1 &1222650410
 GameObject:
   m_ObjectHideFlags: 0
@@ -553,6 +576,64 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1485117796
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1485117798}
+  - component: {fileID: 1485117797}
+  m_Layer: 0
+  m_Name: VRUIController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1485117797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1485117796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3383cb949e3f84c11b40add4dc66e0ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiCanvas: {fileID: 0}
+  canvasTransform: {fileID: 0}
+  playPauseButton: {fileID: 0}
+  stopButton: {fileID: 0}
+  volumeUpButton: {fileID: 0}
+  volumeDownButton: {fileID: 0}
+  seekBackwardButton: {fileID: 0}
+  seekForwardButton: {fileID: 0}
+  currentTimeText: {fileID: 0}
+  durationText: {fileID: 0}
+  statusText: {fileID: 0}
+  progressBar: {fileID: 0}
+  volumeSlider: {fileID: 0}
+  autoShowOnStart: 1
+--- !u!4 &1485117798
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1485117796}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -562,3 +643,4 @@ SceneRoots:
   - {fileID: 1076407588}
   - {fileID: 1320863442}
   - {fileID: 1222650414}
+  - {fileID: 1485117798}

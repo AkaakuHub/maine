@@ -184,7 +184,7 @@ public class VRTheaterManager : MonoBehaviour
     {
         if (VRVideoPlayer.Instance != null)
         {
-            VRVideoPlayer.Instance.SetVideoUrl(url);
+            VRVideoPlayer.Instance.SetVideoPath(url);
         }
         else
         {
