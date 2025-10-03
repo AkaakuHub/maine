@@ -77,6 +77,7 @@ public class VRVideoPlayer : MonoBehaviour
     }
 
     private VideoData currentVideoData;
+    private string currentTempPath;
 
     private void Awake()
     {
@@ -210,13 +211,20 @@ public class VRVideoPlayer : MonoBehaviour
 
         try
         {
+            // Create temporary directory in project folder
+            string tempDir = Path.Combine(Application.dataPath, "temp");
+            if (!Directory.Exists(tempDir))
+            {
+                Directory.CreateDirectory(tempDir);
+            }
+
             // Create temporary file for streaming
-            string tempPath = Path.Combine(Application.temporaryCachePath, $"streaming_video_{System.DateTime.Now.Ticks}.mp4");
+            currentTempPath = Path.Combine(tempDir, $"streaming_video_{System.DateTime.Now.Ticks}.mp4");
 
             // Open connection to video server
             using (UnityWebRequest request = UnityWebRequest.Get(videoUrl))
             {
-                request.SetRequestHeader("Range", "bytes=0-1048575"); // Start with 1MB
+                request.SetRequestHeader("Range", "bytes=0-524287"); // Start with 512KB
                 request.downloadHandler = new DownloadHandlerBuffer();
 
                 Debug.Log($"[VRVideoPlayer] Requesting first chunk: {videoUrl}");
@@ -229,17 +237,58 @@ public class VRVideoPlayer : MonoBehaviour
                     yield break;
                 }
 
-                // Get file size from headers
-                long fileSize = request.GetResponseHeader("Content-Length") != null
-                    ? long.Parse(request.GetResponseHeader("Content-Length"))
-                    : 0;
+                // Get file size from headers and debug
+                string contentLengthHeader = request.GetResponseHeader("Content-Length");
+                string contentRangeHeader = request.GetResponseHeader("Content-Range");
+                string acceptRangesHeader = request.GetResponseHeader("Accept-Ranges");
 
-                Debug.Log($"[VRVideoPlayer] File size: {fileSize} bytes");
+                Debug.Log($"[VRVideoPlayer] Response headers:");
+                Debug.Log($"  - Content-Length: {contentLengthHeader}");
+                Debug.Log($"  - Content-Range: {contentRangeHeader}");
+                Debug.Log($"  - Accept-Ranges: {acceptRangesHeader}");
+                Debug.Log($"  - Response Code: {request.responseCode}");
+
+                long fileSize = 0;
+
+                // Content-Rangeから全体ファイルサイズを取得
+                if (!string.IsNullOrEmpty(contentRangeHeader))
+                {
+                    // Content-Range: bytes 0-524287/97518061
+                    string[] rangeParts = contentRangeHeader.Split('/');
+                    if (rangeParts.Length >= 2)
+                    {
+                        long.TryParse(rangeParts[1], out fileSize);
+                        Debug.Log($"[VRVideoPlayer] Total file size from Content-Range: {fileSize} bytes");
+                    }
+                }
+
+                // フォールバック：Content-Lengthから取得
+                if (fileSize == 0 && !string.IsNullOrEmpty(contentLengthHeader))
+                {
+                    long.TryParse(contentLengthHeader, out fileSize);
+                    Debug.Log($"[VRVideoPlayer] File size from Content-Length: {fileSize} bytes");
+                }
+
+                Debug.Log($"[VRVideoPlayer] Final file size: {fileSize} bytes");
 
                 // Create file and write initial chunk
-                using (FileStream fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
+                using (FileStream fileStream = new FileStream(currentTempPath, FileMode.Create, FileAccess.Write))
                 {
                     fileStream.Write(request.downloadHandler.data);
+                }
+
+                // Log first chunk info
+                Debug.Log($"[VRVideoPlayer] First chunk received: {request.downloadHandler.data.Length} bytes");
+                if (request.downloadHandler.data.Length >= 16)
+                {
+                    string firstChunkHex = BitConverter.ToString(request.downloadHandler.data, 0, 16).Replace("-", " ");
+                    Debug.Log($"[VRVideoPlayer] First chunk header: {firstChunkHex}");
+
+                    if (request.downloadHandler.data.Length >= 8)
+                    {
+                        string firstChunkFtyp = System.Text.Encoding.ASCII.GetString(request.downloadHandler.data, 4, 4);
+                        Debug.Log($"[VRVideoPlayer] First chunk type: {firstChunkFtyp}");
+                    }
                 }
 
                 // Continue streaming the rest of the file
@@ -248,7 +297,7 @@ public class VRVideoPlayer : MonoBehaviour
                 while (currentSize < fileSize)
                 {
                     long remaining = fileSize - currentSize;
-                    long nextChunkSize = Math.Min(1048576, remaining); // 1MB chunks
+                    long nextChunkSize = Math.Min(524288, remaining); // 512KB chunks
 
                     using (UnityWebRequest chunkRequest = UnityWebRequest.Get(videoUrl))
                     {
@@ -259,12 +308,32 @@ public class VRVideoPlayer : MonoBehaviour
 
                         if (chunkRequest.result == UnityWebRequest.Result.Success)
                         {
-                            using (FileStream fileStream = new FileStream(tempPath, FileMode.Append, FileAccess.Write))
+                            int chunkSize = chunkRequest.downloadHandler.data.Length;
+                            Debug.Log($"[VRVideoPlayer] Downloading chunk: {chunkSize} bytes, range {currentSize}-{currentSize + chunkSize - 1}");
+
+                            // Verify file exists before appending
+                            bool fileExistsBefore = File.Exists(currentTempPath);
+                            long fileSizeBefore = fileExistsBefore ? new FileInfo(currentTempPath).Length : 0;
+
+                            using (FileStream fileStream = new FileStream(currentTempPath, FileMode.Append, FileAccess.Write))
                             {
                                 fileStream.Write(chunkRequest.downloadHandler.data);
+                                fileStream.Flush(); // Force write to disk
                             }
 
-                            currentSize += chunkRequest.downloadHandler.data.Length;
+                            // Verify file was appended correctly
+                            long fileSizeAfter = new FileInfo(currentTempPath).Length;
+                            long expectedSize = fileSizeBefore + chunkSize;
+
+                            Debug.Log($"[VRVideoPlayer] Chunk append verification:");
+                            Debug.Log($"  - File existed before: {fileExistsBefore}");
+                            Debug.Log($"  - Size before: {fileSizeBefore} bytes");
+                            Debug.Log($"  - Chunk size: {chunkSize} bytes");
+                            Debug.Log($"  - Size after: {fileSizeAfter} bytes");
+                            Debug.Log($"  - Expected size: {expectedSize} bytes");
+                            Debug.Log($"  - Append successful: {fileSizeAfter == expectedSize}");
+
+                            currentSize += chunkSize;
                             Debug.Log($"[VRVideoPlayer] Downloaded {currentSize}/{fileSize} bytes ({(float)currentSize/fileSize*100:F1}%)");
                         }
                         else
@@ -278,10 +347,57 @@ public class VRVideoPlayer : MonoBehaviour
                 }
 
                 Debug.Log($"[VRVideoPlayer] Download complete: {currentSize} bytes");
+
+                // Verify file was created successfully
+                if (File.Exists(currentTempPath))
+                {
+                    FileInfo fileInfo = new FileInfo(currentTempPath);
+                    Debug.Log($"[VRVideoPlayer] File verification:");
+                    Debug.Log($"  - Path: {currentTempPath}");
+                    Debug.Log($"  - Exists: {File.Exists(currentTempPath)}");
+                    Debug.Log($"  - Size: {fileInfo.Length} bytes");
+                    Debug.Log($"  - Expected: {currentSize} bytes");
+                    Debug.Log($"  - Readable: {new FileInfo(currentTempPath).Length > 0}");
+
+                    // Try to read first few bytes to verify file integrity and format
+                    try
+                    {
+                        byte[] header = new byte[16];
+                        using (FileStream fs = new FileStream(currentTempPath, FileMode.Open, FileAccess.Read))
+                        {
+                            fs.Read(header, 0, 16);
+                        }
+                        string headerHex = BitConverter.ToString(header).Replace("-", " ");
+                        Debug.Log($"  - Header: {headerHex}");
+
+                        // Check for MP4 format (should start with "ftyp" at position 4)
+                        if (header.Length >= 8)
+                        {
+                            string ftyp = System.Text.Encoding.ASCII.GetString(header, 4, 4);
+                            Debug.Log($"  - File type: {ftyp}");
+                            if (ftyp == "ftyp")
+                            {
+                                Debug.Log("  - ✓ Valid MP4 format detected");
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"  - ⚠ Unexpected file format: {ftyp}");
+                            }
+                        }
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"  - Header read error: {e.Message}");
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[VRVideoPlayer] File not found after download: {currentTempPath}");
+                }
             }
 
             // Setup local file playback
-            SetupLocalVideoPlayer(tempPath);
+            SetupLocalVideoPlayer(currentTempPath);
         }
         finally
         {
@@ -503,6 +619,7 @@ public class VRVideoPlayer : MonoBehaviour
         {
             IsPlaying = false;
             OnVideoEnded?.Invoke();
+            CleanupTempFile();
         }
     }
 
@@ -552,6 +669,8 @@ public class VRVideoPlayer : MonoBehaviour
         {
             Destroy(audioSource);
         }
+
+        CleanupTempFile();
     }
 
     // Public data access methods
@@ -577,5 +696,22 @@ public class VRVideoPlayer : MonoBehaviour
                $"  Loop: {videoPlayer.isLooping}\n" +
                $"  File Path: {filePath}\n" +
                $"  Title: {GetVideoTitle()}";
+    }
+
+    private void CleanupTempFile()
+    {
+        if (!string.IsNullOrEmpty(currentTempPath) && File.Exists(currentTempPath))
+        {
+            try
+            {
+                File.Delete(currentTempPath);
+                Debug.Log($"[VRVideoPlayer] Cleaned up temporary file: {currentTempPath}");
+                currentTempPath = null;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[VRVideoPlayer] Failed to cleanup temp file: {e.Message}");
+            }
+        }
     }
 }

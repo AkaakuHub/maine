@@ -66,16 +66,13 @@ export class VideoController {
 			if (range) {
 				const parts = range.replace(/bytes=/, "").split("-");
 				const start = Number.parseInt(parts[0], 10);
-				let end =
+				const end =
 					parts[1] && parts[1].trim() !== ""
 						? Number.parseInt(parts[1], 10)
 						: fileSize - 1;
 
-				// 大きなチャンクを制限（最大10MB）
-				const maxChunkSize = 10 * 1024 * 1024;
-				if (end - start + 1 > maxChunkSize) {
-					end = start + maxChunkSize - 1;
-				}
+				// Rangeリクエストはクライアントの要求通りに応答（ストリーミング用）
+				// 注：チャンクサイズの制限はクライアントに委ねる
 
 				const chunksize = end - start + 1;
 
