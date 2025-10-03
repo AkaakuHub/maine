@@ -1,4 +1,4 @@
-import { SCAN } from "@my-video-storage/shared-utils";
+import { SCAN } from "@maine/shared-utils";
 import { Injectable, Logger } from "@nestjs/common";
 import type { ScanSettings } from "./scan-settings.service";
 

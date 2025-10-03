@@ -26,14 +26,13 @@
 		"db:reset": "cd prisma && prisma migrate reset --force"
 	},
 	"dependencies": {
-		"@my-video-storage/shared-types": "workspace:*",
-		"@my-video-storage/shared-utils": "workspace:*",
+		"@maine/shared-types": "workspace:*",
+		"@maine/shared-utils": "workspace:*",
 		"@nestjs/common": "^11.0.1",
 		"@nestjs/config": "^4.0.2",
 		"@nestjs/core": "^11.0.1",
 		"@nestjs/platform-express": "^11.0.1",
 		"@nestjs/swagger": "^11.2.0",
-		"@prisma/client": "6.8.2",
 		"class-transformer": "^0.5.1",
 		"class-validator": "^0.14.2",
 		"cron": "^4.3.3",
@@ -46,6 +45,7 @@
 		"@nestjs/cli": "^11.0.0",
 		"@nestjs/schematics": "^11.0.0",
 		"@nestjs/testing": "^11.0.1",
+		"@prisma/client": "6.8.2",
 		"@swc/cli": "^0.6.0",
 		"@swc/core": "^1.10.7",
 		"@types/express": "^5.0.0",
@@ -54,7 +54,7 @@
 		"@types/supertest": "^6.0.2",
 		"globals": "^16.0.0",
 		"jest": "^29.7.0",
-		"prisma": "^6.8.2",
+		"prisma": "6.8.2",
 		"source-map-support": "^0.5.21",
 		"supertest": "^7.0.0",
 		"ts-jest": "^29.2.5",
@@ -64,13 +64,19 @@
 		"typescript": "^5.7.3"
 	},
 	"jest": {
-		"moduleFileExtensions": ["js", "json", "ts"],
+		"moduleFileExtensions": [
+			"js",
+			"json",
+			"ts"
+		],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": ["**/*.(t|j)s"],
+		"collectCoverageFrom": [
+			"**/*.(t|j)s"
+		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}

@@ -1,5 +1,5 @@
 {
-	"name": "@my-video-storage/frontend",
+	"name": "@maine/frontend",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
@@ -11,8 +11,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@my-video-storage/shared-types": "workspace:*",
-		"@my-video-storage/shared-utils": "workspace:*",
+		"@maine/shared-types": "workspace:*",
+		"@maine/shared-utils": "workspace:*",
 		"@prisma/client": "6.8.2",
 		"@types/iconv-lite": "^0.0.1",
 		"clsx": "^2.1.1",

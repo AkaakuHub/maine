@@ -3,8 +3,8 @@ import withPWA from 'next-pwa';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: [
-    "@my-video-storage/shared-types",
-    "@my-video-storage/shared-utils",
+    "@maine/shared-types",
+    "@maine/shared-utils",
   ],
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",

@@ -9,10 +9,10 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@my-video-storage/shared-types": ["shared/types/src/index.ts"],
-      "@my-video-storage/shared-types/*": ["shared/types/src/*"],
-      "@my-video-storage/shared-utils": ["shared/utils/src/index.ts"],
-      "@my-video-storage/shared-utils/*": ["shared/utils/src/*"]
+      "@maine/shared-types": ["shared/types/src/index.ts"],
+      "@maine/shared-types/*": ["shared/types/src/*"],
+      "@maine/shared-utils": ["shared/utils/src/index.ts"],
+      "@maine/shared-utils/*": ["shared/utils/src/*"]
     },
     "incremental": true,
     "experimentalDecorators": true,

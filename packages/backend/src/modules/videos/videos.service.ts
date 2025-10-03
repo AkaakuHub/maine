@@ -1,4 +1,4 @@
-import { PAGINATION } from "@my-video-storage/shared-utils";
+import { PAGINATION } from "@maine/shared-utils";
 import { Injectable, Logger } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";

@@ -1,4 +1,4 @@
-# My-Video-Storage
+# Maine - My-Video-Storage
 
 - バックエンド(NestJS)
 - フロントエンド(React/NextJS)

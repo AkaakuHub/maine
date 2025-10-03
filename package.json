@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json.schemastore.org/package.json",
-	"name": "my-video-storage",
+	"name": "maine",
 	"version": "0.1.0",
 	"private": true,
 	"workspaces": [
@@ -8,13 +8,13 @@
 		"shared/*"
 	],
 	"scripts": {
-		"dev": "pnpm --filter @my-video-storage/frontend dev",
-		"dev:backend": "pnpm build:shared && pnpm --filter @my-video-storage/backend start:dev",
-		"build": "pnpm build:shared && pnpm --filter @my-video-storage/frontend build",
-		"build:shared": "pnpm --filter '@my-video-storage/shared-*' run build",
-		"build:backend": "pnpm build:shared && pnpm --filter @my-video-storage/backend build",
-		"start": "pnpm --filter @my-video-storage/frontend start",
-		"start:backend": "pnpm build:shared && pnpm --filter @my-video-storage/backend start:prod",
+		"dev": "pnpm --filter @maine/frontend dev",
+		"dev:backend": "pnpm build:shared && pnpm --filter @maine/backend start:dev",
+		"build": "pnpm build:shared && pnpm --filter @maine/frontend build",
+		"build:shared": "pnpm --filter '@maine/shared-*' run build",
+		"build:backend": "pnpm build:shared && pnpm --filter @maine/backend build",
+		"start": "pnpm --filter @maine/frontend start",
+		"start:backend": "pnpm build:shared && pnpm --filter @maine/backend start:prod",
 		"lint": "pnpm -r lint",
 		"knip": "knip --fix --files",
 		"format": "pnpm -r format",
