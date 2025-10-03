@@ -22,6 +22,7 @@ public class VRVideoPlayer : MonoBehaviour
 
     [Header("Network Settings")]
     [SerializeField] private float connectionTimeout = 30f;
+    [SerializeField] private bool useExactMatch = true;
 
     private VideoPlayer videoPlayer;
     private RenderTexture renderTexture;
@@ -132,7 +133,16 @@ public class VRVideoPlayer : MonoBehaviour
         Debug.Log($"[VRVideoPlayer] Starting video data load for: {filePath}");
 
         string encodedPath = System.Uri.EscapeDataString(filePath);
-        string searchUrl = CreateApiUrl($"videos?search={encodedPath}&exactMatch=true");
+        string searchUrl;
+        
+        if (useExactMatch)
+        {
+            searchUrl = CreateApiUrl($"videos?search={encodedPath}&exactMatch=true");
+        }
+        else
+        {
+            searchUrl = CreateApiUrl($"videos?search={encodedPath}");
+        }
 
         Debug.Log($"[VRVideoPlayer] API URL: {searchUrl}");
 
@@ -335,6 +345,15 @@ public class VRVideoPlayer : MonoBehaviour
     {
         SeekTo(progress * Duration);
     }
+
+    public void SetExactMatch(bool value)
+    {
+        useExactMatch = value;
+        Debug.Log($"[VRVideoPlayer] Exact match set to: {value}");
+    }
+
+
+
 
     public void SetVolume(float newVolume)
     {

@@ -300,7 +300,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93b66c6afa2434d86b447c19f0e50b49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  filePath: 
+  filePath: yappa
   apiBaseUrl: http://localhost:3001
   screenRenderer: {fileID: 0}
   autoPlay: 1
@@ -309,6 +309,7 @@ MonoBehaviour:
   renderTextureWidth: 1920
   renderTextureHeight: 1080
   connectionTimeout: 30
+  useExactMatch: 0
   audioSource: {fileID: 0}
 --- !u!1 &1222650410
 GameObject:

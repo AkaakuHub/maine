@@ -1,66 +1,37 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class VRUIController : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField]
-    private Canvas uiCanvas;
-
-    [SerializeField]
-    private Transform canvasTransform;
-
-    [SerializeField]
-    private readonly float uiDistance = 2.0f;
-
-    [SerializeField]
-    private readonly Vector3 uiOffset = new Vector3(0, 0.5f, 0);
+    [SerializeField] private Canvas uiCanvas;
+    [SerializeField] private Transform canvasTransform;
+    [SerializeField] private readonly float uiDistance = 2.0f;
+    [SerializeField] private readonly Vector3 uiOffset = new Vector3(0, 0.5f, 0);
 
     [Header("Control Buttons")]
-    [SerializeField]
-    private Button playPauseButton;
-
-    [SerializeField]
-    private Button stopButton;
-
-    [SerializeField]
-    private Button volumeUpButton;
-
-    [SerializeField]
-    private Button volumeDownButton;
-
-    [SerializeField]
-    private Button seekBackwardButton;
-
-    [SerializeField]
-    private Button seekForwardButton;
+    [SerializeField] private Button playPauseButton;
+    [SerializeField] private Button stopButton;
+    [SerializeField] private Button volumeUpButton;
+    [SerializeField] private Button volumeDownButton;
+    [SerializeField] private Button seekBackwardButton;
+    [SerializeField] private Button seekForwardButton;
 
     [Header("Display Elements")]
-    [SerializeField]
-    private TextMeshProUGUI currentTimeText;
+    [SerializeField] private TextMeshProUGUI currentTimeText;
+    [SerializeField] private TextMeshProUGUI durationText;
+    [SerializeField] private TextMeshProUGUI statusText;
+    [SerializeField] private Slider progressBar;
+    [SerializeField] private Slider volumeSlider;
 
-    [SerializeField]
-    private TextMeshProUGUI durationText;
-
-    [SerializeField]
-    private TextMeshProUGUI statusText;
-
-    [SerializeField]
-    private Slider progressBar;
-
-    [SerializeField]
-    private Slider volumeSlider;
+    [Header("Exact Match Settings")]
+    [SerializeField] private Toggle exactMatchToggle;
 
     [Header("UI Settings")]
-    [SerializeField]
-    private bool autoShowOnStart = true;
-
-    [SerializeField]
-    private readonly float hideDelay = 5.0f;
-
-    [SerializeField]
-    private readonly Vector3 canvasScale = new Vector3(0.001f, 0.001f, 0.001f);
+    [SerializeField] private bool autoShowOnStart = true;
+    [SerializeField] private readonly float hideDelay = 5.0f;
+    [SerializeField] private readonly Vector3 canvasScale = new Vector3(0.001f, 0.001f, 0.001f);
 
     private bool isVisible = true;
     private float hideTimer;
@@ -151,6 +122,7 @@ public class VRUIController : MonoBehaviour
 
         progressBar = FindComponent<Slider>("ProgressBar");
         volumeSlider = FindComponent<Slider>("VolumeSlider");
+        exactMatchToggle = FindComponent<Toggle>("ExactMatchToggle");
 
         if (progressBar != null)
         {
@@ -220,6 +192,11 @@ public class VRUIController : MonoBehaviour
             volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
         }
 
+        if (exactMatchToggle != null)
+        {
+            exactMatchToggle.onValueChanged.AddListener(OnExactMatchChanged);
+        }
+
         if (VRVideoPlayer.Instance != null)
         {
             VRVideoPlayer.Instance.OnVideoStarted += OnVideoStarted;
@@ -234,7 +211,8 @@ public class VRUIController : MonoBehaviour
         if (canvasTransform != null && Camera.main != null)
         {
             var cameraTransform = Camera.main.transform;
-            var targetPosition = cameraTransform.position + cameraTransform.forward * uiDistance + uiOffset;
+            var targetPosition =
+                cameraTransform.position + cameraTransform.forward * uiDistance + uiOffset;
 
             canvasTransform.SetPositionAndRotation(targetPosition, cameraTransform.rotation);
             canvasTransform.localScale = canvasScale;
@@ -245,11 +223,76 @@ public class VRUIController : MonoBehaviour
     {
         UpdateUI();
         HandleVisibility();
+        HandleKeyboardInput();
 
         if (isVisible && Camera.main != null)
         {
             canvasTransform.LookAt(Camera.main.transform);
             canvasTransform.Rotate(0, 180, 0);
+        }
+    }
+
+    private void HandleKeyboardInput()
+    {
+        // Spaceで再生/一時停止
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (VRVideoPlayer.Instance != null)
+            {
+                if (VRVideoPlayer.Instance.IsPlaying)
+                {
+                    VRVideoPlayer.Instance.Pause();
+                }
+                else
+                {
+                    VRVideoPlayer.Instance.Play();
+                }
+            }
+        }
+
+        // 短縮シーク（左矢印キー）
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            if (VRVideoPlayer.Instance != null && VRVideoPlayer.Instance.IsPrepared)
+            {
+                float newProgress = Mathf.Max(0, VRVideoPlayer.Instance.Progress - 0.1f);
+                VRVideoPlayer.Instance.SeekToProgress(newProgress);
+            }
+        }
+
+        // 前進シーク（右矢印キー）
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            if (VRVideoPlayer.Instance != null && VRVideoPlayer.Instance.IsPrepared)
+            {
+                float newProgress = Mathf.Min(1, VRVideoPlayer.Instance.Progress + 0.1f);
+                VRVideoPlayer.Instance.SeekToProgress(newProgress);
+            }
+        }
+
+        // Homeキーでホームに戻る（VR用に実装）
+        if (Input.GetKeyDown(KeyCode.Home))
+        {
+            Debug.Log("[VRUIController] Home key pressed - returning to main menu");
+            // TODO: メインメニュー画面に戻る処理
+        }
+
+        // 0-9で10秒シーク
+        if (Input.anyKey)
+        {
+            foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
+            {
+                if (Input.GetKeyDown(key) && key >= KeyCode.Alpha0 && key <= KeyCode.Alpha9)
+                {
+                    int number = key - KeyCode.Alpha0;
+                    float seekTime = number * 10f; // 0-9 = 0-90秒シーク
+                    if (VRVideoPlayer.Instance != null && VRVideoPlayer.Instance.IsPrepared)
+                    {
+                        VRVideoPlayer.Instance.SeekTo(seekTime);
+                    }
+                    break;
+                }
+            }
         }
     }
 
@@ -322,7 +365,8 @@ public class VRUIController : MonoBehaviour
             var player = VRVideoPlayer.Instance;
             if (player != null && !isDraggingVolumeSlider)
             {
-                volumeSlider.value = player.audioSource != null ? player.audioSource.volume : 1f;
+                var audioSource = player.audioSource;
+                volumeSlider.value = audioSource != null ? audioSource.volume : 1f;
             }
         }
     }
@@ -394,7 +438,7 @@ public class VRUIController : MonoBehaviour
 
         if (VRVideoPlayer.Instance != null)
         {
-            var currentVolume = VRVideoPlayer.Instance.audioSource?.volume ?? 0f;
+            var currentVolume = VRVideoPlayer.Instance.audioSource != null ? VRVideoPlayer.Instance.audioSource.volume : 0f;
             VRVideoPlayer.Instance.SetVolume(Mathf.Min(1f, currentVolume + 0.1f));
         }
     }
@@ -405,7 +449,7 @@ public class VRUIController : MonoBehaviour
 
         if (VRVideoPlayer.Instance != null)
         {
-            var currentVolume = VRVideoPlayer.Instance.audioSource?.volume ?? 0f;
+            var currentVolume = VRVideoPlayer.Instance.audioSource != null ? VRVideoPlayer.Instance.audioSource.volume : 0f;
             VRVideoPlayer.Instance.SetVolume(Mathf.Max(0f, currentVolume - 0.1f));
         }
     }
@@ -452,6 +496,16 @@ public class VRUIController : MonoBehaviour
         }
     }
 
+    private void OnExactMatchChanged(bool value)
+    {
+        ResetHideTimer();
+
+        if (VRVideoPlayer.Instance != null)
+        {
+            VRVideoPlayer.Instance.SetExactMatch(value);
+        }
+    }
+
     private void OnVideoStarted()
     {
         ResetHideTimer();
@@ -467,9 +521,7 @@ public class VRUIController : MonoBehaviour
         ResetHideTimer();
     }
 
-    private void OnTimeUpdated(double time)
-    {
-    }
+    private void OnTimeUpdated(double time) { }
 
     private string FormatTime(double timeInSeconds)
     {
