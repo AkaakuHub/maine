@@ -168,9 +168,12 @@ public class VRVideoPlayer : MonoBehaviour
                     currentVideoData = response.videos[0];
                     Debug.Log($"[VRVideoPlayer] Video data loaded: {currentVideoData.title}");
                     Debug.Log($"[VRVideoPlayer] Video ID: {currentVideoData.id}");
+                    Debug.Log($"[VRVideoPlayer] Video filePath: {currentVideoData.filePath}");
 
-                    // Set up video streaming URL
-                    videoUrl = CreateApiUrl($"video/{encodedPath}");
+                    // Set up video streaming URL using the actual filePath from API response
+                    string actualFilePath = currentVideoData.filePath;
+                    string encodedActualPath = System.Uri.EscapeDataString(actualFilePath);
+                    videoUrl = CreateApiUrl($"video/{encodedActualPath}");
                     Debug.Log($"[VRVideoPlayer] Streaming URL: {videoUrl}");
                     SetupVideoPlayer();
                 }
@@ -250,6 +253,10 @@ public class VRVideoPlayer : MonoBehaviour
             Debug.Log($"[VRVideoPlayer] VideoPlayer created: {videoPlayer != null}");
             Debug.Log($"[VRVideoPlayer] RenderTexture created: {renderTexture != null}");
             Debug.Log($"[VRVideoPlayer] AudioSource created: {audioSource != null}");
+
+            // Prepare the video for playback
+            Debug.Log("[VRVideoPlayer] Starting video preparation...");
+            videoPlayer.Prepare();
         }
         catch (System.Exception e)
         {
