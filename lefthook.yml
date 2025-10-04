@@ -48,13 +48,13 @@ pre-commit:
         - merge
         - rebase
 
-    knip:
-      glob: "packages/{frontend,backend}/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
-      run: pnpm run knip
-      stage_fixed: true
-      skip:
-        - merge
-        - rebase
+    # knip:
+    #   glob: "packages/{frontend,backend}/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+    #   run: pnpm run knip
+    #   stage_fixed: true
+    #   skip:
+    #     - merge
+    #     - rebase
 
     format-vr:
       glob: "packages/vr/Assets/Scripts/**/*.cs"

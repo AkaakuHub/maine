@@ -3,7 +3,7 @@ import { CronJob } from "cron";
 import type {
 	ScanScheduleSettings,
 	SchedulerStatus,
-} from "../../../../../shared/types/scan-schedule-settings";
+} from "../../types/scan-schedule-settings";
 
 /**
  * デフォルトスケジュール設定

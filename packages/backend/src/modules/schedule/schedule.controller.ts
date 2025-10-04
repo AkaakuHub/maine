@@ -9,7 +9,7 @@ import {
 	Post,
 } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import type { ScanScheduleSettings } from "../../../../../shared/types/scan-schedule-settings";
+import type { ScanScheduleSettings } from "../../types/scan-schedule-settings";
 import { ScanSchedulerService } from "../scan/scan-scheduler.service";
 
 interface ValidationResult {
