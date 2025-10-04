@@ -1,3 +1,15 @@
 packages:
-  - 'packages/*'
-  - 'shared/*'
+  - packages/*
+  - shared/*
+
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - '@nestjs/core'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@scarf/scarf'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - lefthook
+  - prisma
+  - sharp
