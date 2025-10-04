@@ -7,7 +7,16 @@ import {
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { SearchVideosDto } from "./dto/search-videos.dto";
+import type { VideoData } from "./videos.service";
 import { VideosService } from "./videos.service";
+
+type SearchVideosResponse = {
+	success: boolean;
+	videos: VideoData[];
+	totalFound: number;
+	message: string;
+	error?: string;
+};
 
 @ApiTags("videos")
 @Controller("videos")
@@ -24,7 +33,9 @@ export class VideosController {
 		description: "完全一致フラグ",
 	})
 	@ApiResponse({ status: 200, description: "動画検索結果" })
-	async searchVideos(@Query() query: SearchVideosDto) {
+	async searchVideos(
+		@Query() query: SearchVideosDto,
+	): Promise<SearchVideosResponse> {
 		try {
 			this.logger.log(`Searching videos with query: "${query.search}"`);
 			this.logger.log(`Query length: ${query.search?.length || 0}`);

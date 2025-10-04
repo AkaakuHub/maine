@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Logger, Post, Res } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
+import type { ScanProgressEvent } from "../../common/sse/sse-connection.store";
 import { sseStore } from "../../common/sse/sse-connection.store";
 
 interface ControlRequestBody {
@@ -58,7 +59,7 @@ export class ScanControlController {
 			}
 
 			// 制御コマンドを送信
-			sseStore.broadcast({
+			const event: ScanProgressEvent = {
 				type: `control_${body.action}` as
 					| "control_pause"
 					| "control_resume"
@@ -66,7 +67,8 @@ export class ScanControlController {
 				scanId: body.scanId,
 				timestamp: new Date().toISOString(),
 				message: `Scan ${body.action} command received`,
-			});
+			};
+			sseStore.broadcast(event);
 
 			console.log(`🎛️ Scan control API: ${body.action} for scan ${body.scanId}`);
 

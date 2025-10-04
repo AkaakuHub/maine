@@ -8,7 +8,18 @@ import {
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
+import type { VideoChapter } from "./chapters.service";
 import { ChaptersService } from "./chapters.service";
+
+type GetVideoChaptersResponse =
+	| { success: true; chapters: VideoChapter[]; hasChapters: boolean }
+	| {
+			success: true;
+			message: string;
+			chapters?: VideoChapter[];
+			hasChapters?: boolean;
+	  }
+	| string;
 
 @ApiTags("chapters")
 @Controller("chapters")
@@ -37,7 +48,7 @@ export class ChaptersController {
 		@Query("filePath") filePath: string,
 		@Query("format") format?: string,
 		@Res({ passthrough: true }) res?: Response,
-	) {
+	): Promise<GetVideoChaptersResponse> {
 		try {
 			if (!filePath) {
 				throw new BadRequestException({
@@ -70,12 +81,7 @@ export class ChaptersController {
 					res.set("Cache-Control", "public, max-age=86400"); // 24時間キャッシュ
 				}
 
-				return new Response(webvtt, {
-					headers: {
-						"Content-Type": "text/vtt; charset=utf-8",
-						"Cache-Control": "public, max-age=86400", // 24時間キャッシュ
-					},
-				});
+				return webvtt;
 			}
 
 			// JSON形式で返す（デフォルト）

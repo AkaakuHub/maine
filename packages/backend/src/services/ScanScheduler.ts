@@ -8,8 +8,9 @@ import {
 	type SchedulerStatus,
 	DEFAULT_SCHEDULE_SETTINGS,
 } from "../types/scanScheduleSettings";
-import { sseStore } from "../libs/sse-connection-store";
 import { ScanSchedulePersistenceService } from "./ScanSchedulePersistenceService";
+import type { ScanProgressEvent } from "src/common/sse/sse-connection.store";
+import { sseStore } from "src/common/sse/sse-connection.store";
 
 /**
  * スケジューラーサービス
@@ -281,11 +282,12 @@ export class ScanScheduler {
 		this.currentExecutionStartTime = new Date();
 
 		// SSEでスケジュール実行開始を通知
-		sseStore.broadcast({
+		const startEvent: ScanProgressEvent = {
 			type: "scheduler_status",
 			message: "スケジュールされたスキャンを開始しました",
 			timestamp: this.currentExecutionStartTime.toISOString(),
-		});
+		};
+		sseStore.broadcast(startEvent);
 
 		try {
 			// スキャン実行
@@ -297,11 +299,12 @@ export class ScanScheduler {
 			console.log("スケジュールされたスキャンが完了しました");
 
 			// SSEで完了通知
-			sseStore.broadcast({
+			const completeEvent: ScanProgressEvent = {
 				type: "scheduler_status",
 				message: "スケジュールされたスキャンが完了しました",
 				timestamp: new Date().toISOString(),
-			});
+			};
+			sseStore.broadcast(completeEvent);
 		} catch (error) {
 			// エラー
 			this.lastExecution = this.currentExecutionStartTime;
@@ -309,12 +312,13 @@ export class ScanScheduler {
 			console.error("スケジュールされたスキャンでエラーが発生:", error);
 
 			// SSEでエラー通知
-			sseStore.broadcast({
+			const errorEvent: ScanProgressEvent = {
 				type: "scheduler_status",
 				message: "スケジュールされたスキャンでエラーが発生しました",
 				error: error instanceof Error ? error.message : String(error),
 				timestamp: new Date().toISOString(),
-			});
+			};
+			sseStore.broadcast(errorEvent);
 		} finally {
 			this.isRunning = false;
 			this.currentExecutionStartTime = null;
@@ -345,11 +349,12 @@ export class ScanScheduler {
 			this.currentExecutionStartTime = null;
 
 			// SSEでタイムアウト通知
-			sseStore.broadcast({
+			const timeoutEvent: ScanProgressEvent = {
 				type: "scheduler_status",
 				message: "スケジュールされたスキャンがタイムアウトしました",
 				timestamp: new Date().toISOString(),
-			});
+			};
+			sseStore.broadcast(timeoutEvent);
 		}
 	}
 
