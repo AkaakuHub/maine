@@ -300,7 +300,7 @@ GameObject:
   - component: {fileID: 1222650412}
   - component: {fileID: 1222650411}
   - component: {fileID: 1222650416}
-  - component: {fileID: 1222650415}
+  - component: {fileID: 1222650417}
   m_Layer: 0
   m_Name: OVROverlayScreen
   m_TagString: Untagged
@@ -398,19 +398,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 180, z: 0}
---- !u!114 &1222650415
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1222650410}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dfd7c206f30cd4f148de728e71642c90, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  videoUrl: https://media.geeksforgeeks.org/wp-content/uploads/20201217163353/Screenrecorder-2020-12-17-16-32-03-350.mp4
 --- !u!114 &1222650416
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -475,6 +462,19 @@ MonoBehaviour:
   useEfficientSharpen: 0
   useAutomaticFiltering: 0
   _previewInEditor: 0
+--- !u!114 &1222650417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222650410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfd7c206f30cd4f148de728e71642c90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  videoUrl: http://localhost:3001/api/video/%2FUsers%2Fakaaku%2FMovies%2Fyt-dlp-data%2Fexample.mp4
 --- !u!1 &1234567890
 GameObject:
   m_ObjectHideFlags: 0

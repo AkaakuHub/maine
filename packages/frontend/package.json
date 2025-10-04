@@ -11,9 +11,6 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@maine/shared-types": "workspace:*",
-		"@maine/shared-utils": "workspace:*",
-		"@prisma/client": "6.8.2",
 		"@types/iconv-lite": "^0.0.1",
 		"clsx": "^2.1.1",
 		"cron": "^4.3.3",
@@ -22,7 +19,6 @@
 		"lucide-react": "^0.511.0",
 		"next": "15.3.3",
 		"next-pwa": "^5.6.0",
-		"node-cron": "^4.2.1",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"react-intersection-observer": "^9.16.0",
@@ -37,7 +33,6 @@
 		"@commitlint/config-conventional": "^19.8.1",
 		"@tailwindcss/postcss": "^4.1.8",
 		"@types/node": "^22.15.29",
-		"@types/node-cron": "^3.0.11",
 		"@types/react": "^19.1.6",
 		"@types/react-dom": "^19.1.5",
 		"babel-loader": "^10.0.0",

@@ -1,5 +1,23 @@
 {
-  "entry": ["src/app/globals.css"],
-  "project": ["src/**/*.ts*"],
-  "ignore": ["**/*.d.ts", "**/fixtures", "**/prisma/generated/**", "**/node_modules/**","**/frontend/public/**", "**/webpack.config.js", "knip.json"]
+  "ignore": [
+    "**/*.d.ts",
+    "**/fixtures",
+    "**/prisma/generated/**",
+    "**/node_modules/**",
+    "**/frontend/public/**",
+    "**/webpack.config.js",
+    "**/dist/**",
+    "**/.next/**",
+    "knip.json"
+  ],
+  "workspaces": {
+    "packages/backend": {
+      "entry": ["src/main.ts"],
+      "project": ["src/**/*.ts*"]
+    },
+    "frontend": {
+      "entry": ["src/app/globals.css", "src/app/layout.tsx"],
+      "project": ["src/**/*.ts*"]
+    }
+  }
 }
