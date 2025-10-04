@@ -9,6 +9,13 @@
       },
       "hash": "f6796e61f7163daa9b9546f99f787e79a35edb36"
     },
+    "com.meta.xr.sdk.core": {
+      "version": "78.0.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.9",
       "depth": 0,
