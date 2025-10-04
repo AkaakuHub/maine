@@ -8,12 +8,6 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
-    "paths": {
-      "@maine/shared-types": ["shared/types/src/index.ts"],
-      "@maine/shared-types/*": ["shared/types/src/*"],
-      "@maine/shared-utils": ["shared/utils/src/index.ts"],
-      "@maine/shared-utils/*": ["shared/utils/src/*"]
-    },
     "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

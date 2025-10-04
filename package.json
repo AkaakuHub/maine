@@ -12,7 +12,6 @@
 		"postinstall": "pnpm lefthook install"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
 		"knip": "^5.60.2",

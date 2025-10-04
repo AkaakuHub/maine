@@ -19,5 +19,6 @@
       "entry": ["src/app/globals.css", "src/app/layout.tsx"],
       "project": ["src/**/*.ts*"]
     }
-  }
+  },
+  "ignoreDependencies": ["tailwindcss"]
 }

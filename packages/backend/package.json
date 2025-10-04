@@ -26,8 +26,6 @@
 		"db:reset": "cd prisma && prisma migrate reset --force"
 	},
 	"dependencies": {
-		"@maine/shared-types": "workspace:*",
-		"@maine/shared-utils": "workspace:*",
 		"@nestjs/common": "^11.0.1",
 		"@nestjs/config": "^4.0.2",
 		"@nestjs/core": "^11.0.1",
@@ -51,14 +49,9 @@
 		"@types/express": "^5.0.0",
 		"@types/jest": "^29.5.14",
 		"@types/node": "^22.10.7",
-		"@types/supertest": "^6.0.2",
-		"globals": "^16.0.0",
 		"jest": "^29.7.0",
 		"prisma": "6.8.2",
-		"source-map-support": "^0.5.21",
-		"supertest": "^7.0.0",
 		"ts-jest": "^29.2.5",
-		"ts-loader": "^9.5.2",
 		"ts-node": "^10.9.2",
 		"tsconfig-paths": "^4.2.0",
 		"typescript": "^5.7.3"

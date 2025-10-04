@@ -1,11 +1,7 @@
-import withPWA from 'next-pwa';
+// import withPWA from 'next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: [
-    "@maine/shared-types",
-    "@maine/shared-utils",
-  ],
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
   },
