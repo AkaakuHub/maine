@@ -1,10 +1,10 @@
 import { prisma } from "../../libs/prisma";
 import { SCAN } from "../../utils/constants";
 
-export type ScanPhase = "discovery" | "metadata" | "database";
-export type ScanType = "full" | "incremental";
+type ScanPhase = "discovery" | "metadata" | "database";
+type ScanType = "full" | "incremental";
 
-export interface ScanCheckpoint {
+interface ScanCheckpoint {
 	id: string;
 	scanId: string;
 	scanType: ScanType;

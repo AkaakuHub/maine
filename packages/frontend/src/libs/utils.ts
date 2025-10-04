@@ -23,8 +23,3 @@ export const formatFileSize = (size: number | string): string => {
 		return `${(sizeNum / (1024 * 1024)).toFixed(1)} MB`;
 	return `${(sizeNum / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 };
-
-export const truncateText = (text: string, maxLength: number): string => {
-	if (text.length <= maxLength) return text;
-	return `${text.slice(0, maxLength).trim()}...`;
-};

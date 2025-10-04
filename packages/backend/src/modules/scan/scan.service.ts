@@ -2,13 +2,13 @@ import { SCAN } from "../../utils";
 import { Injectable, Logger } from "@nestjs/common";
 import type { ScanSettings } from "./scan-settings.service";
 
-export interface ScanStatus {
+interface ScanStatus {
 	isScanning: boolean;
 	progress: number;
 	message: string;
 }
 
-export interface ScanControlResult {
+interface ScanControlResult {
 	message: string;
 	success?: boolean;
 	timestamp?: string;

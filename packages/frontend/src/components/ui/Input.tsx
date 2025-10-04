@@ -4,8 +4,7 @@ import type React from "react";
 import { forwardRef } from "react";
 import { cn } from "@/libs/utils";
 
-export interface InputProps
-	extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	variant?: "default" | "search";
 	leftIcon?: React.ReactNode;
 	rightIcon?: React.ReactNode;

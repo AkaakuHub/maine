@@ -9,7 +9,7 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { ScanProgressEvent } from "@/libs/sse-connection-store";
 
-export interface ScanState {
+interface ScanState {
 	// 接続状態
 	isConnected: boolean;
 	isConnecting: boolean;
@@ -56,7 +56,7 @@ export interface ScanState {
 	};
 }
 
-export interface ScanActions {
+interface ScanActions {
 	// 接続制御
 	setConnectionState: (connected: boolean, count: number) => void;
 	setConnectionError: (error: string | null) => void;
@@ -312,42 +312,3 @@ export const useScanStore = create<ScanStore>()(
 		},
 	),
 );
-
-// Helper hooks for specific state slices
-export const useConnectionState = () =>
-	useScanStore((state) => ({
-		isConnected: state.isConnected,
-		isConnecting: state.isConnecting,
-		connectionError: state.connectionError,
-		connectionCount: state.connectionCount,
-		lastHeartbeat: state.lastHeartbeat,
-	}));
-
-export const useScanProgress = () =>
-	useScanStore((state) => ({
-		isScanning: state.isScanning,
-		scanId: state.scanId,
-		phase: state.phase,
-		progress: state.progress,
-		processedFiles: state.processedFiles,
-		totalFiles: state.totalFiles,
-		currentFile: state.currentFile,
-		message: state.message,
-		error: state.error,
-		isComplete: state.isComplete,
-		completedAt: state.completedAt,
-		processingSpeed: state.processingSpeed,
-		estimatedTimeRemaining: state.estimatedTimeRemaining,
-		phaseStartTime: state.phaseStartTime,
-		totalElapsedTime: state.totalElapsedTime,
-		currentPhaseElapsed: state.currentPhaseElapsed,
-		skipStats: state.skipStats,
-	}));
-
-export const useScanControls = () =>
-	useScanStore((state) => ({
-		isPaused: state.isPaused,
-		canPause: state.canPause,
-		canResume: state.canResume,
-		canCancel: state.canCancel,
-	}));

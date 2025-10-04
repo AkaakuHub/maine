@@ -1,6 +1,6 @@
 import { SCAN } from "../../utils/constants";
 
-export interface ProgressMetrics {
+interface ProgressMetrics {
 	processingSpeed: number; // ファイル/秒
 	estimatedTimeRemaining: number; // 秒
 	totalElapsedTime: number; // 秒

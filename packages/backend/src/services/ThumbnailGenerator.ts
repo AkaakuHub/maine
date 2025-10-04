@@ -9,13 +9,13 @@ import type { VideoMetadata } from "./FFprobeMetadataExtractor";
 
 const execAsync = promisify(exec);
 
-export interface ThumbnailOptions {
+interface ThumbnailOptions {
 	seekTime?: number; // 自動計算（33%地点）を使用
 	quality?: number; // WebP品質（0-100）デフォルト: 70
 	width?: number; // サムネイル幅（ピクセル）デフォルト: 300px（height自動調整）
 }
 
-export interface ThumbnailResult {
+interface ThumbnailResult {
 	success: boolean;
 	thumbnailPath: string | null; // ローカルファイルパス
 	relativePath: string | null; // API配信用の相対パス

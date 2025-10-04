@@ -88,18 +88,6 @@ export const SCHEDULE_INTERVAL_LABELS = {
 } as const;
 
 /**
- * Cronパターンの例（参考用）
- */
-export const CRON_PATTERN_EXAMPLES = {
-	毎日14時: "0 14 * * *",
-	毎週日曜14時: "0 14 * * 0",
-	毎月1日14時: "0 14 1 * *",
-	"6時間ごと": "0 */6 * * *",
-	毎日午前3時: "0 3 * * *",
-	平日9時: "0 9 * * 1-5",
-} as const;
-
-/**
  * 曜日の表示名
  */
 export const WEEKDAY_LABELS = [
@@ -111,21 +99,6 @@ export const WEEKDAY_LABELS = [
 	"金曜日",
 	"土曜日",
 ] as const;
-
-/**
- * スケジュール実行ログエントリ
- */
-export interface ScheduleExecutionLog {
-	id: number;
-	executionType: "manual" | "scheduled";
-	scheduledAt: Date | null; // スケジュール実行の場合の予定時刻
-	startedAt: Date;
-	completedAt: Date | null;
-	status: "running" | "completed" | "failed" | "cancelled" | "timeout";
-	filesProcessed: number;
-	totalFiles: number;
-	errorMessage?: string;
-}
 
 /**
  * スケジューラーの状態

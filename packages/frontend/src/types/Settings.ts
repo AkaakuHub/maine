@@ -5,8 +5,3 @@ export interface ChapterSkipRule {
 	createdAt: Date;
 	updatedAt: Date;
 }
-
-export interface UserSettings {
-	chapterSkipEnabled: boolean;
-	skipNotificationShow: boolean;
-}

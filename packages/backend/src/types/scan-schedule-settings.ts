@@ -33,21 +33,6 @@ export interface ScanScheduleSettings {
 }
 
 /**
- * スケジュール実行ログエントリ
- */
-export interface ScheduleExecutionLog {
-	id: number;
-	executionType: "manual" | "scheduled";
-	scheduledAt: Date | null; // スケジュール実行の場合の予定時刻
-	startedAt: Date;
-	completedAt: Date | null;
-	status: "running" | "completed" | "failed" | "cancelled" | "timeout";
-	filesProcessed: number;
-	totalFiles: number;
-	errorMessage?: string;
-}
-
-/**
  * スケジューラーの状態
  */
 export interface SchedulerStatus {

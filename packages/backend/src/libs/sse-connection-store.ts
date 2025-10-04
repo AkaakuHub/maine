@@ -5,7 +5,7 @@
  * Next.js 15 App Router環境での安定動作を保証
  */
 
-export interface SSEConnection {
+interface SSEConnection {
 	id: string;
 	controller: ReadableStreamDefaultController;
 	createdAt: Date;
@@ -16,7 +16,7 @@ export interface SSEConnection {
 	};
 }
 
-export interface ScanProgressEvent {
+interface ScanProgressEvent {
 	type:
 		| "progress"
 		| "phase"

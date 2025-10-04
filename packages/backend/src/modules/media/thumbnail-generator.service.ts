@@ -8,13 +8,13 @@ import { Injectable, Logger } from "@nestjs/common";
 
 const execAsync = promisify(exec);
 
-export interface ThumbnailOptions {
+interface ThumbnailOptions {
 	seekTime?: number;
 	quality?: number;
 	width?: number;
 }
 
-export interface ThumbnailResult {
+interface ThumbnailResult {
 	success: boolean;
 	thumbnailPath: string | null;
 	relativePath: string | null;
@@ -22,7 +22,7 @@ export interface ThumbnailResult {
 	error?: string;
 }
 
-export interface VideoMetadata {
+interface VideoMetadata {
 	filePath: string;
 	fileName: string;
 	fileSize: number;

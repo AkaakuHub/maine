@@ -5,7 +5,7 @@
  * Next.js 15 App Router環境での安定動作を保証
  */
 
-export interface SSEConnection {
+interface SSEConnection {
 	id: string;
 	controller: ReadableStreamDefaultController;
 	createdAt: Date;
@@ -246,7 +246,7 @@ declare global {
 if (!globalThis.__sseConnectionStore) {
 	globalThis.__sseConnectionStore = SSEConnectionStore.getInstance();
 }
-export const sseStore = globalThis.__sseConnectionStore;
+const sseStore = globalThis.__sseConnectionStore;
 
 // 定期的なクリーンアップ（開発環境のみ）
 if (typeof window === "undefined") {

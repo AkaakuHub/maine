@@ -54,24 +54,3 @@ export const DEFAULT_SCAN_SETTINGS: ScanSettings = {
 	showResourceMonitoring: true,
 	enablePerformanceMetrics: true,
 };
-
-export const SCAN_SETTINGS_CONSTRAINTS = {
-	batchSize: { min: SCAN.MIN_BATCH_SIZE, max: SCAN.MAX_BATCH_SIZE },
-	progressUpdateInterval: {
-		min: SCAN.MIN_PROGRESS_UPDATE_INTERVAL,
-		max: SCAN.MAX_PROGRESS_UPDATE_INTERVAL,
-	},
-	sleepInterval: { min: SCAN.MIN_SLEEP_INTERVAL, max: SCAN.MAX_SLEEP_INTERVAL },
-	maxConcurrentOperations: {
-		min: SCAN.MIN_CONCURRENT_OPERATIONS,
-		max: SCAN.MAX_CONCURRENT_OPERATIONS,
-	},
-	memoryThresholdMB: {
-		min: SCAN.MIN_MEMORY_THRESHOLD_MB,
-		max: SCAN.MAX_MEMORY_THRESHOLD_MB,
-	},
-	autoPauseThreshold: {
-		min: SCAN.MIN_AUTO_PAUSE_THRESHOLD,
-		max: SCAN.MAX_AUTO_PAUSE_THRESHOLD,
-	},
-} as const;

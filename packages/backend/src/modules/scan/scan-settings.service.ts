@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaClient as SettingsPrismaClient } from "../../../prisma/generated/settings";
 
-export interface TimeRange {
+interface TimeRange {
 	enabled: boolean;
 	startHour: number; // 0-23
 	endHour: number; // 0-23
@@ -29,7 +29,7 @@ export interface ScanSettings {
 	enablePerformanceMetrics: boolean; // パフォーマンス指標
 }
 
-export const DEFAULT_SCAN_SETTINGS: ScanSettings = {
+const DEFAULT_SCAN_SETTINGS: ScanSettings = {
 	// 基本設定
 	batchSize: 50,
 	progressUpdateInterval: 10,

@@ -1,5 +1,4 @@
-export const API_BASE_URL =
-	process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export const createApiUrl = (path: string): string => {
 	const cleanPath = path.startsWith("/") ? path.slice(1) : path;

@@ -1,13 +1,13 @@
 import type { ScanSettings } from "../../types/scanSettings";
 import { SCAN } from "../../utils/constants";
 
-export interface MemoryUsage {
+interface MemoryUsage {
 	used: number;
 	total: number;
 	usagePercent: number;
 }
 
-export interface CPUUsage {
+interface CPUUsage {
 	user: number;
 	system: number;
 	percent: number;

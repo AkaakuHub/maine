@@ -10,11 +10,6 @@ export const PAGINATION = {
 	MIN_LIMIT: 1,
 } as const;
 
-// 検索関連
-export const SEARCH = {
-	MAX_QUERY_LENGTH: 100,
-} as const;
-
 // スキャン関連
 export const SCAN = {
 	// デフォルト設定値
@@ -74,24 +69,6 @@ export const SCAN = {
 	MAX_EXECUTION_TIME_MINUTES: 720, // 最大実行時間（12時間）
 	DEFAULT_MONTHLY_DAY: 1, // デフォルト月次実行日（1日）
 } as const;
-
-// FFprobe/FFmpeg関連
-export const FFPROBE = {
-	// デフォルトサムネイル設定
-	DEFAULT_SEEK_TIME: 20, // 秒
-	DEFAULT_THUMBNAIL_QUALITY: 70, // WebP品質
-	DEFAULT_THUMBNAIL_WIDTH: 300, // ピクセル
-	MAX_THUMBNAIL_FILE_SIZE_KB: 100, // KB
-
-	// 並列処理設定
-	DEFAULT_METADATA_CONCURRENCY: 4,
-	DEFAULT_THUMBNAIL_CONCURRENCY: 2, // サムネイル生成は重い処理
-
-	// タイムアウト設定
-	FFPROBE_TIMEOUT_MS: 30000, // 30秒
-	FFMPEG_TIMEOUT_MS: 60000, // 60秒
-} as const;
-
 // テーマ関連
 export const THEME = {
 	STORAGE_KEY: "theme",

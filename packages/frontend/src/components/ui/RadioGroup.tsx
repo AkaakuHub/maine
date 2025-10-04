@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/libs/utils";
 
-export interface ToggleButtonProps {
+interface ToggleButtonProps {
 	checked?: boolean;
 	onToggle?: (checked: boolean) => void;
 	className?: string;

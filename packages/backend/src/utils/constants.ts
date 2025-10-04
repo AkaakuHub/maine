@@ -10,11 +10,6 @@ export const PAGINATION = {
 	MIN_LIMIT: 1,
 } as const;
 
-// 検索関連
-export const SEARCH = {
-	MAX_QUERY_LENGTH: 100,
-} as const;
-
 // スキャン関連
 export const SCAN = {
 	// デフォルト設定値
@@ -91,39 +86,3 @@ export const FFPROBE = {
 	FFPROBE_TIMEOUT_MS: 30000, // 30秒
 	FFMPEG_TIMEOUT_MS: 60000, // 60秒
 } as const;
-
-// API関連
-export const API = {
-	ENDPOINTS: {
-		VIDEOS: "/api/videos",
-		GET_VIDEO: "/api/getVideo",
-		VIDEO_STREAM: "/api/video",
-		PROGRESS: "/api/progress",
-		PROGRAM_INFO: "/api/programInfo",
-		THUMBNAILS: "/api/thumbnails",
-	},
-	TIMEOUT: 30000,
-} as const;
-
-// テーマ関連
-export const THEME = {
-	STORAGE_KEY: "theme",
-	MODES: {
-		LIGHT: "light",
-		DARK: "dark",
-		SYSTEM: "system",
-	},
-	DEFAULT_MODE: "dark",
-} as const;
-
-// 動画時間フォーマット関数
-export const formatDuration = (seconds: number): string => {
-	const hours = Math.floor(seconds / 3600);
-	const minutes = Math.floor((seconds % 3600) / 60);
-	const secs = Math.floor(seconds % 60);
-
-	if (hours > 0) {
-		return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-	}
-	return `${minutes}:${secs.toString().padStart(2, "0")}`;
-};
