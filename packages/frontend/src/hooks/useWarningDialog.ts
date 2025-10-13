@@ -20,7 +20,7 @@ export function useWarningDialog() {
 		if (warningVideoData) {
 			handleCloseStreamingWarning();
 			setTimeout(() => {
-				window.location.href = `/play/${encodeURIComponent(warningVideoData.filePath)}`;
+				window.location.href = `/play/${encodeURIComponent(warningVideoData.videoId)}`;
 			}, 0);
 		}
 	}, [warningVideoData, handleCloseStreamingWarning]);
@@ -29,7 +29,7 @@ export function useWarningDialog() {
 		if (warningVideoData) {
 			handleCloseStreamingWarning();
 			setTimeout(() => {
-				window.location.href = `/play/${encodeURIComponent(warningVideoData.filePath)}?offline=true`;
+				window.location.href = `/play/${encodeURIComponent(warningVideoData.videoId)}?offline=true`;
 			}, 0);
 		}
 	}, [warningVideoData, handleCloseStreamingWarning]);

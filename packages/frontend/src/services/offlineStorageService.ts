@@ -223,6 +223,8 @@ export const getOfflineVideos = async (): Promise<VideoFileData[]> => {
 		watchProgress: 0, // IndexedDBから取得する必要があれば実装
 		watchTime: 0,
 		isLiked: false,
+		isInWatchlist: false,
+		videoId: cached.id, // 一時的にcached.idを使用（本来はvideoIdを保存すべき）
 		createdAt: cached.downloadedAt.toISOString(),
 		episode: undefined,
 		year: undefined,

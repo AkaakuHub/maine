@@ -33,14 +33,12 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 			try {
 				setIsLoadingChapters(true);
 
-				// srcからfilePathを抽出
+				// srcからvideoIdを抽出
 				const url = new URL(src, window.location.origin);
-				const filePath = decodeURIComponent(
-					url.pathname.replace(/^\/api\/video\//, "/"),
-				);
+				const videoId = url.pathname.replace(/^\/api\/video\//, "");
 
 				const response = await fetch(
-					createApiUrl(`/chapters?filePath=${encodeURIComponent(filePath)}`),
+					createApiUrl(`/chapters?videoId=${encodeURIComponent(videoId)}`),
 				);
 
 				if (response.ok) {

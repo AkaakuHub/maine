@@ -1,23 +1,17 @@
-import { createReadStream, statSync } from "node:fs";
-import {
-	Controller,
-	Get,
-	NotFoundException,
-	Param,
-	Query,
-	Res,
-	Headers,
-	InternalServerErrorException,
-} from "@nestjs/common";
+import { createReadStream } from "node:fs";
+import { Controller, Get, Param, Query, Res, Headers } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
 import type { Response } from "express";
-import { findFileInVideoDirectories } from "../../libs/fileUtils";
+import { VideosService } from "./videos.service";
+import { isValidVideoId } from "../../utils/videoIdValidation";
 
 @ApiTags("video")
 @Controller("video")
 export class VideoController {
-	@Get("*filePath")
-	@ApiParam({ name: "filePath", description: "動画ファイルパス" })
+	constructor(private readonly videosService: VideosService) {}
+
+	@Get(":videoId")
+	@ApiParam({ name: "videoId", description: "64文字のSHA-256ハッシュID" })
 	@ApiQuery({
 		name: "download",
 		required: false,
@@ -25,153 +19,125 @@ export class VideoController {
 	})
 	@ApiResponse({ status: 200, description: "動画配信" })
 	@ApiResponse({ status: 206, description: "部分配信 (Rangeリクエスト)" })
-	@ApiResponse({ status: 404, description: "ファイルが見つからない" })
+	@ApiResponse({ status: 400, description: "無効なvideoId" })
+	@ApiResponse({ status: 404, description: "動画が見つからない" })
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
-	async streamVideo(
-		@Param("filePath") filePath: string,
+	async streamVideoByVideoId(
+		@Param("videoId") videoId: string,
 		@Res() res: Response,
 		@Headers() headers: Record<string, string>,
 		@Query("download") isDownload?: string,
 	) {
 		try {
-			const decodedPath = decodeURIComponent(filePath);
+			// videoIdの形式を検証
+			if (!isValidVideoId(videoId)) {
+				res.status(400).json({
+					error: "Invalid videoId format. Expected 64-character SHA-256 hash.",
+					status: 400,
+				});
+				return;
+			}
+
 			const downloadMode = isDownload === "true";
 
-			// 複数のビデオディレクトリからファイルを検索
-			const fileValidation = await findFileInVideoDirectories(decodedPath);
+			// videoIdから動画メタデータを取得
+			const videoData = await this.videosService.getVideoByVideoId(videoId);
 
-			if (!fileValidation.isValid || !fileValidation.exists) {
-				console.error("File not found or invalid:", {
-					filePath: decodedPath,
-					error: fileValidation.error,
-				});
-
-				if (fileValidation.error === "No video directories configured") {
-					res.status(500).json({
-						error: fileValidation.error,
-						status: 500,
-					});
-					return;
-				}
-
+			if (!videoData) {
 				res.status(404).json({
-					error: fileValidation.error || "File not found",
+					error: "Video not found",
 					status: 404,
 				});
 				return;
 			}
 
-			const fullPath = fileValidation.fullPath;
-			const stat = statSync(fullPath);
-			const fileSize = stat.size;
 			const range = headers.range;
+			const fileSize = videoData.fileSize;
 
-			// Range リクエストの処理（動画ストリーミング用）
-			if (range) {
-				const parts = range.replace(/bytes=/, "").split("-");
-				const start = Number.parseInt(parts[0], 10);
-				const end =
-					parts[1] && parts[1].trim() !== ""
-						? Number.parseInt(parts[1], 10)
-						: fileSize - 1;
-
-				// レンジリクエストのバリデーション
-				if (start >= fileSize || (end && end >= fileSize) || start > end) {
-					res.status(416).json({
-						error: "Requested Range Not Satisfiable",
-						status: 416,
-					});
-					return;
-				}
-
-				const chunksize = end - start + 1;
-
-				// レスポンスヘッダー設定（先に設定）
-				res.writeHead(206, {
-					"Content-Range": `bytes ${start}-${end}/${fileSize}`,
-					"Accept-Ranges": "bytes",
-					"Content-Length": chunksize.toString(),
+			if (!range) {
+				// レンジリクエストなし：ファイル全体を配信
+				res.status(200);
+				res.set({
 					"Content-Type": "video/mp4",
+					"Content-Length": fileSize.toString(),
 					"Cache-Control": "public, max-age=31536000",
 					"Access-Control-Allow-Origin": "*",
 					"Access-Control-Allow-Credentials": "true",
-					...(downloadMode && {
-						"Content-Disposition": `attachment; filename="${decodedPath.split(/[/\\]/).pop() || "video.mp4"}"`,
-					}),
 				});
 
-				const file = createReadStream(fullPath, { start, end });
+				// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
+				if (downloadMode) {
+					const fileName = videoData.fileName || "video.mp4";
+					res.set("Content-Disposition", `attachment; filename="${fileName}"`);
+				}
+
+				const file = createReadStream(videoData.filePath);
 				return file.pipe(res);
 			}
 
-			// Range リクエストがない場合は全体を返す
-			const file = createReadStream(fullPath);
+			// Range リクエストの処理（動画ストリーミング用）
+			console.log(`Range request received for videoId ${videoId}:`, range);
 
-			res.status(200);
-			res.set({
-				"Content-Length": fileSize.toString(),
-				"Content-Type": "video/mp4",
+			const parts = range.replace(/bytes=/, "").split("-");
+			const start = Number.parseInt(parts[0], 10);
+			const end =
+				parts[1] && parts[1].trim() !== ""
+					? Number.parseInt(parts[1], 10)
+					: fileSize - 1;
+
+			// レンジリクエストのバリデーション
+			if (start >= fileSize || (end && end >= fileSize) || start > end) {
+				res.status(416).json({
+					error: "Requested Range Not Satisfiable",
+					status: 416,
+				});
+				return;
+			}
+
+			const chunksize = end - start + 1;
+
+			// レスポンスヘッダー設定
+			res.writeHead(206, {
+				"Content-Range": `bytes ${start}-${end}/${fileSize}`,
 				"Accept-Ranges": "bytes",
+				"Content-Length": chunksize.toString(),
+				"Content-Type": "video/mp4",
 				"Cache-Control": "public, max-age=31536000",
 				"Access-Control-Allow-Origin": "*",
 				"Access-Control-Allow-Credentials": "true",
+				...(downloadMode && {
+					"Content-Disposition": `attachment; filename="${videoData.fileName || "video.mp4"}"`,
+				}),
 			});
 
-			// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
-			if (downloadMode) {
-				const fileName = decodedPath.split(/[/\\]/).pop() || "video.mp4";
-				// RFC 5987に準拠したファイル名エンコード（新しいブラウザ用）
-				const encodedFileName = encodeURIComponent(fileName);
-				// ASCII文字のみの場合はシンプルな形式も併記（古いブラウザ用）
-				const containsNonAscii = fileName
-					.split("")
-					.some((char) => char.charCodeAt(0) > 127);
-				const dispositionValue = containsNonAscii
-					? `attachment; filename="video.mp4"; filename*=UTF-8''${encodedFileName}`
-					: `attachment; filename="${fileName}"`;
-				res.set("Content-Disposition", dispositionValue);
-			}
-
+			const file = createReadStream(videoData.filePath, { start, end });
 			return file.pipe(res);
 		} catch (error) {
 			console.error("Video streaming error:", error);
 
 			// @Res()を使用しているため、直接レスポンスを返す
-			if (error instanceof NotFoundException) {
-				const errorResponse = error.getResponse();
-				const errorMessage =
-					typeof errorResponse === "object" &&
-					errorResponse !== null &&
-					"error" in errorResponse
-						? (errorResponse as { error: string }).error
-						: error.message;
-				res.status(404).json({
-					error: errorMessage || "File not found",
-					status: 404,
-				});
-				return;
-			}
-
-			if (error instanceof InternalServerErrorException) {
-				const errorResponse = error.getResponse();
-				const errorMessage =
-					typeof errorResponse === "object" &&
-					errorResponse !== null &&
-					"error" in errorResponse
-						? (errorResponse as { error: string }).error
-						: error.message;
-				res.status(500).json({
-					error: errorMessage || "Internal server error",
-					status: 500,
-				});
-				return;
-			}
-
-			// その他のエラー
 			res.status(500).json({
 				error: error instanceof Error ? error.message : "Internal server error",
 				status: 500,
 			});
 		}
+	}
+
+	// 古いfilePath方式のアクセスを拒否（後方互換性のためのエラーメッセージ）
+	@Get("*path")
+	@ApiResponse({
+		status: 410,
+		description: "古いURL形式はサポートされていません",
+	})
+	async handleDeprecatedUrl(@Res() res: Response) {
+		res.status(410).json({
+			error:
+				"This URL format is no longer supported. Please use videoId-based URLs.",
+			message:
+				"The old file path-based URL format has been deprecated. Please use the new videoId format.",
+			status: 410,
+			suggestion:
+				"Update your application to use videoId instead of file paths.",
+		});
 	}
 }
