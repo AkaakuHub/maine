@@ -47,14 +47,18 @@ export class VideoController {
 				});
 
 				if (fileValidation.error === "No video directories configured") {
-					throw new InternalServerErrorException({
+					res.status(500).json({
 						error: fileValidation.error,
+						status: 500,
 					});
+					return;
 				}
 
-				throw new NotFoundException({
+				res.status(404).json({
 					error: fileValidation.error || "File not found",
+					status: 404,
 				});
+				return;
 			}
 
 			const fullPath = fileValidation.fullPath;
@@ -139,14 +143,42 @@ export class VideoController {
 			return file.pipe(res);
 		} catch (error) {
 			console.error("Video streaming error:", error);
-			if (
-				error instanceof NotFoundException ||
-				error instanceof InternalServerErrorException
-			) {
-				throw error;
+
+			// @Res()を使用しているため、直接レスポンスを返す
+			if (error instanceof NotFoundException) {
+				const errorResponse = error.getResponse();
+				const errorMessage =
+					typeof errorResponse === "object" &&
+					errorResponse !== null &&
+					"error" in errorResponse
+						? (errorResponse as { error: string }).error
+						: error.message;
+				res.status(404).json({
+					error: errorMessage || "File not found",
+					status: 404,
+				});
+				return;
 			}
-			throw new InternalServerErrorException({
-				error: "Internal server error",
+
+			if (error instanceof InternalServerErrorException) {
+				const errorResponse = error.getResponse();
+				const errorMessage =
+					typeof errorResponse === "object" &&
+					errorResponse !== null &&
+					"error" in errorResponse
+						? (errorResponse as { error: string }).error
+						: error.message;
+				res.status(500).json({
+					error: errorMessage || "Internal server error",
+					status: 500,
+				});
+				return;
+			}
+
+			// その他のエラー
+			res.status(500).json({
+				error: error instanceof Error ? error.message : "Internal server error",
+				status: 500,
 			});
 		}
 	}
