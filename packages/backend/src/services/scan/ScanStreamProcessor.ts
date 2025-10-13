@@ -7,6 +7,7 @@ import { FFprobeMetadataExtractor } from "../../services/FFprobeMetadataExtracto
 import { ThumbnailGenerator } from "../../services/ThumbnailGenerator";
 import type { ScanProgressEvent } from "../../common/sse/sse-connection.store";
 import { sseStore } from "../../common/sse/sse-connection.store";
+import * as crypto from "node:crypto";
 
 export interface ProcessedVideoRecord {
 	id: string;
@@ -19,6 +20,7 @@ export interface ProcessedVideoRecord {
 	duration: number | null;
 	thumbnailPath: string | null;
 	lastModified: Date;
+	videoId: string; // SHA-256ハッシュID (32文字)
 }
 
 export interface VideoFile {
@@ -108,6 +110,10 @@ export class ScanStreamProcessor {
 					const parsedInfo = parseVideoFileName(videoFile.fileName);
 
 					// DBレコードとして準備
+					const videoId = crypto
+						.createHash("sha256")
+						.update(videoFile.filePath)
+						.digest("hex");
 					const record: ProcessedVideoRecord = {
 						id: videoFile.filePath,
 						filePath: videoFile.filePath,
@@ -119,6 +125,7 @@ export class ScanStreamProcessor {
 						duration: metadata.duration,
 						thumbnailPath,
 						lastModified: metadata.lastModified,
+						videoId, // SHA-256ハッシュID (32文字)
 					};
 
 					processedCount++;

@@ -15,6 +15,7 @@ import { sseStore } from "../common/sse/sse-connection.store";
 import type { ScanSettings } from "../types/scanSettings";
 import { DEFAULT_SCAN_SETTINGS } from "../types/scanSettings";
 import { SCAN } from "../utils/constants";
+import * as crypto from "node:crypto";
 
 import {
 	ScanStreamProcessor,
@@ -230,6 +231,7 @@ class VideoCacheService {
 				duration: true,
 				thumbnail_path: true,
 				lastModified: true,
+				videoId: true,
 			},
 		});
 
@@ -240,6 +242,7 @@ class VideoCacheService {
 					...record,
 					fileSize: Number(record.fileSize), // BigIntをnumberに変換
 					thumbnailPath: record.thumbnail_path,
+					videoId: record.videoId || "", // videoIdを含める
 				} as ProcessedVideoRecord,
 			]),
 		);
@@ -481,6 +484,10 @@ class VideoCacheService {
 					console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
 				}
 
+				const videoId = crypto
+					.createHash("sha256")
+					.update(videoFile.filePath)
+					.digest("hex");
 				records.push({
 					id: videoFile.filePath,
 					filePath: videoFile.filePath,
@@ -492,6 +499,7 @@ class VideoCacheService {
 					duration: metadata.duration,
 					thumbnailPath,
 					lastModified: metadata.lastModified,
+					videoId, // SHA-256ハッシュID (32文字)
 				});
 			}
 			return records;
@@ -575,6 +583,7 @@ class VideoCacheService {
 							thumbnail_path: record.thumbnailPath,
 							lastModified: record.lastModified,
 							metadata_extracted_at: record.duration ? new Date() : null,
+							videoId: record.videoId, // SHA-256ハッシュID (32文字)
 						},
 						create: {
 							id: record.id,
@@ -588,6 +597,7 @@ class VideoCacheService {
 							thumbnail_path: record.thumbnailPath,
 							lastModified: record.lastModified,
 							metadata_extracted_at: record.duration ? new Date() : null,
+							videoId: record.videoId, // SHA-256ハッシュID (32文字)
 						},
 					});
 				}

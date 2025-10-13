@@ -75,16 +75,19 @@ export class VideoController {
 						? Number.parseInt(parts[1], 10)
 						: fileSize - 1;
 
-				// Rangeリクエストはクライアントの要求通りに応答（ストリーミング用）
-				// 注：チャンクサイズの制限はクライアントに委ねる
+				// レンジリクエストのバリデーション
+				if (start >= fileSize || (end && end >= fileSize) || start > end) {
+					res.status(416).json({
+						error: "Requested Range Not Satisfiable",
+						status: 416,
+					});
+					return;
+				}
 
 				const chunksize = end - start + 1;
 
-				const file = createReadStream(fullPath, { start, end });
-
-				// レスポンスヘッダー設定
-				res.status(206);
-				res.set({
+				// レスポンスヘッダー設定（先に設定）
+				res.writeHead(206, {
 					"Content-Range": `bytes ${start}-${end}/${fileSize}`,
 					"Accept-Ranges": "bytes",
 					"Content-Length": chunksize.toString(),
@@ -92,23 +95,12 @@ export class VideoController {
 					"Cache-Control": "public, max-age=31536000",
 					"Access-Control-Allow-Origin": "*",
 					"Access-Control-Allow-Credentials": "true",
+					...(downloadMode && {
+						"Content-Disposition": `attachment; filename="${decodedPath.split(/[/\\]/).pop() || "video.mp4"}"`,
+					}),
 				});
 
-				// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
-				if (downloadMode) {
-					const fileName = decodedPath.split(/[/\\]/).pop() || "video.mp4";
-					// RFC 5987に準拠したファイル名エンコード（新しいブラウザ用）
-					const encodedFileName = encodeURIComponent(fileName);
-					// ASCII文字のみの場合はシンプルな形式も併記（古いブラウザ用）
-					const containsNonAscii = fileName
-						.split("")
-						.some((char) => char.charCodeAt(0) > 127);
-					const dispositionValue = containsNonAscii
-						? `attachment; filename="video.mp4"; filename*=UTF-8''${encodedFileName}`
-						: `attachment; filename="${fileName}"`;
-					res.set("Content-Disposition", dispositionValue);
-				}
-
+				const file = createReadStream(fullPath, { start, end });
 				return file.pipe(res);
 			}
 
