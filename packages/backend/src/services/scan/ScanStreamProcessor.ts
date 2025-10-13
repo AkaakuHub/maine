@@ -5,8 +5,8 @@ import type { ScanSettings } from "../../types/scanSettings";
 import { SCAN } from "../../utils/constants";
 import { FFprobeMetadataExtractor } from "../../services/FFprobeMetadataExtractor";
 import { ThumbnailGenerator } from "../../services/ThumbnailGenerator";
-import type { ScanProgressEvent } from "src/common/sse/sse-connection.store";
-import { sseStore } from "src/common/sse/sse-connection.store";
+import type { ScanProgressEvent } from "../../common/sse/sse-connection.store";
+import { sseStore } from "../../common/sse/sse-connection.store";
 
 export interface ProcessedVideoRecord {
 	id: string;

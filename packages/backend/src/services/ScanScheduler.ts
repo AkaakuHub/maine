@@ -9,8 +9,8 @@ import {
 	DEFAULT_SCHEDULE_SETTINGS,
 } from "../types/scanScheduleSettings";
 import { ScanSchedulePersistenceService } from "./ScanSchedulePersistenceService";
-import type { ScanProgressEvent } from "src/common/sse/sse-connection.store";
-import { sseStore } from "src/common/sse/sse-connection.store";
+import type { ScanProgressEvent } from "../common/sse/sse-connection.store";
+import { sseStore } from "../common/sse/sse-connection.store";
 
 /**
  * スケジューラーサービス

@@ -8,14 +8,15 @@
     "**/webpack.config.js",
     "**/dist/**",
     "**/.next/**",
-    "knip.json"
+    "knip.json",
+    "packages/vr-cpp/**"
   ],
   "workspaces": {
     "packages/backend": {
       "entry": ["src/main.ts"],
       "project": ["src/**/*.ts*"]
     },
-    "frontend": {
+    "packages/frontend": {
       "entry": ["src/app/globals.css", "src/app/layout.tsx"],
       "project": ["src/**/*.ts*"]
     }
