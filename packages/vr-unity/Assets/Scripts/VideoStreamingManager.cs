@@ -208,6 +208,7 @@ public class VideoStreamingManager : MonoBehaviour
             using (UnityWebRequest uwr = UnityWebRequest.Get(videoUrl))
             {
                 uwr.SetRequestHeader("Range", $"bytes={start}-{end}");
+                Debug.Log($"Requesting bytes {start}-{end}");
                 yield return uwr.SendWebRequest();
 
                 if (uwr.result == UnityWebRequest.Result.Success)
