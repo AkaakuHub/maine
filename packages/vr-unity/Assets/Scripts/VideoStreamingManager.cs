@@ -116,17 +116,14 @@ public class VideoStreamingManager : MonoBehaviour
             _videoPlayer.url = "file://" + _tempFilePath;
 
             if (statusText)
-                statusText.text = "Buffering...";
-            _downloadCoroutine = StartCoroutine(DownloadVideo());
+                statusText.text = "Downloading metadata...";
 
-            // Wait for initial buffer
-            while (_downloadedBytes < initialBufferSize && _downloadedBytes < _fileSize)
-            {
-                yield return null;
-            }
+            // メタデータ優先でダウンロード
+            yield return DownloadMetadataFirst();
 
             if (statusText)
                 statusText.text = "Preparing player...";
+
             _videoPlayer.Prepare();
         }
     }
@@ -279,5 +276,81 @@ public class VideoStreamingManager : MonoBehaviour
         _fileStream?.Close();
         if (File.Exists(_tempFilePath))
             File.Delete(_tempFilePath);
+    }
+
+    private IEnumerator DownloadMetadataFirst()
+    {
+        long metadataSize = (long)Mathf.Min(5 * 1024 * 1024, _fileSize); // 5MBまたはファイルサイズの小さい方
+        long initialDataSize = (long)Mathf.Min(2 * 1024 * 1024, _fileSize - metadataSize); // 2MB
+
+        // 1. まずメタデータ（ファイル末尾）をダウンロード
+        long metadataStart = _fileSize - metadataSize;
+        yield return DownloadRange(metadataStart, _fileSize - 1, metadataStart);
+
+        // 2. 先頭データをダウンロード
+        yield return DownloadRange(0, initialDataSize - 1, 0);
+
+        // 3. 残りをバックグラウンドでダウンロード
+        _downloadCoroutine = StartCoroutine(DownloadRemainingData(initialDataSize, metadataStart));
+
+        // 初期バッファが揃うまで待機
+        while (_downloadedBytes < initialDataSize)
+        {
+            yield return null;
+        }
+    }
+
+    private IEnumerator DownloadRange(long start, long end, long filePosition)
+    {
+        using (UnityWebRequest uwr = UnityWebRequest.Get(videoUrl))
+        {
+            uwr.SetRequestHeader("Range", $"bytes={start}-{end}");
+            Debug.Log($"Downloading metadata bytes {start}-{end}");
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result == UnityWebRequest.Result.Success)
+            {
+                byte[] data = uwr.downloadHandler.data;
+                _fileStream.Seek(filePosition, SeekOrigin.Begin);
+                _fileStream.Write(data, 0, data.Length);
+                _downloadedBytes += data.Length;
+                _fileStream.Flush();
+                Debug.Log($"Downloaded {data.Length} bytes at position {filePosition}");
+            }
+            else
+            {
+                Debug.LogError($"Error downloading range {start}-{end}: {uwr.error}");
+                if (uwr.responseCode == 416)
+                {
+                    Debug.LogWarning($"Range {start}-{end} not satisfiable, adjusting...");
+                    // 範囲を調整して再試行
+                    long adjustedEnd = (long)Mathf.Min(end, _fileSize - 1);
+                    if (adjustedEnd > start)
+                    {
+                        yield return DownloadRange(start, adjustedEnd, filePosition);
+                    }
+                }
+            }
+        }
+    }
+
+    private IEnumerator DownloadRemainingData(long skipStart, long skipEnd)
+    {
+        long currentPos = skipStart;
+
+        // 先頭からskipStartまでをダウンロード
+        currentPos = skipStart;
+        while (currentPos < skipEnd)
+        {
+            long chunkEnd = (long)Mathf.Min(currentPos + chunkSize - 1, skipEnd - 1);
+            yield return DownloadRange(currentPos, chunkEnd, currentPos);
+            currentPos += chunkSize;
+
+            // 再生中でない場合は少し待機
+            if (!_videoPlayer.isPlaying)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
     }
 }
