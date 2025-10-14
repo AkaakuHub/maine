@@ -12,6 +12,8 @@ public class VideoStreamingManager : MonoBehaviour
     [Header("Configuration")]
     public string videoUrl = "YOUR_VIDEO_URL_HERE"; // インスペクターで設定
 
+    public string videoInfoUrl = "YOUR_VIDEO_INFO_URL_HERE"; // インスペクターで設定
+
     public long initialBufferSize = 1 * 1024 * 1024; // 1MB
 
     public long continuousBufferSize = 5 * 1024 * 1024; // 5MB
@@ -129,18 +131,70 @@ public class VideoStreamingManager : MonoBehaviour
         }
     }
 
+    // VideoInfoの型を定義
+    [System.Serializable]
+    private class VideoInfo
+    {
+        public string id;
+        public string title;
+        public string fileName;
+        public string filePath;
+        public long fileSize;
+        public string lastModified;
+        public int? episode;
+        public int? year;
+        public int duration;
+        public string scannedAt;
+        public string thumbnailPath;
+        public string metadataExtractedAt;
+        public string videoId;
+        public double watchProgress;
+        public double watchTime;
+        public bool isLiked;
+        public string lastWatched;
+        public bool isInWatchlist;
+    }
+
+    [System.Serializable]
+    private class VideoInfoAPIType
+    {
+        public bool success;
+        public VideoInfo video;
+    }
+
     private IEnumerator GetFileSize()
     {
-        using (UnityWebRequest uwr = UnityWebRequest.Head(videoUrl))
+        // videoInfoUrlから、.video.fileSizeでファイルサイズを取得する
+        using (UnityWebRequest uwr = UnityWebRequest.Get(videoInfoUrl))
         {
             yield return uwr.SendWebRequest();
             if (uwr.result == UnityWebRequest.Result.Success)
             {
-                string contentLengthStr = uwr.GetResponseHeader("Content-Length");
-                long.TryParse(contentLengthStr, out _fileSize);
+                // レスポンス例: {"success":true,"video":{"fileSize":239007770,...}}
+                string jsonResponse = uwr.downloadHandler.text;
+                Debug.Log($"Video info JSON: {jsonResponse}");
+                try
+                {
+                    var responseObj = JsonUtility.FromJson<VideoInfoAPIType>(jsonResponse);
+                    if (responseObj.success && responseObj.video != null)
+                    {
+                        _fileSize = responseObj.video.fileSize;
+                        Debug.Log($"File size: {_fileSize} bytes");
+                    }
+                    else
+                    {
+                        Debug.LogError("Invalid response format or missing video data.");
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Failed to parse video info JSON: {e.Message}");
+                }
             }
             else
-                Debug.LogError($"Error getting file size: {uwr.error}");
+            {
+                Debug.LogError($"Error getting video info: {uwr.error}");
+            }
         }
     }
 

@@ -1533,7 +1533,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd00ca0452cbb479789b0e6f947fc262, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  videoUrl: 
+  videoUrl: http://localhost:3001/api/video/c4505225fbaaa654851dbe570863c32ecc3b9713584aabac82042b81bec1b5d5
+  videoInfoUrl: http://localhost:3001/api/videos/by-video-id/c4505225fbaaa654851dbe570863c32ecc3b9713584aabac82042b81bec1b5d5
   initialBufferSize: 1048576
   continuousBufferSize: 5242880
   chunkSize: 524288
