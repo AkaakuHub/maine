@@ -2,6 +2,7 @@ import { PAGINATION } from "../../utils";
 import { Injectable, Logger } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
+import * as crypto from "node:crypto";
 
 export interface VideoData {
 	id: string;
@@ -16,10 +17,12 @@ export interface VideoData {
 	scannedAt: Date;
 	thumbnailPath: string | undefined | null;
 	metadataExtractedAt: Date | null;
+	videoId: string | null; // SHA-256ハッシュID (64文字)
 	// 再生進捗情報（DBから取得、デフォルト値0）
 	watchProgress: number;
 	watchTime: number;
 	isLiked: boolean;
+	isInWatchlist: boolean;
 	lastWatched?: Date | null;
 }
 
@@ -36,6 +39,198 @@ export class VideosService {
 	private readonly logger = new Logger(VideosService.name);
 
 	constructor(private readonly prisma: PrismaService) {}
+
+	/**
+	 * ファイルパスからSHA-256ハッシュを生成
+	 * @param filePath 動画ファイルのフルパス
+	 * @returns 64文字のSHA-256ハッシュ文字列
+	 */
+	generateVideoId(filePath: string): string {
+		return crypto.createHash("sha256").update(filePath).digest("hex");
+	}
+
+	/**
+	 * videoIdからVideoMetadataを取得
+	 * @param videoId 64文字のSHA-256ハッシュID
+	 * @returns VideoMetadata or null
+	 */
+	async getVideoByVideoId(videoId: string): Promise<VideoData | null> {
+		try {
+			this.logger.log(`Getting video with videoId: ${videoId}`);
+
+			const video = await this.prisma.videoMetadata.findUnique({
+				where: { videoId },
+				select: {
+					id: true,
+					title: true,
+					fileName: true,
+					filePath: true,
+					fileSize: true,
+					episode: true,
+					year: true,
+					lastModified: true,
+					duration: true,
+					scannedAt: true,
+					thumbnail_path: true,
+					metadata_extracted_at: true,
+					videoId: true,
+				},
+			});
+
+			if (!video) {
+				return null;
+			}
+
+			// progressデータも取得
+			try {
+				const progress = await this.prisma.videoProgress.findUnique({
+					where: { filePath: video.filePath },
+				});
+
+				return {
+					id: video.id,
+					title: video.title,
+					fileName: video.fileName,
+					filePath: video.filePath,
+					fileSize: video.fileSize ? Number(video.fileSize) : 0,
+					lastModified: video.lastModified,
+					episode: video.episode,
+					year: video.year ? video.year.toString() : null,
+					duration: video.duration,
+					scannedAt: video.scannedAt,
+					thumbnailPath: video.thumbnail_path,
+					metadataExtractedAt: video.metadata_extracted_at,
+					videoId: video.videoId,
+					watchProgress: progress?.watchProgress ?? 0,
+					watchTime: progress?.watchTime ?? 0,
+					isLiked: progress?.isLiked ?? false,
+					isInWatchlist: progress?.isInWatchlist ?? false,
+					lastWatched: progress?.lastWatched ?? undefined,
+				};
+			} catch (progressError) {
+				this.logger.error(
+					`Progress error for ${video.filePath}:`,
+					progressError,
+				);
+				return {
+					id: video.id,
+					title: video.title,
+					fileName: video.fileName,
+					filePath: video.filePath,
+					fileSize: video.fileSize ? Number(video.fileSize) : 0,
+					lastModified: video.lastModified,
+					episode: video.episode,
+					year: video.year ? video.year.toString() : null,
+					duration: video.duration,
+					scannedAt: video.scannedAt,
+					thumbnailPath: video.thumbnail_path,
+					metadataExtractedAt: video.metadata_extracted_at,
+					videoId: video.videoId,
+					watchProgress: 0,
+					watchTime: 0,
+					isLiked: false,
+					isInWatchlist: false,
+					lastWatched: undefined,
+				};
+			}
+		} catch (error) {
+			this.logger.error("Error getting video by videoId:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * 既存動画にvideoIdを一括設定（マイグレーション用）
+	 * @returns 処理した動画数
+	 */
+	async migrateExistingVideos(): Promise<number> {
+		this.logger.log("Starting migration of existing videos to videoId...");
+
+		try {
+			// videoIdが未設定の動画を取得
+			const videosWithoutId = await this.prisma.videoMetadata.findMany({
+				where: { videoId: null },
+				select: { id: true, filePath: true },
+			});
+
+			let processedCount = 0;
+
+			for (const video of videosWithoutId) {
+				try {
+					const videoId = this.generateVideoId(video.filePath);
+
+					await this.prisma.videoMetadata.update({
+						where: { id: video.id },
+						data: { videoId },
+					});
+
+					processedCount++;
+					this.logger.log(
+						`Migrated video ${processedCount}/${videosWithoutId.length}: ${video.filePath} -> ${videoId}`,
+					);
+				} catch (error) {
+					this.logger.error(
+						`Failed to migrate video: ${video.filePath}`,
+						error,
+					);
+				}
+			}
+
+			this.logger.log(
+				`Migration completed. Processed ${processedCount} videos.`,
+			);
+			return processedCount;
+		} catch (error) {
+			this.logger.error("Migration failed", error);
+			throw new Error("Migration failed");
+		}
+	}
+
+	// videoIdから動画情報を取得するAPIエンドポイント
+	async getVideoByVideoIdForApi(videoId: string) {
+		try {
+			this.logger.log(`Getting video by videoId: ${videoId}`);
+
+			const video = await this.prisma.videoMetadata.findUnique({
+				where: { videoId },
+			});
+
+			if (!video) {
+				return { success: false, error: "Video not found" };
+			}
+
+			// progressデータも取得
+			const progress = await this.prisma.videoProgress.findUnique({
+				where: { filePath: video.filePath },
+			});
+
+			const videoData: VideoData = {
+				id: video.id,
+				title: video.title,
+				fileName: video.fileName,
+				filePath: video.filePath,
+				fileSize: video.fileSize ? Number(video.fileSize) : 0,
+				lastModified: video.lastModified,
+				episode: video.episode,
+				year: video.year ? video.year.toString() : null,
+				duration: video.duration,
+				scannedAt: video.scannedAt,
+				thumbnailPath: video.thumbnail_path,
+				metadataExtractedAt: video.metadata_extracted_at,
+				videoId: video.videoId,
+				watchProgress: progress?.watchProgress ?? 0,
+				watchTime: progress?.watchTime ?? 0,
+				isLiked: progress?.isLiked ?? false,
+				lastWatched: progress?.lastWatched ?? undefined,
+				isInWatchlist: progress?.isInWatchlist ?? false,
+			};
+
+			return { success: true, video: videoData };
+		} catch (error) {
+			this.logger.error("Error getting video by videoId:", error);
+			return { success: false, error: "Internal server error" };
+		}
+	}
 
 	async searchVideos(query: string): Promise<SearchResult> {
 		try {
@@ -81,9 +276,11 @@ export class VideosService {
 							scannedAt: v.scannedAt,
 							thumbnailPath: v.thumbnail_path,
 							metadataExtractedAt: v.metadata_extracted_at,
+							videoId: v.videoId, // videoIdを追加
 							watchProgress: progress?.watchProgress ?? 0,
 							watchTime: progress?.watchTime ?? 0,
 							isLiked: progress?.isLiked ?? false,
+							isInWatchlist: progress?.isInWatchlist ?? false,
 							lastWatched: progress?.lastWatched ?? undefined,
 						};
 					} catch (progressError) {
@@ -104,9 +301,11 @@ export class VideosService {
 							scannedAt: v.scannedAt,
 							thumbnailPath: v.thumbnail_path,
 							metadataExtractedAt: v.metadata_extracted_at,
+							videoId: v.videoId, // videoIdを追加
 							watchProgress: 0,
 							watchTime: 0,
 							isLiked: false,
+							isInWatchlist: false,
 							lastWatched: undefined,
 						};
 					}
@@ -141,6 +340,21 @@ export class VideosService {
 
 			const video = await this.prisma.videoMetadata.findUnique({
 				where: { filePath },
+				select: {
+					id: true,
+					title: true,
+					fileName: true,
+					filePath: true,
+					fileSize: true,
+					episode: true,
+					year: true,
+					lastModified: true,
+					duration: true,
+					scannedAt: true,
+					thumbnail_path: true,
+					metadata_extracted_at: true,
+					videoId: true, // videoIdを取得
+				},
 			});
 
 			if (!video) {
@@ -166,9 +380,11 @@ export class VideosService {
 					scannedAt: video.scannedAt,
 					thumbnailPath: video.thumbnail_path,
 					metadataExtractedAt: video.metadata_extracted_at,
+					videoId: video.videoId, // videoIdを追加
 					watchProgress: progress?.watchProgress ?? 0,
 					watchTime: progress?.watchTime ?? 0,
 					isLiked: progress?.isLiked ?? false,
+					isInWatchlist: progress?.isInWatchlist ?? false,
 					lastWatched: progress?.lastWatched ?? undefined,
 				};
 			} catch (progressError) {
@@ -189,9 +405,11 @@ export class VideosService {
 					scannedAt: video.scannedAt,
 					thumbnailPath: video.thumbnail_path,
 					metadataExtractedAt: video.metadata_extracted_at,
+					videoId: video.videoId, // videoIdを追加
 					watchProgress: 0,
 					watchTime: 0,
 					isLiked: false,
+					isInWatchlist: false,
 					lastWatched: undefined,
 				};
 			}

@@ -5,23 +5,18 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { VideoInfoType } from "@/types/VideoInfo";
 import type { VideoFileData } from "@/type";
 import { useVideoProgress } from "./useVideoProgress";
-import { useOfflineStorage } from "./useOfflineStorage";
 import { useNetworkStatus } from "./useNetworkStatus";
 import { useNavigationRefresh } from "@/contexts/NavigationRefreshContext";
 import { createApiUrl } from "@/utils/api";
-import { parseVideoFileName } from "@/utils/videoFileNameParser";
-import {
-	offlineStorageService,
-	type CachedVideo,
-} from "@/services/offlineStorageService";
 
-export function useVideoPlayer() {
+export function useVideoPlayer({
+	videoId: explicitVideoId,
+}: { videoId?: string } = {}) {
 	const params = useParams();
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const explicitOfflineMode = searchParams.get("offline") === "true";
 	const { isOnline } = useNetworkStatus();
-	const { getCachedVideoUrl } = useOfflineStorage();
 	const { triggerVideoRefresh } = useNavigationRefresh();
 
 	// オフラインモードの判定: 明示的なオフラインモード or ネットワーク切断時
@@ -39,7 +34,7 @@ export function useVideoPlayer() {
 	const [showDescription, setShowDescription] = useState<boolean>(false);
 	const [isLiked, setIsLiked] = useState<boolean>(false);
 	const [isInWatchlist, setIsInWatchlist] = useState<boolean>(false);
-	const [programInfo, setProgramInfo] = useState<string>("");
+
 	// ビデオ進捗管理（ページ離脱時のみ保存）
 	const videoProgressHook = useVideoProgress({
 		filePath: videoData?.filePath || "",
@@ -47,346 +42,74 @@ export function useVideoPlayer() {
 		onProgressSaved: () => {},
 	});
 
-	// ファイル名から VideoInfo を生成するヘルパー関数
-	const createVideoInfoFromFileName = useCallback(
-		(filePath: string, title: string, episode?: string): VideoInfoType => {
-			// ファイル名の最後の部分（実際のファイル名）を取得
-			const fileName = filePath.split(/[/\\]/).pop() || filePath;
-			const parsedInfo = parseVideoFileName(fileName);
+	// videoIdで動画を読み込む関数
+	const loadVideoByVideoId = useCallback(async (id: string) => {
+		try {
+			const response = await fetch(createApiUrl(`/videos/by-video-id/${id}`));
 
-			return {
-				title: parsedInfo.cleanTitle || title,
-				episode: episode || "",
-				fullTitle: parsedInfo.cleanTitle || title,
-				filePath,
-				description: "",
-				genre: "動画",
-				year: parsedInfo.broadcastDate?.getFullYear().toString() || "不明",
-				duration: "不明",
-				broadcastDate: parsedInfo.broadcastDate,
-				broadcastStation: parsedInfo.broadcastStation,
-				dayOfWeek: parsedInfo.dayOfWeek,
-				timeSlot: parsedInfo.timeSlot,
-				weeklySchedule: parsedInfo.weeklySchedule,
-			};
-		},
-		[],
-	);
-
-	// 番組情報を取得する関数
-	const fetchProgramInfo = useCallback(
-		async (filePath: string) => {
-			if (isOfflineMode) return; // オフラインモードでは番組情報を取得しない
-
-			try {
-				const response = await fetch(
-					createApiUrl(`/programInfo?filePath=${encodeURIComponent(filePath)}`),
-				);
-
-				if (response.ok) {
-					const data = await response.json();
-					if (data.success && data.programInfo) {
-						// 番組情報が空文字列でないかチェック
-						const trimmedProgramInfo = data.programInfo.trim();
-						if (trimmedProgramInfo.length > 0) {
-							setProgramInfo(data.programInfo);
-							// 番組情報が取得できた場合、videoInfoのdescriptionを更新
-							// 改行を保持するため、trimは行わずそのまま使用
-							setVideoInfo((prev) => ({
-								...prev,
-								description: data.programInfo,
-							}));
-							console.log("番組情報を取得しました:", data.filePath);
-						}
-					} else {
-						console.log("番組情報が見つかりません:", filePath);
-					}
-				}
-			} catch (error) {
-				console.log("番組情報の取得に失敗しました:", error);
-				// エラーは無視（番組情報がない場合もあるため）
+			if (!response.ok) {
+				throw new Error(`Failed to fetch video: ${response.status}`);
 			}
-		},
-		[isOfflineMode],
-	);
+
+			const data = await response.json();
+
+			if (!data.success) {
+				throw new Error(data.error || "Video not found");
+			}
+
+			const videoData: VideoFileData = data.video;
+			setVideoData(videoData);
+			setVideoInfo({
+				title: videoData.title,
+				episode: videoData.episode?.toString() || "",
+				fullTitle: videoData.title,
+				filePath: videoData.filePath,
+				description: "",
+				genre: videoData.genre || "動画",
+				year: videoData.year?.toString() || "不明",
+				duration: videoData.duration ? `${videoData.duration}秒` : "不明",
+			});
+
+			// 動画URLを生成
+			const videoUrl = createApiUrl(`/video/${id}`);
+			setVideoSrc(videoUrl);
+
+			// いいね状態とウォッチリスト状態を設定
+			setIsLiked(videoData.isLiked);
+			setIsInWatchlist(videoData.isInWatchlist);
+
+			console.log("Video loaded successfully by videoId:", videoData.title);
+		} catch (error) {
+			console.error("Error loading video by videoId:", error);
+			throw error;
+		}
+	}, []);
 
 	const initializePlayer = useCallback(async () => {
-		if (params.filePath) {
-			setIsLoading(true);
-			const decodedPath = decodeURIComponent(params.filePath as string);
+		const rawVideoId = explicitVideoId ?? params.videoId;
+		const currentVideoId = Array.isArray(rawVideoId)
+			? rawVideoId[0]
+			: rawVideoId;
 
-			try {
-				if (isOfflineMode) {
-					// オフラインモード: キャッシュされた動画データから情報を取得
-					console.log(
-						"オフラインモード: キャッシュされた動画を検索中:",
-						decodedPath,
-					);
+		if (!currentVideoId) {
+			console.error("No videoId provided");
+			setIsLoading(false);
+			return;
+		}
 
-					// 最新のキャッシュされた動画リストを取得
-					const currentCachedVideos: CachedVideo[] =
-						await offlineStorageService.getAllCachedVideos();
-					console.log(
-						"利用可能なキャッシュされた動画:",
-						currentCachedVideos.map((v: CachedVideo) => v.filePath),
-					);
+		setIsLoading(true);
 
-					const cachedVideo = currentCachedVideos.find(
-						(video: CachedVideo) => video.filePath === decodedPath,
-					);
-
-					if (cachedVideo) {
-						console.log(
-							"キャッシュされた動画が見つかりました:",
-							cachedVideo.title,
-						);
-						// オフライン動画のBlobURLを取得
-						const offlineUrl = await getCachedVideoUrl(decodedPath);
-						if (!offlineUrl) {
-							console.error("オフライン動画の取得に失敗しました:", decodedPath);
-							// オフライン動画が見つからない場合、ストリーミングモードに切り替え
-							router.push(`/play/${encodeURIComponent(decodedPath)}`);
-							return;
-						}
-
-						// キャッシュされた動画データからVideoFileDataを構築
-						const offlineVideoData: VideoFileData = {
-							id: `offline-${cachedVideo.filePath}`,
-							filePath: cachedVideo.filePath,
-							title: cachedVideo.title,
-							fileName: cachedVideo.title,
-							fileSize: cachedVideo.size,
-							episode: undefined,
-							duration: cachedVideo.duration,
-							year: undefined,
-							genre: undefined,
-							isLiked: false, // オフラインモードではLike機能は無効
-							watchTime: 0, // オフラインモードでは進捗保存なし
-							watchProgress: 0,
-						};
-
-						setVideoData(offlineVideoData);
-						setIsLiked(false);
-
-						// ファイル名から情報をパースして設定
-						const videoInfo = createVideoInfoFromFileName(
-							decodedPath,
-							cachedVideo.title,
-						);
-						videoInfo.duration = cachedVideo.duration
-							? `${Math.floor(cachedVideo.duration / 60)}:${Math.floor(
-									cachedVideo.duration % 60,
-								)
-									.toString()
-									.padStart(2, "0")}`
-							: "不明";
-						setVideoInfo(videoInfo);
-
-						setVideoSrc(offlineUrl);
-					} else {
-						console.error(
-							"キャッシュされた動画が見つかりません。検索パス:",
-							decodedPath,
-						);
-						console.error(
-							"利用可能なキャッシュされた動画:",
-							currentCachedVideos.map((v: CachedVideo) => ({
-								filePath: v.filePath,
-								title: v.title,
-							})),
-						);
-
-						// オフライン時でキャッシュされた動画が見つからない場合のフォールバック
-						if (!isOnline) {
-							// ファイルパスから基本情報を推測してフォールバック表示
-							const pathParts = decodedPath.split(/[/\\]/);
-							const videoTitle =
-								pathParts[pathParts.length - 1]?.replace(
-									/\.(mp4|mkv|avi|mov)$/i,
-									"",
-								) || "不明な動画";
-
-							const fallbackVideoData: VideoFileData = {
-								id: `fallback-${decodedPath}`,
-								filePath: decodedPath,
-								title: videoTitle,
-								fileName: videoTitle,
-								fileSize: 0,
-								episode: undefined,
-								duration: undefined,
-								year: undefined,
-								genre: undefined,
-								isLiked: false,
-								watchTime: 0,
-								watchProgress: 0,
-							};
-
-							setVideoData(fallbackVideoData);
-
-							// ファイル名から情報をパースして設定
-							const videoInfo = createVideoInfoFromFileName(
-								decodedPath,
-								videoTitle,
-							);
-							videoInfo.description =
-								"オフライン時のため、詳細情報は利用できません。";
-							setVideoInfo(videoInfo);
-
-							// オフライン時はvideoSrcを設定しない（再生不可状態）
-							setVideoSrc("");
-						} else {
-							// オンライン時はストリーミングモードに切り替え
-							router.push(`/play/${encodeURIComponent(decodedPath)}`);
-						}
-						return;
-					}
-				} else {
-					// ストリーミングモード: APIから動画データを取得
-					const response = await fetch(
-						createApiUrl(
-							`/videos?search=${encodeURIComponent(
-								decodedPath,
-							)}&exactMatch=true`,
-						),
-					);
-
-					if (response.ok) {
-						const data = await response.json();
-						const video = data.videos?.find(
-							(a: VideoFileData) => a.filePath === decodedPath,
-						);
-
-						if (video) {
-							setVideoData(video);
-							setIsLiked(video.isLiked);
-
-							// ファイル名から情報をパースして設定
-							const videoInfo = createVideoInfoFromFileName(
-								decodedPath,
-								video.title,
-								video.episode?.toString(),
-							);
-							videoInfo.genre = video.genre || "動画";
-							videoInfo.year = video.year?.toString() || "不明";
-							videoInfo.duration = video.duration
-								? `${Math.floor(video.duration / 60)}:${Math.floor(
-										video.duration % 60,
-									)
-										.toString()
-										.padStart(2, "0")}`
-								: "不明";
-							setVideoInfo(videoInfo);
-						} else {
-							// フォールバック: ファイルパスからタイトルを抽出
-							const pathParts = decodedPath.split(/[/\\]/);
-							const videoTitle =
-								pathParts[pathParts.length - 2] || pathParts[0];
-							const episodeName =
-								pathParts[pathParts.length - 1]?.replace(
-									/\.(mp4|mkv|avi|mov)$/i,
-									"",
-								) || "";
-
-							const fallbackVideoData: VideoFileData = {
-								id: "fallback",
-								filePath: decodedPath,
-								title: videoTitle,
-								fileName: episodeName,
-								fileSize: 0,
-								episode: undefined,
-								duration: undefined,
-								year: undefined,
-								genre: undefined,
-								isLiked: false,
-								watchTime: 0,
-								watchProgress: 0,
-							};
-
-							setVideoData(fallbackVideoData);
-							setIsLiked(false);
-
-							// ファイル名から情報をパースして設定
-							const videoInfo = createVideoInfoFromFileName(
-								decodedPath,
-								videoTitle,
-								episodeName,
-							);
-							setVideoInfo(videoInfo);
-						}
-					}
-
-					// ストリーミング用のビデオソースを設定
-					setVideoSrc(
-						createApiUrl(`/video/${encodeURIComponent(decodedPath)}`),
-					);
-
-					// 番組情報を取得
-					await fetchProgramInfo(decodedPath);
-				}
-			} catch (error) {
-				console.error("Failed to initialize player:", error);
-
-				if (isOfflineMode) {
-					// オフラインモードでエラーが発生した場合、ホームに戻る
-					alert("オフライン動画の読み込みに失敗しました。");
-					router.push("/");
-					return;
-				}
-
-				// ストリーミングモードでのフォールバック処理
-				const pathParts = decodedPath.split(/[/\\]/);
-				const videoTitle = pathParts[pathParts.length - 2] || pathParts[0];
-				const episodeName =
-					pathParts[pathParts.length - 1]?.replace(
-						/\.(mp4|mkv|avi|mov)$/i,
-						"",
-					) || "";
-
-				const fallbackVideoData: VideoFileData = {
-					id: "fallback-error",
-					filePath: decodedPath,
-					title: videoTitle,
-					fileName: episodeName,
-					fileSize: 0,
-					episode: undefined,
-					duration: undefined,
-					year: undefined,
-					genre: undefined,
-					isLiked: false,
-					watchTime: 0,
-					watchProgress: 0,
-				};
-
-				setVideoData(fallbackVideoData);
-				setIsLiked(false);
-				setVideoInfo({
-					title: videoTitle,
-					episode: episodeName,
-					fullTitle: `${videoTitle} - ${episodeName}`,
-					filePath: decodedPath,
-					description: "",
-					genre: "動画",
-					year: "不明",
-					duration: "不明",
-				});
-
-				setVideoSrc(createApiUrl(`/video/${encodeURIComponent(decodedPath)}`));
-
-				// 番組情報を取得
-				await fetchProgramInfo(decodedPath);
-			}
-
+		try {
+			// videoId方式のみ
+			console.log("Loading video by videoId:", currentVideoId);
+			await loadVideoByVideoId(currentVideoId);
+		} catch (error) {
+			console.error("Failed to load video:", error);
+		} finally {
 			setIsLoading(false);
 		}
-	}, [
-		params.filePath,
-		isOfflineMode,
-		getCachedVideoUrl,
-		router,
-		isOnline,
-		fetchProgramInfo,
-		createVideoInfoFromFileName,
-	]);
+	}, [explicitVideoId, params.videoId, loadVideoByVideoId]);
+
 	useEffect(() => {
 		initializePlayer();
 	}, [initializePlayer]);
@@ -436,6 +159,7 @@ export function useVideoPlayer() {
 			}
 		}
 	};
+
 	const toggleLike = async () => {
 		// オフラインモードではLike機能を無効にする
 		if (isOfflineMode || !videoData) return;
@@ -466,19 +190,17 @@ export function useVideoPlayer() {
 	};
 
 	const handleDownload = useCallback(async () => {
-		if (!videoData?.filePath) {
-			console.error("No video data or file path available");
+		if (!videoData?.id) {
+			console.error("No video data or video ID available");
 			return;
 		}
 
 		try {
-			// ダウンロードリンクを作成
-			const downloadUrl = createApiUrl(
-				`/video/${encodeURIComponent(videoData.filePath)}?download=true`,
-			);
+			// ダウンロードリンクを作成（videoIdを使用）
+			const downloadUrl = createApiUrl(`/video/${videoData.id}?download=true`);
 			const link = document.createElement("a");
 			link.href = downloadUrl;
-			link.download = videoData.filePath.split(/[/\\]/).pop() || "video.mp4";
+			link.download = videoData.fileName || "video.mp4";
 			link.target = "_blank";
 
 			document.body.appendChild(link);
@@ -497,7 +219,6 @@ export function useVideoPlayer() {
 		showDescription,
 		isLiked,
 		isInWatchlist,
-		programInfo,
 		handleGoBack,
 		handleGoHome,
 		handleShare,

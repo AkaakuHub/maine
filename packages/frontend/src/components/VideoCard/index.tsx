@@ -88,14 +88,14 @@ const VideoCard = ({
 
 		if (isOfflineMode) {
 			// オフラインモードでは直接オフライン再生
-			router.push(`/play/${encodeURIComponent(video.filePath)}?offline=true`);
+			router.push(`/play/${encodeURIComponent(video.videoId)}?offline=true`);
 		} else {
 			// ストリーミングモードでオフライン版がある場合は警告を表示
 			if (isVideoCached && onShowStreamingWarning) {
 				onShowStreamingWarning(video);
 			} else {
 				// オフライン版がない場合は直接ストリーミング再生
-				router.push(`/play/${encodeURIComponent(video.filePath)}`);
+				router.push(`/play/${encodeURIComponent(video.videoId)}`);
 			}
 		}
 	};

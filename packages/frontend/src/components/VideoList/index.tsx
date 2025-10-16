@@ -93,13 +93,13 @@ const VideoListItem = ({
 
 		if (isOfflineMode) {
 			// オフラインモードでは直接オフライン再生
-			router.push(`/play/${encodeURIComponent(video.filePath)}?offline=true`);
+			router.push(`/play/${encodeURIComponent(video.videoId)}?offline=true`);
 		} else {
 			// ストリーミングモードでは警告チェック
 			if (isVideoCached && onShowStreamingWarning) {
 				onShowStreamingWarning(video);
 			} else {
-				router.push(`/play/${encodeURIComponent(video.filePath)}`);
+				router.push(`/play/${encodeURIComponent(video.videoId)}`);
 			}
 		}
 	};

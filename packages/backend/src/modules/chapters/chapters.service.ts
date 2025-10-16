@@ -1,6 +1,7 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../common/database/prisma.service";
 import { findFileInVideoDirectories } from "../../libs/fileUtils";
 
 const execAsync = promisify(exec);
@@ -36,6 +37,8 @@ interface FFProbeOutput {
 @Injectable()
 export class ChaptersService {
 	private readonly logger = new Logger(ChaptersService.name);
+
+	constructor(private readonly prisma: PrismaService) {}
 
 	/**
 	 * 動画ファイルからチャプター情報を抽出
@@ -109,6 +112,23 @@ export class ChaptersService {
 		const secs = seconds % 60;
 
 		return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toFixed(3).padStart(6, "0")}`;
+	}
+
+	/**
+	 * videoIdからfilePathを取得
+	 */
+	async getFilePathByVideoId(videoId: string): Promise<string | null> {
+		try {
+			const video = await this.prisma.videoMetadata.findUnique({
+				where: { videoId },
+				select: { filePath: true },
+			});
+
+			return video?.filePath || null;
+		} catch (error) {
+			this.logger.error("Error getting filePath by videoId:", error);
+			return null;
+		}
 	}
 
 	/**
