@@ -6,6 +6,7 @@ import { createApiUrl } from "@/utils/api";
 
 export interface CachedVideo {
 	id: string;
+	videoId: string;
 	filePath: string;
 	title: string;
 	blob: Blob;
@@ -49,6 +50,7 @@ class OfflineStorageService {
 	}
 
 	async downloadAndCache(
+		videoId: string,
 		filePath: string,
 		title: string,
 		onProgress?: (progress: DownloadProgress) => void,
@@ -65,7 +67,7 @@ class OfflineStorageService {
 
 		try {
 			const response = await fetch(
-				createApiUrl(`/video/${encodeURIComponent(filePath)}`),
+				createApiUrl(`/video/${encodeURIComponent(videoId)}`),
 				{
 					signal: abortSignal,
 				},
@@ -112,6 +114,7 @@ class OfflineStorageService {
 			// IndexedDBに保存
 			const cachedVideo: CachedVideo = {
 				id: this.generateId(filePath),
+				videoId,
 				filePath,
 				title,
 				blob,

@@ -8,6 +8,7 @@ interface VideoDescriptionProps {
 	showDescription: boolean;
 	onToggleDescription: () => void;
 	filePath?: string;
+	videoId?: string;
 	title?: string;
 }
 
@@ -16,6 +17,7 @@ export default function VideoDescription({
 	showDescription,
 	onToggleDescription,
 	filePath,
+	videoId,
 	title,
 }: VideoDescriptionProps) {
 	const {
@@ -32,10 +34,10 @@ export default function VideoDescription({
 	const downloading = filePath ? isDownloading[filePath] || false : false;
 
 	const handleDownload = async () => {
-		if (!filePath || !title) return;
+		if (!filePath || !videoId || !title) return;
 
 		try {
-			await downloadVideo(filePath, title);
+			await downloadVideo(videoId, filePath, title);
 		} catch (error) {
 			console.error("Download failed:", error);
 		}

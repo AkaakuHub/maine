@@ -53,7 +53,7 @@ const VideoCard = ({
 	// ダウンロード処理
 	const handleDownload = async () => {
 		try {
-			await downloadVideo(video.filePath, video.title);
+			await downloadVideo(video.videoId, video.filePath, video.title);
 			setShowDownloadConfirm(false);
 			setShowMenu(false);
 		} catch (error) {

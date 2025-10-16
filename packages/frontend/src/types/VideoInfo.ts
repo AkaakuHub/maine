@@ -3,6 +3,7 @@ export interface VideoInfoType {
 	episode: string;
 	fullTitle: string;
 	filePath: string;
+	videoId: string;
 	description?: string;
 	genre?: string;
 	year?: string;

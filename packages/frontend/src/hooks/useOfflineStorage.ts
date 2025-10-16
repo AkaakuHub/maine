@@ -13,7 +13,11 @@ interface UseOfflineStorageReturn {
 	downloadProgress: Record<string, DownloadProgress>;
 	cacheSize: number;
 	storageEstimate: { usage: number; quota: number } | null;
-	downloadVideo: (filePath: string, title: string) => Promise<void>;
+	downloadVideo: (
+		videoId: string,
+		filePath: string,
+		title: string,
+	) => Promise<void>;
 	deleteVideo: (filePath: string) => Promise<void>;
 	clearCache: () => Promise<void>;
 	getCachedVideoUrl: (filePath: string) => Promise<string | null>;
@@ -65,7 +69,7 @@ export function useOfflineStorage(): UseOfflineStorageReturn {
 
 	// 動画をダウンロードしてキャッシュ
 	const downloadVideo = useCallback(
-		async (filePath: string, title: string) => {
+		async (videoId: string, filePath: string, title: string) => {
 			if (isDownloading[filePath]) {
 				throw new Error("この動画は既にダウンロード中です");
 			}
@@ -81,6 +85,7 @@ export function useOfflineStorage(): UseOfflineStorageReturn {
 
 			try {
 				await offlineStorageService.downloadAndCache(
+					videoId,
 					filePath,
 					title,
 					(progress) => {

@@ -28,6 +28,7 @@ export function useVideoPlayer({
 		episode: "",
 		fullTitle: "",
 		filePath: "",
+		videoId: "",
 	});
 	const [videoSrc, setVideoSrc] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -64,6 +65,7 @@ export function useVideoPlayer({
 				episode: videoData.episode?.toString() || "",
 				fullTitle: videoData.title,
 				filePath: videoData.filePath,
+				videoId: videoData.videoId,
 				description: "",
 				genre: videoData.genre || "動画",
 				year: videoData.year?.toString() || "不明",
@@ -190,14 +192,16 @@ export function useVideoPlayer({
 	};
 
 	const handleDownload = useCallback(async () => {
-		if (!videoData?.id) {
+		if (!videoData?.videoId) {
 			console.error("No video data or video ID available");
 			return;
 		}
 
 		try {
 			// ダウンロードリンクを作成（videoIdを使用）
-			const downloadUrl = createApiUrl(`/video/${videoData.id}?download=true`);
+			const downloadUrl = createApiUrl(
+				`/video/${videoData.videoId}?download=true`,
+			);
 			const link = document.createElement("a");
 			link.href = downloadUrl;
 			link.download = videoData.fileName || "video.mp4";

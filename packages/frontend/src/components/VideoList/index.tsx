@@ -111,7 +111,7 @@ const VideoListItem = ({
 		setShowMenu(false);
 
 		try {
-			await downloadVideo(video.filePath, video.title);
+			await downloadVideo(video.videoId, video.filePath, video.title);
 		} catch (error) {
 			console.error("ダウンロードエラー:", error);
 		}

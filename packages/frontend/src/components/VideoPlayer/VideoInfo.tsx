@@ -155,6 +155,7 @@ export default function VideoInfo({
 				showDescription={showDescription}
 				onToggleDescription={onToggleDescription}
 				filePath={videoInfo.filePath}
+				videoId={videoInfo.videoId}
 				title={videoInfo.title}
 			/>
 		</div>
