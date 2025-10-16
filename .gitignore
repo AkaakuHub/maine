@@ -99,6 +99,5 @@ package.copy.json
 *.tgz
 /prisma/*.db-journal
 packages/backend/prisma/generated/*
-# /shared/prisma/migrations
 
 /temp

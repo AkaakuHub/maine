@@ -4,8 +4,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"workspaces": [
-		"packages/*",
-		"shared/*"
+		"packages/*"
 	],
 	"scripts": {
 		"dev": "concurrently \"pnpm --filter @maine/frontend dev\" \"pnpm --filter @maine/backend start:dev\"",

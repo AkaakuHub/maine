@@ -164,10 +164,6 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
-  shared/types: {}
-
-  shared/utils: {}
-
 packages:
 
   '@alloc/quick-lru@5.2.0':
