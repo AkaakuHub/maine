@@ -31,9 +31,12 @@ class APIClient {
 		return response.json();
 	}
 
-	async getVideoStream(filePath: string): Promise<string> {
+	async getVideoStream(videoId: string, filePath?: string): Promise<string> {
 		if (this.isOffline) {
 			// オフライン時はIndexedDBから取得
+			if (!filePath) {
+				throw new Error("filePath is required for offline mode");
+			}
 			const { getOfflineVideoBlob } = await import(
 				"@/services/offlineStorageService"
 			);
@@ -42,7 +45,7 @@ class APIClient {
 		}
 
 		// オンライン時はストリーミングURL
-		return createApiUrl(`/video/${encodeURIComponent(filePath)}`);
+		return createApiUrl(`/video/${encodeURIComponent(videoId)}`);
 	}
 
 	async saveProgress(filePath: string, progress: number): Promise<void> {
