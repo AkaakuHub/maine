@@ -1,3 +1,0 @@
-TODO: 番組情報txtがあれば取得
-TODO: ダブルタップで飛ばす
-TODO: PWA対応

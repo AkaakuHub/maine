@@ -8,12 +8,14 @@
 		"shared/*"
 	],
 	"scripts": {
+		"dev": "concurrently \"pnpm --filter @maine/frontend dev\" \"pnpm --filter @maine/backend start:dev\"",
 		"knip": "knip",
 		"postinstall": "pnpm lefthook install"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
+		"concurrently": "^9.2.1",
 		"knip": "^5.60.2",
 		"lefthook": "^1.11.13",
 		"typescript": "^5.8.3"
