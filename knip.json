@@ -9,17 +9,22 @@
     "**/dist/**",
     "**/.next/**",
     "knip.json",
-    "packages/vr-cpp/**"
+    "packages/apps/vr-cpp/**",
+    "packages/apps/vr-unity/**"
   ],
   "workspaces": {
-    "packages/backend": {
+    "packages/apps/backend": {
       "entry": ["src/main.ts"],
       "project": ["src/**/*.ts*"]
     },
-    "packages/frontend": {
+    "packages/apps/frontend": {
       "entry": ["src/app/globals.css", "src/app/layout.tsx"],
+      "project": ["src/**/*.ts*"]
+    },
+    "packages/libs": {
       "project": ["src/**/*.ts*"]
     }
   },
-  "ignoreDependencies": ["tailwindcss"]
+  "ignoreDependencies": ["tailwindcss"],
+  "includeEntryExports": true
 }

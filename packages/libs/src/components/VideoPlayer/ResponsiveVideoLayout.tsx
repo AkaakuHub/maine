@@ -25,7 +25,7 @@ interface ResponsiveVideoLayoutProps {
 	initialTime?: number;
 }
 
-export default function ResponsiveVideoLayout({
+export function ResponsiveVideoLayout({
 	videoSrc,
 	videoInfo,
 	videoData,

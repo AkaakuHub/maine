@@ -28,8 +28,8 @@
       "@/*": [
         "./src/*"
       ],
-      "@maine/libs/*": [
-        "../../libs/src/*"
+      "@maine/libs": [
+        "../../libs/src/index"
       ]
     }
   },

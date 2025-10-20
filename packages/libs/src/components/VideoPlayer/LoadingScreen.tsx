@@ -1,6 +1,6 @@
 "use client";
 
-export default function LoadingScreen() {
+export function LoadingScreen() {
 	return (
 		<div className="min-h-screen bg-surface-variant flex items-center justify-center">
 			<div className="text-center">

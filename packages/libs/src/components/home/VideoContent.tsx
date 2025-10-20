@@ -3,11 +3,11 @@
 import { Search } from "lucide-react";
 import VideoGridContainer from "../../components/VideoGridContainer";
 import VideoList from "../../components/VideoList";
-import EmptyState from "../../components/EmptyState";
-import LoadingState from "../../components/LoadingState";
 import Button from "../../components/ui/Button";
 import type { VideoFileData } from "../../type";
 import type { ViewMode, TabType } from "../../stores/appStateStore";
+import { LoadingState } from "../LoadingState";
+import { EmptyState } from "../EmptyState";
 
 interface PaginationData {
 	total: number;

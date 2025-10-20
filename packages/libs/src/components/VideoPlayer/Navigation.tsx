@@ -9,7 +9,7 @@ interface NavigationProps {
 	onOpenSettings: () => void;
 }
 
-export default function Navigation({
+export function Navigation({
 	onGoBack,
 	onGoHome,
 	onShare,

@@ -60,4 +60,4 @@ const StreamingWarningDialog = ({
 	);
 };
 
-export default StreamingWarningDialog;
+export { StreamingWarningDialog };

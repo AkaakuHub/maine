@@ -7,7 +7,7 @@ interface PWADebugInfoProps {
 	className?: string;
 }
 
-export default function PWADebugInfo({ className }: PWADebugInfoProps) {
+export function PWADebugInfo({ className }: PWADebugInfoProps) {
 	const [serviceWorkerStatus, setServiceWorkerStatus] =
 		useState<string>("未対応");
 	const [cacheStatus, setCacheStatus] = useState<string>("確認中...");

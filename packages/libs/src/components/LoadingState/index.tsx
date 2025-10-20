@@ -190,4 +190,4 @@ const LoadingState = ({
 	);
 };
 
-export default LoadingState;
+export { LoadingState };
