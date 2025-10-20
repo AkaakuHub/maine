@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { WifiOff } from "lucide-react";
-import Navigation from "@/components/VideoPlayer/Navigation";
-import LoadingScreen from "@/components/VideoPlayer/LoadingScreen";
-import ResponsiveVideoLayout from "@/components/VideoPlayer/ResponsiveVideoLayout";
-import { SettingsModal } from "@/components/settings/SettingsModal";
-import { useVideoPlayer } from "@/hooks/useVideoPlayer";
-import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import Navigation from "@maine/libs/components/VideoPlayer/Navigation";
+import LoadingScreen from "@maine/libs/components/VideoPlayer/LoadingScreen";
+import ResponsiveVideoLayout from "@maine/libs/components/VideoPlayer/ResponsiveVideoLayout";
+import { SettingsModal } from "@maine/libs/components/settings/SettingsModal";
+import { useNetworkStatus } from "@maine/libs/hooks/useNetworkStatus";
+import { useVideoPlayer } from "@maine/libs/hooks/useVideoPlayer";
 
 export default function PlayPage() {
 	const router = useRouter();

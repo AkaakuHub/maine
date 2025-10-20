@@ -12,16 +12,16 @@ import {
 	Settings,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ScanProgressBar } from "@/components/scan/ScanProgressBar";
-import { ScanControlButtons } from "@/components/scan/ScanControlButtons";
-import { ScanSettingsPanel } from "@/components/scan/ScanSettingsPanel";
-import { ScanSchedulePanel } from "@/components/scan/ScanSchedulePanel";
-import { SafeDateDisplay } from "@/components/common/SafeDateDisplay";
-import { SettingsModal } from "@/components/settings/SettingsModal";
-import { formatCurrentTime } from "@/utils/safeDateFormat";
-import { createApiUrl } from "@/utils/api";
-import { useScanProgress } from "@/hooks/useScanProgress";
-import { cn } from "@/libs/utils";
+import { ScanProgressBar } from "@maine/libs/components/scan/ScanProgressBar";
+import { ScanControlButtons } from "@maine/libs/components/scan/ScanControlButtons";
+import { ScanSettingsPanel } from "@maine/libs/components/scan/ScanSettingsPanel";
+import { ScanSchedulePanel } from "@maine/libs/components/scan/ScanSchedulePanel";
+import { SafeDateDisplay } from "@maine/libs/components/common/SafeDateDisplay";
+import { SettingsModal } from "@maine/libs/components/settings/SettingsModal";
+import { formatCurrentTime } from "@maine/libs/utils/safeDateFormat";
+import { createApiUrl } from "@maine/libs/utils/api";
+import { useScanProgress } from "@maine/libs/hooks/useScanProgress";
+import { cn } from "@maine/libs/libs/utils";
 
 /**
  * スキャン管理ページ

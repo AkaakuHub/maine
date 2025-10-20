@@ -27,7 +27,7 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
-  packages/backend:
+  packages/apps/backend:
     dependencies:
       '@nestjs/common':
         specifier: ^11.0.1
@@ -112,17 +112,11 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
-  packages/frontend:
+  packages/apps/frontend:
     dependencies:
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      idb:
-        specifier: ^8.0.3
-        version: 8.0.3
-      lucide-react:
-        specifier: ^0.511.0
-        version: 0.511.0(react@19.2.0)
+      '@maine/libs':
+        specifier: workspace:*
+        version: link:../../libs
       next:
         specifier: 15.3.3
         version: 15.3.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -135,12 +129,6 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.2.0(react@19.2.0)
-      tailwind-merge:
-        specifier: ^3.3.0
-        version: 3.3.1
-      zustand:
-        specifier: ^5.0.8
-        version: 5.0.8(@types/react@19.2.0)(react@19.2.0)
     devDependencies:
       '@biomejs/biome':
         specifier: 1.9.4
@@ -160,6 +148,46 @@ importers:
       tailwindcss:
         specifier: ^4.1.8
         version: 4.1.14
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
+  packages/libs:
+    dependencies:
+      '@types/react':
+        specifier: ^19.1.6
+        version: 19.2.0
+      '@types/react-dom':
+        specifier: ^19.1.5
+        version: 19.2.0(@types/react@19.2.0)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      idb:
+        specifier: ^8.0.3
+        version: 8.0.3
+      lucide-react:
+        specifier: ^0.511.0
+        version: 0.511.0(react@19.2.0)
+      react:
+        specifier: ^19.1.0
+        version: 19.2.0
+      react-dom:
+        specifier: ^19.1.0
+        version: 19.2.0(react@19.2.0)
+      tailwind-merge:
+        specifier: ^3.3.0
+        version: 3.3.1
+      zustand:
+        specifier: ^5.0.8
+        version: 5.0.8(@types/react@19.2.0)(react@19.2.0)
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 1.9.4
+        version: 1.9.4
+      '@types/node':
+        specifier: ^22.15.29
+        version: 22.18.8
       typescript:
         specifier: ^5.8.3
         version: 5.9.3

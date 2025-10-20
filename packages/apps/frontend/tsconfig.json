@@ -1,8 +1,12 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["dom", "dom.iterable", "es6"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es6"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -21,15 +25,12 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/app/*": ["./src/app/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/stores/*": ["./src/stores/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/utils/*": ["./src/utils/*"],
-      "@/libs/*": ["./src/libs/*"],
-      "@/services/*": ["./src/services/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@maine/libs/*": [
+        "../../libs/src/*"
+      ]
     }
   },
   "include": [
@@ -38,5 +39,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

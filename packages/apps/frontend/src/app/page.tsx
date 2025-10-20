@@ -2,25 +2,25 @@
 
 import { useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useVideos } from "@/hooks/useVideos";
-import { useOfflineStorage } from "@/hooks/useOfflineStorage";
-import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { useWarningDialog } from "@/hooks/useWarningDialog";
-import { useOfflineVideoManagement } from "@/hooks/useOfflineVideoManagement";
-import { useVideoActions } from "@/hooks/useVideoActions";
-import { useAppStateStore, type TabType } from "@/stores/appStateStore";
-import { useNavigationRefresh } from "@/contexts/NavigationRefreshContext";
-import { HeaderSection } from "@/components/home/HeaderSection";
-import { TabNavigation } from "@/components/home/TabNavigation";
-import { SearchSection } from "@/components/home/SearchSection";
-import { OfflineManagementPanel } from "@/components/home/OfflineManagementPanel";
-import { VideoContent } from "@/components/home/VideoContent";
-import EmptyState from "@/components/EmptyState";
-import LoadingState from "@/components/LoadingState";
-import StreamingWarningDialog from "@/components/StreamingWarningDialog";
-import PWADebugInfo from "@/components/PWADebugInfo";
-import { SettingsModal } from "@/components/settings/SettingsModal";
-import { PAGINATION } from "@/utils/constants";
+import { useVideos } from "@maine/libs/hooks/useVideos";
+import { useOfflineStorage } from "@maine/libs/hooks/useOfflineStorage";
+import { useNetworkStatus } from "@maine/libs/hooks/useNetworkStatus";
+import { useWarningDialog } from "@maine/libs/hooks/useWarningDialog";
+import { useOfflineVideoManagement } from "@maine/libs/hooks/useOfflineVideoManagement";
+import { useVideoActions } from "@maine/libs/hooks/useVideoActions";
+import { useAppStateStore, type TabType } from "@maine/libs/stores/appStateStore";
+import { useNavigationRefresh } from "@maine/libs/contexts/NavigationRefreshContext";
+import { HeaderSection } from "@maine/libs/components/home/HeaderSection";
+import { TabNavigation } from "@maine/libs/components/home/TabNavigation";
+import { SearchSection } from "@maine/libs/components/home/SearchSection";
+import { OfflineManagementPanel } from "@maine/libs/components/home/OfflineManagementPanel";
+import { VideoContent } from "@maine/libs/components/home/VideoContent";
+import EmptyState from "@maine/libs/components/EmptyState";
+import LoadingState from "@maine/libs/components/LoadingState";
+import StreamingWarningDialog from "@maine/libs/components/StreamingWarningDialog";
+import PWADebugInfo from "@maine/libs/components/PWADebugInfo";
+import { SettingsModal } from "@maine/libs/components/settings/SettingsModal";
+import { PAGINATION } from "@maine/libs/utils/constants";
 
 const HomeContent = () => {
 	// ネットワーク状態

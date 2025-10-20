@@ -1,0 +1,282 @@
+import { useState } from "react";
+import { cn } from "../../libs/utils";
+import type { VideoChapter } from "../../services/chapterService";
+
+interface ChapterProgressBarProps {
+	duration: number;
+	currentTime: number;
+	chapters: VideoChapter[];
+	onSeek: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onSeekStart: () => void;
+	onSeekEnd: (time: number) => void;
+	getSeekStep: () => number;
+	isSeeking?: boolean;
+	className?: string;
+}
+
+export default function ChapterProgressBar({
+	duration,
+	currentTime,
+	chapters,
+	onSeek,
+	onSeekStart,
+	onSeekEnd,
+	getSeekStep,
+	isSeeking = false,
+	className = "",
+}: ChapterProgressBarProps) {
+	const [hoveredChapter, setHoveredChapter] = useState<number | null>(null);
+	const [isHovered, setIsHovered] = useState(false);
+
+	// 現在のチャプターを取得
+	const getCurrentChapter = () => {
+		return chapters.find(
+			(chapter) =>
+				currentTime >= chapter.startTime && currentTime <= chapter.endTime,
+		);
+	};
+
+	// シークバーでの位置計算
+	const getChapterPosition = (chapter: VideoChapter) => {
+		return (chapter.startTime / duration) * 100;
+	};
+
+	// range input の onChange ハンドラー
+	const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		onSeek(e);
+	};
+
+	// シーク開始ハンドラー
+	const handleSeekStart = () => {
+		onSeekStart();
+	};
+
+	// シーク終了ハンドラー（マウス用）
+	const handleSeekEnd = (e: React.MouseEvent<HTMLInputElement>) => {
+		const time = Number.parseFloat(e.currentTarget.value);
+		onSeekEnd(time);
+		// シーク後は即座にフォーカスを外して、キーボードイベントを親に委ねる
+		e.currentTarget.blur();
+	};
+
+	// シーク終了ハンドラー（タッチ用）
+	const handleSeekEndTouch = (e: React.TouchEvent<HTMLInputElement>) => {
+		const time = Number.parseFloat(e.currentTarget.value);
+		onSeekEnd(time);
+		// シーク後は即座にフォーカスを外して、キーボードイベントを親に委ねる
+		e.currentTarget.blur();
+	};
+
+	if (chapters.length === 0) {
+		// チャプターがない場合も新しいスタイルのシークバー
+		const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+		return (
+			<div className={cn("mb-3", className)}>
+				<div className="relative w-full h-3 flex items-center">
+					{/* 背景バー */}
+					<div
+						className={cn(
+							"absolute w-full bg-surface-hover rounded-lg transition-all duration-150",
+							isHovered ? "h-2 top-0.5" : "h-1 top-1",
+						)}
+					/>
+
+					{/* プログレスバー */}
+					<div
+						className={cn(
+							"absolute bg-primary rounded-lg",
+							isSeeking ? "" : "transition-all duration-150",
+							isHovered ? "h-2 top-0.5" : "h-1 top-1",
+						)}
+						style={{ width: `${progress}%` }}
+					/>
+
+					{/* プログレスバー右端の丸いつまみ */}
+					<div
+						className={cn(
+							"absolute bg-primary rounded-full shadow-lg z-25",
+							isSeeking ? "" : "transition-all duration-150",
+							isHovered ? "w-5 h-5 -top-1" : "w-3 h-3 top-0",
+						)}
+						style={{
+							left: `${progress}%`,
+							transform: "translateX(-50%)",
+						}}
+					/>
+
+					{/* 透明なシークバー */}
+					<input
+						type="range"
+						min={0}
+						max={duration || 0}
+						step={getSeekStep()}
+						value={currentTime}
+						onChange={handleSeekChange}
+						onMouseDown={handleSeekStart}
+						onMouseUp={handleSeekEnd}
+						onTouchStart={handleSeekStart}
+						onTouchEnd={handleSeekEndTouch}
+						onMouseEnter={() => setIsHovered(true)}
+						onMouseLeave={() => setIsHovered(false)}
+						className="absolute inset-0 w-full h-3 bg-transparent appearance-none cursor-pointer z-30 opacity-0"
+					/>
+				</div>
+			</div>
+		);
+	}
+
+	const currentChapter = getCurrentChapter();
+
+	return (
+		<div className={cn("mb-3", className)}>
+			{/* チャプタータイトル表示 */}
+			{currentChapter && (
+				<div
+					className="flex items-center justify-between mb-1 text-xs text-white" // tailwind-ignore
+				>
+					<span>{currentChapter.title}</span>
+				</div>
+			)}
+
+			{/* チャプター対応シークバー */}
+			<div className="relative w-full h-3 flex items-center">
+				{/* 分割された背景バー */}
+				{chapters.map((chapter, index) => {
+					const isHovered =
+						hoveredChapter !== null &&
+						String(hoveredChapter) === String(chapter.id);
+					const width =
+						((chapter.endTime - chapter.startTime) / duration) * 100;
+					const left = getChapterPosition(chapter);
+
+					return (
+						<div
+							key={`bg-${chapter.id}`}
+							className={cn(
+								"absolute transition-all duration-150",
+								isHovered
+									? "bg-surface-elevated h-2 top-0.5"
+									: "bg-surface-hover h-1 top-1",
+								index === 0 ? "rounded-l-lg" : "",
+								index === chapters.length - 1 ? "rounded-r-lg" : "",
+							)}
+							style={{
+								left: `${left}%`,
+								width: `${width}%`,
+							}}
+						/>
+					);
+				})}
+
+				{/* 分割されたプログレスバー */}
+				{chapters.map((chapter, index) => {
+					const isHovered =
+						hoveredChapter !== null &&
+						String(hoveredChapter) === String(chapter.id);
+					const chapterLeft = getChapterPosition(chapter);
+					const chapterWidth =
+						((chapter.endTime - chapter.startTime) / duration) * 100;
+
+					let progressWidth = 0;
+					if (currentTime >= chapter.endTime) {
+						progressWidth = chapterWidth; // このチャプターは完全に再生済み
+					} else if (currentTime > chapter.startTime) {
+						const progressInChapter = currentTime - chapter.startTime;
+						progressWidth =
+							(progressInChapter / (chapter.endTime - chapter.startTime)) *
+							chapterWidth;
+					}
+
+					if (progressWidth <= 0) return null;
+
+					return (
+						<div
+							key={`progress-${chapter.id}`}
+							className={cn(
+								"absolute bg-primary",
+								isSeeking ? "" : "transition-all duration-150",
+								isHovered ? "h-2 top-0.5" : "h-1 top-1",
+								index === 0 ? "rounded-l-lg" : "",
+								index === chapters.length - 1 ? "rounded-r-lg" : "",
+							)}
+							style={{
+								left: `${chapterLeft}%`,
+								width: `${progressWidth}%`,
+							}}
+						/>
+					);
+				})}
+
+				{/* チャプター区切り線 */}
+				<div className="absolute inset-0 pointer-events-none z-20">
+					{chapters.map((chapter) => {
+						const isHovered =
+							hoveredChapter !== null &&
+							String(hoveredChapter) === String(chapter.id);
+						return (
+							<div
+								key={`divider-${chapter.id}`}
+								className={cn(
+									"absolute w-0.5 bg-text-secondary/60 rounded-full",
+									isSeeking ? "" : "transition-all duration-150",
+									isHovered ? "h-2 top-0.5" : "h-1 top-1",
+								)}
+								style={{
+									left: `${getChapterPosition(chapter)}%`,
+									transform: "translateX(-50%)",
+								}}
+							/>
+						);
+					})}
+				</div>
+
+				{/* プログレスバー右端の丸いつまみ */}
+				<div
+					className={cn(
+						"absolute bg-primary rounded-full shadow-lg z-25",
+						isSeeking ? "" : "transition-all duration-150",
+						currentChapter && hoveredChapter === currentChapter.id
+							? "w-5 h-5 -top-1"
+							: "w-3 h-3 top-0",
+					)}
+					style={{
+						left: `${(currentTime / duration) * 100}%`,
+						transform: "translateX(-50%)",
+					}}
+				/>
+
+				{/* 透明なシークバー - 最前面でホバー検知も兼ねる */}
+				<input
+					type="range"
+					min={0}
+					max={duration || 0}
+					step={getSeekStep()}
+					value={currentTime}
+					onChange={handleSeekChange}
+					onMouseDown={handleSeekStart}
+					onMouseUp={handleSeekEnd}
+					onTouchStart={handleSeekStart}
+					onTouchEnd={handleSeekEndTouch}
+					onMouseMove={(e) => {
+						const rect = e.currentTarget.getBoundingClientRect();
+						const x = e.clientX - rect.left;
+						const percentage = (x / rect.width) * 100;
+						const timeAtPosition = (percentage / 100) * duration;
+
+						// この位置がどのチャプターに属するかを判定
+						const hoveredChapterData = chapters.find(
+							(chapter) =>
+								timeAtPosition >= chapter.startTime &&
+								timeAtPosition <= chapter.endTime,
+						);
+
+						setHoveredChapter(hoveredChapterData?.id ?? null);
+					}}
+					onMouseLeave={() => setHoveredChapter(null)}
+					className="absolute inset-0 w-full h-3 bg-transparent appearance-none cursor-pointer z-30 opacity-0"
+				/>
+			</div>
+		</div>
+	);
+}
