@@ -1,0 +1,84 @@
+node_modules
+
+# local env files
+.env.local
+.env
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+node_modules
+
+yarn-error.log
+declaration
+dist
+build
+tmp
+pnpm-debug.log
+.DS_Store
+
+/target
+query-engine*
+migration-engine*
+schema-engine*
+libquery_engine*
+libquery-engine*
+query_engine-windows.dll.node
+
+*tmp.db
+dist/
+
+*.tsbuildinfo
+.prisma
+.attest
+.pnpm-store
+
+.vscode/*
+!.vscode/launch.json.default
+!.vscode/extensions.json
+coverage
+
+.eslintcache
+
+.pnpm-debug.log
+
+esm
+
+dev.db
+dev.db-journal
+settings.db
+junit.xml
+/output.txt
+
+# Backend Prisma database files
+prisma/dev.db
+prisma/settings.db
+prisma/*.db.backup
+
+# サムネイルデータ
+data/
+
+.envrc.local
+
+.idea/
+
+package.copy.json
+
+*.tgz
+/prisma/*.db-journal
+prisma/generated/*
