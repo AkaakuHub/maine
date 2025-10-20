@@ -10,6 +10,7 @@ interface VideoGridProps {
 	isOfflineMode?: boolean;
 	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
+	onPlay?: (videoId: string, isOffline?: boolean) => void;
 	enableDownload?: boolean; // ダウンロード機能を有効にするかどうか
 }
 
@@ -19,6 +20,7 @@ const VideoGrid = ({
 	isOfflineMode = false,
 	onDelete,
 	onShowStreamingWarning,
+	onPlay,
 	enableDownload = false,
 }: VideoGridProps) => {
 	return (
@@ -44,6 +46,7 @@ const VideoGrid = ({
 					isOfflineMode={isOfflineMode}
 					onDelete={onDelete}
 					onShowStreamingWarning={onShowStreamingWarning}
+					onPlay={onPlay}
 					enableDownload={enableDownload}
 				/>
 			))}

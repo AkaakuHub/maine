@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { VideoInfoType } from "../types/VideoInfo";
 import type { VideoFileData } from "../type";
 import { useVideoProgress } from "./useVideoProgress";
@@ -10,12 +9,16 @@ import { useNavigationRefresh } from "../contexts/NavigationRefreshContext";
 import { createApiUrl } from "../utils/api";
 
 export function useVideoPlayer({
-	videoId: explicitVideoId,
-}: { videoId?: string } = {}) {
-	const params = useParams();
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const explicitOfflineMode = searchParams.get("offline") === "true";
+	videoId,
+	explicitOfflineMode,
+	onGoBack,
+	onGoHome,
+}: {
+	videoId?: string;
+	explicitOfflineMode?: boolean;
+	onGoBack?: () => void;
+	onGoHome?: () => void;
+} = {}) {
 	const { isOnline } = useNetworkStatus();
 	const { triggerVideoRefresh } = useNavigationRefresh();
 
@@ -88,12 +91,7 @@ export function useVideoPlayer({
 	}, []);
 
 	const initializePlayer = useCallback(async () => {
-		const rawVideoId = explicitVideoId ?? params.videoId;
-		const currentVideoId = Array.isArray(rawVideoId)
-			? rawVideoId[0]
-			: rawVideoId;
-
-		if (!currentVideoId) {
+		if (!videoId) {
 			console.error("No videoId provided");
 			setIsLoading(false);
 			return;
@@ -103,14 +101,14 @@ export function useVideoPlayer({
 
 		try {
 			// videoId方式のみ
-			console.log("Loading video by videoId:", currentVideoId);
-			await loadVideoByVideoId(currentVideoId);
+			console.log("Loading video by videoId:", videoId);
+			await loadVideoByVideoId(videoId);
 		} catch (error) {
 			console.error("Failed to load video:", error);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [explicitVideoId, params.videoId, loadVideoByVideoId]);
+	}, [videoId, loadVideoByVideoId]);
 
 	useEffect(() => {
 		initializePlayer();
@@ -130,12 +128,12 @@ export function useVideoPlayer({
 
 	const handleGoBack = () => {
 		triggerVideoRefresh();
-		router.back();
+		onGoBack?.();
 	};
 
 	const handleGoHome = () => {
 		triggerVideoRefresh();
-		router.push("/");
+		onGoHome?.();
 	};
 
 	const handleShare = async () => {

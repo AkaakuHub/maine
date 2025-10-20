@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { VideoFileData } from "../type";
 import { createApiUrl } from "../utils/api";

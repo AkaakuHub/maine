@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { Download, Radio, MoreHorizontal, Trash2 } from "lucide-react";
 import type { VideoFileData } from "../../type";
 import { cn, formatFileSize } from "../../libs/utils";
@@ -18,6 +17,7 @@ interface VideoCardProps {
 	isOfflineMode?: boolean;
 	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
+	onPlay?: (videoId: string, isOffline?: boolean) => void;
 	enableDownload?: boolean; // ダウンロード機能を有効にするかどうか
 }
 
@@ -26,8 +26,8 @@ const VideoCard = ({
 	className,
 	isOfflineMode = false,
 	onShowStreamingWarning,
+	onPlay,
 }: VideoCardProps) => {
-	const router = useRouter();
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
 	const [showMenu, setShowMenu] = useState(false);
@@ -88,14 +88,14 @@ const VideoCard = ({
 
 		if (isOfflineMode) {
 			// オフラインモードでは直接オフライン再生
-			router.push(`/play/${encodeURIComponent(video.videoId)}?offline=true`);
+			onPlay?.(video.videoId, true);
 		} else {
 			// ストリーミングモードでオフライン版がある場合は警告を表示
 			if (isVideoCached && onShowStreamingWarning) {
 				onShowStreamingWarning(video);
 			} else {
 				// オフライン版がない場合は直接ストリーミング再生
-				router.push(`/play/${encodeURIComponent(video.videoId)}`);
+				onPlay?.(video.videoId, false);
 			}
 		}
 	};

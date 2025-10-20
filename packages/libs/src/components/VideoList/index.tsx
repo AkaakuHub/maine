@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import {
 	Play,
 	Calendar,
@@ -26,6 +25,7 @@ interface VideoListProps {
 	isOfflineMode?: boolean;
 	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
+	onPlay?: (videoId: string, isOffline?: boolean) => void;
 }
 
 const VideoListItem = ({
@@ -33,13 +33,14 @@ const VideoListItem = ({
 	isOfflineMode = false,
 	onDelete,
 	onShowStreamingWarning,
+	onPlay,
 }: {
 	video: VideoFileData;
 	isOfflineMode?: boolean;
 	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
+	onPlay?: (videoId: string, isOffline?: boolean) => void;
 }) => {
-	const router = useRouter();
 	const [showMenu, setShowMenu] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
@@ -93,13 +94,13 @@ const VideoListItem = ({
 
 		if (isOfflineMode) {
 			// オフラインモードでは直接オフライン再生
-			router.push(`/play/${encodeURIComponent(video.videoId)}?offline=true`);
+			onPlay?.(video.videoId, true);
 		} else {
 			// ストリーミングモードでは警告チェック
 			if (isVideoCached && onShowStreamingWarning) {
 				onShowStreamingWarning(video);
 			} else {
-				router.push(`/play/${encodeURIComponent(video.videoId)}`);
+				onPlay?.(video.videoId, false);
 			}
 		}
 	};
@@ -352,6 +353,7 @@ const VideoList = ({
 	isOfflineMode = false,
 	onDelete,
 	onShowStreamingWarning,
+	onPlay,
 }: VideoListProps) => {
 	return (
 		<div className={cn("space-y-3", className)}>
@@ -362,6 +364,7 @@ const VideoList = ({
 					isOfflineMode={isOfflineMode}
 					onDelete={onDelete}
 					onShowStreamingWarning={onShowStreamingWarning}
+					onPlay={onPlay}
 				/>
 			))}
 		</div>

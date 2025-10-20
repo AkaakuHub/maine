@@ -33,6 +33,7 @@ interface VideoContentProps {
 	onShowAll: () => void;
 	onOfflineVideoDelete: () => void;
 	onPageChange: (page: number) => void;
+	onPlay?: (videoId: string, isOffline?: boolean) => void;
 	onRetry?: () => void;
 }
 
@@ -53,6 +54,7 @@ export function VideoContent({
 	onShowAll,
 	onOfflineVideoDelete,
 	onPageChange,
+	onPlay,
 }: VideoContentProps) {
 	// ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
 	if (videosLoading && !hasContent) {
@@ -117,11 +119,13 @@ export function VideoContent({
 						<VideoGridContainer
 							videos={videos}
 							onShowStreamingWarning={onShowStreamingWarning}
+							onPlay={onPlay}
 						/>
 					) : (
 						<VideoList
 							videos={videos}
 							onShowStreamingWarning={onShowStreamingWarning}
+							onPlay={onPlay}
 						/>
 					);
 				}
@@ -136,12 +140,14 @@ export function VideoContent({
 						videos={offlineVideos}
 						isOfflineMode={true}
 						onDelete={onOfflineVideoDelete}
+						onPlay={onPlay}
 					/>
 				) : (
 					<VideoList
 						videos={offlineVideos}
 						isOfflineMode={true}
 						onDelete={onOfflineVideoDelete}
+						onPlay={onPlay}
 					/>
 				);
 			})()}

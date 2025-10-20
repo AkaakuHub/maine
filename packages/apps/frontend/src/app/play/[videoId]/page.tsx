@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { WifiOff } from "lucide-react";
 import {
 	Navigation,
@@ -10,14 +10,33 @@ import {
 	useVideoPlayer,
 	ResponsiveVideoLayout,
 	SettingsModal,
+	useNavigationRefresh,
 } from "@maine/libs";
 
 export default function PlayPage() {
 	const router = useRouter();
+	const params = useParams();
+	const searchParams = useSearchParams();
 	const { isOnline } = useNetworkStatus();
+	const { triggerVideoRefresh } = useNavigationRefresh();
 	const [showNetworkWarning, setShowNetworkWarning] = useState(false);
 	const [isPageReady, setIsPageReady] = useState(false);
 	const [showSettings, setShowSettings] = useState(false);
+
+	// ナビゲーション用のコールバック
+	const handleGoBackCallback = useCallback(() => {
+		triggerVideoRefresh();
+		router.back();
+	}, [router, triggerVideoRefresh]);
+
+	const handleGoHomeCallback = useCallback(() => {
+		triggerVideoRefresh();
+		router.push("/");
+	}, [router, triggerVideoRefresh]);
+
+	// URLからvideoIdを取得
+	const rawVideoId = params.videoId;
+	const videoId = Array.isArray(rawVideoId) ? rawVideoId[0] : rawVideoId;
 
 	const {
 		videoData,
@@ -35,7 +54,12 @@ export default function PlayPage() {
 		toggleWatchlist,
 		toggleDescription,
 		handleTimeUpdate,
-	} = useVideoPlayer();
+	} = useVideoPlayer({
+		videoId,
+		explicitOfflineMode: searchParams?.get("offline") === "true",
+		onGoBack: handleGoBackCallback,
+		onGoHome: handleGoHomeCallback,
+	});
 
 	// ページの準備状態を管理
 	useEffect(() => {

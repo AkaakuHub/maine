@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback, useEffect } from "react";
 import { createAPIClient } from "../libs/apiClient";
 import type { VideoFileData } from "../type";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, Suspense } from "react";
+import { useEffect, useRef, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
 	EmptyState,
@@ -128,6 +128,15 @@ const HomeContent = () => {
 			refreshCachedVideos();
 		}
 	};
+
+	// 動画再生処理
+	const handlePlayVideo = useCallback(
+		(videoId: string, isOffline = false) => {
+			const url = `/play/${videoId}${isOffline ? "?offline=true" : ""}`;
+			router.push(url);
+		},
+		[router],
+	);
 
 	// 警告ダイアログの状態管理
 	const {
@@ -277,6 +286,7 @@ const HomeContent = () => {
 				onOfflineVideoDelete={handleOfflineVideoDelete}
 				onPageChange={setCurrentPage}
 				onRetry={handleRetry}
+				onPlay={handlePlayVideo}
 			/>
 			{/* PWA デバッグ情報 */}
 			{process.env.NODE_ENV === "development" && (
