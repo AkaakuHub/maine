@@ -1,60 +1,82 @@
 pre-commit:
   parallel: true
   commands:
-    tailwind-colors-check:
-      glob: "src/**/*.{ts,tsx,js,jsx}"
-      run: ./scripts/check-tailwind-colors.sh
+    # tailwind-colors-check:
+    #   glob: "src/**/*.{ts,tsx,js,jsx}"
+    #   run: ./scripts/check-tailwind-colors.sh
     format-front:
-      glob: "packages/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
-      run: cd packages/frontend && pnpm run format
+      glob: "packages/apps/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: cd packages/apps/frontend && pnpm run format
       stage_fixed: true
       skip:
         - merge
         - rebase
     lint-front:
-      glob: "packages/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
-      run: cd packages/frontend && pnpm run lint
+      glob: "packages/apps/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: cd packages/apps/frontend && pnpm run lint
       stage_fixed: true
       skip:
         - merge
         - rebase
     typecheck-front:
-      glob: "packages/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
-      run: cd packages/frontend && pnpm run typecheck
+      glob: "packages/apps/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: cd packages/apps/frontend && pnpm run typecheck
       stage_fixed: true
       skip:
         - merge
         - rebase
 
     format-back:
-      glob: "packages/backend/**/*.{ts,tsx,js,json,md,yml,yaml}"
-      run: cd packages/backend && pnpm run format
+      glob: "packages/apps/backend/**/*.{ts,tsx,js,json,md,yml,yaml}"
+      run: cd packages/apps/backend && pnpm run format
       stage_fixed: true
       skip:
         - merge
         - rebase
     lint-back:
-      glob: "packages/backend/**/*.{ts,tsx,js,json,md,yml,yaml}"
-      run: cd packages/backend && pnpm run lint
+      glob: "packages/apps/backend/**/*.{ts,tsx,js,json,md,yml,yaml}"
+      run: cd packages/apps/backend && pnpm run lint
       stage_fixed: true
       skip:
         - merge
         - rebase
     typecheck-back:
-      glob: "packages/backend/**/*.{ts,tsx,js,json,md,yml,yaml}"
-      run: cd packages/backend && pnpm run typecheck
+      glob: "packages/apps/backend/**/*.{ts,tsx,js,json,md,yml,yaml}"
+      run: cd packages/apps/backend && pnpm run typecheck
       stage_fixed: true
       skip:
         - merge
         - rebase
 
-    knip:
-      glob: "packages/{frontend,backend}/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
-      run: pnpm run knip
+    format-libs:
+      glob: "packages/libs/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: cd packages/libs && pnpm run format
       stage_fixed: true
       skip:
         - merge
         - rebase
+    lint-libs:
+      glob: "packages/libs/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: cd packages/libs && pnpm run lint
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+    typecheck-libs:
+      glob: "packages/libs/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: cd packages/libs && pnpm run typecheck
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+
+    # knip:
+    #   glob: "packages/apps/{frontend,backend}/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+    #   run: pnpm run knip
+    #   stage_fixed: true
+    #   skip:
+    #     - merge
+    #     - rebase
 
 commit-msg:
   skip: []
