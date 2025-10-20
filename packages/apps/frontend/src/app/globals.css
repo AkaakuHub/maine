@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@config "../../next.config.mjs";
+@config "../../tailwind.config.js";
 
 @theme {
 	/* Semantic Color System - Light Mode (Default) */
