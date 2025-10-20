@@ -18,13 +18,12 @@
       "project": ["src/**/*.ts*"]
     },
     "packages/apps/frontend": {
-      "entry": ["src/app/globals.css", "src/app/layout.tsx"],
+      "entry": ["src/app/globals.css"],
       "project": ["src/**/*.ts*"]
     },
     "packages/libs": {
       "project": ["src/**/*.ts*"]
     }
   },
-  "ignoreDependencies": ["tailwindcss"],
   "includeEntryExports": true
 }
