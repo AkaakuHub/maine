@@ -17,7 +17,7 @@ const nextConfig = {
             },
         ],
         unoptimized: false,
-        formats: ["image/webp", "image/avif"],
+        formats: ["image/webp"],
     },
     experimental: {
         serverActions: {

@@ -8,7 +8,11 @@ async function bootstrap() {
 
 	// CORS設定
 	app.enableCors({
-		origin: ["http://localhost:3000", "http://localhost:3001"], // フロントエンドとSwagger UIのURL
+		origin: [
+			"http://localhost:3000",
+			"https://localhost:3000",
+			"http://localhost:3001",
+		], // フロントエンドとSwagger UIのURL
 		credentials: true,
 	});
 
