@@ -22,7 +22,7 @@ export interface DownloadProgress {
 	percentage: number;
 }
 
-const DB_NAME = "MyVideoStorage";
+const DB_NAME = "MaineStorage";
 const DB_VERSION = 2; // ID生成方式変更のためバージョンアップ
 const STORE_NAME = "cachedVideos";
 

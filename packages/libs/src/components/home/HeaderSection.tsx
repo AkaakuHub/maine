@@ -32,7 +32,7 @@ export function HeaderSection({
 							</div>
 							<div>
 								<h1 className="text-md lg:text-xl font-semibold text-text whitespace-nowrap">
-									My Video Storage
+									Maine
 								</h1>
 							</div>
 						</div>

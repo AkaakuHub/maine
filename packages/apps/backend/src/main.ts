@@ -27,7 +27,7 @@ async function bootstrap() {
 
 	// Swaggerドキュメント設定
 	const config = new DocumentBuilder()
-		.setTitle("My Video Storage API")
+		.setTitle("Maine API")
 		.setDescription("Video storage and management API")
 		.setVersion("1.0")
 		.addTag("videos")

@@ -6,9 +6,9 @@ import { NavigationRefreshProvider, ThemeProvider } from "@maine/libs";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-	title: "My Video Storage - オフライン対応動画プレイヤー",
+	title: "Maine",
 	description:
-		"ローカルに保存された動画ファイルをストリーミング再生・オフライン視聴できるPWA対応動画プレイヤー",
+		"動画ファイルをストリーミング再生・オフライン視聴できる動画プレイヤー",
 	keywords: [
 		"video",
 		"video",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 	appleWebApp: {
 		capable: true,
 		statusBarStyle: "default",
-		title: "My Video Storage",
+		title: "Maine",
 	},
 	formatDetection: {
 		telephone: false,

@@ -55,7 +55,7 @@ export function useMediaSession({
 				});
 
 				// HTMLのタイトルを更新（一度だけ）
-				document.title = `${videoTitle} - My Video Storage`;
+				document.title = `${videoTitle} - Maine`;
 			} catch {
 				// Media Session API not supported
 			}
@@ -104,7 +104,7 @@ export function useMediaSession({
 				// @ts-ignore - MediaMetadata は実行時に利用可能
 				navigator.mediaSession.metadata = new MediaMetadata({
 					title: videoTitle,
-					artist: "My Video Storage",
+					artist: "Maine",
 					album: "ビデオ動画",
 					artwork,
 				});
