@@ -10,6 +10,15 @@ import { isValidVideoId } from "../../utils/videoIdValidation";
 export class VideoController {
 	constructor(private readonly videosService: VideosService) {}
 
+	private buildContentDispositionHeader(videoId: string): string {
+		const normalizedId = /^[a-f0-9]{64}$/i.test(videoId)
+			? videoId.toLowerCase()
+			: "unknown";
+		const filename = `video-${normalizedId}.mp4`;
+		const encodedFilename = encodeURIComponent(filename);
+		return `attachment; filename="${filename}"; filename*=UTF-8''${encodedFilename}`;
+	}
+
 	@Get(":videoId")
 	@ApiParam({ name: "videoId", description: "64文字のSHA-256ハッシュID" })
 	@ApiQuery({
@@ -67,8 +76,10 @@ export class VideoController {
 
 				// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
 				if (downloadMode) {
-					const fileName = videoData.fileName || "video.mp4";
-					res.set("Content-Disposition", `attachment; filename="${fileName}"`);
+					const contentDisposition = this.buildContentDispositionHeader(
+						videoData.videoId ?? videoId,
+					);
+					res.set("Content-Disposition", contentDisposition);
 				}
 
 				const file = createReadStream(videoData.filePath);
@@ -97,7 +108,7 @@ export class VideoController {
 			const chunksize = end - start + 1;
 
 			// レスポンスヘッダー設定
-			res.writeHead(206, {
+			const rangeHeaders: Record<string, string> = {
 				"Content-Range": `bytes ${start}-${end}/${fileSize}`,
 				"Accept-Ranges": "bytes",
 				"Content-Length": chunksize.toString(),
@@ -105,10 +116,14 @@ export class VideoController {
 				"Cache-Control": "public, max-age=31536000",
 				"Access-Control-Allow-Origin": "*",
 				"Access-Control-Allow-Credentials": "true",
-				...(downloadMode && {
-					"Content-Disposition": `attachment; filename="${videoData.fileName || "video.mp4"}"`,
-				}),
-			});
+			};
+
+			if (downloadMode) {
+				rangeHeaders["Content-Disposition"] =
+					this.buildContentDispositionHeader(videoData.videoId ?? videoId);
+			}
+
+			res.writeHead(206, rangeHeaders);
 
 			const file = createReadStream(videoData.filePath, { start, end });
 			return file.pipe(res);
