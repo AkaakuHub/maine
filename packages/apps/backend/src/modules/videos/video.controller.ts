@@ -4,11 +4,29 @@ import { ApiQuery, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
 import type { Response } from "express";
 import { VideosService } from "./videos.service";
 import { isValidVideoId } from "../../utils/videoIdValidation";
+import { allowedOrigins } from "../../config/cors.config";
 
 @ApiTags("video")
 @Controller("video")
 export class VideoController {
 	constructor(private readonly videosService: VideosService) {}
+
+	private getCorsHeaders(requestOrigin?: string): Record<string, string> {
+		// リクエストのオリジンが許可リストにあるかチェック
+		if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+			return {
+				"Access-Control-Allow-Origin": requestOrigin,
+				"Access-Control-Allow-Credentials": "true",
+			};
+		}
+
+		// 許可リストの最初のオリジンをデフォルトとして使用
+		const defaultOrigin = allowedOrigins.length > 0 ? allowedOrigins[0] : "*";
+		return {
+			"Access-Control-Allow-Origin": defaultOrigin,
+			"Access-Control-Allow-Credentials": "true",
+		};
+	}
 
 	private buildContentDispositionHeader(videoId: string): string {
 		const normalizedId = /^[a-f0-9]{64}$/i.test(videoId)
@@ -70,8 +88,7 @@ export class VideoController {
 					"Content-Type": "video/mp4",
 					"Content-Length": fileSize.toString(),
 					"Cache-Control": "public, max-age=31536000",
-					"Access-Control-Allow-Origin": "*",
-					"Access-Control-Allow-Credentials": "true",
+					...this.getCorsHeaders(headers.origin),
 				});
 
 				// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
@@ -114,8 +131,7 @@ export class VideoController {
 				"Content-Length": chunksize.toString(),
 				"Content-Type": "video/mp4",
 				"Cache-Control": "public, max-age=31536000",
-				"Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": "true",
+				...this.getCorsHeaders(headers.origin),
 			};
 
 			if (downloadMode) {

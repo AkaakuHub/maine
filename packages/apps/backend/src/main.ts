@@ -2,19 +2,13 @@ import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
+import { corsOptions } from "./config/cors.config";
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 
 	// CORS設定
-	app.enableCors({
-		origin: [
-			"http://localhost:3000",
-			"https://localhost:3000",
-			"http://localhost:3001",
-		], // フロントエンドとSwagger UIのURL
-		credentials: true,
-	});
+	app.enableCors(corsOptions);
 
 	// バリデーションパイプのグローバル設定
 	app.useGlobalPipes(
