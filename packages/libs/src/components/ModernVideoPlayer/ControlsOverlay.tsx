@@ -21,6 +21,7 @@ import ChapterProgressBar from "./ChapterProgressBar";
 import type { VideoChapter } from "../../services/chapterService";
 
 interface ControlsOverlayProps {
+	variant?: "desktop" | "mobile";
 	show: boolean;
 	duration: number;
 	currentTime: number;
@@ -54,6 +55,7 @@ interface ControlsOverlayProps {
 }
 
 export default function ControlsOverlay({
+	variant = "desktop",
 	show,
 	duration,
 	currentTime,
@@ -86,6 +88,34 @@ export default function ControlsOverlay({
 	onToggleFullscreen,
 }: ControlsOverlayProps) {
 	const [showChapterList, setShowChapterList] = useState(false);
+	const isMobileLayout = variant === "mobile";
+
+	const timeDisplayButton = (
+		<button
+			type="button"
+			onClick={() => {
+				onSetIsShowRestTime((current) => !current);
+			}}
+			className="text-white text-sm font-mono flex gap-1"
+		>
+			{isShowRestTime ? (
+				<>
+					<span>-</span>
+					<span className={predictedTime !== null ? "text-primary" : ""}>
+						{formatDuration(duration - (predictedTime ?? currentTime))}
+					</span>
+				</>
+			) : (
+				<>
+					<span className={predictedTime !== null ? "text-primary" : ""}>
+						{formatDuration(predictedTime ?? currentTime)}
+					</span>
+					<span>/</span>
+					<span>{formatDuration(duration)}</span>
+				</>
+			)}
+		</button>
+	);
 
 	return (
 		<div
@@ -107,45 +137,47 @@ export default function ControlsOverlay({
 			/>
 
 			{/* 下部コントロール */}
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<button
-						type="button"
-						onClick={onTogglePlay}
-						className="text-white hover:text-primary transition-colors" // tailwind-ignore
-					>
-						{isPlaying ? (
-							<Pause className="h-6 w-6" />
-						) : (
-							<Play className="h-6 w-6" />
-						)}
-					</button>
-
-					{/* カスタムスキップボタン */}
-					<div className="flex items-center gap-2">
+			<div className="flex items-center justify-between gap-6">
+				<div className="flex items-center gap-3 flex-1">
+					{isMobileLayout ? null : (
 						<button
 							type="button"
-							onClick={onSkipBackward}
-							className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
-							title={`${skipSeconds}秒戻す`}
+							onClick={onTogglePlay}
+							className="text-white hover:text-primary transition-colors" // tailwind-ignore
 						>
-							<RotateCcw className="h-5 w-5" />
-							<span className="text-xs w-6">{skipSeconds}s</span>
+							{isPlaying ? (
+								<Pause className="h-6 w-6" />
+							) : (
+								<Play className="h-6 w-6" />
+							)}
 						</button>
+					)}
 
-						<button
-							type="button"
-							onClick={onSkipForward}
-							className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
-							title={`${skipSeconds}秒進む`}
-						>
-							<RotateCw className="h-5 w-5" />
-							<span className="text-xs w-6">{skipSeconds}s</span>
-						</button>
-					</div>
+					{!isMobileLayout && (
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								onClick={onSkipBackward}
+								className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
+								title={`${skipSeconds}秒戻す`}
+							>
+								<RotateCcw className="h-5 w-5" />
+								<span className="text-xs w-6">{skipSeconds}s</span>
+							</button>
 
-					{/* チャプター移動ボタン */}
-					{chapters.length > 0 && (
+							<button
+								type="button"
+								onClick={onSkipForward}
+								className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
+								title={`${skipSeconds}秒進む`}
+							>
+								<RotateCw className="h-5 w-5" />
+								<span className="text-xs w-6">{skipSeconds}s</span>
+							</button>
+						</div>
+					)}
+
+					{!isMobileLayout && chapters.length > 0 && (
 						<div className="flex items-center gap-2">
 							<button
 								type="button"
@@ -206,68 +238,34 @@ export default function ControlsOverlay({
 						</div>
 					)}
 
-					<div className="flex items-center gap-2">
-						<button
-							type="button"
-							onClick={onToggleMute}
-							className="text-white hover:text-primary transition-colors" // tailwind-ignore
-						>
-							{isMuted ? (
-								<VolumeX className="h-5 w-5" />
-							) : (
-								<Volume2 className="h-5 w-5" />
-							)}
-						</button>
-						<input
-							type="range"
-							min="0"
-							max="1"
-							step="0.1"
-							value={isMuted ? 0 : volume}
-							onChange={onVolumeChange}
-							className="w-16 h-1 bg-surface-hover rounded-lg appearance-none cursor-pointer slider volume-slider"
-						/>
+					{!isMobileLayout && (
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								onClick={onToggleMute}
+								className="text-white hover:text-primary transition-colors" // tailwind-ignore
+							>
+								{isMuted ? (
+									<VolumeX className="h-5 w-5" />
+								) : (
+									<Volume2 className="h-5 w-5" />
+								)}
+							</button>
+							<input
+								type="range"
+								min="0"
+								max="1"
+								step="0.1"
+								value={isMuted ? 0 : volume}
+								onChange={onVolumeChange}
+								className="w-16 h-1 bg-surface-hover rounded-lg appearance-none cursor-pointer slider volume-slider"
+							/>
+						</div>
+					)}
+
+					<div className="flex items-center gap-2 text-white text-sm font-mono">
+						{timeDisplayButton}
 					</div>
-					<span
-						className="text-white text-sm font-mono flex gap-1" // tailwind-ignore
-					>
-						<button
-							type="button"
-							onClick={() => {
-								onSetIsShowRestTime((c) => {
-									const newValue = !c;
-									// LocalStorageに保存
-									localStorage.setItem(
-										"video-player-show-rest-time",
-										newValue.toString(),
-									);
-									return newValue;
-								});
-							}}
-							className="cursor-pointer hover:text-primary transition-colors"
-						>
-							{isShowRestTime ? (
-								<>
-									<span>-</span>
-									<span
-										className={predictedTime !== null ? "text-primary" : ""}
-									>
-										{formatDuration(duration - (predictedTime ?? currentTime))}
-									</span>
-								</>
-							) : (
-								<>
-									<span
-										className={predictedTime !== null ? "text-primary" : ""}
-									>
-										{formatDuration(predictedTime ?? currentTime)}
-									</span>
-									<span>/</span>
-									<span>{formatDuration(duration)}</span>
-								</>
-							)}
-						</button>
-					</span>
 				</div>
 
 				<div className="flex items-center gap-3">
@@ -304,7 +302,7 @@ export default function ControlsOverlay({
 						className="text-white hover:text-primary transition-colors" // tailwind-ignore
 					>
 						<PictureInPicture2 className="h-5 w-5" />
-					</button>{" "}
+					</button>
 					<button
 						type="button"
 						onClick={(e) => {

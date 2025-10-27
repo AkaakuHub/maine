@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { cn } from "../../libs/utils";
 
 // 分離したコンポーネントとタイプのインポート
@@ -24,6 +24,7 @@ import { useVideoInteraction } from "./hooks/useVideoInteraction";
 import { useVideoChapters } from "./hooks/useVideoChapters";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useMediaSession } from "./hooks/useMediaSession";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 const ModernVideoPlayer = ({
 	src,
@@ -37,6 +38,7 @@ const ModernVideoPlayer = ({
 	// Refs
 	const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const isMobile = useIsMobile();
 
 	// カスタムフックの呼び出し
 	const settings = useVideoPlayerSettings();
@@ -54,6 +56,12 @@ const ModernVideoPlayer = ({
 	} = settings;
 
 	const [isMuted, setIsMuted] = useState(false);
+	const desktopFlashCounterRef = useRef(0);
+	const prevIsPlayingRef = useRef<boolean | null>(null);
+	const [desktopFlashIndicator, setDesktopFlashIndicator] = useState<{
+		key: number;
+		icon: "play" | "pause";
+	} | null>(null);
 
 	const {
 		isPlaying,
@@ -112,6 +120,7 @@ const ModernVideoPlayer = ({
 			videoRef,
 			skipForward,
 			skipBackward,
+			enableDoubleTap: isMobile,
 		});
 
 	const {
@@ -207,6 +216,59 @@ const ModernVideoPlayer = ({
 
 	const skipOptions = [5, 10, 20, 60, 90];
 
+	const triggerDesktopFlash = useCallback((nextPlaying: boolean) => {
+		desktopFlashCounterRef.current += 1;
+		setDesktopFlashIndicator({
+			key: desktopFlashCounterRef.current,
+			icon: nextPlaying ? "play" : "pause",
+		});
+	}, []);
+
+	useEffect(() => {
+		if (isMobile) {
+			prevIsPlayingRef.current = isPlaying;
+			return;
+		}
+
+		if (prevIsPlayingRef.current === null) {
+			prevIsPlayingRef.current = isPlaying;
+			return;
+		}
+
+		if (prevIsPlayingRef.current !== isPlaying) {
+			triggerDesktopFlash(isPlaying);
+		}
+
+		prevIsPlayingRef.current = isPlaying;
+	}, [isMobile, isPlaying, triggerDesktopFlash]);
+
+	const handleSingleTap = useCallback(() => {
+		if (isMobile) {
+			if (showControls) {
+				setShowControls(false);
+				setShowSettings(false);
+				setSettingsView("main");
+			} else {
+				setShowControls(true);
+				resetControlsTimeout();
+				setShowSettings(false);
+				setSettingsView("main");
+			}
+		} else {
+			togglePlay();
+			setShowControls(true);
+			resetControlsTimeout();
+		}
+	}, [
+		isMobile,
+		resetControlsTimeout,
+		setShowControls,
+		setShowSettings,
+		setSettingsView,
+		showControls,
+		togglePlay,
+	]);
+
 	return (
 		<div
 			ref={containerRef}
@@ -217,15 +279,20 @@ const ModernVideoPlayer = ({
 				className,
 			)}
 			style={{
-				cursor: showControls ? "default" : "none",
+				cursor: !isMobile && !showControls ? "none" : "default",
 			}}
-			onMouseMove={resetControlsTimeout}
+			onMouseMove={() => {
+				if (isMobile) return;
+				resetControlsTimeout();
+			}}
 			onMouseEnter={() => {
+				if (isMobile) return;
 				// ウィンドウフォーカスに関係なくホバー時にコントロールを表示
 				setShowControls(true);
 				resetControlsTimeout();
 			}}
 			onMouseLeave={() => {
+				if (isMobile) return;
 				// マウスが離れたらコントロールを非表示（再生中の場合のみ）
 				if (isPlaying) {
 					setShowControls(false);
@@ -242,7 +309,12 @@ const ModernVideoPlayer = ({
 				isBuffering={isBuffering}
 				lastTapTime={lastTapTime}
 				onVideoTap={handleVideoTap}
+				onSingleTap={handleSingleTap}
 				onTogglePlay={togglePlay}
+				isMobile={isMobile}
+				showMobileControls={isMobile && showControls}
+				desktopFlashKey={desktopFlashIndicator?.key ?? null}
+				desktopFlashIcon={desktopFlashIndicator?.icon ?? null}
 			/>
 
 			{/* スキップ予測オーバーレイ */}
@@ -264,6 +336,7 @@ const ModernVideoPlayer = ({
 
 			{/* コントロール */}
 			<ControlsOverlay
+				variant={isMobile ? "mobile" : "desktop"}
 				show={showControls}
 				duration={duration}
 				currentTime={currentTime}

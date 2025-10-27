@@ -5,6 +5,7 @@ interface UseVideoInteractionProps {
 	videoRef: React.RefObject<HTMLVideoElementWithFullscreen | null>;
 	skipForward: () => void;
 	skipBackward: () => void;
+	enableDoubleTap?: boolean;
 }
 
 interface VideoInteractionState {
@@ -12,7 +13,7 @@ interface VideoInteractionState {
 }
 
 interface VideoInteractionHandlers {
-	handleVideoTap: (e: React.MouseEvent<HTMLVideoElement>) => void;
+	handleVideoTap: (e: React.MouseEvent<HTMLVideoElement>) => boolean;
 	togglePictureInPicture: () => Promise<void>;
 }
 
@@ -20,6 +21,7 @@ export function useVideoInteraction({
 	videoRef,
 	skipForward,
 	skipBackward,
+	enableDoubleTap = true,
 }: UseVideoInteractionProps): VideoInteractionState & VideoInteractionHandlers {
 	const [lastTapTime, setLastTapTime] = useState(0);
 	const [lastTapX, setLastTapX] = useState(0);
@@ -32,26 +34,32 @@ export function useVideoInteraction({
 			const videoWidth = e.currentTarget.clientWidth;
 			const tapPosition = tapX / videoWidth; // 0-1の範囲
 
-			// ダブルタップの判定（300ms以内、同じ位置付近）
-			if (currentTime - lastTapTime < 300 && Math.abs(tapX - lastTapX) < 50) {
-				e.stopPropagation(); // 通常の再生/一時停止を防ぐ
+			if (enableDoubleTap) {
+				// ダブルタップの判定（300ms以内、同じ位置付近）
+				if (currentTime - lastTapTime < 300 && Math.abs(tapX - lastTapX) < 50) {
+					e.stopPropagation(); // 通常の再生/一時停止を防ぐ
 
-				if (tapPosition > 0.6) {
-					// 右側タップ: 前進
-					skipForward();
-				} else if (tapPosition < 0.4) {
-					// 左側タップ: 後退
-					skipBackward();
+					if (tapPosition > 0.6) {
+						// 右側タップ: 前進
+						skipForward();
+					} else if (tapPosition < 0.4) {
+						// 左側タップ: 後退
+						skipBackward();
+					}
+
+					// ダブルタップ処理後はlastTapTimeをリセット
+					setLastTapTime(0);
+					return true;
 				}
-
-				// ダブルタップ処理後はlastTapTimeをリセット
-				setLastTapTime(0);
-			} else {
 				setLastTapTime(currentTime);
 				setLastTapX(tapX);
+				return false;
 			}
+			setLastTapTime(currentTime);
+			setLastTapX(tapX);
+			return false;
 		},
-		[lastTapTime, lastTapX, skipForward, skipBackward],
+		[lastTapTime, lastTapX, skipForward, skipBackward, enableDoubleTap],
 	);
 
 	// ピクチャーインピクチャー
