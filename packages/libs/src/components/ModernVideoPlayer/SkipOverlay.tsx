@@ -17,21 +17,27 @@ export default function SkipOverlay({
 
 	const isForward = skipQueue > 0;
 	const containerAlignment = isForward
-		? "justify-end pr-6"
-		: "justify-start pl-6";
+		? "justify-end pr-6 sm:pr-24"
+		: "justify-start pl-6 sm:pl-24";
 
 	return (
 		<div className="absolute inset-0 pointer-events-none z-40">
 			<div className={`flex h-full w-full ${containerAlignment} items-center`}>
 				<div className="relative">
-					<div className="relative flex h-16 w-24 items-center justify-center">
-						<span className="absolute inline-flex h-12 w-12 rounded-full bg-primary/25 animate-ping" />
-						<span className="absolute inline-flex h-12 w-12 rounded-full bg-primary/45" />
-						<span className="relative inline-flex h-8 w-8 items-center justify-center text-white drop-shadow">
+					<div className="relative flex h-16 sm:h-24 w-24 items-center justify-center">
+						<span className="absolute inline-flex h-12 w-12 sm:h-18 sm:w-18 rounded-full bg-primary/25 animate-ping" />
+						<span className="absolute inline-flex h-12 w-12 sm:h-18 sm:w-18 rounded-full bg-primary/45" />
+						<span className="relative inline-flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center text-white drop-shadow">
 							{isForward ? (
-								<SkipForward className="h-6 w-6" fill="currentColor" />
+								<SkipForward
+									className="h-6 w-6 sm:h-9 sm:w-9"
+									fill="currentColor"
+								/>
 							) : (
-								<SkipBack className="h-6 w-6" fill="currentColor" />
+								<SkipBack
+									className="h-6 w-6 sm:h-9 sm:w-9"
+									fill="currentColor"
+								/>
 							)}
 						</span>
 					</div>
