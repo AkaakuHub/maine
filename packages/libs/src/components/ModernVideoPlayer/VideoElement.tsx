@@ -90,7 +90,7 @@ export default function VideoElement({
 				src={src}
 				crossOrigin="anonymous"
 				className={cn(
-					"w-full h-full object-contain min-h-[300px]",
+					"w-full h-full object-contain min-h-[20vh] not-lg:max-h-[50vh]",
 					isFullscreen && "flex-1",
 				)}
 				onClick={(e) => {

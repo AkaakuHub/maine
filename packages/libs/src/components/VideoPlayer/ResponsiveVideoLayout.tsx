@@ -75,7 +75,7 @@ export function ResponsiveVideoLayout({
 							onTimeUpdate={onTimeUpdate}
 							initialTime={initialTime}
 							onShowHelp={() => setShowHelpModal(true)}
-							className="h-full w-full"
+							className="h-full not-lg:max-h-[50vh] w-full"
 						/>
 					</div>
 				</div>
