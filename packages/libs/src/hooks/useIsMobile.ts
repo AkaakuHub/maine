@@ -15,21 +15,35 @@ function isMobileEnvironment(): boolean {
 		maxTouchPoints?: number;
 	};
 
-	// 1. 最新ブラウザでは userAgentData を最優先
-	if (typeof nav.userAgentData?.mobile === "boolean") {
-		return nav.userAgentData.mobile;
-	}
+	const userAgent = nav.userAgent || "";
+	const userAgentDataMobile = nav.userAgentData?.mobile;
+	const maxTouchPoints = nav.maxTouchPoints ?? 0;
+	const hasTouchStart = "ontouchstart" in window;
+	const platform = nav.platform || "";
 
-	// 2. タッチサポートを確認（PCの一部も該当するが補助条件）
-	if ("ontouchstart" in window || (nav.maxTouchPoints ?? 0) > 1) {
+	// 1. iOSの場合は最優先で判定（userAgentData.mobileがfalseでも）
+	const isIOS =
+		/iPhone|iPad|iPod/.test(userAgent) ||
+		(/Mac/.test(platform) && maxTouchPoints > 0);
+	if (isIOS) {
 		return true;
 	}
 
-	// 3. UA文字列のフォールバック（旧ブラウザ用）
-	const ua = nav.userAgent || "";
-	return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
-		ua,
+	// 2. userAgentData があれば使用（iOS以外）
+	if (typeof userAgentDataMobile === "boolean") {
+		return userAgentDataMobile;
+	}
+
+	// 3. タッチサポートを確認（PCの一部も該当するが補助条件）
+	if (hasTouchStart || maxTouchPoints > 1) {
+		return true;
+	}
+
+	// 4. UA文字列のフォールバック（旧ブラウザ用）
+	const isMobileByUA = /Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+		userAgent,
 	);
+	return isMobileByUA;
 }
 
 /**
