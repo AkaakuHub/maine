@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { WifiOff } from "lucide-react";
 import {
 	Navigation,
@@ -16,7 +16,6 @@ import {
 export default function PlayPage() {
 	const router = useRouter();
 	const params = useParams();
-	const searchParams = useSearchParams();
 	const { isOnline } = useNetworkStatus();
 	const { triggerVideoRefresh } = useNavigationRefresh();
 	const [showNetworkWarning, setShowNetworkWarning] = useState(false);
@@ -56,7 +55,6 @@ export default function PlayPage() {
 		handleTimeUpdate,
 	} = useVideoPlayer({
 		videoId,
-		explicitOfflineMode: searchParams?.get("offline") === "true",
 		onGoBack: handleGoBackCallback,
 		onGoHome: handleGoHomeCallback,
 	});

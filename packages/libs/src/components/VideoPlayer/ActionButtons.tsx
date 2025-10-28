@@ -1,24 +1,30 @@
 "use client";
 
 import { Heart, List, Share2, Download } from "lucide-react";
+import ConfirmDialog from "../ui/ConfirmDialog";
+import { useState } from "react";
+import type { VideoInfoType } from "../../types/VideoInfo";
 
 interface ActionButtonsProps {
 	isLiked: boolean;
 	isInWatchlist: boolean;
+	video: VideoInfoType;
 	onToggleLike: () => void;
 	onToggleWatchlist: () => void;
 	onShare: () => void;
-	onDownload?: () => void;
+	onDownload: () => void;
 }
 
 export default function ActionButtons({
 	isLiked,
 	isInWatchlist,
+	video,
 	onToggleLike,
 	onToggleWatchlist,
 	onShare,
 	onDownload,
 }: ActionButtonsProps) {
+	const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
 	return (
 		<div className="flex items-center gap-3 mb-4 flex-wrap">
 			<button
@@ -56,11 +62,11 @@ export default function ActionButtons({
 				<span className="text-sm">共有</span>
 			</button>
 
-			{onDownload && (
+			{video && (
 				<button
 					type="button"
 					onClick={() => {
-						onDownload();
+						setShowDownloadConfirm(true);
 					}}
 					className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 bg-surface-elevated/50 text-text-secondary hover:bg-primary/20 hover:text-primary border border-border"
 				>
@@ -68,6 +74,44 @@ export default function ActionButtons({
 					<span className="text-sm">ダウンロード</span>
 				</button>
 			)}
+
+			{/* ダウンロード確認ダイアログ */}
+			<ConfirmDialog
+				isOpen={showDownloadConfirm}
+				onClose={() => setShowDownloadConfirm(false)}
+				title="動画をダウンロード"
+				message={
+					<div>
+						<p className="text-text-secondary mb-2">
+							この動画をダウンロードしますか？
+						</p>
+						<div className="bg-surface-elevated/50 rounded-lg p-3 mb-2">
+							<div className="text-sm text-text mb-1">
+								<strong>ファイル名:</strong> {video.fullTitle}
+							</div>
+							{video.duration && (
+								<div className="text-sm text-text">
+									<strong>再生時間:</strong> {video.duration}
+								</div>
+							)}
+						</div>
+					</div>
+				}
+				actions={[
+					{
+						label: "ダウンロード",
+						onClick: () => {
+							setShowDownloadConfirm(false);
+							onDownload();
+						},
+						variant: "primary",
+						icon: Download,
+						description: "オフライン視聴できるようになります",
+					},
+				]}
+				icon={Download}
+				iconColor="text-primary"
+			/>
 		</div>
 	);
 }

@@ -13,7 +13,7 @@ interface VideoInfoProps {
 	onToggleWatchlist: () => void;
 	onShare: () => void;
 	onToggleDescription: () => void;
-	onDownload?: () => void;
+	onDownload: () => void;
 	variant?: "mobile" | "desktop" | "responsive";
 }
 
@@ -143,6 +143,7 @@ export default function VideoInfo({
 			<ActionButtons
 				isLiked={isLiked}
 				isInWatchlist={isInWatchlist}
+				video={videoInfo}
 				onToggleLike={onToggleLike}
 				onToggleWatchlist={onToggleWatchlist}
 				onShare={onShare}
@@ -154,9 +155,6 @@ export default function VideoInfo({
 				description={videoInfo.description}
 				showDescription={showDescription}
 				onToggleDescription={onToggleDescription}
-				filePath={videoInfo.filePath}
-				videoId={videoInfo.videoId}
-				title={videoInfo.title}
 			/>
 		</div>
 	);

@@ -8,13 +8,10 @@ import {
 	Clock,
 	Info,
 	MoreHorizontal,
-	Download,
-	Trash2,
 	Radio,
 } from "lucide-react";
 import type { VideoFileData } from "../../type";
 import { cn, formatFileSize } from "../../libs/utils";
-import { useOfflineStorage } from "../../hooks/useOfflineStorage";
 import { parseVideoFileName } from "../../utils/videoFileNameParser";
 import { SafeDateDisplay } from "../../components/common/SafeDateDisplay";
 import { createApiUrl } from "../../utils/api";
@@ -22,35 +19,20 @@ import { createApiUrl } from "../../utils/api";
 interface VideoListProps {
 	videos: VideoFileData[];
 	className?: string;
-	isOfflineMode?: boolean;
-	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (videoId: string, isOffline?: boolean) => void;
+	onPlay?: (videoId: string) => void;
 }
 
 const VideoListItem = ({
 	video,
-	isOfflineMode = false,
-	onDelete,
-	onShowStreamingWarning,
 	onPlay,
 }: {
 	video: VideoFileData;
-	isOfflineMode?: boolean;
-	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (videoId: string, isOffline?: boolean) => void;
+	onPlay?: (videoId: string) => void;
 }) => {
 	const [showMenu, setShowMenu] = useState(false);
-	const [isDeleting, setIsDeleting] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
-	const {
-		downloadVideo,
-		deleteVideo,
-		isDownloading,
-		downloadProgress,
-		isCached,
-	} = useOfflineStorage();
 
 	// ファイル名から番組情報をパース
 	const parsedInfo = useMemo(() => {
@@ -59,9 +41,6 @@ const VideoListItem = ({
 	}, [video.filePath]);
 
 	const watchProgressPercentage = video.watchProgress || 0;
-	const isVideoCached = isCached(video.filePath);
-	const currentDownloadProgress = downloadProgress[video.filePath];
-	const isCurrentlyDownloading = isDownloading[video.filePath];
 
 	// メニューの外側クリックでメニューを閉じる
 	useEffect(() => {
@@ -91,55 +70,13 @@ const VideoListItem = ({
 	const handlePlayClick = (e: React.MouseEvent | React.KeyboardEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-
-		if (isOfflineMode) {
-			// オフラインモードでは直接オフライン再生
-			onPlay?.(video.videoId, true);
-		} else {
-			// ストリーミングモードでは警告チェック
-			if (isVideoCached && onShowStreamingWarning) {
-				onShowStreamingWarning(video);
-			} else {
-				onPlay?.(video.videoId, false);
-			}
-		}
-	};
-
-	// ダウンロード処理
-	const handleDownload = async (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setShowMenu(false);
-
-		try {
-			await downloadVideo(video.videoId, video.filePath, video.title);
-		} catch (error) {
-			console.error("ダウンロードエラー:", error);
-		}
-	};
-
-	// 削除処理
-	const handleDelete = async (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setShowMenu(false);
-		setIsDeleting(true);
-
-		try {
-			await deleteVideo(video.filePath);
-			onDelete?.(video.filePath);
-		} catch (error) {
-			console.error("削除エラー:", error);
-		} finally {
-			setIsDeleting(false);
-		}
+		onPlay?.(video.videoId);
 	};
 
 	return (
 		<div
 			className={cn(
 				"group bg-surface/30 hover:bg-surface/50 backdrop-blur-sm rounded-xl border border-border-muted/50 hover:border-primary/30 transition-all duration-300",
-				isDeleting && "opacity-50 pointer-events-none",
 			)}
 		>
 			<div
@@ -167,25 +104,10 @@ const VideoListItem = ({
 							</div>
 						)}
 
-						{/* ダウンロード進行状況オーバーレイ */}
-						{isCurrentlyDownloading &&
-							currentDownloadProgress !== undefined && (
-								<div className="absolute inset-0 bg-overlay flex items-center justify-center">
-									<div className="text-center">
-										<div className="w-6 h-6 border-2 border-primary border-t-blue-500 rounded-full animate-spin mb-1" />
-										<div className="text-text text-xs">
-											{Math.round(currentDownloadProgress.percentage || 0)}%
-										</div>
-									</div>
-								</div>
-							)}
-
 						{/* 再生ボタンオーバーレイ */}
-						{!isCurrentlyDownloading && (
-							<div className="absolute inset-0 bg-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-								<Play className="h-8 w-8 text-text" />
-							</div>
-						)}
+						<div className="absolute inset-0 bg-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+							<Play className="h-8 w-8 text-text" />
+						</div>
 					</div>
 
 					{/* メインコンテンツ */}
@@ -287,41 +209,13 @@ const VideoListItem = ({
 								{/* コンテキストメニュー */}
 								{showMenu && (
 									<div className="absolute right-0 top-full mt-2 bg-surface border border-border-muted rounded-lg shadow-xl z-20 min-w-[160px]">
-										{isOfflineMode ? (
-											<button
-												type="button"
-												onClick={handleDelete}
-												disabled={isDeleting}
-												className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-											>
-												<Trash2 className="h-4 w-4" />
-												削除
-											</button>
-										) : (
-											<>
-												{!isVideoCached && !isCurrentlyDownloading && (
-													<button
-														type="button"
-														onClick={handleDownload}
-														className="w-full px-4 py-2 text-left text-primary hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2"
-													>
-														<Download className="h-4 w-4" />
-														ダウンロード
-													</button>
-												)}
-												{isVideoCached && (
-													<button
-														type="button"
-														onClick={handleDelete}
-														disabled={isDeleting}
-														className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-													>
-														<Trash2 className="h-4 w-4" />
-														削除
-													</button>
-												)}
-											</>
-										)}
+										<button
+											type="button"
+											onClick={() => setShowMenu(false)}
+											className="w-full px-4 py-2 text-left text-text hover:bg-surface-elevated rounded-lg transition-colors"
+										>
+											閉じる
+										</button>
 									</div>
 								)}
 							</div>
@@ -350,8 +244,6 @@ const VideoListItem = ({
 const VideoList = ({
 	videos,
 	className,
-	isOfflineMode = false,
-	onDelete,
 	onShowStreamingWarning,
 	onPlay,
 }: VideoListProps) => {
@@ -361,8 +253,6 @@ const VideoList = ({
 				<VideoListItem
 					key={video.id}
 					video={video}
-					isOfflineMode={isOfflineMode}
-					onDelete={onDelete}
 					onShowStreamingWarning={onShowStreamingWarning}
 					onPlay={onPlay}
 				/>

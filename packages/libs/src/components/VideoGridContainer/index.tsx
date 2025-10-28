@@ -7,21 +7,15 @@ import { cn } from "../../libs/utils";
 interface VideoGridProps {
 	videos: VideoFileData[];
 	className?: string;
-	isOfflineMode?: boolean;
-	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (videoId: string, isOffline?: boolean) => void;
-	enableDownload?: boolean; // ダウンロード機能を有効にするかどうか
+	onPlay?: (videoId: string) => void;
 }
 
 const VideoGrid = ({
 	videos,
 	className,
-	isOfflineMode = false,
-	onDelete,
 	onShowStreamingWarning,
 	onPlay,
-	enableDownload = false,
 }: VideoGridProps) => {
 	return (
 		<div
@@ -43,11 +37,8 @@ const VideoGrid = ({
 					key={video.id}
 					video={video}
 					priority={index < 6} // 最初の6つの画像を優先読み込み
-					isOfflineMode={isOfflineMode}
-					onDelete={onDelete}
 					onShowStreamingWarning={onShowStreamingWarning}
 					onPlay={onPlay}
-					enableDownload={enableDownload}
 				/>
 			))}
 		</div>

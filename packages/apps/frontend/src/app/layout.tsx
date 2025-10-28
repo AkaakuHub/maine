@@ -7,27 +7,17 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
 	title: "Maine",
-	description:
-		"動画ファイルをストリーミング再生・オフライン視聴できる動画プレイヤー",
+	description: "動画ファイルをストリーミング再生できる動画プレイヤー",
 	keywords: [
 		"video",
 		"video",
 		"streaming",
 		"self-hosted",
-		"PWA",
-		"offline",
 		"動画",
 		"ビデオ",
 		"ストリーミング",
-		"オフライン",
 	],
 	authors: [{ name: "Akaaku" }],
-	manifest: "/manifest.json",
-	appleWebApp: {
-		capable: true,
-		statusBarStyle: "default",
-		title: "Maine",
-	},
 	formatDetection: {
 		telephone: false,
 	},

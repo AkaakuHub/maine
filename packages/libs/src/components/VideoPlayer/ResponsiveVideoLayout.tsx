@@ -20,7 +20,7 @@ interface ResponsiveVideoLayoutProps {
 	onToggleWatchlist: () => void;
 	onShare: () => void;
 	onToggleDescription: () => void;
-	onDownload?: () => void;
+	onDownload: () => void;
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
 	initialTime?: number;
 }

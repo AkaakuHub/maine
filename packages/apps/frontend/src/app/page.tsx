@@ -6,19 +6,12 @@ import {
 	EmptyState,
 	HeaderSection,
 	LoadingState,
-	OfflineManagementPanel,
 	PAGINATION,
-	PWADebugInfo,
 	SearchSection,
 	SettingsModal,
-	StreamingWarningDialog,
 	TabNavigation,
-	type TabType,
 	useAppStateStore,
 	useNavigationRefresh,
-	useNetworkStatus,
-	useOfflineStorage,
-	useOfflineVideoManagement,
 	useVideoActions,
 	useVideos,
 	useWarningDialog,
@@ -26,8 +19,6 @@ import {
 } from "@maine/libs";
 
 const HomeContent = () => {
-	// ネットワーク状態
-	const { isOffline } = useNetworkStatus();
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const isInitialized = useRef(false);
@@ -51,16 +42,11 @@ const HomeContent = () => {
 		viewMode,
 		setViewMode,
 
-		// タブ管理
-		activeTab,
-		setActiveTab,
-
 		// ページネーション
 		currentPage,
 		showAll,
 		setCurrentPage,
 		handleShowAll,
-		handleTabChange: handleTabChangeStore,
 
 		// 設定モーダル
 		showSettings,
@@ -73,10 +59,6 @@ const HomeContent = () => {
 		shouldCreateHistoryEntry,
 		setShouldCreateHistoryEntry,
 	} = useAppStateStore();
-
-	// オフラインストレージのフック
-	const { cacheSize, storageEstimate, clearCache, refreshCachedVideos } =
-		useOfflineStorage();
 
 	// URL初期化: ページロード時にURLから状態を復元
 	useEffect(() => {
@@ -113,48 +95,17 @@ const HomeContent = () => {
 		setShouldCreateHistoryEntry,
 	]);
 
-	// オフライン状態に応じたタブ自動切り替え
-	useEffect(() => {
-		if (isOffline && activeTab === "streaming") {
-			setActiveTab("offline");
-		}
-	}, [isOffline, activeTab, setActiveTab]);
-
-	// タブ変更処理
-	const handleTabChange = (tab: TabType) => {
-		setActiveTab(tab);
-		handleTabChangeStore(true);
-		if (tab === "offline") {
-			refreshCachedVideos();
-		}
-	};
-
 	// 動画再生処理
 	const handlePlayVideo = useCallback(
-		(videoId: string, isOffline = false) => {
-			const url = `/play/${videoId}${isOffline ? "?offline=true" : ""}`;
+		(videoId: string) => {
+			const url = `/play/${videoId}`;
 			router.push(url);
 		},
 		[router],
 	);
 
 	// 警告ダイアログの状態管理
-	const {
-		showStreamingWarning,
-		warningVideoData,
-		handleShowStreamingWarning,
-		handleCloseStreamingWarning,
-		handleContinueStreaming,
-		handleUseOfflineFromWarning,
-	} = useWarningDialog();
-
-	// オフライン動画管理
-	const { offlineVideos, handleOfflineVideoDelete, handleClearAllOffline } =
-		useOfflineVideoManagement({
-			activeTab,
-			clearCache,
-			refreshCachedVideos,
-		});
+	const { handleShowStreamingWarning } = useWarningDialog();
 
 	// 動画データのフック（オンライン時のみ）
 	const {
@@ -178,16 +129,16 @@ const HomeContent = () => {
 			limit: PAGINATION.DEFAULT_LIMIT,
 		},
 		loadAll: showAll,
-		enabled: !isOffline, // オフライン時は無効化
+		enabled: true,
 	});
 
 	// 動画ページから戻ってきた際に進捗情報を更新するためのリフレッシュ処理
 	useEffect(() => {
-		if (activeTab === "streaming" && shouldRefreshVideos) {
+		if (shouldRefreshVideos) {
 			refetchVideos();
 			consumeRefresh();
 		}
-	}, [activeTab, shouldRefreshVideos, refetchVideos, consumeRefresh]);
+	}, [shouldRefreshVideos, refetchVideos, consumeRefresh]);
 
 	// エラーハンドリングとコンテンツ状態
 	const { handleRetry, hasContent } = useVideoActions({
@@ -227,52 +178,29 @@ const HomeContent = () => {
 						onScanNavigate={() => router.push("/scan")}
 					/>
 
-					<TabNavigation
-						activeTab={activeTab}
-						offlineVideos={offlineVideos}
-						onTabChange={handleTabChange}
+					<TabNavigation />
+
+					<SearchSection
+						searchTerm={searchTerm}
+						sortBy={sortBy}
+						sortOrder={sortOrder}
+						onSearchTermChange={setSearchTerm}
+						onSetIsComposing={setIsComposing}
+						onSearch={handleSearch}
+						onClearSearch={handleClearSearch}
+						onSortByChange={setSortBy}
+						onSortOrderToggle={toggleSortOrder}
+						videosLoading={videosLoading}
+						videos={videos}
+						pagination={pagination}
 					/>
-
-					{/* 検索・フィルターセクション（ストリーミングタブのみ） */}
-					{activeTab === "streaming" && (
-						<SearchSection
-							searchTerm={searchTerm}
-							sortBy={sortBy}
-							sortOrder={sortOrder}
-							onSearchTermChange={setSearchTerm}
-							onSetIsComposing={setIsComposing}
-							onSearch={handleSearch}
-							onClearSearch={handleClearSearch}
-							onSortByChange={setSortBy}
-							onSortOrderToggle={toggleSortOrder}
-							videosLoading={videosLoading}
-							activeTab={activeTab}
-							videos={videos}
-							pagination={pagination}
-							offlineVideos={offlineVideos}
-							cacheSize={cacheSize}
-						/>
-					)}
-
-					{/* オフライン管理パネル */}
-					{activeTab === "offline" && (
-						<OfflineManagementPanel
-							offlineVideos={offlineVideos}
-							cacheSize={cacheSize}
-							storageEstimate={storageEstimate}
-							onRefreshCachedVideos={refreshCachedVideos}
-							onClearAllOffline={handleClearAllOffline}
-						/>
-					)}
 				</div>
 			</div>
 
 			{/* コンテンツエリア */}
 			<VideoContent
-				activeTab={activeTab}
 				viewMode={viewMode}
 				videos={videos}
-				offlineVideos={offlineVideos}
 				videosLoading={videosLoading}
 				searchQuery={searchQuery}
 				showAll={showAll}
@@ -283,27 +211,10 @@ const HomeContent = () => {
 				hasNextPage={hasNextPage}
 				onShowStreamingWarning={handleShowStreamingWarning}
 				onShowAll={handleShowAll}
-				onOfflineVideoDelete={handleOfflineVideoDelete}
 				onPageChange={setCurrentPage}
 				onRetry={handleRetry}
 				onPlay={handlePlayVideo}
 			/>
-			{/* PWA デバッグ情報 */}
-			{process.env.NODE_ENV === "development" && (
-				<div className="mt-8">
-					<PWADebugInfo />
-				</div>
-			)}
-			{/* グローバル警告ダイアログ */}
-			{warningVideoData && (
-				<StreamingWarningDialog
-					isOpen={showStreamingWarning}
-					onClose={handleCloseStreamingWarning}
-					onContinueStreaming={handleContinueStreaming}
-					onUseOffline={handleUseOfflineFromWarning}
-					videoTitle={warningVideoData.title}
-				/>
-			)}
 
 			{/* 設定モーダル */}
 			<SettingsModal isOpen={showSettings} onClose={handleCloseSettings} />

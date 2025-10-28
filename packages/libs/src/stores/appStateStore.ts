@@ -2,7 +2,6 @@ import { create } from "zustand";
 
 export type SortBy = "title" | "year" | "episode" | "createdAt";
 export type SortOrder = "asc" | "desc";
-export type TabType = "streaming" | "offline";
 export type ViewMode = "grid" | "list";
 
 interface AppStateStore {
@@ -15,9 +14,6 @@ interface AppStateStore {
 
 	// 表示設定
 	viewMode: ViewMode;
-
-	// タブ管理
-	activeTab: TabType;
 
 	// 設定モーダル
 	showSettings: boolean;
@@ -36,7 +32,6 @@ interface AppStateStore {
 	setSortBy: (sortBy: SortBy) => void;
 	setSortOrder: (sortOrder: SortOrder) => void;
 	setViewMode: (mode: ViewMode) => void;
-	setActiveTab: (tab: TabType) => void;
 	setShowSettings: (show: boolean) => void;
 	setCurrentPage: (page: number) => void;
 	setShowAll: (showAll: boolean) => void;
@@ -65,7 +60,6 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 	sortBy: "title",
 	sortOrder: "asc",
 	viewMode: "grid",
-	activeTab: "streaming",
 	showSettings: false,
 	currentPage: 1,
 	showAll: false,
@@ -82,7 +76,6 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		set({ sortOrder, currentPage: 1, showAll: false });
 	},
 	setViewMode: (mode) => set({ viewMode: mode }),
-	setActiveTab: (tab) => set({ activeTab: tab }),
 	setShowSettings: (show) => set({ showSettings: show }),
 	setCurrentPage: (page) => set({ currentPage: page }),
 	setShowAll: (showAll) => set({ showAll }),

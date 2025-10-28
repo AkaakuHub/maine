@@ -4,26 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import type { VideoInfoType } from "../types/VideoInfo";
 import type { VideoFileData } from "../type";
 import { useVideoProgress } from "./useVideoProgress";
-import { useNetworkStatus } from "./useNetworkStatus";
 import { useNavigationRefresh } from "../contexts/NavigationRefreshContext";
 import { createApiUrl } from "../utils/api";
 
 export function useVideoPlayer({
 	videoId,
-	explicitOfflineMode,
 	onGoBack,
 	onGoHome,
 }: {
 	videoId?: string;
-	explicitOfflineMode?: boolean;
 	onGoBack?: () => void;
 	onGoHome?: () => void;
 } = {}) {
-	const { isOnline } = useNetworkStatus();
 	const { triggerVideoRefresh } = useNavigationRefresh();
-
-	// オフラインモードの判定: 明示的なオフラインモード or ネットワーク切断時
-	const isOfflineMode = explicitOfflineMode || !isOnline;
 
 	const [videoData, setVideoData] = useState<VideoFileData | null>(null);
 	const [videoInfo, setVideoInfo] = useState<VideoInfoType>({
@@ -42,7 +35,7 @@ export function useVideoPlayer({
 	// ビデオ進捗管理（ページ離脱時のみ保存）
 	const videoProgressHook = useVideoProgress({
 		filePath: videoData?.filePath || "",
-		enableBackup: !isOfflineMode,
+		enableBackup: true,
 		onProgressSaved: () => {},
 	});
 
@@ -117,13 +110,12 @@ export function useVideoPlayer({
 	// ビデオの時間更新ハンドラー（新しいuseVideoProgressフックを使用）
 	const handleTimeUpdate = useCallback(
 		(currentTime: number, duration: number) => {
-			// オフラインモードでは進捗を保存しない
-			if (isOfflineMode || !videoData || !duration) return;
+			if (!videoData || !duration) return;
 
 			// 新しいフックのhandleTimeUpdateを呼び出し
 			videoProgressHook.handleTimeUpdate(currentTime, duration);
 		},
-		[isOfflineMode, videoData, videoProgressHook],
+		[videoData, videoProgressHook],
 	);
 
 	const handleGoBack = () => {
@@ -161,8 +153,7 @@ export function useVideoPlayer({
 	};
 
 	const toggleLike = async () => {
-		// オフラインモードではLike機能を無効にする
-		if (isOfflineMode || !videoData) return;
+		if (!videoData) return;
 
 		const newLikeStatus = !isLiked;
 		setIsLiked(newLikeStatus); // 楽観的更新

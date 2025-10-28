@@ -27,21 +27,11 @@ export function useWarningDialog() {
 		}
 	}, [warningVideoData, handleCloseStreamingWarning]);
 
-	const handleUseOfflineFromWarning = useCallback(() => {
-		if (warningVideoData) {
-			handleCloseStreamingWarning();
-			setTimeout(() => {
-				window.location.href = `/play/${encodeURIComponent(warningVideoData.videoId)}?offline=true`;
-			}, 0);
-		}
-	}, [warningVideoData, handleCloseStreamingWarning]);
-
 	return {
 		showStreamingWarning,
 		warningVideoData,
 		handleShowStreamingWarning,
 		handleCloseStreamingWarning,
 		handleContinueStreaming,
-		handleUseOfflineFromWarning,
 	};
 }

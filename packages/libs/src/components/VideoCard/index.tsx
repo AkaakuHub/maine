@@ -1,103 +1,33 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Download, Radio, MoreHorizontal, Trash2 } from "lucide-react";
+import { useMemo } from "react";
+import { Radio } from "lucide-react";
 import type { VideoFileData } from "../../type";
 import { cn, formatFileSize } from "../../libs/utils";
 import { formatDuration } from "../../utils/constants";
 import { createApiUrl } from "../../utils/api";
-import { useOfflineStorage } from "../../hooks/useOfflineStorage";
-import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { parseVideoFileName } from "../../utils/videoFileNameParser";
 
 interface VideoCardProps {
 	video: VideoFileData;
 	priority?: boolean;
 	className?: string;
-	isOfflineMode?: boolean;
-	onDelete?: (filePath: string) => void;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (videoId: string, isOffline?: boolean) => void;
-	enableDownload?: boolean; // ダウンロード機能を有効にするかどうか
+	onPlay?: (videoId: string) => void;
 }
 
-const VideoCard = ({
-	video,
-	className,
-	isOfflineMode = false,
-	onShowStreamingWarning,
-	onPlay,
-}: VideoCardProps) => {
-	const [isDeleting, setIsDeleting] = useState(false);
-	const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
-	const [showMenu, setShowMenu] = useState(false);
-	const {
-		isCached,
-		deleteVideo,
-		downloadVideo,
-		isDownloading,
-		downloadProgress,
-	} = useOfflineStorage();
-
+const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 	// ファイル名から番組情報をパース
 	const parsedInfo = useMemo(() => {
 		const fileName = video.filePath.split(/[/\\]/).pop() || video.filePath;
 		return parseVideoFileName(fileName);
 	}, [video.filePath]);
 
-	// オフライン保存状態をチェック
-	const isVideoCached = isCached(video.filePath);
-	const currentDownloadProgress = downloadProgress[video.filePath];
-	const isCurrentlyDownloading = isDownloading[video.filePath];
-
-	// ダウンロード処理
-	const handleDownload = async () => {
-		try {
-			await downloadVideo(video.videoId, video.filePath, video.title);
-			setShowDownloadConfirm(false);
-			setShowMenu(false);
-		} catch (error) {
-			console.error("ダウンロードエラー:", error);
-		}
-	};
-
-	// 削除処理
-	const handleDelete = async () => {
-		try {
-			setIsDeleting(true);
-			await deleteVideo(video.filePath);
-			setShowMenu(false);
-		} catch (error) {
-			console.error("削除エラー:", error);
-		} finally {
-			setIsDeleting(false);
-		}
-	};
-
-	// メニューボタンクリック処理
-	const handleMenuClick = (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setShowMenu(!showMenu);
-	};
-
-	// 再生処理（直接再生）
+	// 再生処理
 	const handlePlayClick = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-
-		if (isOfflineMode) {
-			// オフラインモードでは直接オフライン再生
-			onPlay?.(video.videoId, true);
-		} else {
-			// ストリーミングモードでオフライン版がある場合は警告を表示
-			if (isVideoCached && onShowStreamingWarning) {
-				onShowStreamingWarning(video);
-			} else {
-				// オフライン版がない場合は直接ストリーミング再生
-				onPlay?.(video.videoId, false);
-			}
-		}
+		onPlay?.(video.videoId);
 	};
 
 	return (
@@ -141,20 +71,6 @@ const VideoCard = ({
 									backgroundSize: "20px 20px",
 								}}
 							/>
-						</div>
-					)}
-					{/* ダウンロード進行状況オーバーレイ */}
-					{isCurrentlyDownloading && currentDownloadProgress && (
-						<div className="absolute inset-0 bg-overlay flex items-center justify-center">
-							<div className="text-center text-text">
-								<Download className="h-8 w-8 mx-auto mb-2 animate-pulse" />
-								<div className="text-sm font-medium">
-									{Math.round(currentDownloadProgress.percentage)}%
-								</div>
-								<div className="text-xs text-text-secondary mt-1">
-									ダウンロード中...
-								</div>
-							</div>
 						</div>
 					)}
 					{/* エピソード番号 */}
@@ -231,62 +147,6 @@ const VideoCard = ({
 				</div>
 			</button>
 
-			{/* メニューボタン（右上） */}
-			{!isCurrentlyDownloading && (
-				<div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-					<div className="relative">
-						<button
-							type="button"
-							onClick={handleMenuClick}
-							className="w-8 h-8 bg-surface-elevated/75 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-surface-elevated transition-colors"
-						>
-							<MoreHorizontal className="h-4 w-4 text-text" />
-						</button>
-
-						{/* コンテキストメニュー */}
-						{showMenu && (
-							<div className="absolute right-0 top-full mt-2 bg-surface border border-border-muted rounded-lg shadow-xl z-20 min-w-[160px]">
-								{isOfflineMode ? (
-									<button
-										type="button"
-										onClick={handleDelete}
-										disabled={isDeleting}
-										className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-									>
-										<Trash2 className="h-4 w-4" />
-										削除
-									</button>
-								) : (
-									<>
-										{!isVideoCached && !isCurrentlyDownloading && (
-											<button
-												type="button"
-												onClick={() => setShowDownloadConfirm(true)}
-												className="w-full px-4 py-2 text-left text-primary hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2"
-											>
-												<Download className="h-4 w-4" />
-												ダウンロード
-											</button>
-										)}
-										{isVideoCached && (
-											<button
-												type="button"
-												onClick={handleDelete}
-												disabled={isDeleting}
-												className="w-full px-4 py-2 text-left text-error hover:bg-surface-elevated rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-											>
-												<Trash2 className="h-4 w-4" />
-												オフラインデータを削除
-											</button>
-										)}
-									</>
-								)}
-							</div>
-						)}
-					</div>
-				</div>
-			)}
-
 			{/* 進行状況バー（視聴進捗があれば表示） */}
 			{video.watchProgress > 0 && (
 				<div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated">
@@ -298,37 +158,6 @@ const VideoCard = ({
 					/>
 				</div>
 			)}
-
-			{/* ダウンロード確認ダイアログ */}
-			<ConfirmDialog
-				isOpen={showDownloadConfirm}
-				onClose={() => setShowDownloadConfirm(false)}
-				title="動画をダウンロード"
-				message={
-					<div>
-						<p className="text-text-secondary mb-2">
-							この動画をオフライン視聴用にダウンロードしますか？
-						</p>
-						<p className="text-sm text-text-secondary">
-							ファイル名: {video.fileName}
-						</p>
-						<p className="text-sm text-text-secondary">
-							サイズ: {formatFileSize(video.fileSize)}
-						</p>
-					</div>
-				}
-				icon={Download}
-				iconColor="text-primary"
-				actions={[
-					{
-						label: "ダウンロード",
-						onClick: handleDownload,
-						variant: "primary",
-						icon: Download,
-						description: "オフライン視聴できるようになります",
-					},
-				]}
-			/>
 		</div>
 	);
 };
