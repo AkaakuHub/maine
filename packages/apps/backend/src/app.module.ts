@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { DatabaseModule } from "./common/database/database.module";
+import { AuthModule } from "./auth/auth.module";
 import { ChaptersModule } from "./modules/chapters/chapters.module";
 import { MediaModule } from "./modules/media/media.module";
 import { ProgressModule } from "./modules/progress/progress.module";
@@ -18,6 +19,7 @@ import { VideosModule } from "./modules/videos/videos.module";
 			isGlobal: true,
 		}),
 		DatabaseModule,
+		AuthModule,
 		VideosModule,
 		ScanModule,
 		ProgressModule,

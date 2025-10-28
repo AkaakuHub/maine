@@ -7,13 +7,17 @@ import {
 	Post,
 	Put,
 	Query,
+	Request,
+	UseGuards,
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { UpdateProgressDto } from "./dto/update-progress.dto";
 import { ProgressService } from "./progress.service";
+import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 
 @ApiTags("progress")
 @Controller("progress")
+@UseGuards(JwtAuthGuard)
 export class ProgressController {
 	private readonly logger = new Logger(ProgressController.name);
 
@@ -28,9 +32,12 @@ export class ProgressController {
 	@ApiResponse({ status: 200, description: "動画進捗取得" })
 	@ApiResponse({ status: 400, description: "バリデーションエラー" })
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
-	async getVideoProgress(@Query("filePath") filePath: string) {
+	async getVideoProgress(@Query("filePath") filePath: string, @Request() req) {
 		try {
-			const result = await this.progressService.getVideoProgress(filePath);
+			const result = await this.progressService.getVideoProgress(
+				filePath,
+				req.user.userId,
+			);
 
 			if (!result.success) {
 				if (result.error?.includes("required")) {
@@ -57,9 +64,15 @@ export class ProgressController {
 	@ApiResponse({ status: 200, description: "動画進捗更新" })
 	@ApiResponse({ status: 400, description: "バリデーションエラー" })
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
-	async updateVideoProgress(@Body() updateData: UpdateProgressDto) {
+	async updateVideoProgress(
+		@Body() updateData: UpdateProgressDto,
+		@Request() req,
+	) {
 		try {
-			const result = await this.progressService.updateVideoProgress(updateData);
+			const result = await this.progressService.updateVideoProgress(
+				updateData,
+				req.user.userId,
+			);
 
 			if (!result.success) {
 				if (result.error?.includes("required")) {
@@ -86,8 +99,11 @@ export class ProgressController {
 	@ApiResponse({ status: 200, description: "動画進捗更新" })
 	@ApiResponse({ status: 400, description: "バリデーションエラー" })
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
-	async updateVideoProgressPut(@Body() updateData: UpdateProgressDto) {
+	async updateVideoProgressPut(
+		@Body() updateData: UpdateProgressDto,
+		@Request() req,
+	) {
 		// POSTと同じ処理
-		return this.updateVideoProgress(updateData);
+		return this.updateVideoProgress(updateData, req);
 	}
 }

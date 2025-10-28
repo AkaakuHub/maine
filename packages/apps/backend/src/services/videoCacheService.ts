@@ -737,7 +737,7 @@ class VideoCacheService {
 			const videosWithProgress = await Promise.all(
 				videos.map(async (v) => {
 					try {
-						const progress = await prisma.videoProgress.findUnique({
+						const progress = await prisma.videoProgress.findFirst({
 							where: { filePath: v.filePath },
 						});
 
@@ -817,7 +817,7 @@ class VideoCacheService {
 			const videosWithProgress = await Promise.all(
 				videos.map(async (v) => {
 					try {
-						const progress = await prisma.videoProgress.findUnique({
+						const progress = await prisma.videoProgress.findFirst({
 							where: { filePath: v.filePath },
 						});
 

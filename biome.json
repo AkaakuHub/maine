@@ -19,13 +19,7 @@
 	"overrides": [
 		{
 			"include": [
-				"**/*.controller.ts",
-				"**/*.service.ts",
-				"**/*.module.ts",
-				"**/*.guard.ts",
-				"**/*.interceptor.ts",
-				"**/*.pipe.ts",
-				"**/*.filter.ts"
+				"backend/**/*.ts"
 			],
 			"linter": {
 				"rules": {
@@ -49,7 +43,7 @@
 		"rules": {
 			"recommended": true,
 			"style": {
-				"useImportType": "error",
+				"useImportType": "off",
 				"useExportType": "error"
 			},
 			"correctness": {

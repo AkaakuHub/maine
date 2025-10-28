@@ -38,7 +38,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "../../libs/src/components/auth/auth-guard.tsx"  ],
   "exclude": [
     "node_modules"
   ]

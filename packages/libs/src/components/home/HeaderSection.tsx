@@ -1,9 +1,18 @@
 "use client";
 
-import { Play, Grid, List, Settings, FolderSearch } from "lucide-react";
+import {
+	Play,
+	Grid,
+	List,
+	Settings,
+	FolderSearch,
+	LogOut,
+	User,
+} from "lucide-react";
 import { cn } from "../../libs/utils";
 import type { ViewMode } from "../../stores/appStateStore";
 import PWAInstallPrompt from "../../components/PWAInstallPrompt";
+import { useAuthStore } from "../../stores/auth-store";
 
 interface HeaderSectionProps {
 	viewMode: ViewMode;
@@ -18,6 +27,7 @@ export function HeaderSection({
 	onViewModeChange,
 	onScanNavigate,
 }: HeaderSectionProps) {
+	const { user, logout } = useAuthStore();
 	return (
 		<header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-sm border-b border-border">
 			<div className="max-w-7xl mx-auto">
@@ -112,6 +122,43 @@ export function HeaderSection({
 
 						{/* PWA Install */}
 						<PWAInstallPrompt />
+
+						{/* User Menu */}
+						{user && (
+							<div className="relative group">
+								<button
+									type="button"
+									className="flex items-center gap-2 p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
+								>
+									<User className="w-4 h-4 sm:w-5 sm:h-5" />
+									<span className="hidden sm:block text-sm">
+										{user.username}
+									</span>
+								</button>
+
+								{/* Dropdown */}
+								<div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-surface border border-border rounded-lg shadow-lg z-50 min-w-48">
+									<div className="p-2">
+										<div className="px-3 py-2 text-sm text-text-secondary">
+											<div className="font-medium text-text">
+												{user.username}
+											</div>
+											<div className="text-xs">{user.email}</div>
+											<div className="text-xs mt-1">役割: {user.role}</div>
+										</div>
+										<hr className="my-1 border-border" />
+										<button
+											type="button"
+											onClick={logout}
+											className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text hover:bg-surface-elevated rounded-md transition-colors"
+										>
+											<LogOut className="w-4 h-4" />
+											ログアウト
+										</button>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

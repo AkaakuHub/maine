@@ -83,7 +83,7 @@ export class VideosService {
 
 			// progressデータも取得
 			try {
-				const progress = await this.prisma.videoProgress.findUnique({
+				const progress = await this.prisma.videoProgress.findFirst({
 					where: { filePath: video.filePath },
 				});
 
@@ -200,7 +200,7 @@ export class VideosService {
 			}
 
 			// progressデータも取得
-			const progress = await this.prisma.videoProgress.findUnique({
+			const progress = await this.prisma.videoProgress.findFirst({
 				where: { filePath: video.filePath },
 			});
 
@@ -260,7 +260,7 @@ export class VideosService {
 			const videosWithProgress = await Promise.all(
 				videos.map(async (v) => {
 					try {
-						const progress = await this.prisma.videoProgress.findUnique({
+						const progress = await this.prisma.videoProgress.findFirst({
 							where: { filePath: v.filePath },
 						});
 						return {
@@ -363,7 +363,7 @@ export class VideosService {
 
 			// progressデータも取得
 			try {
-				const progress = await this.prisma.videoProgress.findUnique({
+				const progress = await this.prisma.videoProgress.findFirst({
 					where: { filePath: video.filePath },
 				});
 

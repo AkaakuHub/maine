@@ -9,6 +9,11 @@ export { useNetworkStatus } from "./hooks/useNetworkStatus";
 export { useVideoActions } from "./hooks/useVideoActions";
 export { useAppStateStore } from "./stores/appStateStore";
 export { useNavigationRefresh } from "./contexts/NavigationRefreshContext";
+
+// 認証関連
+export { useAuthStore } from "./stores/auth-store";
+export { AuthGuard } from "./components/auth/auth-guard";
+export { AuthAPI } from "./api/auth";
 export { HeaderSection } from "./components/home/HeaderSection";
 export { TabNavigation } from "./components/home/TabNavigation";
 export { SearchSection } from "./components/home/SearchSection";

@@ -16,6 +16,7 @@ import {
 	useVideos,
 	useWarningDialog,
 	VideoContent,
+	AuthGuard,
 } from "@maine/libs";
 
 const HomeContent = () => {
@@ -223,16 +224,26 @@ const HomeContent = () => {
 };
 
 const Home = () => {
+	const router = useRouter();
+
 	return (
-		<Suspense
-			fallback={
-				<div className="min-h-screen bg-surface-variant">
-					<div className="container mx-auto px-4 py-8">Loading...</div>
-				</div>
-			}
+		<AuthGuard
+			onRedirect={(path) => {
+				if (path) {
+					router.push(path);
+				}
+			}}
 		>
-			<HomeContent />
-		</Suspense>
+			<Suspense
+				fallback={
+					<div className="min-h-screen bg-surface-variant">
+						<div className="container mx-auto px-4 py-8">Loading...</div>
+					</div>
+				}
+			>
+				<HomeContent />
+			</Suspense>
+		</AuthGuard>
 	);
 };
 
