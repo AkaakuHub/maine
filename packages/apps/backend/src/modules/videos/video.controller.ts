@@ -28,13 +28,9 @@ export class VideoController {
 		};
 	}
 
-	private buildContentDispositionHeader(videoId: string): string {
-		const normalizedId = /^[a-f0-9]{64}$/i.test(videoId)
-			? videoId.toLowerCase()
-			: "unknown";
-		const filename = `video-${normalizedId}.mp4`;
-		const encodedFilename = encodeURIComponent(filename);
-		return `attachment; filename="${filename}"; filename*=UTF-8''${encodedFilename}`;
+	private buildContentDispositionHeader(fileName: string): string {
+		const encodedFilename = encodeURIComponent(fileName);
+		return `attachment; filename="${fileName}"; filename*=UTF-8''${encodedFilename}`;
 	}
 
 	@Get(":videoId")
@@ -94,7 +90,7 @@ export class VideoController {
 				// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
 				if (downloadMode) {
 					const contentDisposition = this.buildContentDispositionHeader(
-						videoData.videoId ?? videoId,
+						videoData.fileName,
 					);
 					res.set("Content-Disposition", contentDisposition);
 				}
@@ -136,7 +132,7 @@ export class VideoController {
 
 			if (downloadMode) {
 				rangeHeaders["Content-Disposition"] =
-					this.buildContentDispositionHeader(videoData.videoId ?? videoId);
+					this.buildContentDispositionHeader(videoData.fileName);
 			}
 
 			res.writeHead(206, rangeHeaders);
