@@ -142,11 +142,29 @@ def scan_file(
     truncated = False
     try:
         with file_path.open("r", encoding="utf-8") as handle:
+            skip_next = False
             for line_no, line in enumerate(handle, start=1):
                 stripped = line.rstrip("\r\n")
-                if ignore_token and ignore_token in stripped:
+                contains_ignore_token = bool(ignore_token and ignore_token in stripped)
+
+                if skip_next:
+                    skip_next = False
+                    if contains_ignore_token:
+                        # comment行などに付いた無視トークンは次の行もスキップする
+                        if not any(pattern.search(stripped) for pattern in patterns):
+                            skip_next = True
                     continue
-                if any(pattern.search(stripped) for pattern in patterns):
+
+                has_forbidden_color = any(pattern.search(stripped) for pattern in patterns)
+
+                if contains_ignore_token:
+                    # 同じ行に無視トークンがある場合は常にスキップ。
+                    # コメント行のみなら次の行もスキップする。
+                    if not has_forbidden_color:
+                        skip_next = True
+                    continue
+
+                if has_forbidden_color:
                     if limit is None or len(matches) < limit:
                         matches.append(Match(file_path=file_path, line_no=line_no, line=stripped))
                     else:

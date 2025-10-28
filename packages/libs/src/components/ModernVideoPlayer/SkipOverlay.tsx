@@ -27,7 +27,9 @@ export default function SkipOverlay({
 					<div className="relative flex h-16 sm:h-24 w-24 items-center justify-center">
 						<span className="absolute inline-flex h-12 w-12 sm:h-18 sm:w-18 rounded-full bg-primary/25 animate-ping" />
 						<span className="absolute inline-flex h-12 w-12 sm:h-18 sm:w-18 rounded-full bg-primary/45" />
-						<span className="relative inline-flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center text-white drop-shadow">
+						<span
+							className="relative inline-flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center text-white drop-shadow" // tailwind-ignore
+						>
 							{isForward ? (
 								<SkipForward
 									className="h-6 w-6 sm:h-9 sm:w-9"

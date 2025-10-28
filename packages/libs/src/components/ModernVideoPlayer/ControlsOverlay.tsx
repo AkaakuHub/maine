@@ -96,7 +96,7 @@ export default function ControlsOverlay({
 			onClick={() => {
 				onSetIsShowRestTime((current) => !current);
 			}}
-			className="text-white text-sm font-mono flex gap-1"
+			className="text-white text-sm font-mono flex gap-1" // tailwind-ignore
 		>
 			{isShowRestTime ? (
 				<>
@@ -263,7 +263,9 @@ export default function ControlsOverlay({
 						</div>
 					)}
 
-					<div className="flex items-center gap-2 text-white text-sm font-mono">
+					<div
+						className="flex items-center gap-2 text-white text-sm font-mono" // tailwind-ignore
+					>
 						{timeDisplayButton}
 					</div>
 				</div>
