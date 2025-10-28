@@ -158,18 +158,37 @@ export class VideosController {
 		try {
 			this.logger.log("Getting directories from VIDEO_DIRECTORY");
 
-			// VIDEO_DIRECTORY環境変数からディレクトリを取得
+			// VIDEO_DIRECTORY環境変数からディレクトリを取得（カンマ区切り対応）
 			const videoDirectory = process.env.VIDEO_DIRECTORY;
 			if (!videoDirectory) {
 				this.logger.warn("VIDEO_DIRECTORY not found, using default");
 				return ["/"];
 			}
 
-			// ビデオサービスからディレクトリ一覧を取得
-			const directories =
-				await this.videosService.getDirectoriesFromVideoDirectory(
-					videoDirectory,
-				);
+			// カンマ区切りで複数のディレクトリを分割
+			const directoriesList = videoDirectory
+				.split(",")
+				.map((dir) => dir.trim());
+			this.logger.log(
+				`Processing ${directoriesList.length} directories: ${directoriesList.join(", ")}`,
+			);
+
+			// 各ディレクトリからディレクトリ一覧を取得してマージ
+			const allDirectories = new Set<string>("/");
+
+			for (const dir of directoriesList) {
+				try {
+					const directories =
+						await this.videosService.getDirectoriesFromVideoDirectory(dir);
+					for (const d of directories) {
+						allDirectories.add(d);
+					}
+				} catch (error) {
+					this.logger.warn(`Failed to get directories from ${dir}:`, error);
+				}
+			}
+
+			const directories = Array.from(allDirectories).sort();
 
 			this.logger.log(
 				`Found ${directories.length} directories from VIDEO_DIRECTORY: ${videoDirectory}`,

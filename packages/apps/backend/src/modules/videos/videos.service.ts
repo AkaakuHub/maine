@@ -4,7 +4,6 @@ import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
-import * as path from "node:path";
 
 export interface VideoData {
 	id: string;
@@ -442,49 +441,10 @@ export class VideosService {
 				return ["/"];
 			}
 
-			// ディレクトリを再帰的にスキャン
-			const directories = new Set<string>();
-			directories.add("/"); // ルートディレクトリを追加
-
-			const scanDirectory = async (dirPath: string, relativePath = "") => {
-				try {
-					const items = await fsPromises.readdir(dirPath);
-
-					for (const item of items) {
-						const itemPath = path.join(dirPath, item);
-						const relativeItemPath = relativePath
-							? path.join(relativePath, item)
-							: item;
-
-						try {
-							const stat = await fsPromises.stat(itemPath);
-							if (stat.isDirectory()) {
-								// ディレクトリの場合
-								const dirPathForUI = `/${relativeItemPath}`;
-								directories.add(dirPathForUI);
-
-								// 再帰的にスキャン（最大3階層まで）
-								if (relativePath.split("/").length < 3) {
-									await scanDirectory(itemPath, relativeItemPath);
-								}
-							}
-						} catch (error) {
-							// アクセス権限などでエラーの場合は無視
-							this.logger.warn(`Cannot access ${itemPath}:`, error);
-						}
-					}
-				} catch (error) {
-					this.logger.warn(`Cannot read directory ${dirPath}:`, error);
-				}
-			};
-
-			await scanDirectory(videoDirectory);
-
-			const result = Array.from(directories).sort();
-			this.logger.log(
-				`Found ${result.length} directories from VIDEO_DIRECTORY`,
-			);
-			return result;
+			// VIDEO_DIRECTORY自身のみを返す
+			const directories = [videoDirectory];
+			this.logger.log(`Returning VIDEO_DIRECTORY itself: ${videoDirectory}`);
+			return directories;
 		} catch (error) {
 			this.logger.error(
 				"Error getting directories from VIDEO_DIRECTORY:",
