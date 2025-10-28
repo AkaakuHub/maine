@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import {
-	Activity,
+	FolderSearch,
 	Database,
 	HardDrive,
 	Cpu,
@@ -86,7 +86,7 @@ export default function ScanManagementPage() {
 				<div className="container mx-auto px-4 py-6">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3">
-							<Activity className="h-8 w-8 text-primary" />
+							<FolderSearch className="h-8 w-8 text-primary" />
 							<div>
 								<h1 className="text-2xl font-bold text-text-primary">
 									スキャン管理
@@ -143,7 +143,7 @@ export default function ScanManagementPage() {
 										{isStartingScan ? (
 											<RefreshCw className="h-4 w-4 animate-spin" />
 										) : (
-											<Activity className="h-4 w-4" />
+											<FolderSearch className="h-4 w-4" />
 										)}
 										スキャン開始
 									</button>
@@ -333,7 +333,7 @@ export default function ScanManagementPage() {
 						<div className="bg-surface rounded-lg border border-border p-6">
 							<div className="flex items-center justify-between mb-4">
 								<h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-									<Activity className="h-5 w-5" />
+									<FolderSearch className="h-5 w-5" />
 									スキャンログ
 								</h3>
 								<div className="text-xs text-text-muted">リアルタイム更新</div>
