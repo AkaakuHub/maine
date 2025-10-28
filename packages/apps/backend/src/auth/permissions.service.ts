@@ -20,7 +20,7 @@ export class PermissionsService {
 		}
 
 		// ユーザーの権限をチェック
-		const _permission = await this.prisma.permission.findFirst({
+		const permission = await this.prisma.permission.findFirst({
 			where: {
 				userId,
 				directoryPath: {
@@ -29,20 +29,12 @@ export class PermissionsService {
 			},
 		});
 
-		// ディレクトリパスの権限を再帰的にチェック
-		const hasAccess = await this.checkRecursiveAccess(userId, directoryPath);
-		return hasAccess;
-	}
+		// 読み取り権限がある場合はOK
+		if (permission?.canRead) {
+			return true;
+		}
 
-	private async checkRecursiveAccess(
-		userId: string,
-		directoryPath: string,
-	): Promise<boolean> {
-		// ルートディレクトリからチェック
-		const pathSegments = directoryPath.split("/").filter(Boolean);
-		let currentPath = "/";
-
-		// ルートディレクトリの権限をチェック
+		// 親根ディレクトリの権限をチェック
 		const rootPermission = await this.prisma.permission.findUnique({
 			where: {
 				userId_directoryPath: {
@@ -56,32 +48,10 @@ export class PermissionsService {
 			return true;
 		}
 
-		// 各ディレクトリレベルで権限をチェック
-		for (const segment of pathSegments) {
-			currentPath += `${segment}/`;
-			const permission = await this.prisma.permission.findUnique({
-				where: {
-					userId_directoryPath: {
-						userId,
-						directoryPath: currentPath,
-					},
-				},
-			});
-
-			if (permission?.canRead) {
-				return true;
-			}
-		}
-
 		return false;
 	}
 
-	async grantPermission(
-		userId: string,
-		directoryPath: string,
-		canRead = true,
-		canWrite = false,
-	) {
+	async grantPermission(userId: string, directoryPath: string, canRead = true) {
 		return this.prisma.permission.upsert({
 			where: {
 				userId_directoryPath: {
@@ -91,13 +61,11 @@ export class PermissionsService {
 			},
 			update: {
 				canRead,
-				canWrite,
 			},
 			create: {
 				userId,
 				directoryPath,
 				canRead,
-				canWrite,
 			},
 		});
 	}
@@ -153,6 +121,6 @@ export class PermissionsService {
 
 	async initializeUserPermissions(userId: string) {
 		// 新規ユーザーのデフォルト権限（ルートディレクトリへの読み取り権限）
-		return this.grantPermission(userId, "/", true, false);
+		return this.grantPermission(userId, "/", true);
 	}
 }

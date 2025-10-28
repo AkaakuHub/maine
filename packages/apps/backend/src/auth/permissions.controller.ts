@@ -67,7 +67,6 @@ export class PermissionsController {
 			grantData.userId,
 			grantData.directoryPath,
 			grantData.canRead ?? true,
-			grantData.canWrite ?? false,
 		);
 	}
 
@@ -89,7 +88,6 @@ export class PermissionsController {
 			userId,
 			decodeURIComponent(directoryPath),
 			updateData.canRead ?? true,
-			updateData.canWrite ?? false,
 		);
 	}
 

@@ -8,6 +8,7 @@ import {
 	FolderSearch,
 	LogOut,
 	User,
+	Shield,
 } from "lucide-react";
 import { cn } from "../../libs/utils";
 import type { ViewMode } from "../../stores/appStateStore";
@@ -20,6 +21,7 @@ interface HeaderSectionProps {
 	onShowSettings: () => void;
 	onViewModeChange: (mode: ViewMode) => void;
 	onScanNavigate: () => void;
+	router?: { push: (path: string) => void }; // routerをpropsで受け取る
 }
 
 export function HeaderSection({
@@ -27,6 +29,7 @@ export function HeaderSection({
 	onShowSettings,
 	onViewModeChange,
 	onScanNavigate,
+	router,
 }: HeaderSectionProps) {
 	const { user, logout } = useAuthStore();
 	const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -132,6 +135,18 @@ export function HeaderSection({
 								aria-label="スキャン"
 							>
 								<FolderSearch className="w-4 h-4 sm:w-5 sm:h-5" />
+							</button>
+						)}
+
+						{/* Permissions Button - Admin Only */}
+						{user?.role === "ADMIN" && router && (
+							<button
+								type="button"
+								onClick={() => router.push("/admin/permissions")}
+								className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
+								aria-label="権限管理"
+							>
+								<Shield className="w-4 h-4 sm:w-5 sm:h-5" />
 							</button>
 						)}
 

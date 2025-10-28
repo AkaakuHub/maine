@@ -3,6 +3,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
 import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 export interface VideoData {
 	id: string;
@@ -415,6 +417,160 @@ export class VideosService {
 			}
 		} catch (error) {
 			this.logger.error("Error getting video:", error);
+			throw error;
+		}
+	}
+
+	// VIDEO_DIRECTORYからディレクトリ一覧を取得（読み込み権限のみ）
+	async getDirectoriesFromVideoDirectory(
+		videoDirectory: string,
+	): Promise<string[]> {
+		try {
+			this.logger.log(
+				`Getting directories from VIDEO_DIRECTORY: ${videoDirectory}`,
+			);
+
+			const fsPromises = fs.promises;
+
+			// ディレクトリが存在するか確認（読み取りアクセスのみ）
+			try {
+				await fsPromises.access(videoDirectory, fs.constants.R_OK);
+			} catch {
+				this.logger.warn(
+					`VIDEO_DIRECTORY does not exist or no read access: ${videoDirectory}`,
+				);
+				return ["/"];
+			}
+
+			// ディレクトリを再帰的にスキャン
+			const directories = new Set<string>();
+			directories.add("/"); // ルートディレクトリを追加
+
+			const scanDirectory = async (dirPath: string, relativePath = "") => {
+				try {
+					const items = await fsPromises.readdir(dirPath);
+
+					for (const item of items) {
+						const itemPath = path.join(dirPath, item);
+						const relativeItemPath = relativePath
+							? path.join(relativePath, item)
+							: item;
+
+						try {
+							const stat = await fsPromises.stat(itemPath);
+							if (stat.isDirectory()) {
+								// ディレクトリの場合
+								const dirPathForUI = `/${relativeItemPath}`;
+								directories.add(dirPathForUI);
+
+								// 再帰的にスキャン（最大3階層まで）
+								if (relativePath.split("/").length < 3) {
+									await scanDirectory(itemPath, relativeItemPath);
+								}
+							}
+						} catch (error) {
+							// アクセス権限などでエラーの場合は無視
+							this.logger.warn(`Cannot access ${itemPath}:`, error);
+						}
+					}
+				} catch (error) {
+					this.logger.warn(`Cannot read directory ${dirPath}:`, error);
+				}
+			};
+
+			await scanDirectory(videoDirectory);
+
+			const result = Array.from(directories).sort();
+			this.logger.log(
+				`Found ${result.length} directories from VIDEO_DIRECTORY`,
+			);
+			return result;
+		} catch (error) {
+			this.logger.error(
+				"Error getting directories from VIDEO_DIRECTORY:",
+				error,
+			);
+			return ["/"];
+		}
+	}
+
+	// 検索語で動画を検索（権限チェック用）
+	async getVideoBySearchTerm(
+		searchTerm: string,
+	): Promise<{ filePath: string } | null> {
+		try {
+			// 空文字の場合はルートを返す
+			if (!searchTerm.trim()) {
+				return null;
+			}
+
+			const videos = await this.prisma.videoMetadata.findMany({
+				where: {
+					title: {
+						contains: searchTerm,
+					},
+				},
+				select: {
+					filePath: true,
+				},
+				take: 1,
+			});
+
+			return videos.length > 0 ? videos[0] : null;
+		} catch (error) {
+			this.logger.error("Error searching video:", error);
+			return null;
+		}
+	}
+
+	// データベースからディレクトリ一覧を取得
+	async getDirectories(): Promise<string[]> {
+		try {
+			this.logger.log("Getting unique directories from database");
+
+			// データベースからユニークなディレクトリパスを取得
+			const videos = await this.prisma.videoMetadata.findMany({
+				select: { filePath: true },
+				where: {
+					filePath: {
+						not: "",
+					},
+				},
+			});
+
+			// ファイルパスからディレクトリパスを抽出
+			const directories = new Set<string>();
+			directories.add("/"); // ルートディレクトリを追加
+
+			for (const video of videos) {
+				if (video.filePath) {
+					// ファイルパスからディレクトリパスを抽出
+					const dirPath = video.filePath.substring(
+						0,
+						video.filePath.lastIndexOf("/"),
+					);
+					if (dirPath && dirPath !== "") {
+						directories.add(dirPath);
+
+						// 親ディレクトリも追加
+						let currentPath = dirPath;
+						while (currentPath !== "/" && currentPath.includes("/")) {
+							currentPath = currentPath.substring(
+								0,
+								currentPath.lastIndexOf("/"),
+							);
+							if (currentPath === "" || currentPath === dirPath) break;
+							directories.add(currentPath);
+						}
+					}
+				}
+			}
+
+			const result = Array.from(directories).sort();
+			this.logger.log(`Found ${result.length} unique directories`);
+			return result;
+		} catch (error) {
+			this.logger.error("Error getting directories:", error);
 			throw error;
 		}
 	}
