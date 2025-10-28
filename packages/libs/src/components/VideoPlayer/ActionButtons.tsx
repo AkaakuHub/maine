@@ -89,11 +89,6 @@ export default function ActionButtons({
 							<div className="text-sm text-text mb-1">
 								<strong>ファイル名:</strong> {video.fullTitle}
 							</div>
-							{video.duration && (
-								<div className="text-sm text-text">
-									<strong>再生時間:</strong> {video.duration}
-								</div>
-							)}
 						</div>
 					</div>
 				}
@@ -106,7 +101,6 @@ export default function ActionButtons({
 						},
 						variant: "primary",
 						icon: Download,
-						description: "オフライン視聴できるようになります",
 					},
 				]}
 				icon={Download}

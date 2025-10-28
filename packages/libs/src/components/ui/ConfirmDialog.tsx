@@ -38,9 +38,9 @@ const ConfirmDialog = ({
 	const getActionClasses = (variant = "secondary") => {
 		switch (variant) {
 			case "primary":
-				return "bg-success text-text-inverse hover:bg-success/90";
+				return "bg-primary text-text-inverse hover:bg-success/90";
 			case "danger":
-				return "bg-error text-text-inverse hover:bg-error/90";
+				return "bg-danger text-text-inverse hover:bg-error/90";
 			default:
 				return "bg-surface-elevated text-text hover:bg-surface-elevated";
 		}
@@ -117,10 +117,10 @@ const ConfirmDialog = ({
 							key={action.label}
 							type="button"
 							onClick={action.onClick}
-							className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${getActionClasses(action.variant)}`}
+							className={`w-full flex items-center justify-center gap-3 p-3 rounded-lg transition-colors ${getActionClasses(action.variant)}`}
 						>
 							{action.icon && <action.icon className="h-5 w-5" />}
-							<div className="text-left flex-1">
+							<div className="text-center">
 								<div className="font-medium">{action.label}</div>
 								{action.description && (
 									<div className="text-xs opacity-80">{action.description}</div>
