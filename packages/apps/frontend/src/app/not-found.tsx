@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass, Home, FolderSearch } from "lucide-react";
+import { Compass, Home } from "lucide-react";
 
 type QuickLink = {
 	href: string;
@@ -15,13 +15,6 @@ const quickLinks: QuickLink[] = [
 		description:
 			"動画ライブラリに戻り、最近追加したコンテンツをチェックしましょう。",
 		icon: Home,
-	},
-	{
-		href: "/scan",
-		label: "ライブラリをスキャン",
-		description:
-			"メディアフォルダを再スキャンしてデータベースを最新状態に更新します。",
-		icon: FolderSearch,
 	},
 ];
 
