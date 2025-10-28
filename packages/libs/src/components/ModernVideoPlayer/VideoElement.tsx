@@ -166,9 +166,9 @@ export default function VideoElement({
 					aria-label="動画を再生"
 				>
 					{isPlaying ? (
-						<Pause className="h-8 w-8" fill="currentColor" />
+						<Pause className="h-8 w-8" fill="white" stroke="none" />
 					) : (
-						<Play className="h-8 w-8" fill="currentColor" />
+						<Play className="h-8 w-8" fill="white" stroke="none" />
 					)}
 				</button>
 			) : (
@@ -197,14 +197,14 @@ export default function VideoElement({
 			{!isMobile && desktopFlashVisible && (
 				<div
 					className={cn(
-						"pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/50 text-text transition-all duration-150 ease-in-out",
+						"pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/50 transition-all duration-150 ease-in-out",
 						desktopFlashActive ? "opacity-100 scale-100" : "opacity-0 scale-75",
 					)}
 				>
 					{desktopFlashIconState === "play" ? (
-						<Play className="h-8 w-8" fill="currentColor" />
+						<Play className="h-8 w-8" fill="white" stroke="none" />
 					) : (
-						<Pause className="h-8 w-8" fill="currentColor" />
+						<Pause className="h-8 w-8" fill="white" stroke="none" />
 					)}
 				</div>
 			)}
