@@ -1,9 +1,6 @@
 pre-commit:
   parallel: true
   commands:
-    # tailwind-colors-check:
-    #   glob: "src/**/*.{ts,tsx,js,jsx}"
-    #   run: ./scripts/check-tailwind-colors.sh
     format-front:
       glob: "packages/apps/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
       run: cd packages/apps/frontend && pnpm run format
@@ -21,6 +18,13 @@ pre-commit:
     typecheck-front:
       glob: "packages/apps/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
       run: cd packages/apps/frontend && pnpm run typecheck
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+    tailwind-colors-check-front:
+      glob: "packages/apps/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: python3 scripts/check-tailwind-colors.py packages/apps/frontend/src
       stage_fixed: true
       skip:
         - merge
@@ -65,6 +69,13 @@ pre-commit:
     typecheck-libs:
       glob: "packages/libs/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
       run: cd packages/libs && pnpm run typecheck
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+    tailwind-colors-check-libs:
+      glob: "packages/libs/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: python3 scripts/check-tailwind-colors.py packages/libs/src
       stage_fixed: true
       skip:
         - merge
