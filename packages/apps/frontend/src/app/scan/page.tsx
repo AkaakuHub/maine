@@ -23,14 +23,15 @@ import {
 	ScanSettingsPanel,
 	SettingsModal,
 	useScanProgress,
+	AuthGuard,
 } from "@maine/libs";
 
 /**
- * スキャン管理ページ
+ * スキャン管理ページのコンテンツ
  *
  * スキャンの詳細な状態表示と制御機能を提供
  */
-export default function ScanManagementPage() {
+function ScanManagementContent() {
 	const router = useRouter();
 	const scanProgress = useScanProgress();
 	const [isStartingScan, setIsStartingScan] = useState(false);
@@ -546,5 +547,25 @@ export default function ScanManagementPage() {
 				onClose={() => setShowSettings(false)}
 			/>
 		</div>
+	);
+}
+
+/**
+ * 管理者専用スキャン管理ページ
+ */
+export default function ScanManagementPage() {
+	const router = useRouter();
+
+	return (
+		<AuthGuard
+			requireAdmin={true}
+			onRedirect={(path) => {
+				if (path) {
+					router.push(path);
+				}
+			}}
+		>
+			<ScanManagementContent />
+		</AuthGuard>
 	);
 }

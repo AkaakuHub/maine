@@ -6,6 +6,7 @@ import { useAuthStore } from "../../stores/auth-store";
 interface AuthGuardProps {
 	children: React.ReactNode;
 	requireAuth?: boolean;
+	requireAdmin?: boolean;
 	redirectTo?: string;
 	onRedirect?: (path?: string) => void;
 }
@@ -13,10 +14,11 @@ interface AuthGuardProps {
 export function AuthGuard({
 	children,
 	requireAuth = true,
+	requireAdmin = false,
 	redirectTo = "/login",
 	onRedirect,
 }: AuthGuardProps) {
-	const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+	const { isAuthenticated, isLoading, checkAuth, user } = useAuthStore();
 	const [isChecking, setIsChecking] = useState(true);
 	const hasCheckedRef = useRef(false);
 
@@ -39,6 +41,9 @@ export function AuthGuard({
 				onRedirect?.(redirectTo);
 			} else if (!requireAuth && isAuthenticated) {
 				onRedirect?.("/");
+			} else if (requireAdmin && isAuthenticated && user?.role !== "ADMIN") {
+				// 管理者権限がない場合はホームにリダイレクト
+				onRedirect?.("/");
 			}
 		}
 	}, [
@@ -46,6 +51,8 @@ export function AuthGuard({
 		isAuthenticated,
 		isLoading,
 		requireAuth,
+		requireAdmin,
+		user,
 		onRedirect,
 		redirectTo,
 	]);
@@ -69,6 +76,11 @@ export function AuthGuard({
 
 	// 認証が不要で認証済みの場合
 	if (!requireAuth && isAuthenticated) {
+		return null; // リダイレクト中
+	}
+
+	// 管理者権限が必要で権限がない場合
+	if (requireAdmin && user?.role !== "ADMIN") {
 		return null; // リダイレクト中
 	}
 

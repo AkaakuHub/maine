@@ -123,15 +123,17 @@ export function HeaderSection({
 							</button>
 						</div>
 
-						{/* Scan Button */}
-						<button
-							type="button"
-							onClick={onScanNavigate}
-							className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
-							aria-label="スキャン"
-						>
-							<FolderSearch className="w-4 h-4 sm:w-5 sm:h-5" />
-						</button>
+						{/* Scan Button - Admin Only */}
+						{user?.role === "ADMIN" && (
+							<button
+								type="button"
+								onClick={onScanNavigate}
+								className="p-1.5 sm:p-2 text-text-secondary hover:text-text hover:bg-surface-elevated rounded-lg transition-colors"
+								aria-label="スキャン"
+							>
+								<FolderSearch className="w-4 h-4 sm:w-5 sm:h-5" />
+							</button>
+						)}
 
 						{/* Settings Button */}
 						<button
