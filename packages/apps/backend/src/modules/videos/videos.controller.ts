@@ -49,49 +49,36 @@ export class VideosController {
 		@Request() req,
 	): Promise<SearchVideosResponse> {
 		// ユーザーIDを取得
-		const userId = req.user?.sub;
+		const userId = req.user?.userId;
 		if (!userId) {
+			this.logger.error(
+				`No user ID found in request. User object: ${JSON.stringify(req.user)}`,
+			);
 			throw new ForbiddenException("認証が必要です");
 		}
-
-		// 検索クエリに基づいてディレクトリを推測
-		let directoryPath = "/";
-		if (query.search) {
-			// 検索語からディレクトリパスを推測
-			const video = await this.videosService.getVideoBySearchTerm(query.search);
-			if (video) {
-				const pathParts = video.filePath.split("/");
-				// ディレクトリパスまで取得
-				if (pathParts.length > 1) {
-					directoryPath = `/${pathParts.slice(0, -1).join("/")}`;
-				}
-			}
-		}
-
-		// 権限チェック
-		const hasAccess = await this.permissionsService.checkDirectoryAccess(
-			userId,
-			directoryPath,
-		);
-		if (!hasAccess) {
-			throw new ForbiddenException(
-				`このディレクトリへのアクセス権がありません: ${directoryPath}`,
-			);
-		}
 		try {
-			this.logger.log(`Searching videos with query: "${query.search}"`);
-			this.logger.log(`Query length: ${query.search?.length || 0}`);
-			this.logger.log(`Exact match: ${query.exactMatch}`);
-
-			// 常にsearchVideosを使用（空文字の場合は全件取得、クエリありの場合は検索）
 			const searchResult = await this.videosService.searchVideos(
 				query.search || "",
+				{
+					loadAll: query.loadAll,
+					sortBy: query.sortBy,
+					sortOrder: query.sortOrder as "asc" | "desc",
+					page: query.page,
+					limit: query.limit,
+				},
 			);
 
-			this.logger.log(`Search result success: ${searchResult.success}`);
-			this.logger.log(
-				`Search result videos count: ${searchResult.videos.length}`,
-			);
+			if (searchResult.videos.length === 0) {
+				this.logger.log(
+					`No videos found for search query: "${query.search}", returning empty result`,
+				);
+				return {
+					success: true,
+					videos: [],
+					totalFound: 0,
+					message: "動画が見つかりませんでした",
+				};
+			}
 
 			if (!searchResult.success) {
 				this.logger.error(
@@ -104,25 +91,28 @@ export class VideosController {
 				});
 			}
 
-			// 完全マッチが要求された場合は、ファイルパスで厳密にフィルタリング
-			if (query.exactMatch && query.search) {
-				this.logger.log(`Exact match query: "${query.search}"`);
-				this.logger.log(`Query length: ${query.search.length}`);
-				this.logger.log("Available video paths:");
-				searchResult.videos.forEach((video, index) => {
-					this.logger.log(
-						`  [${index}] Path: "${video.filePath}" (length: ${video.filePath.length})`,
-					);
-					this.logger.log(
-						`  [${index}] Match: ${video.filePath === query.search}`,
-					);
-				});
+			// 各動画に対して権限チェックを行う
+			const accessibleVideos: VideoData[] = [];
+			for (const video of searchResult.videos) {
+				// 動画のディレクトリパスを取得
+				const pathParts = video.filePath.split("/");
+				const videoDirectory =
+					pathParts.length > 1 ? pathParts.slice(0, -1).join("/") || "/" : "/";
 
-				const filteredVideos = searchResult.videos.filter(
-					(video) => video.filePath === query.search,
+				const hasAccess = await this.permissionsService.checkDirectoryAccess(
+					userId,
+					videoDirectory,
 				);
-				this.logger.log(
-					`Exact match filtered videos: ${filteredVideos.length}`,
+
+				if (hasAccess) {
+					accessibleVideos.push(video);
+				}
+			}
+
+			// 完全マッチが要求された場合は、アクセス可能な動画の中からさらにフィルタリング
+			if (query.exactMatch && query.search) {
+				const filteredVideos = accessibleVideos.filter(
+					(video) => video.filePath === query.search,
 				);
 
 				// フィルタリング結果でsearchResultを更新
@@ -134,7 +124,13 @@ export class VideosController {
 				};
 			}
 
-			return searchResult;
+			// 権限チェック済みの動画を返す
+			return {
+				...searchResult,
+				videos: accessibleVideos,
+				totalFound: accessibleVideos.length,
+				message: `${accessibleVideos.length}件の動画が見つかりました`,
+			};
 		} catch (error) {
 			this.logger.error("Video search error:", error);
 			if (error instanceof BadRequestException) {

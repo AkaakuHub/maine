@@ -233,7 +233,16 @@ export class VideosService {
 		}
 	}
 
-	async searchVideos(query: string): Promise<SearchResult> {
+	async searchVideos(
+		query: string,
+		options?: {
+			loadAll?: boolean;
+			sortBy?: string;
+			sortOrder?: "asc" | "desc";
+			page?: number;
+			limit?: number;
+		},
+	): Promise<SearchResult> {
 		try {
 			this.logger.log(`Searching videos with query: "${query}"`);
 
@@ -248,14 +257,57 @@ export class VideosService {
 				];
 			}
 
+			// ソート順の構築
+			const sortBy = options?.sortBy || "title";
+			const sortOrder = options?.sortOrder || "asc";
+
+			const orderBy: Array<Record<string, "asc" | "desc">> = [];
+
+			switch (sortBy) {
+				case "title":
+					orderBy.push({ title: sortOrder });
+					break;
+				case "fileName":
+					orderBy.push({ fileName: sortOrder });
+					break;
+				case "createdAt":
+					orderBy.push({ scannedAt: sortOrder });
+					break;
+				case "updatedAt":
+					orderBy.push({ lastModified: sortOrder });
+					break;
+				case "duration":
+					orderBy.push({ duration: sortOrder });
+					break;
+				default:
+					orderBy.push({ title: "asc" });
+			}
+			orderBy.push({ scannedAt: "desc" }); // 二番目のソート条件
+
+			// ページネーション
+			const page = options?.page || 1;
+			const limit = options?.limit || 20;
+			const skip = (page - 1) * limit;
+
+			// 総件数を取得
+			const totalCount = await this.prisma.videoMetadata.count({ where });
+
+			// loadAllがtrueの場合は制限なし、それ以外はページネーションを適用
+			const takeLimit = options?.loadAll
+				? undefined
+				: Math.min(limit, PAGINATION.MAX_LIMIT);
+
 			// 動画データを取得
 			const videos = await this.prisma.videoMetadata.findMany({
 				where,
-				orderBy: [{ title: "asc" }, { scannedAt: "desc" }],
-				take: PAGINATION.MAX_LIMIT, // 安全のため最大件数を制限
+				orderBy,
+				take: takeLimit,
+				skip: options?.loadAll ? undefined : skip,
 			});
 
-			this.logger.log(`Found ${videos.length} videos`);
+			this.logger.log(
+				`Found ${videos.length} videos (total: ${totalCount}, page: ${page}, limit: ${limit}, loadAll: ${options?.loadAll})`,
+			);
 
 			// 各動画の進捗情報を個別に取得
 			const videosWithProgress = await Promise.all(
@@ -317,11 +369,15 @@ export class VideosService {
 				`Returning ${videosWithProgress.length} videos with progress`,
 			);
 
+			const totalToReturn = options?.loadAll
+				? totalCount
+				: videosWithProgress.length;
+
 			return {
 				success: true,
 				videos: videosWithProgress,
-				totalFound: videosWithProgress.length,
-				message: `${videosWithProgress.length}件の動画が見つかりました`,
+				totalFound: totalToReturn,
+				message: `${videosWithProgress.length}件の動画が見つかりました（全${totalCount}件中）`,
 			};
 		} catch (error) {
 			this.logger.error("Error searching videos:", error);

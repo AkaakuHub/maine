@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { VideoFileData } from "../type";
 import { createApiUrl } from "../utils/api";
+import { AuthAPI } from "../api/auth";
 
 interface UseVideosFilters {
 	search?: string;
@@ -114,6 +115,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 			const url = createApiUrl(`/videos?${searchParams}`);
 
 			const response = await fetch(url, {
+				headers: AuthAPI.getAuthHeaders(),
 				signal: AbortSignal.timeout(30000),
 			});
 

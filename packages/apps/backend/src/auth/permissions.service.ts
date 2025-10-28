@@ -19,36 +19,48 @@ export class PermissionsService {
 			return true;
 		}
 
-		// ユーザーの権限をチェック
+		// ユーザーの権限をチェック - 動画のディレクトリが権限のあるディレクトリ配下にあるかチェック
 		const permission = await this.prisma.permission.findFirst({
 			where: {
 				userId,
+				canRead: true,
 				directoryPath: {
-					startsWith: directoryPath,
+					in: [
+						// 完全一致
+						directoryPath,
+						// 親ディレクトリを全てチェック
+						...this.getParentDirectories(directoryPath),
+					],
 				},
 			},
 		});
 
-		// 読み取り権限がある場合はOK
-		if (permission?.canRead) {
-			return true;
-		}
-
-		// 親根ディレクトリの権限をチェック
-		const rootPermission = await this.prisma.permission.findUnique({
-			where: {
-				userId_directoryPath: {
-					userId,
-					directoryPath: "/",
-				},
-			},
-		});
-
-		if (rootPermission?.canRead) {
+		// 権限が見つかった場合はOK
+		if (permission) {
 			return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * ディレクトリパスの親ディレクトリを全て取得
+	 * 例: /Users/akaaku/Movies/yt-dlp-data -> ["/Users/akaaku/Movies", "/Users/akaaku", "/Users", "/"]
+	 */
+	private getParentDirectories(directoryPath: string): string[] {
+		const parents: string[] = [];
+		const parts = directoryPath.split("/").filter((part) => part.length > 0);
+
+		// 上位ディレクトリを順番に追加
+		for (let i = parts.length - 1; i > 0; i--) {
+			const parentPath = `/${parts.slice(0, i).join("/")}`;
+			parents.push(parentPath);
+		}
+
+		// ルートディレクトリも追加
+		parents.push("/");
+
+		return parents;
 	}
 
 	async grantPermission(userId: string, directoryPath: string, canRead = true) {
