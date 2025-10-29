@@ -5,7 +5,8 @@ import { promises as fs } from "node:fs";
  * クロスプラットフォーム対応のファイルパス正規化
  */
 export function normalizePath(filePath: string): string {
-	return path.normalize(filePath).replace(/\\/g, "/");
+	// Windows環境ではバックスラッシュを維持し、path.normalizeのみ適用
+	return path.normalize(filePath);
 }
 
 /**
