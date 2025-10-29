@@ -1,6 +1,6 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import { mkdir } from "node:fs/promises";
+import { mkdir, copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -74,6 +74,16 @@ export class ThumbnailGenerator {
 				// サムネイルが古い場合は再生成（下に続く）
 				console.log(
 					`サムネイル更新: ${videoFilePath} (ビデオファイルが更新されました)`,
+				);
+			}
+
+			// 動画と同じ名前の.webpファイルが存在するかチェック
+			const existingWebpPath = this.checkExistingWebpFile(videoFilePath);
+			if (existingWebpPath) {
+				return await this.copyExistingWebp(
+					existingWebpPath,
+					thumbnailPath,
+					videoFilePath,
 				);
 			}
 
@@ -190,5 +200,61 @@ export class ThumbnailGenerator {
 	 */
 	getThumbnailPath(videoFilePath: string): string {
 		return this.generateThumbnailPath(videoFilePath);
+	}
+
+	/**
+	 * 動画と同じ名前の.webpファイルが存在するかチェック
+	 */
+	private checkExistingWebpFile(videoFilePath: string): string | null {
+		const videoBaseName = videoFilePath.replace(/\.[^/.]+$/, ""); // 拡張子を除去
+		const webpPath = `${videoBaseName}.webp`;
+
+		if (existsSync(webpPath)) {
+			console.log(`既存のwebpファイルを発見: ${webpPath}`);
+			return webpPath;
+		}
+
+		return null;
+	}
+
+	/**
+	 * 既存のwebpファイルをサムネイルとしてコピー
+	 */
+	private async copyExistingWebp(
+		sourcePath: string,
+		destinationPath: string,
+		videoFilePath: string,
+	): Promise<ThumbnailResult> {
+		try {
+			// サムネイル保存ディレクトリを作成
+			await this.ensureThumbnailDirectory(destinationPath);
+
+			// webpファイルをコピー
+			await copyFile(sourcePath, destinationPath);
+
+			// コピーしたファイルの情報を取得
+			const stat = await import("node:fs/promises").then((fs) =>
+				fs.stat(destinationPath),
+			);
+
+			console.log(
+				`既存webpファイルをコピー: ${sourcePath} -> ${destinationPath}`,
+			);
+
+			return {
+				success: true,
+				thumbnailPath: destinationPath,
+				relativePath: this.getThumbnailRelativePath(videoFilePath),
+				fileSize: stat.size,
+			};
+		} catch (error) {
+			console.error(`webpファイルのコピーに失敗: ${sourcePath}`, error);
+			return {
+				success: false,
+				thumbnailPath: null,
+				relativePath: null,
+				error: error instanceof Error ? error.message : String(error),
+			};
+		}
 	}
 }
