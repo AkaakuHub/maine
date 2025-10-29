@@ -13,25 +13,6 @@ interface ParsedVideoInfo {
 }
 
 /**
- * 放送局名をクリーンアップ
- */
-function cleanStationName(station: string): string {
-	// よくある放送局名のマッピング
-	const stationMap: Record<string, string> = {
-		ＢＳ１１イレブン: "BS11",
-		ＢＳ１１: "BS11",
-		ＢＳフジ: "BSフジ",
-		"ＢＳ-ＴＢＳ": "BS-TBS",
-		ＢＳテレ東: "BSテレ東",
-		ＢＳアニマックス: "アニマックス",
-		ＡＴＸＸ: "AT-X",
-		"ＡＴ－Ｘ": "AT-X",
-	};
-
-	return stationMap[station] || station;
-}
-
-/**
  * ファイル名から番組情報をパースする
  * 例: "202505252330_負けヒロインが多すぎる! 第8話「おこまりでしたらコンサルに」_ＢＳ１１イレブン.mp4"
  */
@@ -41,10 +22,10 @@ export function parseVideoFileName(fileName: string): ParsedVideoInfo {
 
 	// 日付パターン (YYYYMMDDHHMM) をマッチ
 	const datePattern = /^(\d{12})_/;
-	const stationPattern = /_([^_]+)$/;
+	// const stationPattern = /_([^_]+)$/;
 
 	const dateMatch = nameWithoutExt.match(datePattern);
-	const stationMatch = nameWithoutExt.match(stationPattern);
+	// const stationMatch = nameWithoutExt.match(stationPattern);
 
 	let cleanTitle = nameWithoutExt;
 	let broadcastDate: Date | undefined;
@@ -78,12 +59,12 @@ export function parseVideoFileName(fileName: string): ParsedVideoInfo {
 		cleanTitle = cleanTitle.replace(datePattern, "");
 	}
 
-	// 放送局情報を抽出
-	if (stationMatch) {
-		broadcastStation = cleanStationName(stationMatch[1]);
-		// タイトルから放送局部分を除去
-		cleanTitle = cleanTitle.replace(stationPattern, "");
-	}
+	// // 放送局情報を抽出
+	// if (stationMatch) {
+	// 	// broadcastStation = cleanStationName(stationMatch[1]);
+	// 	// タイトルから放送局部分を除去
+	// 	// cleanTitle = cleanTitle.replace(stationPattern, "");
+	// }
 
 	return {
 		cleanTitle: cleanTitle.trim(),
