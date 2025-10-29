@@ -8,6 +8,7 @@
 	],
 	"scripts": {
 		"dev": "concurrently \"pnpm --filter @maine/frontend dev\" \"pnpm --filter @maine/backend start:dev\"",
+		"start": "concurrently \"pnpm --filter @maine/frontend build && pnpm --filter @maine/frontend start\" \"pnpm --filter @maine/backend build && pnpm --filter @maine/backend start:prod\"",
 		"knip": "knip",
 		"postinstall": "pnpm lefthook install"
 	},
