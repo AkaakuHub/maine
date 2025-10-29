@@ -17,6 +17,7 @@ import { VideosModule } from "./modules/videos/videos.module";
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
+			envFilePath: [".env.local", ".env"],
 		}),
 		DatabaseModule,
 		AuthModule,

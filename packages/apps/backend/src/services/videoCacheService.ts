@@ -416,12 +416,14 @@ class VideoCacheService {
 				return [];
 			}
 
-			if (!(await directoryExists(directory))) {
+			const dirExists = await directoryExists(directory);
+			if (!dirExists) {
 				console.warn(`ディレクトリが存在しないためスキップ: ${directory}`);
 				return [];
 			}
 			try {
-				return await this.scanDirectory(directory);
+				const result = await this.scanDirectory(directory);
+				return result;
 			} catch (error) {
 				console.warn(`ディレクトリスキャンエラー: ${directory}`, error);
 				return [];
@@ -635,11 +637,23 @@ class VideoCacheService {
 			const files = await fs.readdir(directory);
 			for (const file of files) {
 				const filePath = path.join(directory, file);
-				if (isVideoFile(file)) {
-					videoFiles.push({
-						filePath: normalizePath(filePath),
-						fileName: file,
-					});
+				// ファイルの統計情報を取得
+				try {
+					const stat = await fs.stat(filePath);
+
+					if (stat.isDirectory()) {
+						// サブディレクトリの場合は再帰的にスキャン
+						const subDirVideos = await this.scanDirectory(filePath);
+						videoFiles.push(...subDirVideos);
+					} else if (isVideoFile(file)) {
+						// 動画ファイルの場合
+						videoFiles.push({
+							filePath: normalizePath(filePath),
+							fileName: file,
+						});
+					}
+				} catch (statError) {
+					console.warn(`[DEBUG] Failed to stat "${filePath}":`, statError);
 				}
 			}
 		} catch (error) {

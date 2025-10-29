@@ -16,6 +16,7 @@ import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 import { RolesGuard } from "../../auth/roles.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { PermissionsService } from "../../auth/permissions.service";
+import { getVideoDirectories } from "../../libs/fileUtils";
 
 type SearchVideosResponse = {
 	success: boolean;
@@ -154,17 +155,12 @@ export class VideosController {
 		try {
 			this.logger.log("Getting directories from VIDEO_DIRECTORY");
 
-			// VIDEO_DIRECTORY環境変数からディレクトリを取得（カンマ区切り対応）
-			const videoDirectory = process.env.VIDEO_DIRECTORY;
-			if (!videoDirectory) {
+			// getVideoDirectories関数からディレクトリを取得
+			const directoriesList = getVideoDirectories();
+			if (directoriesList.length === 0) {
 				this.logger.warn("VIDEO_DIRECTORY not found, using default");
 				return ["/"];
 			}
-
-			// カンマ区切りで複数のディレクトリを分割
-			const directoriesList = videoDirectory
-				.split(",")
-				.map((dir) => dir.trim());
 			this.logger.log(
 				`Processing ${directoriesList.length} directories: ${directoriesList.join(", ")}`,
 			);
@@ -187,7 +183,7 @@ export class VideosController {
 			const directories = Array.from(allDirectories).sort();
 
 			this.logger.log(
-				`Found ${directories.length} directories from VIDEO_DIRECTORY: ${videoDirectory}`,
+				`Found ${directories.length} directories from VIDEO_DIRECTORY: ${directoriesList.join(", ")}`,
 			);
 			return directories;
 		} catch (error) {
