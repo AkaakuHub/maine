@@ -1,30 +1,26 @@
 // import withPWA from 'next-pwa';
 
 /** @type {import('next').NextConfig} */
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 const nextConfig = {
     env: {
-        NEXT_PUBLIC_API_URL:
-            process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
+        NEXT_PUBLIC_API_URL: apiUrl,
     },
     transpilePackages: ["@maine/libs", "next"],
     images: {
         remotePatterns: [
             {
-                protocol: "http",
-                hostname: "localhost",
-                port: "3001",
+                protocol: new URL(apiUrl).protocol.replace(':', ''),
+                hostname: new URL(apiUrl).hostname,
+                port: new URL(apiUrl).port,
                 pathname: "/api/**",
             },
         ],
         unoptimized: false,
         formats: ["image/webp"],
     },
-    experimental: {
-        serverActions: {
-            allowedOrigins: ["localhost:3000"],
-        },
-    },
 };
 
-// 一時的にnext-pwaを無効化してカスタムService Workerのみ使用
 export default nextConfig;
