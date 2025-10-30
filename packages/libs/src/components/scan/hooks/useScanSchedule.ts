@@ -36,13 +36,6 @@ export function useScanSchedule() {
 							data.status.currentExecutionStartTime,
 						),
 					};
-					console.log("[Schedule Debug] Converted status:", {
-						original: data.status,
-						converted: convertedStatus,
-						nextExecutionValid:
-							convertedStatus.nextExecution instanceof Date &&
-							!Number.isNaN(convertedStatus.nextExecution.getTime()),
-					});
 					setStatus(convertedStatus);
 				}
 			} else {
@@ -86,13 +79,6 @@ export function useScanSchedule() {
 							data.status.currentExecutionStartTime,
 						),
 					};
-					console.log("[Schedule Debug] Converted status:", {
-						original: data.status,
-						converted: convertedStatus,
-						nextExecutionValid:
-							convertedStatus.nextExecution instanceof Date &&
-							!Number.isNaN(convertedStatus.nextExecution.getTime()),
-					});
 					setStatus(convertedStatus);
 				}
 				setMessage({ type: "success", text: "スケジュール設定を保存しました" });

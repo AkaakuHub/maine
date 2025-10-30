@@ -12,12 +12,10 @@ export const useNetworkStatus = () => {
 
 		const handleOnline = () => {
 			setIsOnline(true);
-			console.log("ネットワーク接続が復旧しました");
 		};
 
 		const handleOffline = () => {
 			setIsOnline(false);
-			console.log("ネットワーク接続が切断されました");
 		};
 
 		// オンライン/オフライン状態の変化を監視

@@ -87,8 +87,6 @@ export function useVideoPlayer({
 			// いいね状態とウォッチリスト状態を設定
 			setIsLiked(videoData.isLiked);
 			setIsInWatchlist(videoData.isInWatchlist);
-
-			console.log("Video loaded successfully by videoId:", videoData.title);
 		} catch (error) {
 			console.error("Error loading video by videoId:", error);
 			// ネットワークエラーやその他のエラーの場合
@@ -112,7 +110,6 @@ export function useVideoPlayer({
 
 		try {
 			// videoId方式のみ
-			console.log("Loading video by videoId:", videoId);
 			await loadVideoByVideoId(videoId);
 		} catch (error) {
 			console.error("Failed to load video:", error);

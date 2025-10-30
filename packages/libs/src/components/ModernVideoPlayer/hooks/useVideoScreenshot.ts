@@ -102,7 +102,6 @@ export function useVideoScreenshot({
 								text: `${videoTitle} (${formatDuration(currentTime)})`,
 								files: [file],
 							});
-							console.log("スクリーンショットを共有しました");
 						} catch (shareError) {
 							if (
 								shareError instanceof Error &&
@@ -118,9 +117,6 @@ export function useVideoScreenshot({
 					} else if (isIOS()) {
 						// iOS Safariではダウンロードを優先
 						downloadScreenshot(fileName, a);
-						console.log(
-							"スクリーンショットをダウンロードしました（iOS Safari）",
-						);
 					} else {
 						// デスクトップブラウザではクリップボードを試み、失敗したらダウンロード
 						if (

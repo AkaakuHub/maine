@@ -151,11 +151,6 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 				throw new Error("Invalid JSON response from server");
 			}
 
-			console.log("[useVideos] Response:", {
-				videoCount: data.videos?.length || 0,
-				total: data.pagination?.total || 0,
-			});
-
 			setVideos(data.videos || []);
 			setPaginationInfo(
 				data.pagination || {

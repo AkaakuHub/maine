@@ -25,9 +25,6 @@ export function useVideoProgress({
 		hasUnsavedChanges,
 	} = useBeforeUnload({
 		enableLocalStorageBackup: enableBackup,
-		onBeforeUnload: (data) => {
-			console.log("Saving progress on page unload:", data);
-		},
 	});
 
 	// 初期化時にバックアップを復元して送信
