@@ -46,9 +46,15 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 					if (data.success && data.chapters) {
 						setChapters(data.chapters);
 					}
+				} else if (response.status === 400 || response.status === 404) {
+					// 動画ファイルが存在しない場合 - エラーを表示せず静かに処理
+					// console.debug("Chapters not available for this video");
 				}
 			} catch (error) {
-				console.error("Failed to fetch chapters:", error);
+				// ネットワークエラーなどの場合のみエラーを表示
+				if (!(error instanceof TypeError) || !error.message.includes("fetch")) {
+					console.error("Failed to fetch chapters:", error);
+				}
 			} finally {
 				setIsLoadingChapters(false);
 			}

@@ -2,13 +2,15 @@
 
 import { cn } from "../../libs/utils";
 import { Film, Search, FolderOpen, RefreshCw, Download } from "lucide-react";
+import Button from "../ui/Button";
 
 interface EmptyStateProps {
 	type:
 		| "no-videos"
 		| "no-search-results"
 		| "loading-error"
-		| "no-offline-videos";
+		| "no-offline-videos"
+		| "video-not-found";
 	searchTerm?: string;
 	onRetry?: () => void;
 	className?: string;
@@ -96,6 +98,30 @@ const EmptyState = ({
 						</div>
 					),
 					action: null,
+				};
+
+			case "video-not-found":
+				return {
+					icon: <Film className="h-20 w-20 text-warning" />,
+					title: "動画が見つかりません",
+					description: (
+						<div className="space-y-2">
+							<p>お探しの動画は見つかりませんでした。</p>
+							<p className="text-sm">
+								動画が削除されたか、URLが変更されている可能性があります。
+							</p>
+						</div>
+					),
+					action: onRetry ? (
+						<Button
+							type="button"
+							onClick={onRetry}
+							className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary text-text rounded-lg transition-colors"
+						>
+							<RefreshCw className="h-4 w-4" />
+							ホームに戻る
+						</Button>
+					) : null,
 				};
 
 			default:

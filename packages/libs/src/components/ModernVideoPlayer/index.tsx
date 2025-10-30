@@ -34,6 +34,7 @@ const ModernVideoPlayer = ({
 	initialTime = 0,
 	className = "",
 	onShowHelp,
+	onError,
 }: ModernVideoPlayerProps) => {
 	// Refs
 	const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
@@ -85,6 +86,7 @@ const ModernVideoPlayer = ({
 
 	const { isFullscreen, toggleFullscreen } = useVideoFullscreen({
 		containerRef,
+		videoRef,
 	});
 
 	const { predictedTime, skipQueue, skipForward, skipBackward } = useVideoSkip({
@@ -315,6 +317,7 @@ const ModernVideoPlayer = ({
 				showMobileControls={isMobile && showControls}
 				desktopFlashKey={desktopFlashIndicator?.key ?? null}
 				desktopFlashIcon={desktopFlashIndicator?.icon ?? null}
+				onError={onError}
 			/>
 
 			{/* スキップ予測オーバーレイ */}

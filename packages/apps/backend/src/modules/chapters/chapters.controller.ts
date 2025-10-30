@@ -104,10 +104,13 @@ export class ChaptersController {
 				hasChapters: chapters.length > 0,
 			};
 		} catch (error) {
-			this.logger.error("Error extracting video chapters:", error);
 			if (error instanceof BadRequestException) {
+				// 予期されるエラー（ファイルが存在しないなど） - 警告レベルでログ
+				this.logger.warn("Expected error in chapters extraction:", error);
 				throw error;
 			}
+			// 予期せぬエラーのみエラーログ
+			this.logger.error("Unexpected error extracting video chapters:", error);
 			throw new BadRequestException({
 				error: "動画チャプターの抽出に失敗しました",
 			});

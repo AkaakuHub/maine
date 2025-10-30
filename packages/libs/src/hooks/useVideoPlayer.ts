@@ -31,6 +31,7 @@ export function useVideoPlayer({
 	const [showDescription, setShowDescription] = useState<boolean>(false);
 	const [isLiked, setIsLiked] = useState<boolean>(false);
 	const [isInWatchlist, setIsInWatchlist] = useState<boolean>(false);
+	const [error, setError] = useState<string | null>(null);
 
 	// ビデオ進捗管理（ページ離脱時のみ保存）
 	const videoProgressHook = useVideoProgress({
@@ -42,15 +43,26 @@ export function useVideoPlayer({
 	// videoIdで動画を読み込む関数
 	const loadVideoByVideoId = useCallback(async (id: string) => {
 		try {
+			setError(null);
 			const response = await fetch(createApiUrl(`/videos/by-video-id/${id}`));
 
 			if (!response.ok) {
+				// 404エラーの場合は特別なエラーメッセージを設定
+				if (response.status === 404) {
+					setError("Video not found");
+					return;
+				}
 				throw new Error(`Failed to fetch video: ${response.status}`);
 			}
 
 			const data = await response.json();
 
 			if (!data.success) {
+				// APIのsuccessがfalseの場合も404として扱う
+				if (data.error?.includes("not found")) {
+					setError("Video not found");
+					return;
+				}
 				throw new Error(data.error || "Video not found");
 			}
 
@@ -79,7 +91,13 @@ export function useVideoPlayer({
 			console.log("Video loaded successfully by videoId:", videoData.title);
 		} catch (error) {
 			console.error("Error loading video by videoId:", error);
-			throw error;
+			// ネットワークエラーやその他のエラーの場合
+			if (
+				!(error instanceof Error) ||
+				!error.message?.includes("Video not found")
+			) {
+				setError("Failed to load video");
+			}
 		}
 	}, []);
 
@@ -209,6 +227,7 @@ export function useVideoPlayer({
 		videoInfo,
 		videoSrc,
 		isLoading,
+		error,
 		showDescription,
 		isLiked,
 		isInWatchlist,

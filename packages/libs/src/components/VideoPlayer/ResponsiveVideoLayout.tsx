@@ -23,6 +23,7 @@ interface ResponsiveVideoLayoutProps {
 	onDownload: () => void;
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
 	initialTime?: number;
+	onVideoError?: (error: string) => void;
 }
 
 export function ResponsiveVideoLayout({
@@ -40,6 +41,7 @@ export function ResponsiveVideoLayout({
 	onDownload,
 	onTimeUpdate,
 	initialTime,
+	onVideoError,
 }: ResponsiveVideoLayoutProps) {
 	const [showHelpModal, setShowHelpModal] = useState(false);
 
@@ -75,6 +77,7 @@ export function ResponsiveVideoLayout({
 							onTimeUpdate={onTimeUpdate}
 							initialTime={initialTime}
 							onShowHelp={() => setShowHelpModal(true)}
+							onError={onVideoError}
 							className="h-full not-lg:max-h-[50vh] w-full"
 						/>
 					</div>
