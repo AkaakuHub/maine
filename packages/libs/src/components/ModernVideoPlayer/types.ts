@@ -1,6 +1,7 @@
 // フルスクリーン用の型定義
 export interface HTMLVideoElementWithFullscreen extends HTMLVideoElement {
 	webkitRequestFullscreen?: () => Promise<void>;
+	webkitEnterFullscreen?: () => Promise<void>; // iOS Safari用
 	mozRequestFullScreen?: () => Promise<void>;
 	msRequestFullscreen?: () => Promise<void>;
 }
@@ -29,6 +30,7 @@ export interface ModernVideoPlayerProps {
 	initialTime?: number;
 	className?: string;
 	onShowHelp?: () => void;
+	onError?: (error: string) => void;
 }
 
 export type SettingsView =
