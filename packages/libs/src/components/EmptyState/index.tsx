@@ -1,7 +1,14 @@
 "use client";
 
 import { cn } from "../../libs/utils";
-import { Film, Search, FolderOpen, RefreshCw, Download } from "lucide-react";
+import {
+	Film,
+	Search,
+	FolderOpen,
+	RefreshCw,
+	Download,
+	Home,
+} from "lucide-react";
 import Button from "../ui/Button";
 
 interface EmptyStateProps {
@@ -118,7 +125,7 @@ const EmptyState = ({
 							onClick={onRetry}
 							className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary text-text rounded-lg transition-colors"
 						>
-							<RefreshCw className="h-4 w-4" />
+							<Home className="h-4 w-4" />
 							ホームに戻る
 						</Button>
 					) : null,
