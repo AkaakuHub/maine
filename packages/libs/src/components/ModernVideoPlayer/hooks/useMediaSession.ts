@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import type { HTMLVideoElementWithFullscreen } from "../types";
+import { createApiUrl } from "../../../utils/api";
 
 interface UseMediaSessionProps {
 	title?: string;
@@ -77,42 +78,87 @@ export function useMediaSession({
 		};
 	}, [title, src, videoRef, togglePlay, skipBackward, skipForward]);
 
+	const fallBackArray = [
+		{ src: "/favicon.ico", sizes: "96x96", type: "image/x-icon" },
+	];
+
+	// Blob URLを管理するためのMap
+	const blobUrlMapRef = useRef(new Map<string, string>());
+
+	// Blobを作成してartworkを設定する関数
+	const createArtworkWithBlob = useCallback(
+		async (thumbnailPath: string): Promise<MediaImage[]> => {
+			try {
+				// 複数サイズの画像URLを生成
+				const thumbnailUrl = createApiUrl(`/thumbnails/${thumbnailPath}`);
+
+				// Blobを使用して画像を取得
+				const response = await fetch(thumbnailUrl);
+				if (!response.ok) {
+					throw new Error(`Failed to fetch thumbnail: ${response.statusText}`);
+				}
+
+				const blob = await response.blob();
+				const blobUrl = URL.createObjectURL(blob);
+
+				// Blob URLをマップに保存して後でクリーンアップできるようにする
+				blobUrlMapRef.current.set(thumbnailPath, blobUrl);
+
+				// Blob URLを使用したartwork配列を返す
+				return [
+					{ src: blobUrl, sizes: "640x360", type: blob.type },
+					{ src: blobUrl, sizes: "512x512", type: blob.type },
+					{ src: blobUrl, sizes: "96x96", type: blob.type },
+				];
+			} catch (error) {
+				console.warn("Failed to create blob artwork", error);
+				return fallBackArray;
+			}
+		},
+		[],
+	);
+
 	// Media Session API のメタデータを設定（サムネイル含む）
 	useEffect(() => {
 		if ("mediaSession" in navigator) {
-			try {
-				const videoTitle =
-					title || src.split("/").pop()?.split(".")[0] || "無題の動画";
+			const setupMediaMetadata = async () => {
+				try {
+					const videoTitle =
+						title || src.split("/").pop()?.split(".")[0] || "無題の動画";
 
-				// サムネイルの有無に応じてartworkを設定
-				const artwork = thumbnailPath
-					? [
-							{
-								src: thumbnailPath,
-								sizes: "640x360",
-								type: "image/jpeg",
-							},
-						]
-					: [
-							{
-								src: "/favicon.ico",
-								sizes: "96x96",
-								type: "image/x-icon",
-							},
-						];
+					let artwork: MediaImage[];
 
-				// @ts-ignore - MediaMetadata は実行時に利用可能
-				navigator.mediaSession.metadata = new MediaMetadata({
-					title: videoTitle,
-					artist: "Maine",
-					album: "ビデオ動画",
-					artwork,
-				});
-			} catch {
-				// Media Session metadata update failed
-			}
+					if (thumbnailPath) {
+						// サムネイルがある場合はBlobを使用してartworkを設定
+						artwork = await createArtworkWithBlob(thumbnailPath);
+					} else {
+						// サムネイルがない場合はfaviconを使用
+						artwork = fallBackArray;
+					}
+
+					navigator.mediaSession.metadata = new MediaMetadata({
+						title: videoTitle,
+						artist: "Maine",
+						album: "ビデオ動画",
+						artwork,
+					});
+				} catch (error) {
+					console.warn("Media Session metadata update failed:", error);
+				}
+			};
+
+			setupMediaMetadata();
 		}
-	}, [thumbnailPath, title, src]);
+
+		// クリーンアップ関数
+		return () => {
+			// Blob URLをクリーンアップ
+			for (const blobUrl of blobUrlMapRef.current.values()) {
+				URL.revokeObjectURL(blobUrl);
+			}
+			blobUrlMapRef.current.clear();
+		};
+	}, [thumbnailPath, title, src, createArtworkWithBlob]);
 
 	// Media Session API の位置情報を更新
 	useEffect(() => {
