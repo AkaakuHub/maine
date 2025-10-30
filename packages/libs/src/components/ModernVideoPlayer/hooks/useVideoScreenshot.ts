@@ -27,6 +27,29 @@ export function useVideoScreenshot({
 		);
 	}, []);
 
+	// モバイル端末検出
+	const isMobile = useCallback(() => {
+		return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+			navigator.userAgent,
+		);
+	}, []);
+
+	// Web Share APIが利用可能かチェック
+	const canShare = useCallback((): boolean => {
+		return !!navigator.share;
+	}, []);
+
+	// スクリーンショットをダウンロードするヘルパー関数
+	const downloadScreenshot = useCallback(
+		(fileName: string, a: HTMLAnchorElement) => {
+			a.download = fileName;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		},
+		[],
+	);
+
 	// スクリーンショット取得機能（iOS Safari対応）
 	const takeScreenshot = useCallback(async () => {
 		if (!videoRef.current || videoRef.current.readyState < 2) {
@@ -68,19 +91,38 @@ export function useVideoScreenshot({
 					const videoTitle = title || "screenshot";
 					const timeStr = formatDuration(currentTime).replace(/:/g, "-");
 					const randomId = Math.random().toString(36).substring(2, 8);
-					a.download = `${videoTitle}_${timeStr}_${randomId}.png`;
+					const fileName = `${videoTitle}_${timeStr}_${randomId}.png`;
 
-					// iOS Safariではダウンロードを優先
-					if (isIOS()) {
-						// iOS Safariの場合はユーザージェスチャー内で直接ダウンロード
-						document.body.appendChild(a);
-						a.click();
-						document.body.removeChild(a);
+					// モバイル端末で共有APIが利用可能な場合は共有を試みる
+					if (isMobile() && canShare()) {
+						try {
+							const file = new File([blob], fileName, { type: "image/png" });
+							await navigator.share({
+								title: "動画スクリーンショット",
+								text: `${videoTitle} (${formatDuration(currentTime)})`,
+								files: [file],
+							});
+							console.log("スクリーンショットを共有しました");
+						} catch (shareError) {
+							if (
+								shareError instanceof Error &&
+								shareError.name === "AbortError"
+							) {
+								console.log("共有がキャンセルされました");
+							} else {
+								console.warn("共有に失敗、ダウンロードします:", shareError);
+								// 共有に失敗した場合はダウンロードにフォールバック
+								downloadScreenshot(fileName, a);
+							}
+						}
+					} else if (isIOS()) {
+						// iOS Safariではダウンロードを優先
+						downloadScreenshot(fileName, a);
 						console.log(
 							"スクリーンショットをダウンロードしました（iOS Safari）",
 						);
 					} else {
-						// その他のブラウザではクリップボードを試み、失敗したらダウンロード
+						// デスクトップブラウザではクリップボードを試み、失敗したらダウンロード
 						if (
 							navigator.clipboard?.write &&
 							window.isSecureContext &&
@@ -95,15 +137,11 @@ export function useVideoScreenshot({
 									"クリップボードへのコピーに失敗、ダウンロードします:",
 									clipboardError,
 								);
-								document.body.appendChild(a);
-								a.click();
-								document.body.removeChild(a);
+								downloadScreenshot(fileName, a);
 							}
 						} else {
 							// 自動ダウンロードが有効な場合やクリップボードが使えない場合
-							document.body.appendChild(a);
-							a.click();
-							document.body.removeChild(a);
+							downloadScreenshot(fileName, a);
 						}
 					}
 
@@ -118,7 +156,16 @@ export function useVideoScreenshot({
 		} catch (error) {
 			console.error("スクリーンショット取得エラー:", error);
 		}
-	}, [videoRef, autoDownloadScreenshot, title, currentTime, isIOS]);
+	}, [
+		videoRef,
+		autoDownloadScreenshot,
+		title,
+		currentTime,
+		isIOS,
+		isMobile,
+		canShare,
+		downloadScreenshot,
+	]);
 
 	return {
 		takeScreenshot,
