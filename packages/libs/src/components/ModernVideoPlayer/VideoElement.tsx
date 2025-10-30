@@ -231,7 +231,7 @@ export default function VideoElement({
 			{!isMobile && desktopFlashVisible && (
 				<div
 					className={cn(
-						"pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/50 transition-all duration-150 ease-in-out",
+						"pointer-events-none absolute flex h-16 w-16 items-center justify-center rounded-full bg-primary/50 transition-all duration-150 ease-in-out",
 						desktopFlashActive ? "opacity-100 scale-100" : "opacity-0 scale-75",
 					)}
 				>

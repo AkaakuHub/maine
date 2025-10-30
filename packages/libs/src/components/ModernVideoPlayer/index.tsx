@@ -275,7 +275,7 @@ const ModernVideoPlayer = ({
 		<div
 			ref={containerRef}
 			className={cn(
-				"relative bg-overlay overflow-hidden group",
+				"flex items-center justify-center relative bg-overlay overflow-hidden group",
 				isFullscreen &&
 					"!fixed !inset-0 !w-screen !h-screen !rounded-none !z-50 flex flex-col",
 				className,
