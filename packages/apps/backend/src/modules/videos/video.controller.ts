@@ -31,7 +31,7 @@ export class VideoController {
 
 	private buildContentDispositionHeader(fileName: string): string {
 		const encodedFilename = encodeURIComponent(fileName);
-		return `attachment; filename="${fileName}"; filename*=UTF-8''${encodedFilename}`;
+		return `attachment; filename*=UTF-8''${encodedFilename}`;
 	}
 
 	@Get(":videoId")
