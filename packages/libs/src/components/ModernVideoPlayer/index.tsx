@@ -107,7 +107,6 @@ const ModernVideoPlayer = ({
 		resetControlsTimeout,
 	} = useVideoControls({
 		isPlaying,
-		containerRef,
 	});
 
 	const { takeScreenshot } = useVideoScreenshot({
@@ -289,8 +288,6 @@ const ModernVideoPlayer = ({
 			}}
 			onMouseEnter={() => {
 				if (isMobile) return;
-				// ウィンドウフォーカスに関係なくホバー時にコントロールを表示
-				setShowControls(true);
 				resetControlsTimeout();
 			}}
 			onMouseLeave={() => {

@@ -35,8 +35,8 @@ export function useVideoInteraction({
 			const tapPosition = tapX / videoWidth; // 0-1の範囲
 
 			if (enableDoubleTap) {
-				// ダブルタップの判定（300ms以内、同じ位置付近）
-				if (currentTime - lastTapTime < 300 && Math.abs(tapX - lastTapX) < 50) {
+				// ダブルタップの判定（500ms以内、同じ位置付近）
+				if (currentTime - lastTapTime < 500 && Math.abs(tapX - lastTapX) < 50) {
 					e.stopPropagation(); // 通常の再生/一時停止を防ぐ
 
 					if (tapPosition > 0.6) {
