@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import type {
+	HTMLVideoElementWithFullscreen,
 	HTMLElementWithFullscreen,
 	DocumentWithFullscreen,
 } from "../types";
 
 interface UseVideoFullscreenProps {
 	containerRef: React.RefObject<HTMLDivElement | null>;
+	videoRef: React.RefObject<HTMLVideoElement | null>;
 }
 
 interface VideoFullscreenState {
@@ -18,15 +20,24 @@ interface VideoFullscreenHandlers {
 
 export function useVideoFullscreen({
 	containerRef,
+	videoRef,
 }: UseVideoFullscreenProps): VideoFullscreenState & VideoFullscreenHandlers {
 	const [isFullscreen, setIsFullscreen] = useState(false);
 
-	// フルスクリーン切り替え - ブラウザ間互換性を考慮
+	// iOS Safari検出
+	const isIOS = useCallback(() => {
+		return (
+			/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+			(/Mac/.test(navigator.userAgent) && "ontouchend" in document)
+		);
+	}, []);
+
+	// フルスクリーン切り替え - ブラウザ間互換性を考慮（iOS Safari対応）
 	const toggleFullscreen = useCallback(async () => {
-		if (!containerRef.current) return;
+		if (!videoRef.current) return;
 
 		const doc = document as DocumentWithFullscreen;
-		const container = containerRef.current as HTMLElementWithFullscreen;
+		const video = videoRef.current as HTMLVideoElementWithFullscreen;
 
 		try {
 			// フルスクリーン状態の確認（ベンダープレフィックス対応）
@@ -48,21 +59,35 @@ export function useVideoFullscreen({
 					await doc.msExitFullscreen();
 				}
 			} else {
-				// フルスクリーン開始
-				if (container.requestFullscreen) {
-					await container.requestFullscreen();
-				} else if (container.webkitRequestFullscreen) {
-					await container.webkitRequestFullscreen();
-				} else if (container.mozRequestFullScreen) {
-					await container.mozRequestFullScreen();
-				} else if (container.msRequestFullscreen) {
-					await container.msRequestFullscreen();
+				// iOS Safariの場合はビデオ要素を直接フルスクリーンに
+				if (isIOS()) {
+					// iOS Safari用のAPI
+					if (video.webkitEnterFullscreen) {
+						await video.webkitEnterFullscreen();
+					} else if (video.webkitRequestFullscreen) {
+						await video.webkitRequestFullscreen();
+					} else if (video.requestFullscreen) {
+						await video.requestFullscreen();
+					}
+				} else {
+					// その他のブラウザではコンテナをフルスクリーンに
+					const container = containerRef.current as HTMLElementWithFullscreen;
+					if (container?.requestFullscreen) {
+						await container.requestFullscreen();
+					} else if (container?.webkitRequestFullscreen) {
+						await container.webkitRequestFullscreen();
+					} else if (container?.mozRequestFullScreen) {
+						await container.mozRequestFullScreen();
+					} else if (container?.msRequestFullscreen) {
+						await container.msRequestFullscreen();
+					}
 				}
 			}
 		} catch (error) {
 			console.error("Fullscreen error:", error);
+			alert("お使いのブラウザはフルスクリーンに対応していません。");
 		}
-	}, [containerRef]);
+	}, [containerRef, videoRef, isIOS]);
 
 	// フルスクリーン状態の変更を監視
 	useEffect(() => {

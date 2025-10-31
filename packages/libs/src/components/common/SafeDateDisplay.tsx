@@ -33,18 +33,8 @@ export function SafeDateDisplay({
 			datetime: formatSafeDateTime,
 		};
 
-		// Debug logging for production issues
-		console.log("[SafeDateDisplay Debug]", {
-			date,
-			format,
-			dateType: typeof date,
-			isValidDate: date instanceof Date ? !Number.isNaN(date.getTime()) : false,
-			dateString: String(date),
-		});
-
 		try {
 			const formatted = formatters[format](date, fallback);
-			console.log("[SafeDateDisplay Debug] Formatted result:", formatted);
 			setFormattedDate(formatted);
 		} catch (error) {
 			console.error("[SafeDateDisplay Debug] Error formatting date:", error);

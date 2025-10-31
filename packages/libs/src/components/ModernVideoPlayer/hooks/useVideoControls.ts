@@ -3,7 +3,6 @@ import type { SettingsView } from "../types";
 
 interface UseVideoControlsProps {
 	isPlaying: boolean;
-	containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
 interface VideoControlsState {
@@ -23,7 +22,6 @@ interface VideoControlsHandlers {
 
 export function useVideoControls({
 	isPlaying,
-	containerRef,
 }: UseVideoControlsProps): VideoControlsState & VideoControlsHandlers {
 	const [showControls, setShowControls] = useState(true);
 	const [showSettings, setShowSettings] = useState(false);
@@ -73,59 +71,6 @@ export function useVideoControls({
 	useEffect(() => {
 		resetControlsTimeout();
 	}, [resetControlsTimeout]);
-
-	// 別のアプリにフォーカスがあってもマウスホバーを検出するための強化されたマウス検出
-	useEffect(() => {
-		if (!containerRef.current) return;
-
-		const container = containerRef.current;
-		let isMouseInside = false;
-
-		const handleMouseEnterCapture = () => {
-			if (!isMouseInside) {
-				isMouseInside = true;
-				setShowControls(true);
-				resetControlsTimeout();
-			}
-		};
-
-		const handleMouseLeaveCapture = () => {
-			isMouseInside = false;
-			if (isPlaying) {
-				setShowControls(false);
-			}
-		};
-
-		const handleMouseMoveCapture = () => {
-			if (isMouseInside) {
-				setShowControls(true);
-				resetControlsTimeout();
-			}
-		};
-
-		// Capture phaseでイベントを検出してウィンドウフォーカスに関係なくホバーを検出
-		container.addEventListener("mouseenter", handleMouseEnterCapture, {
-			capture: true,
-		});
-		container.addEventListener("mouseleave", handleMouseLeaveCapture, {
-			capture: true,
-		});
-		container.addEventListener("mousemove", handleMouseMoveCapture, {
-			capture: true,
-		});
-
-		return () => {
-			container.removeEventListener("mouseenter", handleMouseEnterCapture, {
-				capture: true,
-			});
-			container.removeEventListener("mouseleave", handleMouseLeaveCapture, {
-				capture: true,
-			});
-			container.removeEventListener("mousemove", handleMouseMoveCapture, {
-				capture: true,
-			});
-		};
-	}, [isPlaying, resetControlsTimeout, containerRef]);
 
 	// クリーンアップ処理
 	useEffect(() => {

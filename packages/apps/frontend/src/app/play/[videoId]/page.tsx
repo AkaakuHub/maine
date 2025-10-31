@@ -11,6 +11,7 @@ import {
 	ResponsiveVideoLayout,
 	SettingsModal,
 	useNavigationRefresh,
+	EmptyState,
 } from "@maine/libs";
 
 export default function PlayPage() {
@@ -42,6 +43,7 @@ export default function PlayPage() {
 		videoInfo,
 		videoSrc,
 		isLoading,
+		error,
 		showDescription,
 		isLiked,
 		isInWatchlist,
@@ -58,6 +60,14 @@ export default function PlayPage() {
 		onGoBack: handleGoBackCallback,
 		onGoHome: handleGoHomeCallback,
 	});
+
+	// 動画プレイヤーのエラーハンドリング
+	const [videoError, setVideoError] = useState<string | null>(null);
+
+	const handleVideoError = useCallback((errorMessage: string) => {
+		console.log("Video playback error:", errorMessage);
+		setVideoError(errorMessage);
+	}, []);
 
 	// ページの準備状態を管理
 	useEffect(() => {
@@ -123,6 +133,69 @@ export default function PlayPage() {
 		);
 	}
 
+	// 動画が見つからない場合のエラー表示
+	if (error === "Video not found") {
+		return (
+			<div className="min-h-screen bg-surface-variant">
+				{/* ナビゲーションバー - 全画面で表示 */}
+				<Navigation
+					onGoBack={handleGoBack}
+					onGoHome={handleGoHome}
+					onShare={() => {}}
+					onOpenSettings={() => {}}
+				/>
+				{/* 動画が見つからない表示 */}
+				<EmptyState
+					type="video-not-found"
+					onRetry={handleGoHome}
+					className="flex-1"
+				/>
+			</div>
+		);
+	}
+
+	// 動画再生エラー表示
+	if (videoError) {
+		return (
+			<div className="min-h-screen bg-surface-variant">
+				{/* ナビゲーションバー - 全画面で表示 */}
+				<Navigation
+					onGoBack={handleGoBack}
+					onGoHome={handleGoHome}
+					onShare={() => {}}
+					onOpenSettings={() => {}}
+				/>
+				{/* 動画再生エラー表示 */}
+				<EmptyState
+					type="video-not-found"
+					onRetry={handleGoHome}
+					className="flex-1"
+				/>
+			</div>
+		);
+	}
+
+	// その他のエラー表示
+	if (error) {
+		return (
+			<div className="min-h-screen bg-surface-variant">
+				{/* ナビゲーションバー - 全画面で表示 */}
+				<Navigation
+					onGoBack={handleGoBack}
+					onGoHome={handleGoHome}
+					onShare={() => {}}
+					onOpenSettings={() => {}}
+				/>
+				{/* 読み込みエラー表示 */}
+				<EmptyState
+					type="loading-error"
+					onRetry={() => window.location.reload()}
+					className="flex-1"
+				/>
+			</div>
+		);
+	}
+
 	if (isLoading || !videoSrc || !videoData) {
 		return <LoadingScreen />;
 	}
@@ -153,6 +226,7 @@ export default function PlayPage() {
 				onToggleDescription={toggleDescription}
 				onTimeUpdate={handleTimeUpdate}
 				initialTime={initialTime}
+				onVideoError={handleVideoError}
 			/>
 
 			{/* 設定モーダル */}

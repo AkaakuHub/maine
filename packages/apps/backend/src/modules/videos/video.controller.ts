@@ -1,4 +1,5 @@
 import { createReadStream } from "node:fs";
+import { access, constants } from "node:fs/promises";
 import { Controller, Get, Param, Query, Res, Headers } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
 import type { Response } from "express";
@@ -74,6 +75,21 @@ export class VideoController {
 				return;
 			}
 
+			// ファイル存在チェック
+			try {
+				await access(videoData.filePath, constants.R_OK);
+			} catch (error) {
+				console.warn(
+					`Video file not found on disk: ${videoData.filePath}`,
+					error,
+				);
+				res.status(404).json({
+					error: "Video file not found on disk",
+					status: 404,
+				});
+				return;
+			}
+
 			const range = headers.range;
 			const fileSize = videoData.fileSize;
 
@@ -140,9 +156,29 @@ export class VideoController {
 			const file = createReadStream(videoData.filePath, { start, end });
 			return file.pipe(res);
 		} catch (error) {
-			console.error("Video streaming error:", error);
+			// ファイルシステム関連エラーをチェック
+			if (error instanceof Error) {
+				const errorMessage = error.message;
 
-			// @Res()を使用しているため、直接レスポンスを返す
+				// ENOENT (ファイルが見つからない) やアクセス権エラーは404を返す
+				if (
+					errorMessage.includes("ENOENT") ||
+					errorMessage.includes("no such file") ||
+					errorMessage.includes("permission denied") ||
+					errorMessage.includes("EACCES")
+				) {
+					// 予期されるエラー（ファイルが存在しない） - 警告レベルでログ
+					console.warn(`Video file not found: ${errorMessage}`);
+					res.status(404).json({
+						error: "Video file not found or not accessible",
+						status: 404,
+					});
+					return;
+				}
+			}
+
+			// その他の予期せぬエラーのみエラーログ
+			console.error("Video streaming error:", error);
 			res.status(500).json({
 				error: error instanceof Error ? error.message : "Internal server error",
 				status: 500,

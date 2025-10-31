@@ -18,6 +18,7 @@ interface VideoElementProps {
 	showMobileControls: boolean;
 	desktopFlashKey: number | null;
 	desktopFlashIcon: "play" | "pause" | null;
+	onError?: (error: string) => void;
 }
 
 export default function VideoElement({
@@ -35,6 +36,7 @@ export default function VideoElement({
 	showMobileControls,
 	desktopFlashKey,
 	desktopFlashIcon,
+	onError,
 }: VideoElementProps) {
 	const singleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const desktopFlashDeactivateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -99,17 +101,17 @@ export default function VideoElement({
 						singleTapTimeoutRef.current = null;
 					}
 
-					const isSingleTapCandidate = Date.now() - lastTapTime > 300;
+					const isSingleTapCandidate = Date.now() - lastTapTime > 500;
 					const handledByDoubleTap = onVideoTap(e);
 
 					if (isSingleTapCandidate && !handledByDoubleTap) {
 						if (isMobile) {
 							singleTapTimeoutRef.current = setTimeout(() => {
-								onSingleTap();
+								onSingleTap(); // これが、コントロールを表示する関数
 								singleTapTimeoutRef.current = null;
-							}, 180);
+							}, 500);
 						} else {
-							onSingleTap();
+							onSingleTap(); // これが、コントロールを表示する関数
 						}
 					}
 
@@ -121,6 +123,38 @@ export default function VideoElement({
 						e.preventDefault();
 						onTogglePlay();
 					}
+				}}
+				onError={(e) => {
+					const video = e.currentTarget;
+					let errorMessage = "動画の読み込みに失敗しました";
+
+					if (video.error) {
+						switch (video.error.code) {
+							case video.error.MEDIA_ERR_ABORTED:
+								errorMessage = "動画の読み込みが中断されました";
+								break;
+							case video.error.MEDIA_ERR_NETWORK:
+								errorMessage = "ネットワークエラーが発生しました";
+								break;
+							case video.error.MEDIA_ERR_DECODE:
+								errorMessage = "動画のデコードに失敗しました";
+								break;
+							case video.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+								errorMessage =
+									"動画ファイルが見つからないか、対応していない形式です";
+								break;
+							default:
+								errorMessage = `動画の読み込みエラー: ${video.error.message}`;
+						}
+					}
+
+					// 404エラー（動画が存在しない）の場合はログを抑制
+					const isNotFoundError =
+						video.error?.code === video.error?.MEDIA_ERR_SRC_NOT_SUPPORTED;
+					if (!isNotFoundError) {
+						console.log("Video element error:", errorMessage, e);
+					}
+					onError?.(errorMessage);
 				}}
 				preload="metadata"
 				autoPlay
@@ -160,7 +194,7 @@ export default function VideoElement({
 					className={cn(
 						"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/50 transition-opacity duration-200",
 						showMobileControls
-							? "opacity-100 pointer-events-auto"
+							? "opacity-100"
 							: "opacity-0 pointer-events-none",
 					)}
 					aria-label="動画を再生"
@@ -197,7 +231,7 @@ export default function VideoElement({
 			{!isMobile && desktopFlashVisible && (
 				<div
 					className={cn(
-						"pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/50 transition-all duration-150 ease-in-out",
+						"pointer-events-none absolute flex h-16 w-16 items-center justify-center rounded-full bg-primary/50 transition-all duration-150 ease-in-out",
 						desktopFlashActive ? "opacity-100 scale-100" : "opacity-0 scale-75",
 					)}
 				>

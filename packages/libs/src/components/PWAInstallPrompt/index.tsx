@@ -54,7 +54,6 @@ export default function PWAInstallPrompt({ className }: PWAInstallPromptProps) {
 		const { outcome } = await deferredPrompt.userChoice;
 
 		if (outcome === "accepted") {
-			console.log("PWA installed");
 			setIsInstallable(false);
 		}
 

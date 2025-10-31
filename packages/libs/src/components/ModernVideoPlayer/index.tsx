@@ -34,6 +34,7 @@ const ModernVideoPlayer = ({
 	initialTime = 0,
 	className = "",
 	onShowHelp,
+	onError,
 }: ModernVideoPlayerProps) => {
 	// Refs
 	const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
@@ -85,6 +86,7 @@ const ModernVideoPlayer = ({
 
 	const { isFullscreen, toggleFullscreen } = useVideoFullscreen({
 		containerRef,
+		videoRef,
 	});
 
 	const { predictedTime, skipQueue, skipForward, skipBackward } = useVideoSkip({
@@ -105,7 +107,6 @@ const ModernVideoPlayer = ({
 		resetControlsTimeout,
 	} = useVideoControls({
 		isPlaying,
-		containerRef,
 	});
 
 	const { takeScreenshot } = useVideoScreenshot({
@@ -273,7 +274,7 @@ const ModernVideoPlayer = ({
 		<div
 			ref={containerRef}
 			className={cn(
-				"relative bg-overlay overflow-hidden group",
+				"flex items-center justify-center relative bg-overlay overflow-hidden group",
 				isFullscreen &&
 					"!fixed !inset-0 !w-screen !h-screen !rounded-none !z-50 flex flex-col",
 				className,
@@ -287,8 +288,6 @@ const ModernVideoPlayer = ({
 			}}
 			onMouseEnter={() => {
 				if (isMobile) return;
-				// ウィンドウフォーカスに関係なくホバー時にコントロールを表示
-				setShowControls(true);
 				resetControlsTimeout();
 			}}
 			onMouseLeave={() => {
@@ -315,6 +314,7 @@ const ModernVideoPlayer = ({
 				showMobileControls={isMobile && showControls}
 				desktopFlashKey={desktopFlashIndicator?.key ?? null}
 				desktopFlashIcon={desktopFlashIndicator?.icon ?? null}
+				onError={onError}
 			/>
 
 			{/* スキップ予測オーバーレイ */}
