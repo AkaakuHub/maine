@@ -182,10 +182,10 @@ export const useAuthStore = () => {
 			notifyListeners();
 
 			try {
-				const isValid = await AuthAPI.checkAuth();
-				if (isValid) {
-					const profile = await AuthAPI.getProfile();
-					authState.user = profile;
+				// 新しいvalidateToken APIを使用してユーザー情報も同時に取得
+				const response = await AuthAPI.validateToken();
+				if (response.valid) {
+					authState.user = response.user;
 					authState.isAuthenticated = true;
 					authState.isLoading = false;
 					authState.error = null;

@@ -7,6 +7,7 @@ import {
 	Request,
 	BadRequestException,
 } from "@nestjs/common";
+import type { RequestWithUser } from "./types/request.types";
 import { AuthService } from "./auth.service";
 import { MigrationService } from "./migration.service";
 import { RegisterDto } from "./dto/register.dto";
@@ -53,8 +54,18 @@ export class AuthController {
 
 	@Get("profile")
 	@UseGuards(JwtAuthGuard)
-	async getProfile(@Request() req) {
+	async getProfile(@Request() req: RequestWithUser) {
 		return req.user;
+	}
+
+	@Get("validate")
+	@UseGuards(JwtAuthGuard)
+	async validateToken(@Request() req: RequestWithUser) {
+		// トークンが有効な場合、ユーザー情報を返す
+		return {
+			valid: true,
+			user: req.user,
+		};
 	}
 
 	@Post("create-admin")

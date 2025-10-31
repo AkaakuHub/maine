@@ -139,11 +139,30 @@ export const AuthAPI = {
 
 	async checkAuth(): Promise<boolean> {
 		try {
-			await this.getProfile();
+			// 新しいトークン検証APIを使用
+			await this.validateToken();
 			return true;
 		} catch {
 			removeToken();
 			return false;
 		}
+	},
+
+	// 新しいトークン検証API
+	async validateToken(): Promise<{ valid: boolean; user: UserProfile }> {
+		const response = await fetch(createApiUrl("auth/validate"), {
+			headers: this.getAuthHeaders(),
+		});
+
+		if (!response.ok) {
+			// 401エラー（トークン無効）の場合は自動的にログアウト
+			if (response.status === 401) {
+				removeToken();
+				window.location.href = "/login";
+			}
+			throw new Error("トークンの検証に失敗しました");
+		}
+
+		return response.json();
 	},
 };
