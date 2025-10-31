@@ -93,7 +93,7 @@ export function useMediaSession({
 				const thumbnailUrl = createApiUrl(`/thumbnails/${thumbnailPath}`);
 
 				// Blobを使用して画像を取得
-				const response = await fetch(thumbnailUrl);
+				const response = await fetch(thumbnailUrl, { credentials: "include" });
 				if (!response.ok) {
 					throw new Error(`Failed to fetch thumbnail: ${response.statusText}`);
 				}
