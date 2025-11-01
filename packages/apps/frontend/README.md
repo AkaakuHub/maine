@@ -6,3 +6,9 @@
 ```bash
 pnpm run dev
 ```
+
+## CF workersにデプロイ
+
+```bash
+pnpm run deploy
+```
