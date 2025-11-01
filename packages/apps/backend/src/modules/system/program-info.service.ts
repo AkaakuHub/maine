@@ -51,12 +51,15 @@ export class ProgramInfoService {
 				};
 			}
 
+			// youtubeのinfo.json形式
 			if (infoJsonPath && existsSync(infoJsonPath)) {
 				let programInfo: string;
 				// .info.json ファイルが存在する場合
 				const buffer = await readFile(infoJsonPath);
 				try {
-					programInfo = buffer.toString("utf-8");
+					const bufferString = buffer.toString("utf-8");
+					const infoJson = JSON.parse(bufferString);
+					programInfo = infoJson.description || "";
 				} catch {
 					return {
 						success: false,
