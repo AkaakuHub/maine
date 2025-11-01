@@ -7,6 +7,11 @@
 pnpm run dev
 ```
 
+また、wranglerのデバッグ
+```bash
+pnpm run preview
+```
+
 ## CF workersにデプロイ
 
 ```bash
