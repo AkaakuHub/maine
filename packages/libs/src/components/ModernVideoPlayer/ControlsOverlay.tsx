@@ -120,8 +120,10 @@ export default function ControlsOverlay({
 	return (
 		<div
 			className={cn(
-				"absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay via-overlay/50 to-transparent transition-opacity duration-300 p-4",
-				show ? "opacity-100" : "opacity-0 hidden pointer-events-none",
+				"absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay via-overlay/50 to-transparent transition-all duration-300 p-4",
+				show
+					? "opacity-100 visible"
+					: "opacity-0 invisible pointer-events-none",
 			)}
 		>
 			{/* チャプター対応プログレスバー */}
