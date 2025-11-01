@@ -24,34 +24,57 @@ export class ProgramInfoService {
 			}
 
 			// 動画ファイルパスから番組情報テキストファイルのパスを生成
-			const programInfoPath = this.generateProgramInfoPath(filePath);
+			const programInfoPath = this.generateTsProgramPath(filePath);
+			const infoJsonPath = this.generateInfoJsonPath(filePath);
 
-			if (!programInfoPath || !existsSync(programInfoPath)) {
+			// まず.ts.program.txt: shift_jis(iconv-liteでデコード
+			// 次に.info.json: utf-8
+
+			if (programInfoPath && existsSync(programInfoPath)) {
+				let programInfo: string;
+				// .ts.program.txt ファイルが存在する場合
+				const buffer = await readFile(programInfoPath);
+				try {
+					programInfo = iconv.decode(buffer, "shift_jis");
+				} catch {
+					return {
+						success: false,
+						programInfo: null,
+						error: "番組情報ファイルのデコードに失敗しました",
+					};
+				}
+
 				return {
-					success: false,
-					programInfo: null,
-					message: "番組情報ファイルが見つかりません",
+					success: true,
+					programInfo: programInfo.trim(),
+					filePath: programInfoPath,
 				};
 			}
 
-			// テキストファイルを読み込み
-			// 元がShift_JISのため、iconv-liteを使用
-			let programInfo = "";
-			const buffer = await readFile(programInfoPath);
-			try {
-				programInfo = iconv.decode(buffer, "shift_jis");
-			} catch {
+			if (infoJsonPath && existsSync(infoJsonPath)) {
+				let programInfo: string;
+				// .info.json ファイルが存在する場合
+				const buffer = await readFile(infoJsonPath);
+				try {
+					programInfo = buffer.toString("utf-8");
+				} catch {
+					return {
+						success: false,
+						programInfo: null,
+						error: "番組情報ファイルのデコードに失敗しました",
+					};
+				}
+
 				return {
-					success: false,
-					programInfo: null,
-					error: "番組情報ファイルのデコードに失敗しました",
+					success: true,
+					programInfo: programInfo.trim(),
+					filePath: infoJsonPath,
 				};
 			}
-
 			return {
-				success: true,
-				programInfo: programInfo.trim(),
-				filePath: programInfoPath,
+				success: false,
+				programInfo: null,
+				message: "番組情報ファイルが見つかりません",
 			};
 		} catch (error) {
 			this.logger.error("番組情報の取得エラー:", error);
@@ -63,7 +86,7 @@ export class ProgramInfoService {
 		}
 	}
 
-	private generateProgramInfoPath(videoFilePath: string): string | null {
+	private generateTsProgramPath(videoFilePath: string): string | null {
 		try {
 			// 動画ファイルの拡張子を取得
 			const videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".ts", ".m2ts"];
@@ -89,6 +112,38 @@ export class ProgramInfoService {
 			const programInfoPath = `${baseName}.ts.program.txt`;
 
 			return programInfoPath;
+		} catch (error) {
+			this.logger.error("番組情報パスの生成エラー:", error);
+			return null;
+		}
+	}
+
+	private generateInfoJsonPath(videoFilePath: string): string | null {
+		try {
+			// 動画ファイルの拡張子を取得
+			const videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".ts", ".m2ts"];
+			let foundExtension = "";
+
+			for (const ext of videoExtensions) {
+				if (videoFilePath.toLowerCase().endsWith(ext)) {
+					foundExtension = ext;
+					break;
+				}
+			}
+
+			if (!foundExtension) {
+				return null;
+			}
+
+			// 拡張子を除いたベース名を取得
+			const baseName = videoFilePath.slice(0, -foundExtension.length);
+
+			// .info.json ファイルのパスを生成
+			// 例: video.mp4 -> video.info.json
+			// 例: video.ts -> video.ts.info.json
+			const infoJsonPath = `${baseName}.info.json`;
+
+			return infoJsonPath;
 		} catch (error) {
 			this.logger.error("番組情報パスの生成エラー:", error);
 			return null;
