@@ -101,7 +101,7 @@ export default function VideoElement({
 						singleTapTimeoutRef.current = null;
 					}
 
-					const isSingleTapCandidate = Date.now() - lastTapTime > 500;
+					const isSingleTapCandidate = Date.now() - lastTapTime > 350;
 					const handledByDoubleTap = onVideoTap(e);
 
 					if (isSingleTapCandidate && !handledByDoubleTap) {
@@ -109,7 +109,7 @@ export default function VideoElement({
 							singleTapTimeoutRef.current = setTimeout(() => {
 								onSingleTap(); // これが、コントロールを表示する関数
 								singleTapTimeoutRef.current = null;
-							}, 500);
+							}, 350);
 						} else {
 							onSingleTap(); // これが、コントロールを表示する関数
 						}
