@@ -27,6 +27,7 @@ export function useVideoInteraction({
 }: UseVideoInteractionProps): VideoInteractionState & VideoInteractionHandlers {
 	const [lastTapTime, setLastTapTime] = useState(0);
 	const [lastTapX, setLastTapX] = useState(0);
+	const [lastDoubleTapTime, setLastDoubleTapTime] = useState(0);
 
 	// YouTube風ダブルタップ機能
 	const handleVideoTap = useCallback(
@@ -41,8 +42,11 @@ export function useVideoInteraction({
 				if (currentTime - lastTapTime < 300 && Math.abs(tapX - lastTapX) < 50) {
 					e.stopPropagation(); // 通常の再生/一時停止を防ぐ
 
-					// 2回目のタップ：コントロールを非表示
-					if (onControlToggle) {
+					// 連続ダブルタップ判定
+					const isConsecutiveDoubleTap = currentTime - lastDoubleTapTime < 1000;
+
+					// 連続ダブルタップでなければコントロール非表示
+					if (!isConsecutiveDoubleTap && onControlToggle) {
 						onControlToggle(false);
 					}
 
@@ -54,12 +58,13 @@ export function useVideoInteraction({
 						skipBackward();
 					}
 
-					// ダブルタップ処理後はlastTapTimeをリセット
-					setLastTapTime(0);
+					// ダブルタップ処理後は時刻を更新（リセットしない）
+					setLastTapTime(currentTime);
+					setLastDoubleTapTime(currentTime);
 					return true;
 				}
 
-				// 1回目のタップ：コントロールを表示
+				// 1回目のタップ：常にコントロールを表示
 				if (onControlToggle) {
 					onControlToggle(true);
 				}
@@ -81,6 +86,7 @@ export function useVideoInteraction({
 		[
 			lastTapTime,
 			lastTapX,
+			lastDoubleTapTime,
 			skipForward,
 			skipBackward,
 			enableDoubleTap,
