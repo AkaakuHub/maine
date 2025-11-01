@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { createApiUrl } from "../utils/api";
+import { AuthAPI } from "../api/auth";
 import type { ProgressData, UpdateProgressParams } from "../types/progress";
 
 interface UseProgressReturn {
@@ -25,6 +26,7 @@ export function useProgress(): UseProgressReturn {
 					method: "PUT",
 					headers: {
 						"Content-Type": "application/json",
+						...AuthAPI.getAuthHeaders(),
 					},
 					body: JSON.stringify(params),
 					signal: AbortSignal.timeout(30000),
@@ -61,6 +63,7 @@ export function useProgress(): UseProgressReturn {
 				const response = await fetch(
 					createApiUrl(`/progress?filePath=${encodeURIComponent(filePath)}`),
 					{
+						headers: AuthAPI.getAuthHeaders(),
 						signal: AbortSignal.timeout(30000),
 					},
 				);
