@@ -195,6 +195,7 @@ const ModernVideoPlayer = ({
 		togglePlay,
 		skipBackward,
 		skipForward,
+		isPlaying,
 	});
 
 	// ハンドラー関数（設定用）
