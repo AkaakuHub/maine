@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import type { HTMLVideoElementWithFullscreen } from "../types";
 import { createApiUrl } from "../../../utils/api";
 
@@ -82,9 +82,6 @@ export function useMediaSession({
 		{ src: "/favicon.ico", sizes: "96x96", type: "image/x-icon" },
 	];
 
-	// Blob URLを管理するためのMap
-	const blobUrlMapRef = useRef(new Map<string, string>());
-
 	// Blobを作成してartworkを設定する関数
 	const createArtworkWithBlob = useCallback(
 		async (thumbnailPath: string): Promise<MediaImage[]> => {
@@ -100,6 +97,8 @@ export function useMediaSession({
 
 				const tempBlob = await response.blob();
 
+				console.log("temp Blob:", tempBlob);
+
 				// 画像を一旦canvasに描画して、全く同じサイズで、どのブラウザでも表示できるpngに変換してから、media sessionに渡す
 				const img = document.createElement("img");
 				const objectUrl = URL.createObjectURL(tempBlob);
@@ -110,12 +109,16 @@ export function useMediaSession({
 					img.onerror = () => reject(new Error("Image load error"));
 				});
 
+				console.log("Loaded image:", img);
+
 				const canvas = document.createElement("canvas");
 				canvas.width = img.width;
 				canvas.height = img.height;
 				const ctx = canvas.getContext("2d");
 				if (!ctx) throw new Error("Failed to get canvas context");
 				ctx.drawImage(img, 0, 0);
+
+				console.log("Canvas created:", canvas);
 
 				// canvasからpngのBlobを取得
 				const pngBlob: Blob = await new Promise((res) =>
@@ -131,8 +134,7 @@ export function useMediaSession({
 				const blob = pngBlob;
 				const blobUrl = URL.createObjectURL(blob);
 
-				// Blob URLをマップに保存して後でクリーンアップできるようにする
-				blobUrlMapRef.current.set(thumbnailPath, blobUrl);
+				console.log("Final Blob URL:", blobUrl);
 
 				// Blob URLを使用したartwork配列を返す
 				return [
@@ -180,14 +182,7 @@ export function useMediaSession({
 			setupMediaMetadata();
 		}
 
-		// クリーンアップ関数
-		return () => {
-			// Blob URLをクリーンアップ
-			for (const blobUrl of blobUrlMapRef.current.values()) {
-				URL.revokeObjectURL(blobUrl);
-			}
-			blobUrlMapRef.current.clear();
-		};
+		// 一旦クリーンアップは冷笑
 	}, [thumbnailPath, title, src, createArtworkWithBlob]);
 
 	// Media Session API の位置情報を更新
