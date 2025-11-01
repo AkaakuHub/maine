@@ -18,10 +18,7 @@ export class ThumbnailsController {
 	@ApiResponse({ status: 200, description: "サムネイル画像配信" })
 	@ApiResponse({ status: 400, description: "無効なパス" })
 	@ApiResponse({ status: 404, description: "サムネイルが見つからない" })
-	async getThumbnail(
-		@Param("path") path: string,
-		@Res({ passthrough: true }) response: Response,
-	) {
+	async getThumbnail(@Param("path") path: string, @Res() response: Response) {
 		try {
 			const thumbnailPath = Array.isArray(path) ? path.join("/") : path;
 
