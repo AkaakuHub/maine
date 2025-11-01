@@ -40,64 +40,91 @@ export function useVideoPlayer({
 		onProgressSaved: () => {},
 	});
 
+	// 説明欄を取得する関数
+	const fetchDescription = useCallback(
+		async (filePath: string): Promise<string> => {
+			try {
+				const response = await fetch(
+					createApiUrl(`/programInfo?filePath=${encodeURIComponent(filePath)}`),
+				);
+				if (!response.ok) {
+					return "";
+				}
+				const data = await response.json();
+				return data.success ? data.programInfo || "" : "";
+			} catch (error) {
+				console.error("Error fetching description:", error);
+				return "";
+			}
+		},
+		[],
+	);
+
 	// videoIdで動画を読み込む関数
-	const loadVideoByVideoId = useCallback(async (id: string) => {
-		try {
-			setError(null);
-			const response = await fetch(createApiUrl(`/videos/by-video-id/${id}`));
+	const loadVideoByVideoId = useCallback(
+		async (id: string) => {
+			try {
+				setError(null);
+				const response = await fetch(createApiUrl(`/videos/by-video-id/${id}`));
 
-			if (!response.ok) {
-				// 404エラーの場合は特別なエラーメッセージを設定
-				if (response.status === 404) {
-					setError("Video not found");
-					return;
+				if (!response.ok) {
+					// 404エラーの場合は特別なエラーメッセージを設定
+					if (response.status === 404) {
+						setError("Video not found");
+						return;
+					}
+					throw new Error(`Failed to fetch video: ${response.status}`);
 				}
-				throw new Error(`Failed to fetch video: ${response.status}`);
-			}
 
-			const data = await response.json();
+				const data = await response.json();
 
-			if (!data.success) {
-				// APIのsuccessがfalseの場合も404として扱う
-				if (data.error?.includes("not found")) {
-					setError("Video not found");
-					return;
+				if (!data.success) {
+					// APIのsuccessがfalseの場合も404として扱う
+					if (data.error?.includes("not found")) {
+						setError("Video not found");
+						return;
+					}
+					throw new Error(data.error || "Video not found");
 				}
-				throw new Error(data.error || "Video not found");
+
+				const videoData: VideoFileData = data.video;
+				setVideoData(videoData);
+
+				// 説明欄を取得
+				const description = await fetchDescription(videoData.filePath);
+
+				setVideoInfo({
+					title: videoData.title,
+					episode: videoData.episode?.toString() || "",
+					fullTitle: videoData.title,
+					filePath: videoData.filePath,
+					videoId: videoData.videoId,
+					description: description,
+					genre: videoData.genre || "動画",
+					year: videoData.year?.toString() || "不明",
+					duration: videoData.duration ? `${videoData.duration}秒` : "不明",
+				});
+
+				// 動画URLを生成
+				const videoUrl = createApiUrl(`/video/${id}`);
+				setVideoSrc(videoUrl);
+
+				// いいね状態とウォッチリスト状態を設定
+				setIsLiked(videoData.isLiked);
+				setIsInWatchlist(videoData.isInWatchlist);
+			} catch (error) {
+				console.error("Error loading video by videoId:", error);
+				// ネットワークエラーやその他のエラーの場合
+				if (
+					!(error instanceof Error) ||
+					!error.message?.includes("Video not found")
+				) {
+					setError("Failed to load video");
+				}
 			}
-
-			const videoData: VideoFileData = data.video;
-			setVideoData(videoData);
-			setVideoInfo({
-				title: videoData.title,
-				episode: videoData.episode?.toString() || "",
-				fullTitle: videoData.title,
-				filePath: videoData.filePath,
-				videoId: videoData.videoId,
-				description: "",
-				genre: videoData.genre || "動画",
-				year: videoData.year?.toString() || "不明",
-				duration: videoData.duration ? `${videoData.duration}秒` : "不明",
-			});
-
-			// 動画URLを生成
-			const videoUrl = createApiUrl(`/video/${id}`);
-			setVideoSrc(videoUrl);
-
-			// いいね状態とウォッチリスト状態を設定
-			setIsLiked(videoData.isLiked);
-			setIsInWatchlist(videoData.isInWatchlist);
-		} catch (error) {
-			console.error("Error loading video by videoId:", error);
-			// ネットワークエラーやその他のエラーの場合
-			if (
-				!(error instanceof Error) ||
-				!error.message?.includes("Video not found")
-			) {
-				setError("Failed to load video");
-			}
-		}
-	}, []);
+		},
+		[fetchDescription],
+	);
 
 	const initializePlayer = useCallback(async () => {
 		if (!videoId) {
