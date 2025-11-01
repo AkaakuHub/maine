@@ -92,13 +92,43 @@ export function useMediaSession({
 				// 複数サイズの画像URLを生成
 				const thumbnailUrl = createApiUrl(`/thumbnails/${thumbnailPath}`);
 
-				// Blobを使用して画像を取得
+				// 認証付きでサムネイルを取得
 				const response = await fetch(thumbnailUrl, { credentials: "include" });
 				if (!response.ok) {
 					throw new Error(`Failed to fetch thumbnail: ${response.statusText}`);
 				}
 
-				const blob = await response.blob();
+				const tempBlob = await response.blob();
+
+				// 画像を一旦canvasに描画して、全く同じサイズで、どのブラウザでも表示できるpngに変換してから、media sessionに渡す
+				const img = document.createElement("img");
+				const objectUrl = URL.createObjectURL(tempBlob);
+				img.src = objectUrl;
+
+				await new Promise<void>((resolve, reject) => {
+					img.onload = () => resolve();
+					img.onerror = () => reject(new Error("Image load error"));
+				});
+
+				const canvas = document.createElement("canvas");
+				canvas.width = img.width;
+				canvas.height = img.height;
+				const ctx = canvas.getContext("2d");
+				if (!ctx) throw new Error("Failed to get canvas context");
+				ctx.drawImage(img, 0, 0);
+
+				// canvasからpngのBlobを取得
+				const pngBlob: Blob = await new Promise((res) =>
+					canvas.toBlob((b) => {
+						if (b) res(b);
+					}, "image/png"),
+				);
+
+				// 一時的なオブジェクトURLを解放
+				URL.revokeObjectURL(objectUrl);
+
+				// 最終的にmedia sessionに渡すBlob
+				const blob = pngBlob;
 				const blobUrl = URL.createObjectURL(blob);
 
 				// Blob URLをマップに保存して後でクリーンアップできるようにする
