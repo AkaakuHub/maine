@@ -29,6 +29,18 @@ export class VideoController {
 		};
 	}
 
+	private sanitizeHeaders(
+		headers: Record<string, string>,
+	): Record<string, string> {
+		const sanitized: Record<string, string> = {};
+		for (const [key, value] of Object.entries(headers)) {
+			if (typeof value === "string") {
+				sanitized[key] = value;
+			}
+		}
+		return sanitized;
+	}
+
 	private buildContentDispositionHeader(fileName: string): string {
 		const encodedFilename = encodeURIComponent(fileName);
 		return `attachment; filename*=UTF-8''${encodedFilename}`;
@@ -96,20 +108,25 @@ export class VideoController {
 			if (!range) {
 				// レンジリクエストなし：ファイル全体を配信
 				res.status(200);
-				res.set({
+
+				const responseHeaders: Record<string, string> = {
 					"Content-Type": "video/mp4",
 					"Content-Length": fileSize.toString(),
 					"Cache-Control": "public, max-age=31536000",
 					...this.getCorsHeaders(headers.origin),
-				});
+				};
 
 				// ダウンロードモードの場合はContent-Dispositionヘッダーを追加
 				if (downloadMode) {
 					const contentDisposition = this.buildContentDispositionHeader(
 						videoData.fileName,
 					);
-					res.set("Content-Disposition", contentDisposition);
+					responseHeaders["Content-Disposition"] = contentDisposition;
 				}
+
+				// 循環参照を避けるためにヘッダーをサニタイズ
+				const sanitizedHeaders = this.sanitizeHeaders(responseHeaders);
+				res.set(sanitizedHeaders);
 
 				const file = createReadStream(videoData.filePath);
 				return file.pipe(res);
@@ -151,7 +168,9 @@ export class VideoController {
 					this.buildContentDispositionHeader(videoData.fileName);
 			}
 
-			res.writeHead(206, rangeHeaders);
+			// 循環参照を避けるためにヘッダーをサニタイズ
+			const sanitizedHeaders = this.sanitizeHeaders(rangeHeaders);
+			res.writeHead(206, sanitizedHeaders);
 
 			const file = createReadStream(videoData.filePath, { start, end });
 			return file.pipe(res);
