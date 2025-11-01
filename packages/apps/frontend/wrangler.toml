@@ -1,0 +1,12 @@
+name = "maine-frontend"
+compatibility_date = "2025-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+main = ".open-next/worker.js"
+[assets]
+  directory = ".open-next/assets"
+  binding = "ASSETS"
+
+[[routes]]
+  pattern       = "se-hasu-honsitsu-api.akaaku.net/*"
+  custom_domain = true

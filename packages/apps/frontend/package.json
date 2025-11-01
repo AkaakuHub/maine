@@ -6,13 +6,18 @@
 		"dev": "next dev",
 		"dev:https": "next dev --experimental-https",
 		"build": "next build",
+		"build:open": "opennextjs-cloudflare build",
 		"start": "next start",
+		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+		"cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
 		"lint": "biome lint ./src",
 		"format": "biome format --write ./src",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@maine/libs": "workspace:*",
+		"@opennextjs/cloudflare": "^1.11.0",
 		"lucide-react": "^0.511.0",
 		"next": "15.3.3",
 		"postcss": "^8.5.6",
@@ -26,6 +31,7 @@
 		"@types/react": "^19.1.6",
 		"@types/react-dom": "^19.1.5",
 		"tailwindcss": "^4.1.8",
-		"typescript": "^5.8.3"
+		"typescript": "^5.8.3",
+		"wrangler": "^4.45.3"
 	}
 }
