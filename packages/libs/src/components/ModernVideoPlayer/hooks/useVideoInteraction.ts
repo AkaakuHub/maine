@@ -6,6 +6,7 @@ interface UseVideoInteractionProps {
 	skipForward: () => void;
 	skipBackward: () => void;
 	enableDoubleTap?: boolean;
+	onControlToggle?: (show: boolean) => void;
 }
 
 interface VideoInteractionState {
@@ -22,11 +23,12 @@ export function useVideoInteraction({
 	skipForward,
 	skipBackward,
 	enableDoubleTap = true,
+	onControlToggle,
 }: UseVideoInteractionProps): VideoInteractionState & VideoInteractionHandlers {
 	const [lastTapTime, setLastTapTime] = useState(0);
 	const [lastTapX, setLastTapX] = useState(0);
 
-	// ダブルタップ機能
+	// YouTube風ダブルタップ機能
 	const handleVideoTap = useCallback(
 		(e: React.MouseEvent<HTMLVideoElement>) => {
 			const currentTime = Date.now();
@@ -35,9 +37,14 @@ export function useVideoInteraction({
 			const tapPosition = tapX / videoWidth; // 0-1の範囲
 
 			if (enableDoubleTap) {
-				// ダブルタップの判定（500ms以内、同じ位置付近）
-				if (currentTime - lastTapTime < 500 && Math.abs(tapX - lastTapX) < 50) {
+				// ダブルタップの判定（300ms以内、同じ位置付近）
+				if (currentTime - lastTapTime < 300 && Math.abs(tapX - lastTapX) < 50) {
 					e.stopPropagation(); // 通常の再生/一時停止を防ぐ
+
+					// 2回目のタップ：コントロールを非表示
+					if (onControlToggle) {
+						onControlToggle(false);
+					}
 
 					if (tapPosition > 0.6) {
 						// 右側タップ: 前進
@@ -51,15 +58,34 @@ export function useVideoInteraction({
 					setLastTapTime(0);
 					return true;
 				}
+
+				// 1回目のタップ：コントロールを表示
+				if (onControlToggle) {
+					onControlToggle(true);
+				}
+
 				setLastTapTime(currentTime);
 				setLastTapX(tapX);
 				return false;
 			}
+
+			// ダブルタップ無効時は常にコントロール表示
+			if (onControlToggle) {
+				onControlToggle(true);
+			}
+
 			setLastTapTime(currentTime);
 			setLastTapX(tapX);
 			return false;
 		},
-		[lastTapTime, lastTapX, skipForward, skipBackward, enableDoubleTap],
+		[
+			lastTapTime,
+			lastTapX,
+			skipForward,
+			skipBackward,
+			enableDoubleTap,
+			onControlToggle,
+		],
 	);
 
 	// ピクチャーインピクチャー

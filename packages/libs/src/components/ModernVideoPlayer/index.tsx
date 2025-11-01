@@ -116,13 +116,13 @@ const ModernVideoPlayer = ({
 		currentTime,
 	});
 
-	const { lastTapTime, handleVideoTap, togglePictureInPicture } =
-		useVideoInteraction({
-			videoRef,
-			skipForward,
-			skipBackward,
-			enableDoubleTap: isMobile,
-		});
+	const { handleVideoTap, togglePictureInPicture } = useVideoInteraction({
+		videoRef,
+		skipForward,
+		skipBackward,
+		enableDoubleTap: isMobile,
+		onControlToggle: setShowControls,
+	});
 
 	const {
 		chapters,
@@ -307,7 +307,6 @@ const ModernVideoPlayer = ({
 				isFullscreen={isFullscreen}
 				isPlaying={isPlaying}
 				isBuffering={isBuffering}
-				lastTapTime={lastTapTime}
 				onVideoTap={handleVideoTap}
 				onSingleTap={handleSingleTap}
 				onTogglePlay={togglePlay}

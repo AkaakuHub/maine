@@ -10,7 +10,6 @@ interface VideoElementProps {
 	isFullscreen: boolean;
 	isPlaying: boolean;
 	isBuffering: boolean;
-	lastTapTime: number;
 	onVideoTap: (e: React.MouseEvent<HTMLVideoElement>) => boolean;
 	onSingleTap: () => void;
 	onTogglePlay: () => void;
@@ -28,7 +27,6 @@ export default function VideoElement({
 	isFullscreen,
 	isPlaying,
 	isBuffering,
-	lastTapTime,
 	onVideoTap,
 	onSingleTap,
 	onTogglePlay,
@@ -96,23 +94,11 @@ export default function VideoElement({
 					isFullscreen && "flex-1",
 				)}
 				onClick={(e) => {
-					if (singleTapTimeoutRef.current) {
-						clearTimeout(singleTapTimeoutRef.current);
-						singleTapTimeoutRef.current = null;
-					}
-
-					const isSingleTapCandidate = Date.now() - lastTapTime > 350;
 					const handledByDoubleTap = onVideoTap(e);
 
-					if (isSingleTapCandidate && !handledByDoubleTap) {
-						if (isMobile) {
-							singleTapTimeoutRef.current = setTimeout(() => {
-								onSingleTap(); // これが、コントロールを表示する関数
-								singleTapTimeoutRef.current = null;
-							}, 350);
-						} else {
-							onSingleTap(); // これが、コントロールを表示する関数
-						}
+					// ダブルタップでなければ即座にシングルタップ処理
+					if (!handledByDoubleTap) {
+						onSingleTap(); // これが、コントロールを表示する関数
 					}
 
 					// クリック後もキーボードショートカットが効くようにフォーカスを維持
