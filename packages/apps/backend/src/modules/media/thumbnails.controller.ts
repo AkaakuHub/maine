@@ -60,6 +60,7 @@ export class ThumbnailsController {
 				"Content-Type": "image/webp",
 				"Cache-Control": "public, max-age=86400, immutable", // 24時間キャッシュ
 				"Content-Length": fileBuffer.length.toString(),
+				Vary: "Origin, Cookie",
 			});
 
 			return response.send(new Uint8Array(fileBuffer));
