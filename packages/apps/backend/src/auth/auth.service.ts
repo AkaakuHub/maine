@@ -174,6 +174,18 @@ export class AuthService {
 		}
 	}
 
+	async checkUserExists(userId: string): Promise<boolean> {
+		try {
+			const user = await this.prisma.user.findUnique({
+				where: { id: userId },
+				select: { id: true, isActive: true },
+			});
+			return user?.isActive ?? false;
+		} catch {
+			return false;
+		}
+	}
+
 	async registerFirstUser(firstUserDto: FirstUserDto) {
 		const { username, password } = firstUserDto;
 
