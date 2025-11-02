@@ -107,6 +107,7 @@ const HomeContent = () => {
 	const { handleShowStreamingWarning } = useWarningDialog();
 
 	// 動画データのフック（オンライン時のみ）
+	// URL初期化が完了してからデータ取得を開始
 	const {
 		videos,
 		loading: videosLoading,
@@ -117,7 +118,7 @@ const HomeContent = () => {
 		hasPrevPage,
 	} = useVideos({
 		filters: {
-			search: searchQuery || undefined,
+			search: searchQuery,
 		},
 		sorting: {
 			sortBy,
@@ -127,7 +128,7 @@ const HomeContent = () => {
 			page: currentPage,
 			limit: PAGINATION.DEFAULT_LIMIT,
 		},
-		enabled: true,
+		enabled: isInitialized.current, // URL初期化完了後に有効化
 	});
 
 	// 動画ページから戻ってきた際に進捗情報を更新するためのリフレッシュ処理

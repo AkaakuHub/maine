@@ -136,13 +136,27 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		const sortOrder = (params.get("sortOrder") as SortOrder) || "asc";
 		const currentPage = Number.parseInt(params.get("page") || "1", 10);
 
-		set({
-			searchTerm: searchQuery,
-			searchQuery,
-			sortBy,
-			sortOrder,
-			currentPage: Math.max(1, currentPage),
-		});
+		// 検索クエリがある場合は検索を実行、ない場合は空の状態を設定
+		const trimmedQuery = searchQuery.trim();
+		if (trimmedQuery) {
+			set({
+				searchTerm: trimmedQuery,
+				searchQuery: trimmedQuery,
+				sortBy,
+				sortOrder,
+				currentPage: Math.max(1, currentPage),
+				shouldCreateHistoryEntry: false, // URLからの初期化なので履歴エントリは作成しない
+			});
+		} else {
+			set({
+				searchTerm: "",
+				searchQuery: "",
+				sortBy,
+				sortOrder,
+				currentPage: Math.max(1, currentPage),
+				shouldCreateHistoryEntry: false,
+			});
+		}
 	},
 
 	getSearchParams: () => {

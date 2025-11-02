@@ -62,9 +62,8 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 	const searchParams = useMemo(() => {
 		const params = new URLSearchParams();
 
-		if (filters.search) {
-			params.set("search", filters.search.trim());
-		}
+		// 検索クエリを常に設定（undefinedの場合は空文字）
+		params.set("search", (filters.search || "").trim());
 
 		params.set("sortBy", sorting.sortBy);
 		params.set("sortOrder", sorting.sortOrder);
