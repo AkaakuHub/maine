@@ -12,7 +12,7 @@ import {
 	generateFileContentHash,
 	type PlaylistData,
 } from "../libs/fileUtils";
-import type { VideoFileData } from "../type";
+import type { SearchResult, VideoFileData } from "../type";
 import { parseVideoFileName } from "../utils/videoFileNameParser";
 import { sseStore } from "../common/sse/sse-connection.store";
 import type { ScanSettings } from "../types/scanSettings";
@@ -30,14 +30,6 @@ import { ScanProgressCalculator } from "./scan/ScanProgressCalculator";
 import { FFprobeMetadataExtractor } from "./FFprobeMetadataExtractor";
 import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import { ScanScheduler } from "./ScanScheduler";
-
-type SearchResult = {
-	success: boolean;
-	videos: VideoFileData[];
-	totalFound: number;
-	message: string;
-	error?: string;
-};
 
 /**
  * リファクタリングされたビデオキャッシュサービス

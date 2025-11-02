@@ -45,9 +45,7 @@ const HomeContent = () => {
 
 		// ページネーション
 		currentPage,
-		showAll,
 		setCurrentPage,
-		handleShowAll,
 
 		// 設定モーダル
 		showSettings,
@@ -129,7 +127,6 @@ const HomeContent = () => {
 			page: currentPage,
 			limit: PAGINATION.DEFAULT_LIMIT,
 		},
-		loadAll: showAll,
 		enabled: true,
 	});
 
@@ -146,7 +143,6 @@ const HomeContent = () => {
 		refetchVideos,
 		videos,
 		searchQuery,
-		showAll,
 	});
 
 	if (videosLoading && !hasContent) {
@@ -205,14 +201,12 @@ const HomeContent = () => {
 				videos={videos}
 				videosLoading={videosLoading}
 				searchQuery={searchQuery}
-				showAll={showAll}
 				hasContent={hasContent}
 				pagination={pagination}
 				currentPage={currentPage}
 				hasPrevPage={hasPrevPage}
 				hasNextPage={hasNextPage}
 				onShowStreamingWarning={handleShowStreamingWarning}
-				onShowAll={handleShowAll}
 				onPageChange={setCurrentPage}
 				onRetry={handleRetry}
 				onPlay={handlePlayVideo}

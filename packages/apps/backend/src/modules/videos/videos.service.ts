@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
 import { generateFileContentHash } from "../../libs/fileUtils";
 import * as fs from "node:fs";
+import { SearchResult } from "../../type";
 
 export interface VideoData {
 	id: string;
@@ -22,14 +23,6 @@ export interface VideoData {
 	playlistId?: string | null; // プレイリストID
 	playlistName?: string | null; // プレイリスト名
 }
-
-type SearchResult = {
-	success: boolean;
-	videos: VideoData[];
-	totalFound: number;
-	message: string;
-	error?: string;
-};
 
 @Injectable()
 export class VideosService {
@@ -245,7 +238,6 @@ export class VideosService {
 	async searchVideos(
 		query: string,
 		options?: {
-			loadAll?: boolean;
 			sortBy?: string;
 			sortOrder?: "asc" | "desc";
 			page?: number;
@@ -301,21 +293,19 @@ export class VideosService {
 			// 総件数を取得
 			const totalCount = await this.prisma.videoMetadata.count({ where });
 
-			// loadAllがtrueの場合は制限なし、それ以外はページネーションを適用
-			const takeLimit = options?.loadAll
-				? undefined
-				: Math.min(limit, PAGINATION.MAX_LIMIT);
+			// ページネーションを適用
+			const takeLimit = Math.min(limit, PAGINATION.MAX_LIMIT);
 
 			// 動画データを取得
 			const videos = await this.prisma.videoMetadata.findMany({
 				where,
 				orderBy,
 				take: takeLimit,
-				skip: options?.loadAll ? undefined : skip,
+				skip: skip,
 			});
 
 			this.logger.log(
-				`Found ${videos.length} videos (total: ${totalCount}, page: ${page}, limit: ${limit}, loadAll: ${options?.loadAll})`,
+				`Found ${videos.length} videos (total: ${totalCount}, page: ${page}, limit: ${limit})`,
 			);
 
 			// 動画の基本情報を返す（進捗情報は含めない）
@@ -337,15 +327,20 @@ export class VideosService {
 
 			this.logger.log(`Returning ${videosWithProgress.length} videos`);
 
-			const totalToReturn = options?.loadAll
-				? totalCount
-				: videosWithProgress.length;
+			// ページネーション情報を計算
+			const pagination = {
+				page,
+				limit,
+				total: totalCount,
+				totalPages: Math.ceil(totalCount / limit),
+			};
 
 			return {
 				success: true,
 				videos: videosWithProgress,
-				totalFound: totalToReturn,
+				totalFound: videosWithProgress.length,
 				message: `${videosWithProgress.length}件の動画が見つかりました（全${totalCount}件中）`,
+				pagination,
 			};
 		} catch (error) {
 			this.logger.error("Error searching videos:", error);

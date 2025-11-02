@@ -1,6 +1,5 @@
 "use client";
 
-import { Search } from "lucide-react";
 import VideoGridContainer from "../../components/VideoGridContainer";
 import VideoList from "../../components/VideoList";
 import Button from "../../components/ui/Button";
@@ -21,14 +20,12 @@ interface VideoContentProps {
 	videos: VideoFileData[];
 	videosLoading: boolean;
 	searchQuery: string;
-	showAll: boolean;
 	hasContent: boolean;
 	pagination: PaginationData;
 	currentPage: number;
 	hasPrevPage: boolean;
 	hasNextPage: boolean;
 	onShowStreamingWarning: (video: VideoFileData) => void;
-	onShowAll: () => void;
 	onPageChange: (page: number) => void;
 	onPlay?: (videoId: string) => void;
 	onRetry?: () => void;
@@ -39,14 +36,12 @@ export function VideoContent({
 	videos,
 	videosLoading,
 	searchQuery,
-	showAll,
 	hasContent,
 	pagination,
 	currentPage,
 	hasPrevPage,
 	hasNextPage,
 	onShowStreamingWarning,
-	onShowAll,
 	onPageChange,
 	onPlay,
 }: VideoContentProps) {
@@ -69,41 +64,8 @@ export function VideoContent({
 					);
 				}
 
-				if (videos.length === 0 && showAll && !videosLoading) {
+				if (videos.length === 0 && !videosLoading) {
 					return <EmptyState type="no-videos" />;
-				}
-
-				if (videos.length === 0) {
-					return (
-						<div className="text-center py-20">
-							<div className="max-w-md mx-auto">
-								<div className="mb-8">
-									<div className="w-24 h-24 mx-auto mb-6 bg-surface rounded-full flex items-center justify-center">
-										<Search className="h-12 w-12 text-text-secondary" />
-									</div>
-									<h2 className="text-2xl font-bold text-text mb-4">
-										動画ライブラリへようこそ
-									</h2>
-									<p className="text-text-secondary mb-8">
-										検索フィールドから動画を検索するか、下のボタンで全ての動画を表示できます。
-									</p>
-								</div>
-								<div className="space-y-4">
-									<Button
-										onClick={onShowAll}
-										disabled={videosLoading}
-										className="w-full"
-										size="lg"
-									>
-										{videosLoading ? "読み込み中..." : "すべての動画を表示"}
-									</Button>
-									<p className="text-sm text-text-muted">
-										※ 多くの動画がある場合、読み込みに時間がかかる場合があります
-									</p>
-								</div>
-							</div>
-						</div>
-					);
 				}
 
 				// 動画がある場合は表示

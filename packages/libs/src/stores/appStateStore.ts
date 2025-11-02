@@ -20,7 +20,6 @@ interface AppStateStore {
 
 	// ページネーション
 	currentPage: number;
-	showAll: boolean;
 
 	// URL履歴管理
 	shouldCreateHistoryEntry: boolean;
@@ -34,14 +33,12 @@ interface AppStateStore {
 	setViewMode: (mode: ViewMode) => void;
 	setShowSettings: (show: boolean) => void;
 	setCurrentPage: (page: number) => void;
-	setShowAll: (showAll: boolean) => void;
 
 	// Compound actions
 	handleSearch: () => void;
 	handleClearSearch: () => void;
 	toggleSortOrder: () => void;
 	resetPagination: () => void;
-	handleShowAll: () => void;
 	handleTabChange: (resetSearch?: boolean) => void;
 	handleShowSettings: () => void;
 	handleCloseSettings: () => void;
@@ -62,7 +59,6 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 	viewMode: "grid",
 	showSettings: false,
 	currentPage: 1,
-	showAll: false,
 	shouldCreateHistoryEntry: false,
 
 	// Basic setters
@@ -70,15 +66,14 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 	setSearchQuery: (query) => set({ searchQuery: query }),
 	setIsComposing: (composing) => set({ isComposing: composing }),
 	setSortBy: (sortBy) => {
-		set({ sortBy, currentPage: 1, showAll: false });
+		set({ sortBy, currentPage: 1 });
 	},
 	setSortOrder: (sortOrder) => {
-		set({ sortOrder, currentPage: 1, showAll: false });
+		set({ sortOrder, currentPage: 1 });
 	},
 	setViewMode: (mode) => set({ viewMode: mode }),
 	setShowSettings: (show) => set({ showSettings: show }),
 	setCurrentPage: (page) => set({ currentPage: page }),
-	setShowAll: (showAll) => set({ showAll }),
 	setShouldCreateHistoryEntry: (should) =>
 		set({ shouldCreateHistoryEntry: should }),
 
@@ -93,46 +88,36 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 				searchQuery: "",
 				currentPage: 1,
 				searchTerm: "",
-				showAll: false,
 				shouldCreateHistoryEntry: true,
 			});
 		} else {
 			set({
 				searchQuery: trimmedTerm,
 				currentPage: 1,
-				showAll: false,
 				shouldCreateHistoryEntry: true,
 			});
 		}
 	},
 
 	handleClearSearch: () => {
-		set({ searchTerm: "", searchQuery: "", currentPage: 1, showAll: false });
+		set({ searchTerm: "", searchQuery: "", currentPage: 1 });
 	},
 
 	toggleSortOrder: () => {
 		const { sortOrder } = get();
 		const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
-		set({ sortOrder: newSortOrder, currentPage: 1, showAll: false });
+		set({ sortOrder: newSortOrder, currentPage: 1 });
 	},
 
 	resetPagination: () => {
-		set({ currentPage: 1, showAll: false });
-	},
-
-	handleShowAll: () => {
-		set({ showAll: true, currentPage: 1, searchTerm: "", searchQuery: "" });
+		set({ currentPage: 1 });
 	},
 
 	handleTabChange: (resetSearch = false) => {
 		const updates: Partial<
-			Pick<
-				AppStateStore,
-				"currentPage" | "showAll" | "searchTerm" | "searchQuery"
-			>
+			Pick<AppStateStore, "currentPage" | "searchTerm" | "searchQuery">
 		> = {
 			currentPage: 1,
-			showAll: false,
 		};
 		if (resetSearch) {
 			updates.searchTerm = "";
@@ -150,7 +135,6 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		const sortBy = (params.get("sortBy") as SortBy) || "title";
 		const sortOrder = (params.get("sortOrder") as SortOrder) || "asc";
 		const currentPage = Number.parseInt(params.get("page") || "1", 10);
-		// showAllはURLから読み取らない（常にfalseで初期化）
 
 		set({
 			searchTerm: searchQuery,
@@ -158,7 +142,6 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 			sortBy,
 			sortOrder,
 			currentPage: Math.max(1, currentPage),
-			showAll: false, // 常にfalse
 		});
 	},
 
@@ -182,8 +165,6 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		if (currentPage > 1) {
 			params.set("page", currentPage.toString());
 		}
-
-		// showAllはURLに含めない
 
 		return params;
 	},

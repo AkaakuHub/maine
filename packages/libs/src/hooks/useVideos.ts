@@ -24,7 +24,6 @@ interface UseVideosOptions {
 	sorting?: UseVideosSorting;
 	pagination?: UseVideosPagination;
 	enabled?: boolean;
-	loadAll?: boolean; // 明示的な一覧読み込みフラグ
 }
 
 interface UseVideosReturn {
@@ -46,9 +45,8 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 	const {
 		filters = {},
 		sorting = { sortBy: "title", sortOrder: "asc" },
-		pagination = { page: 1, limit: 20 }, // デフォルト値を削減
+		pagination = { page: 1, limit: 20 },
 		enabled = true,
-		loadAll = false,
 	} = options;
 	const [videos, setVideos] = useState<VideoFileData[]>([]);
 	const [loading, setLoading] = useState(false); // 初期状態はfalseに変更
@@ -64,12 +62,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 	const searchParams = useMemo(() => {
 		const params = new URLSearchParams();
 
-		// 明示的な一覧読み込みフラグ
-		if (loadAll) {
-			params.set("loadAll", "true");
-		}
-
-		if (filters.search && filters.search.trim().length >= 2) {
+		if (filters.search) {
 			params.set("search", filters.search.trim());
 		}
 
@@ -79,7 +72,6 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 		params.set("limit", pagination.limit.toString());
 		return params.toString();
 	}, [
-		loadAll,
 		filters.search,
 		sorting.sortBy,
 		sorting.sortOrder,
@@ -89,22 +81,6 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 	// データを取得する関数
 	const fetchVideos = useCallback(async () => {
 		if (!enabled) {
-			return;
-		}
-
-		// 検索条件もloadAllフラグもない場合は何もしない
-		const hasSearchConditions =
-			(filters.search && filters.search.trim().length >= 2) || loadAll;
-
-		if (!hasSearchConditions) {
-			setVideos([]);
-			setPaginationInfo({
-				page: 1,
-				limit: pagination.limit,
-				total: 0,
-				totalPages: 0,
-			});
-			setLoading(false);
 			return;
 		}
 
@@ -154,7 +130,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 			setVideos(data.videos || []);
 			setPaginationInfo(
 				data.pagination || {
-					page: 1,
+					page: pagination.page,
 					limit: pagination.limit,
 					total: 0,
 					totalPages: 0,
@@ -173,7 +149,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 		} finally {
 			setLoading(false);
 		}
-	}, [enabled, searchParams, filters.search, loadAll, pagination.limit]);
+	}, [enabled, searchParams, pagination.limit, pagination.page]);
 
 	// 初期化とパラメータ変更時にデータを取得
 	useEffect(() => {

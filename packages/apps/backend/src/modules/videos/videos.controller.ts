@@ -68,7 +68,6 @@ export class VideosController {
 			const searchResult = await this.videosService.searchVideos(
 				query.search || "",
 				{
-					loadAll: query.loadAll,
 					sortBy: query.sortBy,
 					sortOrder: query.sortOrder as "asc" | "desc",
 					page: query.page,
@@ -131,13 +130,11 @@ export class VideosController {
 					(video) => video.filePath === query.search,
 				);
 
-				// ページネーション情報を計算
 				const page = query.page || 1;
 				const limit = query.limit || 20;
 				const total = filteredVideos.length;
 				const totalPages = Math.ceil(total / limit);
 
-				// フィルタリング結果でsearchResultを更新
 				return {
 					...searchResult,
 					videos: filteredVideos,
@@ -152,24 +149,12 @@ export class VideosController {
 				};
 			}
 
-			// ページネーション情報を計算
-			const page = query.page || 1;
-			const limit = query.limit || 20;
-			const total = accessibleVideos.length;
-			const totalPages = Math.ceil(total / limit);
-
 			// 権限チェック済みの動画を返す
 			return {
 				...searchResult,
 				videos: accessibleVideos,
 				totalFound: accessibleVideos.length,
 				message: `${accessibleVideos.length}件の動画が見つかりました`,
-				pagination: {
-					page,
-					limit,
-					total,
-					totalPages,
-				},
 			};
 		} catch (error) {
 			this.logger.error("Video search error:", error);

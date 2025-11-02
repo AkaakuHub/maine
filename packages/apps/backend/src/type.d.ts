@@ -1,3 +1,17 @@
+export type SearchResult = {
+	success: boolean;
+	videos: VideoData[];
+	totalFound: number;
+	message: string;
+	error?: string;
+	pagination?: {
+		page: number;
+		limit: number;
+		total: number;
+		totalPages: number;
+	};
+};
+
 // 再生進捗関連の型定義（現在の設計で使用）
 export interface VideoProgressData {
 	id: string;
