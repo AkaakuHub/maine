@@ -14,7 +14,7 @@ import { DatabaseModule } from "../common/database/database.module";
 		PassportModule,
 		JwtModule.register({
 			secret: process.env.JWT_SECRET || "maine-secret-key",
-			signOptions: { expiresIn: "24h" },
+			signOptions: { expiresIn: "6M" },
 		}),
 	],
 	controllers: [AuthController, PermissionsController],
