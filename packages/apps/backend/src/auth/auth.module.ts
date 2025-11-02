@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
@@ -10,11 +11,16 @@ import { DatabaseModule } from "../common/database/database.module";
 
 @Module({
 	imports: [
+		ConfigModule,
 		DatabaseModule,
 		PassportModule,
-		JwtModule.register({
-			secret: process.env.JWT_SECRET || "maine-secret-key",
-			signOptions: { expiresIn: "180d" },
+		JwtModule.registerAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: (configService: ConfigService) => ({
+				secret: configService.get<string>("JWT_SECRET"),
+				signOptions: { expiresIn: "180d" },
+			}),
 		}),
 	],
 	controllers: [AuthController, PermissionsController],
