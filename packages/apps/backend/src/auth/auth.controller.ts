@@ -77,14 +77,34 @@ export class AuthController {
 	}
 
 	@Get("check-user-exists")
-	@UseGuards(JwtAuthGuard)
-	async checkUserExists(@Request() req: RequestWithUser) {
-		const userId = req.user.id;
-		const userExists = await this.authService.checkUserExists(userId);
+	async checkUserExists(
+		@Request() req: { headers: { authorization?: string } },
+	) {
+		const authHeader = req.headers.authorization;
+		if (!authHeader || !authHeader.startsWith("Bearer ")) {
+			return {
+				exists: false,
+				userId: null,
+			};
+		}
 
-		return {
-			exists: userExists,
-			userId: userId,
-		};
+		try {
+			const token = authHeader.substring(7);
+			const decoded = JSON.parse(
+				Buffer.from(token.split(".")[1], "base64").toString(),
+			);
+			const userId = decoded.sub;
+			const userExists = await this.authService.checkUserExists(userId);
+
+			return {
+				exists: userExists,
+				userId: userId,
+			};
+		} catch {
+			return {
+				exists: false,
+				userId: null,
+			};
+		}
 	}
 }

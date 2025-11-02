@@ -5,6 +5,8 @@ import { PrismaService } from "../common/database/prisma.service";
 
 interface JwtPayload {
 	sub: string;
+	username: string;
+	role: string;
 	iat: number;
 	exp: number;
 }
