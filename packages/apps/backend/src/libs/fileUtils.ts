@@ -327,7 +327,9 @@ export class PlaylistDetector {
 		for (const baseDir of getVideoDirectories()) {
 			if (filePath.startsWith(baseDir)) {
 				const relativePath = path.relative(baseDir, filePath);
-				const pathParts = relativePath.split(path.sep);
+				// パス区切り文字を統一（WindowsでもPOSIX形式で扱う）
+				const normalizedPath = relativePath.replace(/\\/g, "/");
+				const pathParts = normalizedPath.split("/");
 
 				// 最初の階層のみをプレイリストとして判断
 				if (pathParts.length > 1) {
