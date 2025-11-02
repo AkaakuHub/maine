@@ -1,4 +1,4 @@
-import { PlaylistVideo } from "src/types/Playlist";
+import { PlaylistVideo } from "../../types/Playlist";
 
 // フルスクリーン用の型定義
 export interface HTMLVideoElementWithFullscreen extends HTMLVideoElement {
