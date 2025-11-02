@@ -70,23 +70,8 @@ export function useVideoProgress({
 
 			// 保存条件が満たされた場合の詳細ログ
 			if (shouldSaveByTime || shouldSaveByProgress || shouldSaveBySeek) {
-				console.log("Progress save conditions met:", {
-					currentTime,
-					currentProgress,
-					lastSavedTime,
-					lastSavedProgress,
-					timeDiff,
-					progressDiff,
-					shouldSaveByTime,
-					shouldSaveByProgress,
-					shouldSaveBySeek,
-					progressData,
-				});
-
 				try {
 					const result = await updateProgress(progressData);
-					console.log("Progress save result:", result);
-
 					if (result) {
 						lastSavedTimeRef.current = currentTime;
 						lastSavedProgressRef.current = currentProgress;
@@ -186,12 +171,8 @@ export function useVideoProgress({
 	const loadInitialProgress =
 		useCallback(async (): Promise<VideoProgressData | null> => {
 			if (!filePath) return null;
-
-			console.log("Loading initial progress for:", filePath);
 			try {
 				const progressData = await getProgress(filePath);
-				console.log("Initial progress data loaded:", progressData);
-
 				if (progressData) {
 					// VideoProgressData型に変換
 					const videoProgressData: VideoProgressData = {
@@ -204,10 +185,6 @@ export function useVideoProgress({
 					// 最終保存時間と進捗を初期化
 					lastSavedTimeRef.current = videoProgressData.watchTime ?? 0;
 					lastSavedProgressRef.current = videoProgressData.watchProgress ?? 0;
-					console.log("Progress initialized:", {
-						lastSavedTime: lastSavedTimeRef.current,
-						lastSavedProgress: lastSavedProgressRef.current,
-					});
 					return videoProgressData;
 				}
 			} catch (error) {

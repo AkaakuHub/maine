@@ -21,11 +21,7 @@ export function useProgress(): UseProgressReturn {
 			try {
 				setLoading(true);
 				setError(null);
-
-				console.log("Sending progress update request:", params);
 				const url = createApiUrl("/progress");
-				console.log("Request URL:", url);
-
 				const response = await fetch(url, {
 					method: "PUT",
 					headers: {
@@ -35,9 +31,6 @@ export function useProgress(): UseProgressReturn {
 					body: JSON.stringify(params),
 					signal: AbortSignal.timeout(30000),
 				});
-
-				console.log("Response status:", response.status, response.statusText);
-
 				if (!response.ok) {
 					const errorText = await response.text();
 					console.error("HTTP error response:", errorText);
@@ -45,8 +38,6 @@ export function useProgress(): UseProgressReturn {
 				}
 
 				const result = await response.json();
-				console.log("Response data:", result);
-
 				if (!result.success) {
 					throw new Error(result.error || "Failed to update progress");
 				}
@@ -68,29 +59,19 @@ export function useProgress(): UseProgressReturn {
 			try {
 				setLoading(true);
 				setError(null);
-
-				console.log("Getting progress for:", filePath);
 				const url = createApiUrl(
 					`/progress?filePath=${encodeURIComponent(filePath)}`,
 				);
-				console.log("Get progress URL:", url);
-
 				const response = await fetch(url, {
 					headers: AuthAPI.getAuthHeaders(),
 					signal: AbortSignal.timeout(30000),
 				});
-
-				console.log("Get progress response status:", response.status);
-
 				if (!response.ok) {
 					const errorText = await response.text();
 					console.error("Get progress HTTP error:", errorText);
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
-
 				const result = await response.json();
-				console.log("Get progress response data:", result);
-
 				if (!result.success) {
 					throw new Error(result.error || "Failed to get progress");
 				}

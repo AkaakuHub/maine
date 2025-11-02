@@ -239,8 +239,6 @@ export function useMediaSession({
 				// サムネイルがない場合はfaviconを使用
 				artwork = fallBackArray;
 			}
-
-			console.log("media sessionを設定:");
 			navigator.mediaSession.metadata = new MediaMetadata({
 				title: videoTitle,
 				artist: "Maine",
