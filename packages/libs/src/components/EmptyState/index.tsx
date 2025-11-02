@@ -1,13 +1,6 @@
 "use client";
 
-import {
-	Download,
-	Film,
-	FolderOpen,
-	Home,
-	RefreshCw,
-	Search,
-} from "lucide-react";
+import { Download, Film, FolderOpen, Home, Search } from "lucide-react";
 import { cn } from "../../libs/utils";
 import Button from "../ui/Button";
 
@@ -19,6 +12,7 @@ interface EmptyStateProps {
 		| "no-offline-videos"
 		| "video-not-found";
 	searchTerm?: string;
+	errorMessage?: string; // カスタムエラーメッセージ
 	onRetry?: () => void;
 	className?: string;
 }
@@ -26,6 +20,7 @@ interface EmptyStateProps {
 const EmptyState = ({
 	type,
 	searchTerm,
+	errorMessage,
 	onRetry,
 	className,
 }: EmptyStateProps) => {
@@ -41,14 +36,14 @@ const EmptyState = ({
 						</div>
 					),
 					action: onRetry ? (
-						<button
+						<Button
 							type="button"
 							onClick={onRetry}
 							className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary text-text rounded-lg transition-colors"
 						>
-							<RefreshCw className="h-4 w-4" />
-							データベースを更新
-						</button>
+							<Home className="h-4 w-4" />
+							ホームに戻る
+						</Button>
 					) : null,
 				};
 
@@ -74,21 +69,21 @@ const EmptyState = ({
 					title: "読み込みエラー",
 					description: (
 						<div className="space-y-2">
-							<p>動画データの読み込み中にエラーが発生しました。</p>
-							<p className="text-sm">
-								ネットワーク接続を確認して、再試行してください。
+							<p>
+								{errorMessage ||
+									"動画データの読み込み中にエラーが発生しました。"}
 							</p>
 						</div>
 					),
 					action: onRetry ? (
-						<button
+						<Button
 							type="button"
 							onClick={onRetry}
-							className="flex items-center gap-2 px-6 py-3 bg-error hover:bg-error text-text rounded-lg transition-colors"
+							className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary text-text rounded-lg transition-colors"
 						>
-							<RefreshCw className="h-4 w-4" />
-							再試行
-						</button>
+							<Home className="h-4 w-4" />
+							ホームに戻る
+						</Button>
 					) : null,
 				};
 
@@ -113,10 +108,7 @@ const EmptyState = ({
 					title: "動画が見つかりません",
 					description: (
 						<div className="space-y-2">
-							<p>お探しの動画は見つかりませんでした。</p>
-							<p className="text-sm">
-								動画が削除されたか、URLが変更されている可能性があります。
-							</p>
+							<p>{errorMessage || "お探しの動画は見つかりませんでした。"}</p>
 						</div>
 					),
 					action: onRetry ? (

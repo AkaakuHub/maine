@@ -164,6 +164,7 @@ export default function PlayPage() {
 				{/* 動画が見つからない表示 */}
 				<EmptyState
 					type="video-not-found"
+					errorMessage={error}
 					onRetry={handleGoHome}
 					className="flex-1"
 				/>
@@ -185,6 +186,7 @@ export default function PlayPage() {
 				{/* 動画再生エラー表示 */}
 				<EmptyState
 					type="video-not-found"
+					errorMessage={videoError}
 					onRetry={handleGoHome}
 					className="flex-1"
 				/>
@@ -206,7 +208,8 @@ export default function PlayPage() {
 				{/* 読み込みエラー表示 */}
 				<EmptyState
 					type="loading-error"
-					onRetry={() => window.location.reload()}
+					errorMessage={error}
+					onRetry={handleGoHome}
 					className="flex-1"
 				/>
 			</div>

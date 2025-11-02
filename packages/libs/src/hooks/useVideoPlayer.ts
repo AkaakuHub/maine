@@ -6,6 +6,7 @@ import type { VideoFileData } from "../type";
 import type { VideoInfoType } from "../types/VideoInfo";
 import { createApiUrl } from "../utils/api";
 import { useVideoProgress } from "./useVideoProgress";
+import { AuthAPI } from "../api/auth";
 
 export function useVideoPlayer({
 	videoId,
@@ -67,9 +68,23 @@ export function useVideoPlayer({
 		async (id: string) => {
 			try {
 				setError(null);
-				const response = await fetch(createApiUrl(`/videos/by-video-id/${id}`));
+				const response = await fetch(
+					createApiUrl(`/videos/by-video-id/${id}`),
+					{
+						headers: AuthAPI.getAuthHeaders(),
+					},
+				);
 
 				if (!response.ok) {
+					// 401/403エラーの場合は権限なしエラーメッセージを設定
+					if (response.status === 401) {
+						setError("認証が必要です");
+						return;
+					}
+					if (response.status === 403) {
+						setError("この動画にアクセスする権限がありません");
+						return;
+					}
 					// 404エラーの場合は特別なエラーメッセージを設定
 					if (response.status === 404) {
 						setError("Video not found");
