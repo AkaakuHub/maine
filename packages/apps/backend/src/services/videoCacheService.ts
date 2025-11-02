@@ -150,9 +150,6 @@ class VideoCacheService {
 							updatedAt: detected.updatedAt,
 						},
 					});
-					console.log(
-						`✨ Created new playlist: ${detected.name} (${detected.path})`,
-					);
 				}
 			}
 
@@ -164,9 +161,6 @@ class VideoCacheService {
 						where: { id: existing.id },
 						data: { isActive: false },
 					});
-					console.log(
-						`🗑️ Deactivated playlist: ${existing.name} (${existing.path})`,
-					);
 				}
 			}
 		} catch (error) {
@@ -242,22 +236,13 @@ class VideoCacheService {
 			this.progressCalculator.startTotalTimer();
 
 			// 1. プレイリストを検出して同期
-			console.log("Detecting and syncing playlists...");
 			const videoDirectories = getVideoDirectories();
 			const detectedPlaylists =
 				await this.playlistDetector.detectPlaylists(videoDirectories);
 			await this.syncPlaylists(detectedPlaylists);
-			console.log(`Synced ${detectedPlaylists.length} playlists`);
 
 			// 2. StreamProcessorをプレイリスト情報で初期化
 			this.initializeStreamProcessorWithPlaylists(detectedPlaylists);
-
-			// チェックポイントから再開可能かチェック
-			const checkpoint = await this.checkpointManager.getValidCheckpoint();
-			if (checkpoint) {
-				console.log(`📍 Resuming from checkpoint: ${checkpoint.phase} phase`);
-			}
-
 			return await this.performFullScan(scanId);
 		} catch (error) {
 			sseStore.broadcast({
@@ -442,9 +427,6 @@ class VideoCacheService {
 
 		// Phase 2.2: 未変更ファイルにもプレイリストを割り当て
 		if (unchangedFiles.length > 0) {
-			console.log(
-				`Processing playlist assignments for ${unchangedFiles.length} unchanged files`,
-			);
 			const playlistUpdatedRecords = await this.updatePlaylistForUnchangedFiles(
 				unchangedFiles,
 				unchangedRecords,
@@ -454,9 +436,6 @@ class VideoCacheService {
 				0,
 				unchangedRecords.length,
 				...playlistUpdatedRecords,
-			);
-			console.log(
-				`Updated playlist assignments for ${playlistUpdatedRecords.length} unchanged files`,
 			);
 		}
 
@@ -569,17 +548,6 @@ class VideoCacheService {
 				this.detectedPlaylists,
 			);
 
-			// デバッグログ
-			if (playlist) {
-				console.log(
-					`Assigned playlist to unchanged file: ${playlist.name} (${playlist.id}) for ${videoFile.fileName}`,
-				);
-			} else {
-				console.log(
-					`No playlist assigned for unchanged file: ${videoFile.fileName}`,
-				);
-			}
-
 			// プレイリスト情報のみ更新
 			updatedRecords.push({
 				...existingRecord,
@@ -646,15 +614,6 @@ class VideoCacheService {
 					videoFile.filePath,
 					this.detectedPlaylists,
 				);
-
-				// デバッグログ
-				if (playlist) {
-					console.log(
-						`Assigned playlist: ${playlist.name} (${playlist.id}) to ${videoFile.fileName}`,
-					);
-				} else {
-					console.log(`No playlist assigned for: ${videoFile.fileName}`);
-				}
 
 				const videoId = await generateFileContentHash(videoFile.filePath);
 				records.push({
@@ -775,10 +734,6 @@ class VideoCacheService {
 
 					// 6. プレイリスト関連を処理
 					if (record.playlistId) {
-						console.log(
-							`Creating playlist relation: videoId=${record.videoId}, playlistId=${record.playlistId}`,
-						);
-
 						// 既存のVideoPlaylist関係を確認
 						const existingRelation = await tx.videoPlaylist.findFirst({
 							where: {
@@ -795,11 +750,6 @@ class VideoCacheService {
 									playlistId: record.playlistId,
 								},
 							});
-							console.log(`Created playlist relation for: ${record.fileName}`);
-						} else {
-							console.log(
-								`Playlist relation already exists for: ${record.fileName}`,
-							);
 						}
 					} else {
 						console.log(`No playlistId for video: ${record.fileName}`);

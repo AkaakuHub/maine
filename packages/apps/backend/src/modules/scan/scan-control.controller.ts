@@ -70,8 +70,6 @@ export class ScanControlController {
 			};
 			sseStore.broadcast(event);
 
-			console.log(`🎛️ Scan control API: ${body.action} for scan ${body.scanId}`);
-
 			return {
 				success: true,
 				action: body.action,

@@ -135,8 +135,43 @@ export class AuthService {
 	}
 
 	async hasExistingUsers(): Promise<boolean> {
-		const userCount = await this.prisma.user.count();
-		return userCount > 0;
+		try {
+			// DB接続チェック
+			await this.prisma.$queryRaw`SELECT 1`;
+			// ユーザーテーブル存在チェック
+			const tableExists = (await this.prisma.$queryRaw`
+				SELECT name FROM sqlite_master
+				WHERE type='table' AND name='users'
+			`) as Array<{ name: string }>;
+
+			if (tableExists.length === 0) {
+				return false;
+			}
+
+			// ユーザー数チェック
+			let userCount = 0;
+			try {
+				userCount = await this.prisma.user.count();
+			} catch (countError) {
+				console.warn(
+					"User count check failed:",
+					countError instanceof Error ? countError.message : "Unknown error",
+				);
+				// 直接SQLでユーザー数を確認
+				const directCount = (await this.prisma.$queryRaw`
+					SELECT COUNT(*) as count FROM users
+				`) as Array<{ count: number }>;
+				userCount = directCount[0]?.count || 0;
+			}
+			return userCount > 0;
+		} catch (error) {
+			// DB接続エラーやテーブル不存在の場合はfalseを返す
+			if (error instanceof Error) {
+				console.warn("First user check failed:", error.message);
+			}
+			console.log("Error case: returning false");
+			return false;
+		}
 	}
 
 	async registerFirstUser(firstUserDto: FirstUserDto) {
@@ -184,36 +219,5 @@ export class AuthService {
 				role: user.role,
 			},
 		};
-	}
-
-	async createDefaultAdmin() {
-		// 既存の管理者ユーザーをチェック
-		const existingAdmin = await this.prisma.user.findFirst({
-			where: { role: "ADMIN" },
-		});
-
-		if (existingAdmin) {
-			return existingAdmin;
-		}
-
-		// デフォルト管理者ユーザーの作成
-		const defaultPassword = "admin123";
-		const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-
-		const adminUser = await this.prisma.user.create({
-			data: {
-				username: "admin",
-				email: "admin@maine.local",
-				passwordHash: hashedPassword,
-				role: "ADMIN",
-			},
-		});
-
-		console.log("デフォルト管理者ユーザーを作成しました:");
-		console.log("ユーザー名: admin");
-		console.log("パスワード: admin123");
-		console.log("※初回ログイン後にパスワードを変更してください");
-
-		return adminUser;
 	}
 }

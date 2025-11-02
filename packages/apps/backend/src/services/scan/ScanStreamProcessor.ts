@@ -124,15 +124,6 @@ export class ScanStreamProcessor {
 						self.playlists,
 					);
 
-					// デバッグログ
-					if (playlist) {
-						console.log(
-							`📁 Assigned playlist: ${playlist.name} (${playlist.id}) to ${videoFile.fileName}`,
-						);
-					} else {
-						console.log(`⚠️ No playlist assigned for: ${videoFile.fileName}`);
-					}
-
 					// DBレコードとして準備
 					const videoId = await generateFileContentHash(videoFile.filePath);
 					const record: ProcessedVideoRecord = {
@@ -155,10 +146,6 @@ export class ScanStreamProcessor {
 
 					// プログレス更新（設定された間隔で）
 					if (processedCount % self.settings.progressUpdateInterval === 0) {
-						console.log(
-							`🌊 Stream processing: ${processedCount}/${allVideoFiles.length} processed`,
-						);
-
 						// メモリ使用量をチェック
 						const memUsage = self.getMemoryUsage();
 						if (memUsage.used > self.settings.memoryThresholdMB) {
@@ -223,10 +210,6 @@ export class ScanStreamProcessor {
 		// ストリームパイプライン実行
 		try {
 			await pipeline(fileStream, metadataTransform, collectStream);
-
-			console.log(
-				`Stream processing completed: ${results.length} files processed`,
-			);
 
 			return results;
 		} catch (error) {

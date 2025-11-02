@@ -9,25 +9,33 @@ import {
 } from "@nestjs/common";
 import type { RequestWithUser } from "./types/request.types";
 import { AuthService } from "./auth.service";
-import { MigrationService } from "./migration.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { FirstUserDto } from "./dto/first-user.dto";
 import { JwtAuthGuard } from "./jwt-auth.guard";
-import { Roles } from "./decorators/roles.decorator";
-import { RolesGuard } from "./roles.guard";
 
 @Controller("auth")
 export class AuthController {
-	constructor(
-		private readonly authService: AuthService,
-		private readonly migrationService: MigrationService,
-	) {}
+	constructor(private readonly authService: AuthService) {}
 
 	@Get("check-first-user")
 	async checkFirstUser() {
-		const hasExistingUsers = await this.authService.hasExistingUsers();
-		return { isFirstUser: !hasExistingUsers };
+		try {
+			const hasExistingUsers = await this.authService.hasExistingUsers();
+			return {
+				isFirstUser: !hasExistingUsers,
+				databaseReady: true,
+				message: hasExistingUsers
+					? "既存ユーザーが存在します"
+					: "最初のユーザーを登録してください",
+			};
+		} catch {
+			return {
+				isFirstUser: true,
+				databaseReady: false,
+				message: "データベースの準備ができていません",
+			};
+		}
 	}
 
 	@Post("first-user")
@@ -66,17 +74,5 @@ export class AuthController {
 			valid: true,
 			user: req.user,
 		};
-	}
-
-	@Post("create-admin")
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Roles("ADMIN")
-	async createAdmin() {
-		return this.authService.createDefaultAdmin();
-	}
-
-	@Post("migrate")
-	async migrateData() {
-		return this.migrationService.migrateExistingData();
 	}
 }

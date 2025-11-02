@@ -51,7 +51,11 @@ export const AuthAPI = {
 		return token ? { Authorization: `Bearer ${token}` } : {};
 	},
 
-	async checkFirstUser(): Promise<{ isFirstUser: boolean }> {
+	async checkFirstUser(): Promise<{
+		isFirstUser: boolean;
+		databaseReady: boolean;
+		message: string;
+	}> {
 		const response = await fetch(createApiUrl("auth/check-first-user"));
 		if (!response.ok) {
 			throw new Error("初回ユーザーチェックに失敗しました");

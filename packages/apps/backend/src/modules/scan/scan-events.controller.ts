@@ -45,7 +45,6 @@ export class SseController {
 
 				// SSE Connection Storeに接続を登録
 				sseStore.addConnection(connection);
-				console.log("SSE connection registered");
 
 				// 接続確立メッセージを送信
 				const encoder = new TextEncoder();

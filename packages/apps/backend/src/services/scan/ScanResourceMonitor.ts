@@ -76,9 +76,6 @@ export class ScanResourceMonitor {
 				Math.floor(batchSize * SCAN.BATCH_SIZE_REDUCTION_RATIO),
 				SCAN.MIN_BATCH_SIZE_AFTER_REDUCTION,
 			);
-			console.log(
-				`📉 Reducing batch size due to high memory usage: ${batchSize} (Memory: ${memUsage.used}MB, ${memUsage.usagePercent}%)`,
-			);
 		} else if (
 			memUsage.usagePercent < SCAN.MEMORY_LOW_THRESHOLD &&
 			this.memoryUsageHistory.length >= 3
@@ -91,9 +88,6 @@ export class ScanResourceMonitor {
 				batchSize = Math.min(
 					Math.floor(batchSize * SCAN.BATCH_SIZE_INCREASE_RATIO),
 					SCAN.MAX_BATCH_SIZE,
-				);
-				console.log(
-					`📈 Increasing batch size due to low memory usage: ${batchSize} (Avg Memory: ${Math.round(avgUsage)}MB)`,
 				);
 			}
 		}

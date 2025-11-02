@@ -4,7 +4,6 @@ import { PassportModule } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { JwtStrategy } from "./jwt.strategy";
-import { MigrationService } from "./migration.service";
 import { PermissionsService } from "./permissions.service";
 import { PermissionsController } from "./permissions.controller";
 import { DatabaseModule } from "../common/database/database.module";
@@ -19,7 +18,7 @@ import { DatabaseModule } from "../common/database/database.module";
 		}),
 	],
 	controllers: [AuthController, PermissionsController],
-	providers: [AuthService, JwtStrategy, MigrationService, PermissionsService],
-	exports: [AuthService, MigrationService, PermissionsService],
+	providers: [AuthService, JwtStrategy, PermissionsService],
+	exports: [AuthService, PermissionsService],
 })
 export class AuthModule {}

@@ -70,11 +70,6 @@ export class ThumbnailGenerator {
 						fileSize: thumbnailStat.size,
 					};
 				}
-
-				// サムネイルが古い場合は再生成（下に続く）
-				console.log(
-					`サムネイル更新: ${videoFilePath} (ビデオファイルが更新されました)`,
-				);
 			}
 
 			// 動画と同じ名前の.webpファイルが存在するかチェック
@@ -210,7 +205,6 @@ export class ThumbnailGenerator {
 		const webpPath = `${videoBaseName}.webp`;
 
 		if (existsSync(webpPath)) {
-			console.log(`既存のwebpファイルを発見: ${webpPath}`);
 			return webpPath;
 		}
 
@@ -236,7 +230,6 @@ export class ThumbnailGenerator {
 			const stat = await import("node:fs/promises").then((fs) =>
 				fs.stat(destinationPath),
 			);
-
 			console.log(
 				`既存webpファイルをコピー: ${sourcePath} -> ${destinationPath}`,
 			);

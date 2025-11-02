@@ -28,6 +28,11 @@ function LoginContent() {
 				if (result.isFirstUser) {
 					setIsLogin(false);
 				}
+
+				// DB準備ができていない場合のメッセージ表示
+				if (!result.databaseReady) {
+					console.warn("Database not ready:", result.message);
+				}
 			} catch (error) {
 				console.error("初回ユーザーチェック失敗:", error);
 				// エラーの場合は通常のログイン表示
