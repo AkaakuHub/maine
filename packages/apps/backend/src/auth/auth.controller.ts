@@ -75,16 +75,4 @@ export class AuthController {
 			user: req.user,
 		};
 	}
-
-	@Get("check-user-exists")
-	@UseGuards(JwtAuthGuard)
-	async checkUserExists(@Request() req: RequestWithUser) {
-		const userId = req.user.id;
-		const userExists = await this.authService.checkUserExists(userId);
-
-		return {
-			exists: userExists,
-			userId: userId,
-		};
-	}
 }
