@@ -14,6 +14,8 @@ import type { Request as ExpressRequest } from "express";
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 import { PermissionsService } from "../../auth/permissions.service";
 import { PrismaService } from "../../common/database/prisma.service";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 @ApiTags("playlists")
 @Controller("playlists")
@@ -25,6 +27,42 @@ export class PlaylistsController {
 		private readonly permissionsService: PermissionsService,
 		private readonly prisma: PrismaService,
 	) {}
+
+	/**
+	 * 動画のタイムスタンプを取得（.info.jsonがあればその値、なければファイルの更新日時）
+	 */
+	private async getVideoTimestamp(video: {
+		filePath: string;
+		lastModified: Date;
+	}): Promise<number> {
+		try {
+			// .info.json ファイルを検索
+			const videoDir = path.dirname(video.filePath);
+			const videoName = path.basename(
+				video.filePath,
+				path.extname(video.filePath),
+			);
+			const infoJsonPath = path.join(videoDir, `${videoName}.info.json`);
+
+			if (fs.existsSync(infoJsonPath)) {
+				const infoContent = fs.readFileSync(infoJsonPath, "utf8");
+				const infoJson = JSON.parse(infoContent);
+
+				// timestampフィールドがあればUNIXタイムスタンプとして使用
+				if (infoJson.timestamp) {
+					return typeof infoJson.timestamp === "number"
+						? infoJson.timestamp
+						: new Date(infoJson.timestamp).getTime();
+				}
+			}
+
+			// ファイルの更新日時をミリ秒に変換して返す
+			return video.lastModified.getTime();
+		} catch (error) {
+			this.logger.warn(`Failed to get timestamp for ${video.filePath}:`, error);
+			return video.lastModified.getTime();
+		}
+	}
 
 	@Get()
 	@ApiResponse({ status: 200, description: "プレイリスト一覧取得成功" })
@@ -198,6 +236,7 @@ export class PlaylistsController {
 				thumbnailPath: string | null;
 				videoId: string | null;
 				addedAt: Date;
+				timestamp: number;
 			}> = [];
 			for (const videoRelation of playlist.videos) {
 				const pathParts = videoRelation.video.filePath.split("/");
@@ -212,6 +251,7 @@ export class PlaylistsController {
 				);
 
 				if (hasAccess) {
+					const timestamp = await this.getVideoTimestamp(videoRelation.video);
 					accessibleVideos.push({
 						id: videoRelation.video.id,
 						filePath: videoRelation.video.filePath,
@@ -223,9 +263,13 @@ export class PlaylistsController {
 						thumbnailPath: videoRelation.video.thumbnail_path,
 						videoId: videoRelation.video.videoId,
 						addedAt: videoRelation.addedAt,
+						timestamp,
 					});
 				}
 			}
+
+			// タイムスタンプでソート（古い順）
+			accessibleVideos.sort((a, b) => a.timestamp - b.timestamp);
 
 			return {
 				success: true,
