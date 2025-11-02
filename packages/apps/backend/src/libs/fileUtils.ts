@@ -202,17 +202,35 @@ export class PlaylistDetector {
 	 */
 	async detectPlaylists(videoDirectories: string[]): Promise<PlaylistData[]> {
 		const playlists = new Map<string, PlaylistData>();
+
+		console.log(
+			`Detecting playlists in directories: ${videoDirectories.join(", ")}`,
+		);
+
 		for (const baseDir of videoDirectories) {
 			try {
 				// ディレクトリの存在確認
 				await fs.access(baseDir, fs.constants.R_OK);
+				console.log(`Scanning base directory: ${baseDir}`);
+
 				// 直接の子ディレクトリのみをスキャン
 				const immediateSubdirs = await this.getImmediateSubdirectories(baseDir);
+				console.log(
+					`Found ${immediateSubdirs.length} immediate subdirectories: ${immediateSubdirs.join(", ")}`,
+				);
+
 				for (const subdir of immediateSubdirs) {
 					const relativePath = path.relative(baseDir, subdir);
 					const playlistName = path.basename(subdir);
+
+					console.log(
+						`Checking subdirectory: ${subdir} (relative: ${relativePath}, name: ${playlistName})`,
+					);
+
 					// このディレクトリに動画ファイルが含まれているか確認
 					const hasVideos = await this.hasVideoFiles(subdir);
+					console.log(`Has videos in ${playlistName}: ${hasVideos}`);
+
 					if (hasVideos) {
 						const playlistData: PlaylistData = {
 							id: this.generatePlaylistId(relativePath),
@@ -225,6 +243,9 @@ export class PlaylistDetector {
 							isActive: true,
 						};
 						playlists.set(relativePath, playlistData);
+						console.log(
+							`Created playlist: ${playlistName} (${playlistData.id}) with path: ${relativePath}`,
+						);
 					}
 				}
 			} catch (error) {
@@ -233,6 +254,10 @@ export class PlaylistDetector {
 		}
 
 		const result = Array.from(playlists.values());
+		console.log(`Total playlists detected: ${result.length}`);
+		for (const p of result) {
+			console.log(`  - ${p.name} (${p.path})`);
+		}
 
 		return result;
 	}
@@ -325,8 +350,15 @@ export class PlaylistDetector {
 		playlists: PlaylistData[],
 	): PlaylistData | null {
 		for (const baseDir of getVideoDirectories()) {
-			if (filePath.startsWith(baseDir)) {
-				const relativePath = path.relative(baseDir, filePath);
+			// 両方のパスを正規化して比較
+			const normalizedBaseDir = normalizePath(baseDir);
+			const normalizedFilePath = normalizePath(filePath);
+
+			if (normalizedFilePath.startsWith(normalizedBaseDir)) {
+				const relativePath = path.relative(
+					normalizedBaseDir,
+					normalizedFilePath,
+				);
 				// パス区切り文字を統一（WindowsでもPOSIX形式で扱う）
 				const normalizedPath = relativePath.replace(/\\/g, "/");
 				const pathParts = normalizedPath.split("/");
