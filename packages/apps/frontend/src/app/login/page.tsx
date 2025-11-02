@@ -112,7 +112,7 @@ function LoginContent() {
 						{isFirstUser && (
 							<div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-md">
 								<p className="text-sm text-primary font-medium">
-									🎉 初回アクセス！管理者アカウントを作成します
+									初回アクセスのため、管理者アカウントを作成します
 								</p>
 							</div>
 						)}

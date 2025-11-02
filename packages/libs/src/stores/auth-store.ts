@@ -7,12 +7,14 @@ const authState: {
 	isLoading: boolean;
 	isAuthenticated: boolean;
 	error: string | null;
+	userExists: boolean | null; // null = 未チェック
 	listeners: Array<() => void>;
 } = {
 	user: null,
 	isLoading: false,
 	isAuthenticated: false,
 	error: null,
+	userExists: null,
 	listeners: [],
 };
 
@@ -76,6 +78,7 @@ export const useAuthStore = () => {
 		isLoading: authState.isLoading,
 		isAuthenticated: authState.isAuthenticated,
 		error: authState.error,
+		userExists: authState.userExists,
 
 		// アクション
 		login: async (username: string, password: string) => {
@@ -163,6 +166,7 @@ export const useAuthStore = () => {
 			authState.isAuthenticated = false;
 			authState.error = null;
 			authState.isLoading = false;
+			authState.userExists = null;
 			if (typeof window !== "undefined") {
 				localStorage.removeItem(STORAGE_KEY);
 			}
@@ -204,6 +208,26 @@ export const useAuthStore = () => {
 				authState.isLoading = false;
 				authState.error = null;
 				notifyListeners();
+			}
+		},
+
+		checkUserExists: async (): Promise<boolean> => {
+			if (!AuthAPI.isAuthenticated()) {
+				authState.userExists = false;
+				notifyListeners();
+				return false;
+			}
+
+			try {
+				const response = await AuthAPI.checkUserExists();
+				authState.userExists = response.exists;
+				notifyListeners();
+				return response.exists;
+			} catch (_error) {
+				// エラーの場合は存在しないとみなす
+				authState.userExists = false;
+				notifyListeners();
+				return false;
 			}
 		},
 

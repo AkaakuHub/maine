@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../../stores/auth-store";
+import { useUserExistCheck } from "../../hooks/use-user-exist-check";
 
 interface AuthGuardProps {
 	children: React.ReactNode;
@@ -19,6 +20,7 @@ export function AuthGuard({
 	onRedirect,
 }: AuthGuardProps) {
 	const { isAuthenticated, isLoading, checkAuth, user } = useAuthStore();
+	const { isCheckingUserExists } = useUserExistCheck();
 	const [isChecking, setIsChecking] = useState(true);
 	const hasCheckedRef = useRef(false);
 
@@ -58,7 +60,7 @@ export function AuthGuard({
 	]);
 
 	// ローディング中
-	if (isLoading || isChecking) {
+	if (isLoading || isChecking || isCheckingUserExists) {
 		return (
 			<div className="min-h-screen bg-surface-variant flex items-center justify-center">
 				<div className="text-center">

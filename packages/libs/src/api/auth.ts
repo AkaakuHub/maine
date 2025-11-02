@@ -169,4 +169,20 @@ export const AuthAPI = {
 
 		return response.json();
 	},
+
+	// ユーザー存在チェックAPI
+	async checkUserExists(): Promise<{
+		exists: boolean;
+		userId: string;
+	}> {
+		const response = await fetch(createApiUrl("auth/check-user-exists"), {
+			headers: this.getAuthHeaders(),
+		});
+
+		if (!response.ok) {
+			throw new Error("ユーザー存在チェックに失敗しました");
+		}
+
+		return response.json();
+	},
 };
