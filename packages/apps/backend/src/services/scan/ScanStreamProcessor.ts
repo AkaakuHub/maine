@@ -7,7 +7,11 @@ import { FFprobeMetadataExtractor } from "../../services/FFprobeMetadataExtracto
 import { ThumbnailGenerator } from "../../services/ThumbnailGenerator";
 import type { ScanProgressEvent } from "../../common/sse/sse-connection.store";
 import { sseStore } from "../../common/sse/sse-connection.store";
-import * as crypto from "node:crypto";
+import {
+	PlaylistDetector,
+	generateFileContentHash,
+} from "../../libs/fileUtils";
+import type { PlaylistData } from "../../libs/fileUtils";
 
 export interface ProcessedVideoRecord {
 	id: string;
@@ -21,6 +25,8 @@ export interface ProcessedVideoRecord {
 	thumbnailPath: string | null;
 	lastModified: Date;
 	videoId: string; // SHA-256ハッシュID (32文字)
+	playlistId?: string;
+	playlistName?: string;
 }
 
 export interface VideoFile {
@@ -35,6 +41,7 @@ export interface VideoFile {
 export class ScanStreamProcessor {
 	private ffprobeExtractor: FFprobeMetadataExtractor;
 	private thumbnailGenerator: ThumbnailGenerator;
+	private playlistDetector: PlaylistDetector;
 
 	constructor(
 		private settings: ScanSettings,
@@ -55,9 +62,11 @@ export class ScanStreamProcessor {
 		},
 		private phaseStartTime: number | null,
 		private extractEpisode: (fileName: string) => number | undefined,
+		private playlists: PlaylistData[] = [],
 	) {
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
 		this.thumbnailGenerator = new ThumbnailGenerator("./data/thumbnails");
+		this.playlistDetector = new PlaylistDetector();
 	}
 
 	/**
@@ -109,11 +118,23 @@ export class ScanStreamProcessor {
 					// 既存のパーサーを使用してタイトル情報抽出
 					const parsedInfo = parseVideoFileName(videoFile.fileName);
 
+					// プレイリストの割り当て
+					const playlist = self.playlistDetector.assignPlaylist(
+						videoFile.filePath,
+						self.playlists,
+					);
+
+					// デバッグログ
+					if (playlist) {
+						console.log(
+							`📁 Assigned playlist: ${playlist.name} (${playlist.id}) to ${videoFile.fileName}`,
+						);
+					} else {
+						console.log(`⚠️ No playlist assigned for: ${videoFile.fileName}`);
+					}
+
 					// DBレコードとして準備
-					const videoId = crypto
-						.createHash("sha256")
-						.update(videoFile.filePath)
-						.digest("hex");
+					const videoId = await generateFileContentHash(videoFile.filePath);
 					const record: ProcessedVideoRecord = {
 						id: videoFile.filePath,
 						filePath: videoFile.filePath,
@@ -126,6 +147,8 @@ export class ScanStreamProcessor {
 						thumbnailPath,
 						lastModified: metadata.lastModified,
 						videoId, // SHA-256ハッシュID (32文字)
+						playlistId: playlist?.id,
+						playlistName: playlist?.name,
 					};
 
 					processedCount++;

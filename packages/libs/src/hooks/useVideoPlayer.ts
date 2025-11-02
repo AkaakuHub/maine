@@ -7,6 +7,7 @@ import type { VideoInfoType } from "../types/VideoInfo";
 import { createApiUrl } from "../utils/api";
 import { useVideoProgress } from "./useVideoProgress";
 import { AuthAPI } from "../api/auth";
+import { usePlaylistVideos } from "./usePlaylists";
 
 export function useVideoPlayer({
 	videoId,
@@ -33,6 +34,13 @@ export function useVideoPlayer({
 	const [isLiked, setIsLiked] = useState<boolean>(false);
 	const [isInWatchlist, setIsInWatchlist] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+
+	// プレイリスト機能
+	const {
+		playlist,
+		videos: playlistVideos,
+		loading: playlistLoading,
+	} = usePlaylistVideos(videoData?.playlistId || "");
 
 	// ビデオ進捗管理（定期保存 + 離脱時保存）
 	const videoProgressHook = useVideoProgress({
@@ -291,5 +299,9 @@ export function useVideoPlayer({
 		progressLoading: videoProgressHook.loading,
 		progressError: videoProgressHook.error,
 		hasUnsavedProgress: videoProgressHook.hasUnsavedChanges,
+		// プレイリスト機能
+		playlist,
+		playlistVideos,
+		playlistLoading,
 	};
 }

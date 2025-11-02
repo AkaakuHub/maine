@@ -77,7 +77,8 @@ export class VideoController {
 			const downloadMode = isDownload === "true";
 
 			// videoIdから動画メタデータを取得
-			const videoData = await this.videosService.getVideoByVideoId(videoId);
+			const result = await this.videosService.getVideoByVideoIdForApi(videoId);
+			const videoData = result.success ? result.video : null;
 
 			if (!videoData) {
 				res.status(404).json({

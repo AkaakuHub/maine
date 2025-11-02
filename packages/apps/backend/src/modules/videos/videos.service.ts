@@ -2,7 +2,7 @@ import { PAGINATION } from "../../utils";
 import { Injectable, Logger } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
-import * as crypto from "node:crypto";
+import { generateFileContentHash } from "../../libs/fileUtils";
 import * as fs from "node:fs";
 
 export interface VideoData {
@@ -19,6 +19,8 @@ export interface VideoData {
 	thumbnailPath: string | undefined | null;
 	metadataExtractedAt: Date | null;
 	videoId: string | null; // SHA-256ハッシュID (64文字)
+	playlistId?: string | null; // プレイリストID
+	playlistName?: string | null; // プレイリスト名
 }
 
 type SearchResult = {
@@ -36,65 +38,12 @@ export class VideosService {
 	constructor(private readonly prisma: PrismaService) {}
 
 	/**
-	 * ファイルパスからSHA-256ハッシュを生成
+	 * ファイルコンテンツからSHA-256ハッシュを生成
 	 * @param filePath 動画ファイルのフルパス
 	 * @returns 64文字のSHA-256ハッシュ文字列
 	 */
-	generateVideoId(filePath: string): string {
-		return crypto.createHash("sha256").update(filePath).digest("hex");
-	}
-
-	/**
-	 * videoIdからVideoMetadataを取得
-	 * @param videoId 64文字のSHA-256ハッシュID
-	 * @returns VideoMetadata or null
-	 */
-	async getVideoByVideoId(videoId: string): Promise<VideoData | null> {
-		try {
-			this.logger.log(`Getting video with videoId: ${videoId}`);
-
-			const video = await this.prisma.videoMetadata.findUnique({
-				where: { videoId },
-				select: {
-					id: true,
-					title: true,
-					fileName: true,
-					filePath: true,
-					fileSize: true,
-					episode: true,
-					year: true,
-					lastModified: true,
-					duration: true,
-					scannedAt: true,
-					thumbnail_path: true,
-					metadata_extracted_at: true,
-					videoId: true,
-				},
-			});
-
-			if (!video) {
-				return null;
-			}
-
-			return {
-				id: video.id,
-				title: video.title,
-				fileName: video.fileName,
-				filePath: video.filePath,
-				fileSize: video.fileSize ? Number(video.fileSize) : 0,
-				lastModified: video.lastModified,
-				episode: video.episode,
-				year: video.year ? video.year.toString() : null,
-				duration: video.duration,
-				scannedAt: video.scannedAt,
-				thumbnailPath: video.thumbnail_path,
-				metadataExtractedAt: video.metadata_extracted_at,
-				videoId: video.videoId,
-			};
-		} catch (error) {
-			this.logger.error("Error getting video by videoId:", error);
-			throw error;
-		}
+	async generateVideoId(filePath: string): Promise<string> {
+		return await generateFileContentHash(filePath);
 	}
 
 	/**
@@ -115,7 +64,7 @@ export class VideosService {
 
 			for (const video of videosWithoutId) {
 				try {
-					const videoId = this.generateVideoId(video.filePath);
+					const videoId = await this.generateVideoId(video.filePath);
 
 					await this.prisma.videoMetadata.update({
 						where: { id: video.id },
@@ -144,6 +93,99 @@ export class VideosService {
 		}
 	}
 
+	/**
+	 * 既存動画にプレイリストを一括設定（マイグレーション用）
+	 * @returns 処理した動画数
+	 */
+	async migrateExistingPlaylists(): Promise<number> {
+		this.logger.log("Starting migration of existing videos to playlists...");
+
+		try {
+			// プレイリスト検出器を使用して現在のプレイリストを取得
+			const { PlaylistDetector, getVideoDirectories } = await import(
+				"../../libs/fileUtils"
+			);
+			const playlistDetector = new PlaylistDetector();
+			const videoDirectories = getVideoDirectories();
+
+			this.logger.log(`Detecting playlists in: ${videoDirectories.join(", ")}`);
+			const detectedPlaylists =
+				await playlistDetector.detectPlaylists(videoDirectories);
+			this.logger.log(
+				`Found ${detectedPlaylists.length} playlists for migration`,
+			);
+
+			// 1. videoIdがある動画をすべて取得
+			const allVideos = await this.prisma.videoMetadata.findMany({
+				where: {
+					videoId: { not: null },
+				},
+				select: { id: true, filePath: true, fileName: true, videoId: true },
+			});
+
+			this.logger.log(
+				`Processing ${allVideos.length} videos for playlist assignment`,
+			);
+
+			let processedCount = 0;
+
+			for (const video of allVideos) {
+				try {
+					// PlaylistDetectorを使用してプレイリストを割り当て
+					const playlist = playlistDetector.assignPlaylist(
+						video.filePath,
+						detectedPlaylists,
+					);
+
+					if (playlist) {
+						// videoIdがnullの場合はスキップ
+						if (!video.videoId) {
+							this.logger.warn(
+								`Skipping video without videoId: ${video.fileName}`,
+							);
+							continue;
+						}
+
+						// 既存の関係を削除
+						await this.prisma.videoPlaylist.deleteMany({
+							where: { videoId: video.videoId },
+						});
+
+						// 新しい関係を作成
+						await this.prisma.videoPlaylist.create({
+							data: {
+								videoId: video.videoId,
+								playlistId: playlist.id,
+							},
+						});
+
+						processedCount++;
+						this.logger.log(
+							`Migrated playlist for video ${processedCount}/${allVideos.length}: ${video.fileName} -> ${playlist.name}`,
+						);
+					} else {
+						this.logger.log(
+							`No playlist assigned for video: ${video.fileName}`,
+						);
+					}
+				} catch (error) {
+					this.logger.error(
+						`Failed to migrate playlist for video: ${video.filePath}`,
+						error,
+					);
+				}
+			}
+
+			this.logger.log(
+				`Playlist migration completed. Processed ${processedCount} videos.`,
+			);
+			return processedCount;
+		} catch (error) {
+			this.logger.error("Playlist migration failed", error);
+			throw error;
+		}
+	}
+
 	// videoIdから動画情報を取得するAPIエンドポイント
 	async getVideoByVideoIdForApi(videoId: string) {
 		try {
@@ -151,11 +193,29 @@ export class VideosService {
 
 			const video = await this.prisma.videoMetadata.findUnique({
 				where: { videoId },
+				include: {
+					playlists: {
+						include: {
+							playlist: {
+								select: {
+									id: true,
+									name: true,
+									path: true,
+								},
+							},
+						},
+						take: 1, // 最初のプレイリストのみ取得
+					},
+				},
 			});
 
 			if (!video) {
 				return { success: false, error: "Video not found" };
 			}
+
+			// 最初のプレイリスト情報を取得
+			const firstPlaylist =
+				video.playlists.length > 0 ? video.playlists[0] : null;
 
 			const videoData: VideoData = {
 				id: video.id,
@@ -171,6 +231,8 @@ export class VideosService {
 				thumbnailPath: video.thumbnail_path,
 				metadataExtractedAt: video.metadata_extracted_at,
 				videoId: video.videoId,
+				playlistId: firstPlaylist?.playlist.id,
+				playlistName: firstPlaylist?.playlist.name,
 			};
 
 			return { success: true, video: videoData };

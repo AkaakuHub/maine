@@ -5,8 +5,10 @@ import HelpModal from "../../components/HelpModal";
 import ModernVideoPlayer from "../../components/ModernVideoPlayer";
 import type { VideoFileData } from "../../type";
 import type { VideoInfoType } from "../../types/VideoInfo";
+import type { PlaylistData, PlaylistVideo } from "../../types/Playlist";
 import RelatedVideos from "./RelatedVideos";
 import VideoInfo from "./VideoInfo";
+import { PlaylistVideoList } from "../PlaylistVideoList";
 
 interface ResponsiveVideoLayoutProps {
 	videoSrc: string;
@@ -24,6 +26,11 @@ interface ResponsiveVideoLayoutProps {
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
 	initialTime?: number;
 	onVideoError?: (error: string) => void;
+	// プレイリスト機能
+	playlist?: PlaylistData | null;
+	playlistVideos?: PlaylistVideo[];
+	playlistLoading?: boolean;
+	onVideoSelect?: (video: PlaylistVideo) => void;
 }
 
 export function ResponsiveVideoLayout({
@@ -42,6 +49,9 @@ export function ResponsiveVideoLayout({
 	onTimeUpdate,
 	initialTime,
 	onVideoError,
+	playlist,
+	playlistVideos,
+	onVideoSelect,
 }: ResponsiveVideoLayoutProps) {
 	const [showHelpModal, setShowHelpModal] = useState(false);
 
@@ -98,6 +108,18 @@ export function ResponsiveVideoLayout({
 						onDownload={onDownload}
 						variant="responsive" // 新しいvariantを追加
 					/>
+
+					{/* プレイリスト */}
+					{playlist && (
+						<div className="p-4 border-t border-border">
+							<PlaylistVideoList
+								videos={playlistVideos || []}
+								currentVideoId={videoData?.videoId}
+								onVideoSelect={onVideoSelect}
+								className="mt-2"
+							/>
+						</div>
+					)}
 
 					{/* 関連動画 */}
 					<RelatedVideos videoInfo={videoInfo} isMobile={false} />

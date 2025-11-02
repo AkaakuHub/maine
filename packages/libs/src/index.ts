@@ -13,6 +13,9 @@ export { useNavigationRefresh } from "./contexts/NavigationRefreshContext";
 // 認証関連
 export { useAuthStore } from "./stores/auth-store";
 export { AuthGuard } from "./components/auth/auth-guard";
+
+// プレイリスト関連
+export type { PlaylistVideo } from "./types/Playlist";
 export { AuthAPI } from "./api/auth";
 export { HeaderSection } from "./components/home/HeaderSection";
 export { TabNavigation } from "./components/home/TabNavigation";

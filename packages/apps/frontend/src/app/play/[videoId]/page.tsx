@@ -9,6 +9,7 @@ import {
 	useNavigationRefresh,
 	useNetworkStatus,
 	useVideoPlayer,
+	type PlaylistVideo,
 } from "@maine/libs";
 import { WifiOff } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -56,6 +57,10 @@ export default function PlayPage() {
 		toggleDescription,
 		handleTimeUpdate,
 		loadInitialProgress,
+		// プレイリスト機能
+		playlist,
+		playlistVideos,
+		playlistLoading,
 	} = useVideoPlayer({
 		videoId,
 		onGoBack: handleGoBackCallback,
@@ -100,11 +105,9 @@ export default function PlayPage() {
 
 	useEffect(() => {
 		if (videoData && loadInitialProgress) {
-			console.log("Loading initial progress for video:", videoData.filePath);
 			loadInitialProgress()
 				.then((progressData) => {
 					if (progressData?.watchTime) {
-						console.log("Setting initial time to:", progressData.watchTime);
 						setInitialTime(progressData.watchTime);
 					}
 				})
@@ -247,6 +250,13 @@ export default function PlayPage() {
 				onTimeUpdate={handleTimeUpdate}
 				initialTime={initialTime}
 				onVideoError={handleVideoError}
+				playlist={playlist}
+				playlistVideos={playlistVideos}
+				playlistLoading={playlistLoading}
+				onVideoSelect={(video: PlaylistVideo) => {
+					// 動画を選択したときは、videoIdでページを遷移
+					router.push(`/play/${video.videoId}`);
+				}}
 			/>
 
 			{/* 設定モーダル */}

@@ -8,6 +8,9 @@ import {
 	isVideoFile,
 	getVideoDirectories,
 	directoryExists,
+	PlaylistDetector,
+	generateFileContentHash,
+	type PlaylistData,
 } from "../libs/fileUtils";
 import type { VideoFileData } from "../type";
 import { parseVideoFileName } from "../utils/videoFileNameParser";
@@ -15,7 +18,6 @@ import { sseStore } from "../common/sse/sse-connection.store";
 import type { ScanSettings } from "../types/scanSettings";
 import { DEFAULT_SCAN_SETTINGS } from "../types/scanSettings";
 import { SCAN } from "../utils/constants";
-import * as crypto from "node:crypto";
 
 import {
 	ScanStreamProcessor,
@@ -57,6 +59,8 @@ class VideoCacheService {
 	private streamProcessor: ScanStreamProcessor | null = null;
 	private ffprobeExtractor: FFprobeMetadataExtractor;
 	private thumbnailGenerator: ThumbnailGenerator;
+	private playlistDetector: PlaylistDetector;
+	private detectedPlaylists: PlaylistData[] = [];
 
 	// スケジューラー（レイジー初期化）
 	private scheduler: ScanScheduler | null = null;
@@ -77,8 +81,10 @@ class VideoCacheService {
 		this.progressCalculator = new ScanProgressCalculator();
 		this.ffprobeExtractor = new FFprobeMetadataExtractor();
 		this.thumbnailGenerator = new ThumbnailGenerator("./data/thumbnails");
+		this.playlistDetector = new PlaylistDetector();
 
-		this.initializeStreamProcessor();
+		// プレイリスト検出を初期化（空の状態で開始）
+		this.initializeStreamProcessorWithPlaylists([]);
 	}
 
 	static getInstance(): VideoCacheService {
@@ -90,7 +96,9 @@ class VideoCacheService {
 
 	// Progress listenerは不要（SSE Connection Storeが直接ブロードキャスト）
 
-	private initializeStreamProcessor(): void {
+	private initializeStreamProcessorWithPlaylists(
+		playlists: PlaylistData[],
+	): void {
 		this.streamProcessor = new ScanStreamProcessor(
 			this.scanSettings,
 			this.checkScanControl.bind(this),
@@ -100,14 +108,71 @@ class VideoCacheService {
 			),
 			this.progressCalculator.currentPhaseStartTime,
 			this.extractEpisode.bind(this),
+			playlists,
 		);
+		// プレイリスト情報を保存して並列処理でも使用できるようにする
+		this.detectedPlaylists = playlists;
 	}
 
 	async updateScanSettings(newSettings: Partial<ScanSettings>): Promise<void> {
 		this.scanSettings = { ...this.scanSettings, ...newSettings };
 		this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
-		this.initializeStreamProcessor();
+		// 検出済みのプレイリスト情報を維持して初期化
+		this.initializeStreamProcessorWithPlaylists(this.detectedPlaylists);
 		await this.saveScanSettings();
+	}
+
+	/**
+	 * プレイリストをデータベースと同期
+	 */
+	private async syncPlaylists(
+		detectedPlaylists: PlaylistData[],
+	): Promise<void> {
+		try {
+			const existingPlaylists = await prisma.playlist.findMany({
+				where: { isActive: true },
+			});
+
+			// 新規プレイリストの追加
+			for (const detected of detectedPlaylists) {
+				const existing = existingPlaylists.find(
+					(p) => p.path === detected.path,
+				);
+				if (!existing) {
+					await prisma.playlist.create({
+						data: {
+							id: detected.id,
+							name: detected.name,
+							path: detected.path,
+							description: detected.description,
+							isActive: true,
+							createdAt: detected.createdAt,
+							updatedAt: detected.updatedAt,
+						},
+					});
+					console.log(
+						`✨ Created new playlist: ${detected.name} (${detected.path})`,
+					);
+				}
+			}
+
+			// 存在しないプレイリストを非活性化
+			const detectedPaths = new Set(detectedPlaylists.map((p) => p.path));
+			for (const existing of existingPlaylists) {
+				if (!detectedPaths.has(existing.path)) {
+					await prisma.playlist.update({
+						where: { id: existing.id },
+						data: { isActive: false },
+					});
+					console.log(
+						`🗑️ Deactivated playlist: ${existing.name} (${existing.path})`,
+					);
+				}
+			}
+		} catch (error) {
+			console.error("Failed to sync playlists:", error);
+			throw error;
+		}
 	}
 
 	private async saveScanSettings(): Promise<void> {
@@ -176,6 +241,17 @@ class VideoCacheService {
 		try {
 			this.progressCalculator.startTotalTimer();
 
+			// 1. プレイリストを検出して同期
+			console.log("Detecting and syncing playlists...");
+			const videoDirectories = getVideoDirectories();
+			const detectedPlaylists =
+				await this.playlistDetector.detectPlaylists(videoDirectories);
+			await this.syncPlaylists(detectedPlaylists);
+			console.log(`Synced ${detectedPlaylists.length} playlists`);
+
+			// 2. StreamProcessorをプレイリスト情報で初期化
+			this.initializeStreamProcessorWithPlaylists(detectedPlaylists);
+
 			// チェックポイントから再開可能かチェック
 			const checkpoint = await this.checkpointManager.getValidCheckpoint();
 			if (checkpoint) {
@@ -218,7 +294,7 @@ class VideoCacheService {
 		newFiles: VideoFile[];
 		unchangedRecords: ProcessedVideoRecord[];
 	}> {
-		// 既存レコードを一括取得
+		// 既存レコードを一括取得（プレイリスト情報も含める）
 		const existingRecords = await prisma.videoMetadata.findMany({
 			select: {
 				id: true,
@@ -232,19 +308,37 @@ class VideoCacheService {
 				thumbnail_path: true,
 				lastModified: true,
 				videoId: true,
+				playlists: {
+					select: {
+						playlist: {
+							select: {
+								id: true,
+								name: true,
+								path: true,
+							},
+						},
+					},
+				},
 			},
 		});
 
 		const existingRecordMap = new Map(
-			existingRecords.map((record) => [
-				record.filePath,
-				{
-					...record,
-					fileSize: Number(record.fileSize), // BigIntをnumberに変換
-					thumbnailPath: record.thumbnail_path,
-					videoId: record.videoId || "", // videoIdを含める
-				} as ProcessedVideoRecord,
-			]),
+			existingRecords.map((record) => {
+				// 最初のプレイリスト情報を取得（複数ある場合は最初のものを使用）
+				const firstPlaylist =
+					record.playlists.length > 0 ? record.playlists[0] : null;
+				return [
+					record.filePath,
+					{
+						...record,
+						fileSize: Number(record.fileSize), // BigIntをnumberに変換
+						thumbnailPath: record.thumbnail_path,
+						videoId: record.videoId || "", // videoIdを含める
+						playlistId: firstPlaylist?.playlist.id,
+						playlistName: firstPlaylist?.playlist.name,
+					} as ProcessedVideoRecord,
+				];
+			}),
 		);
 
 		const changedFiles: VideoFile[] = [];
@@ -346,6 +440,26 @@ class VideoCacheService {
 			}
 		}
 
+		// Phase 2.2: 未変更ファイルにもプレイリストを割り当て
+		if (unchangedFiles.length > 0) {
+			console.log(
+				`Processing playlist assignments for ${unchangedFiles.length} unchanged files`,
+			);
+			const playlistUpdatedRecords = await this.updatePlaylistForUnchangedFiles(
+				unchangedFiles,
+				unchangedRecords,
+			);
+			// unchangedRecordsを更新済みのレコードに置き換え
+			unchangedRecords.splice(
+				0,
+				unchangedRecords.length,
+				...playlistUpdatedRecords,
+			);
+			console.log(
+				`Updated playlist assignments for ${playlistUpdatedRecords.length} unchanged files`,
+			);
+		}
+
 		// Phase 2.5: 処理済み + 未変更レコードを統合
 		const allDbRecords = [...processedDbRecords, ...unchangedRecords];
 
@@ -436,6 +550,47 @@ class VideoCacheService {
 		return allVideoFiles;
 	}
 
+	/**
+	 * 未変更ファイルのプレイリスト割り当てを更新
+	 */
+	private async updatePlaylistForUnchangedFiles(
+		unchangedFiles: VideoFile[],
+		unchangedRecords: ProcessedVideoRecord[],
+	): Promise<ProcessedVideoRecord[]> {
+		const updatedRecords: ProcessedVideoRecord[] = [];
+
+		for (let i = 0; i < unchangedFiles.length; i++) {
+			const videoFile = unchangedFiles[i];
+			const existingRecord = unchangedRecords[i];
+
+			// プレイリストの割り当て
+			const playlist = this.playlistDetector.assignPlaylist(
+				videoFile.filePath,
+				this.detectedPlaylists,
+			);
+
+			// デバッグログ
+			if (playlist) {
+				console.log(
+					`Assigned playlist to unchanged file: ${playlist.name} (${playlist.id}) for ${videoFile.fileName}`,
+				);
+			} else {
+				console.log(
+					`No playlist assigned for unchanged file: ${videoFile.fileName}`,
+				);
+			}
+
+			// プレイリスト情報のみ更新
+			updatedRecords.push({
+				...existingRecord,
+				playlistId: playlist?.id,
+				playlistName: playlist?.name,
+			});
+		}
+
+		return updatedRecords;
+	}
+
 	private async performParallelProcessing(
 		allVideoFiles: VideoFile[],
 		scanId: string,
@@ -486,10 +641,22 @@ class VideoCacheService {
 					console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
 				}
 
-				const videoId = crypto
-					.createHash("sha256")
-					.update(videoFile.filePath)
-					.digest("hex");
+				// プレイリストの割り当て
+				const playlist = this.playlistDetector.assignPlaylist(
+					videoFile.filePath,
+					this.detectedPlaylists,
+				);
+
+				// デバッグログ
+				if (playlist) {
+					console.log(
+						`Assigned playlist: ${playlist.name} (${playlist.id}) to ${videoFile.fileName}`,
+					);
+				} else {
+					console.log(`No playlist assigned for: ${videoFile.fileName}`);
+				}
+
+				const videoId = await generateFileContentHash(videoFile.filePath);
 				records.push({
 					id: videoFile.filePath,
 					filePath: videoFile.filePath,
@@ -502,6 +669,8 @@ class VideoCacheService {
 					thumbnailPath,
 					lastModified: metadata.lastModified,
 					videoId, // SHA-256ハッシュID (32文字)
+					playlistId: playlist?.id,
+					playlistName: playlist?.name,
 				});
 			}
 			return records;
@@ -572,7 +741,8 @@ class VideoCacheService {
 
 				// 5. 各レコードをupsert（存在すれば更新、なければ挿入）
 				for (const record of allDbRecords) {
-					await tx.videoMetadata.upsert({
+					// VideoMetadataをupsert
+					const _videoRecord = await tx.videoMetadata.upsert({
 						where: { id: record.id },
 						update: {
 							filePath: record.filePath,
@@ -600,6 +770,50 @@ class VideoCacheService {
 							lastModified: record.lastModified,
 							metadata_extracted_at: record.duration ? new Date() : null,
 							videoId: record.videoId, // SHA-256ハッシュID (32文字)
+						},
+					});
+
+					// 6. プレイリスト関連を処理
+					if (record.playlistId) {
+						console.log(
+							`Creating playlist relation: videoId=${record.videoId}, playlistId=${record.playlistId}`,
+						);
+
+						// 既存のVideoPlaylist関係を確認
+						const existingRelation = await tx.videoPlaylist.findFirst({
+							where: {
+								videoId: record.videoId,
+								playlistId: record.playlistId,
+							},
+						});
+
+						if (!existingRelation) {
+							// 新しい関係を作成
+							await tx.videoPlaylist.create({
+								data: {
+									videoId: record.videoId,
+									playlistId: record.playlistId,
+								},
+							});
+							console.log(`Created playlist relation for: ${record.fileName}`);
+						} else {
+							console.log(
+								`Playlist relation already exists for: ${record.fileName}`,
+							);
+						}
+					} else {
+						console.log(`No playlistId for video: ${record.fileName}`);
+					}
+
+					// 7. 古いプレイリスト関係をクリーンアップ（この動画が持つ他のプレイリスト関係を削除）
+					await tx.videoPlaylist.deleteMany({
+						where: {
+							videoId: record.videoId,
+							playlistId: record.playlistId
+								? {
+										not: record.playlistId,
+									}
+								: undefined,
 						},
 					});
 				}
@@ -823,7 +1037,8 @@ class VideoCacheService {
 	async resetScanSettings(): Promise<void> {
 		this.scanSettings = { ...DEFAULT_SCAN_SETTINGS };
 		this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
-		this.initializeStreamProcessor();
+		// 検出済みのプレイリスト情報を維持して初期化
+		this.initializeStreamProcessorWithPlaylists(this.detectedPlaylists);
 		await this.saveScanSettings();
 	}
 

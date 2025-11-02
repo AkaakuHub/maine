@@ -76,11 +76,48 @@ model VideoMetadata {
   thumbnail_path        String?
   videoId               String?   @unique
 
+  // Relations
+  playlists             VideoPlaylist[]
+
   @@index([title])
   @@index([fileName])
   @@index([filePath])
   @@index([videoId])
   @@map("video_metadata")
+}
+
+model Playlist {
+  id          String   @id
+  name        String   @unique
+  path        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true)
+
+  // Relations
+  videos      VideoPlaylist[]
+
+  @@index([name])
+  @@index([path])
+  @@index([isActive])
+  @@map("playlists")
+}
+
+model VideoPlaylist {
+  id         String   @id @default(cuid())
+  videoId    String
+  playlistId String
+  addedAt    DateTime @default(now())
+
+  // Relations
+  video      VideoMetadata @relation(fields: [videoId], references: [videoId], onDelete: Cascade)
+  playlist   Playlist      @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, playlistId])
+  @@index([playlistId])
+  @@index([videoId])
+  @@map("video_playlist")
 }
 
 model ScanStatus {
