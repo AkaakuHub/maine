@@ -1,20 +1,20 @@
 "use client";
 
 import {
-	Play,
+	FolderSearch,
 	Grid,
 	List,
-	Settings,
-	FolderSearch,
 	LogOut,
-	User,
+	Play,
+	Settings,
 	Shield,
+	User,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import PWAInstallPrompt from "../../components/PWAInstallPrompt";
 import { cn } from "../../libs/utils";
 import type { ViewMode } from "../../stores/appStateStore";
-import PWAInstallPrompt from "../../components/PWAInstallPrompt";
 import { useAuthStore } from "../../stores/auth-store";
-import { useState, useRef, useEffect } from "react";
 
 interface HeaderSectionProps {
 	viewMode: ViewMode;

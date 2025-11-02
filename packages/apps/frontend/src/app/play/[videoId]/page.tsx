@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { WifiOff } from "lucide-react";
 import {
-	Navigation,
+	EmptyState,
 	LoadingScreen,
-	useNetworkStatus,
-	useVideoPlayer,
+	Navigation,
 	ResponsiveVideoLayout,
 	SettingsModal,
 	useNavigationRefresh,
-	EmptyState,
+	useNetworkStatus,
+	useVideoPlayer,
 } from "@maine/libs";
+import { WifiOff } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function PlayPage() {
 	const router = useRouter();
@@ -55,6 +55,7 @@ export default function PlayPage() {
 		toggleWatchlist,
 		toggleDescription,
 		handleTimeUpdate,
+		loadInitialProgress,
 	} = useVideoPlayer({
 		videoId,
 		onGoBack: handleGoBackCallback,
@@ -94,8 +95,24 @@ export default function PlayPage() {
 		}
 	}, [isOnline, videoSrc, isPageReady, isLoading]);
 
-	// 進捗情報のデバッグログ
-	const initialTime = videoData?.watchTime || 0;
+	// 進捗情報の読み込み
+	const [initialTime, setInitialTime] = useState<number>(0);
+
+	useEffect(() => {
+		if (videoData && loadInitialProgress) {
+			console.log("Loading initial progress for video:", videoData.filePath);
+			loadInitialProgress()
+				.then((progressData) => {
+					if (progressData?.watchTime) {
+						console.log("Setting initial time to:", progressData.watchTime);
+						setInitialTime(progressData.watchTime);
+					}
+				})
+				.catch((error) => {
+					console.error("Failed to load initial progress:", error);
+				});
+		}
+	}, [videoData, loadInitialProgress]);
 
 	// オフライン時のフォールバック表示
 	if (!isPageReady) {

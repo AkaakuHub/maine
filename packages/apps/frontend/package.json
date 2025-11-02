@@ -11,7 +11,7 @@
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
 		"cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-		"lint": "biome lint ./src",
+		"lint": "biome lint --write ./src",
 		"format": "biome format --write ./src",
 		"typecheck": "tsc --noEmit"
 	},

@@ -3,9 +3,7 @@
 	"name": "maine",
 	"version": "0.1.0",
 	"private": true,
-	"workspaces": [
-		"packages/*"
-	],
+	"workspaces": ["packages/*"],
 	"scripts": {
 		"dev": "concurrently \"pnpm --filter @maine/frontend dev:https\" \"pnpm --filter @maine/backend start:dev\"",
 		"start": "concurrently \"pnpm --filter @maine/frontend build && pnpm --filter @maine/frontend start\" \"pnpm --filter @maine/backend build && pnpm --filter @maine/backend start:prod\"",

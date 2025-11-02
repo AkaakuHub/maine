@@ -1,24 +1,24 @@
 import {
-	Play,
-	Pause,
-	Volume2,
-	VolumeX,
+	Camera,
+	List,
 	Maximize,
 	Minimize,
+	Pause,
+	PictureInPicture2,
+	Play,
 	RotateCcw,
 	RotateCw,
 	Settings,
-	PictureInPicture2,
-	Camera,
 	SkipBack,
 	SkipForward,
-	List,
+	Volume2,
+	VolumeX,
 } from "lucide-react";
 import { useState } from "react";
 import { cn, formatDuration } from "../../libs/utils";
-import type { SettingsView } from "./types";
-import ChapterProgressBar from "./ChapterProgressBar";
 import type { VideoChapter } from "../../services/chapterService";
+import ChapterProgressBar from "./ChapterProgressBar";
+import type { SettingsView } from "./types";
 
 interface ControlsOverlayProps {
 	variant?: "desktop" | "mobile";

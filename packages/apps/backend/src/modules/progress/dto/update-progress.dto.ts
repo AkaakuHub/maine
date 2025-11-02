@@ -15,8 +15,4 @@ export class UpdateProgressDto {
 	@IsBoolean()
 	@IsOptional()
 	isLiked?: boolean;
-
-	@IsBoolean()
-	@IsOptional()
-	isInWatchlist?: boolean;
 }

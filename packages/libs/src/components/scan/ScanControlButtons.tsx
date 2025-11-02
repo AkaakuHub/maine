@@ -1,9 +1,9 @@
 "use client";
 
+import { Loader2, Pause, Play, Square } from "lucide-react";
 import { useState } from "react";
-import { Pause, Play, Square, Loader2 } from "lucide-react";
-import { cn } from "../../libs/utils";
 import { useScanProgress } from "../../hooks/useScanProgress";
+import { cn } from "../../libs/utils";
 
 interface ScanControlButtonsProps {
 	className?: string;

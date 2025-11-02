@@ -1,11 +1,11 @@
 "use client";
 
 import {
+	type ReactNode,
 	createContext,
+	useCallback,
 	useContext,
 	useState,
-	useCallback,
-	type ReactNode,
 } from "react";
 
 interface NavigationRefreshContextType {

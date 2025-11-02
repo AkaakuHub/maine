@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
 import {
-	Play,
 	Calendar,
-	HardDrive,
 	Clock,
+	HardDrive,
 	Info,
 	MoreHorizontal,
+	Play,
 	Radio,
 } from "lucide-react";
-import type { VideoFileData } from "../../type";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn, formatFileSize } from "../../libs/utils";
-import { parseVideoFileName } from "../../utils/videoFileNameParser";
-import { SafeDateDisplay } from "../../components/common/SafeDateDisplay";
+import type { VideoFileData } from "../../type";
 import { createApiUrl } from "../../utils/api";
+import { parseVideoFileName } from "../../utils/videoFileNameParser";
+import { AuthAPI } from "../../api/auth";
 
 interface VideoListProps {
 	videos: VideoFileData[];
@@ -32,6 +32,8 @@ const VideoListItem = ({
 	onPlay?: (videoId: string) => void;
 }) => {
 	const [showMenu, setShowMenu] = useState(false);
+	const [watchProgress, setWatchProgress] = useState<number>(0);
+	const [isLoadingProgress, setIsLoadingProgress] = useState<boolean>(false);
 	const menuRef = useRef<HTMLDivElement>(null);
 
 	// ファイル名から番組情報をパース
@@ -40,7 +42,37 @@ const VideoListItem = ({
 		return parseVideoFileName(fileName);
 	}, [video.filePath]);
 
-	const watchProgressPercentage = video.watchProgress || 0;
+	// 進捗情報を取得
+	useEffect(() => {
+		const fetchProgress = async () => {
+			if (!video.filePath) return;
+
+			try {
+				setIsLoadingProgress(true);
+				const response = await fetch(
+					createApiUrl(
+						`/progress?filePath=${encodeURIComponent(video.filePath)}`,
+					),
+					{
+						headers: AuthAPI.getAuthHeaders(),
+					},
+				);
+
+				if (response.ok) {
+					const result = await response.json();
+					if (result.success && result.data?.watchProgress !== undefined) {
+						setWatchProgress(result.data.watchProgress);
+					}
+				}
+			} catch (error) {
+				console.warn("Failed to fetch progress for video list item:", error);
+			} finally {
+				setIsLoadingProgress(false);
+			}
+		};
+
+		fetchProgress();
+	}, [video.filePath]);
 
 	// メニューの外側クリックでメニューを閉じる
 	useEffect(() => {
@@ -170,19 +202,6 @@ const VideoListItem = ({
 										<HardDrive className="h-3 w-3" />
 										<span>{formatFileSize(video.fileSize)}</span>
 									</div>
-									{video.lastWatched && (
-										<div className="flex items-center gap-1">
-											<Clock className="h-3 w-3" />
-											<span>
-												最後に視聴:{" "}
-												<SafeDateDisplay
-													date={video.lastWatched}
-													format="date"
-													fallback="---"
-												/>
-											</span>
-										</div>
-									)}
 								</div>
 							</div>
 
@@ -221,13 +240,16 @@ const VideoListItem = ({
 						</div>
 
 						{/* 進行状況バー */}
-						{video.lastWatched && (
+						{watchProgress > 0 && (
 							<div className="mt-3">
 								<div className="w-full h-1 bg-surface-elevated rounded-full overflow-hidden">
 									<div
-										className="h-full bg-primary transition-all duration-300"
+										className={cn(
+											"h-full bg-primary transition-all duration-300",
+											isLoadingProgress && "opacity-50",
+										)}
 										style={{
-											width: `${Math.min(100, Math.max(0, watchProgressPercentage))}%`,
+											width: `${Math.min(100, Math.max(0, watchProgress))}%`,
 										}}
 									/>
 								</div>

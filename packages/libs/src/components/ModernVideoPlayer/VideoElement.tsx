@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../../libs/utils";
 import type { HTMLVideoElementWithFullscreen } from "./types";
 

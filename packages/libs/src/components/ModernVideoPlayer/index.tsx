@@ -1,30 +1,30 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../../libs/utils";
 
-// 分離したコンポーネントとタイプのインポート
-import VideoElement from "./VideoElement";
-import SkipOverlay from "./SkipOverlay";
 import ControlsOverlay from "./ControlsOverlay";
 import SettingsMenu from "./SettingsMenu";
+import SkipOverlay from "./SkipOverlay";
+// 分離したコンポーネントとタイプのインポート
+import VideoElement from "./VideoElement";
 import type {
 	HTMLVideoElementWithFullscreen,
 	ModernVideoPlayerProps,
 } from "./types";
 
-// カスタムフック
-import { useVideoPlayerSettings } from "./hooks/useVideoPlayerSettings";
-import { useVideoElement } from "./hooks/useVideoElement";
-import { useVideoFullscreen } from "./hooks/useVideoFullscreen";
-import { useVideoSkip } from "./hooks/useVideoSkip";
-import { useVideoControls } from "./hooks/useVideoControls";
-import { useVideoScreenshot } from "./hooks/useVideoScreenshot";
-import { useVideoInteraction } from "./hooks/useVideoInteraction";
-import { useVideoChapters } from "./hooks/useVideoChapters";
+import { useIsMobile } from "../../hooks/useIsMobile";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useMediaSession } from "./hooks/useMediaSession";
-import { useIsMobile } from "../../hooks/useIsMobile";
+import { useVideoChapters } from "./hooks/useVideoChapters";
+import { useVideoControls } from "./hooks/useVideoControls";
+import { useVideoElement } from "./hooks/useVideoElement";
+import { useVideoFullscreen } from "./hooks/useVideoFullscreen";
+import { useVideoInteraction } from "./hooks/useVideoInteraction";
+// カスタムフック
+import { useVideoPlayerSettings } from "./hooks/useVideoPlayerSettings";
+import { useVideoScreenshot } from "./hooks/useVideoScreenshot";
+import { useVideoSkip } from "./hooks/useVideoSkip";
 
 const ModernVideoPlayer = ({
 	src,

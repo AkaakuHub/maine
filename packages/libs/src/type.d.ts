@@ -25,12 +25,6 @@ export interface VideoFileData {
 	year?: number;
 	fileModifiedAt?: Date; // ファイル更新日時（ファイル名から日付が取得できない場合のフォールバック）
 	videoId: string; // SHA-256ハッシュID（必須）
-	// 再生進捗情報（DBから取得、デフォルト値0）
-	watchProgress: number;
-	watchTime: number;
-	isLiked: boolean;
-	isInWatchlist: boolean;
-	lastWatched?: Date | null;
 }
 
 export type VideoControlProps = {

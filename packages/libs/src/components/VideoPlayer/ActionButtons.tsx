@@ -1,9 +1,9 @@
 "use client";
 
-import { Heart, List, Share2, Download } from "lucide-react";
-import ConfirmDialog from "../ui/ConfirmDialog";
+import { Download, Heart, List, Share2 } from "lucide-react";
 import { useState } from "react";
 import type { VideoInfoType } from "../../types/VideoInfo";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 interface ActionButtonsProps {
 	isLiked: boolean;

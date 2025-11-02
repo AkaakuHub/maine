@@ -1,7 +1,7 @@
 "use client";
 
+import { Loader2, Search, SortAsc, SortDesc, X } from "lucide-react";
 import type React from "react";
-import { Search, X, SortAsc, SortDesc, Loader2 } from "lucide-react";
 import Button from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import type { SortBy, SortOrder } from "../../stores/appStateStore";

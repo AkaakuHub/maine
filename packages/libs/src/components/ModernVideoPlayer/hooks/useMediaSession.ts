@@ -1,6 +1,6 @@
-import { useEffect, useCallback } from "react";
-import type { HTMLVideoElementWithFullscreen } from "../types";
+import { useCallback, useEffect } from "react";
 import { createApiUrl } from "../../../utils/api";
+import type { HTMLVideoElementWithFullscreen } from "../types";
 
 interface UseMediaSessionProps {
 	title?: string;

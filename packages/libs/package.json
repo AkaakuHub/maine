@@ -6,7 +6,7 @@
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"scripts": {
-		"lint": "biome lint ./src",
+		"lint": "biome lint --write ./src",
 		"format": "biome format --write ./src",
 		"typecheck": "tsc --noEmit",
 		"build": "tsc"

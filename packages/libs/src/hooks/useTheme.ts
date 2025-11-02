@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { THEME } from "../utils/constants";
+import { useCallback, useEffect, useState } from "react";
 import type { ThemeMode, UseThemeReturn } from "../types/theme";
+import { THEME } from "../utils/constants";
 
 export function useTheme(): UseThemeReturn {
 	const [theme, setThemeState] = useState<ThemeMode>(() => {

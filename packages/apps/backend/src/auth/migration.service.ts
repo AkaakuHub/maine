@@ -15,31 +15,10 @@ export class MigrationService {
 		// デフォルト管理者ユーザーを作成
 		const adminUser = await this.authService.createDefaultAdmin();
 
-		// 既存のVideoProgressデータを管理者ユーザーに関連付け
-		const orphanedProgress = await this.prisma.videoProgress.findMany({
-			where: {
-				userId: null,
-			},
-		});
-
-		if (orphanedProgress.length > 0) {
-			console.log(
-				`${orphanedProgress.length}件のVideoProgressデータを管理者ユーザーに関連付けます...`,
-			);
-
-			await this.prisma.videoProgress.updateMany({
-				where: {
-					userId: null,
-				},
-				data: {
-					userId: adminUser.id,
-				},
-			});
-
-			console.log("データ移行が完了しました。");
-		} else {
-			console.log("移行対象のデータはありませんでした。");
-		}
+		// videoProgressテーブルは削除されたため、移行処理は不要
+		console.log(
+			"VideoProgressテーブルの移行はスキップされます（テーブルは削除されました）",
+		);
 
 		// デフォルト権限を設定（管理者は全ディレクトリにアクセス可能）
 		await this.prisma.permission.upsert({
@@ -62,7 +41,7 @@ export class MigrationService {
 
 		return {
 			adminUser,
-			migratedCount: orphanedProgress.length,
+			migratedCount: 0, // videoProgressテーブルは削除されたため移行不要
 		};
 	}
 }

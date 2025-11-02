@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { X, Settings, SkipForward, Palette } from "lucide-react";
-import { useChapterSkipStore } from "../../stores/chapterSkipStore";
+import { Palette, Settings, SkipForward, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { SettingsSection } from "../../components/settings/SettingsSection";
 import { SkipRuleForm } from "../../components/settings/SkipRuleForm";
 import { SkipRuleItem } from "../../components/settings/SkipRuleItem";
 import { ToggleButton } from "../../components/ui/RadioGroup";
 import { useTheme } from "../../hooks/useTheme";
-import { THEME } from "../../utils/constants";
+import { useChapterSkipStore } from "../../stores/chapterSkipStore";
 import type { ThemeMode } from "../../types/theme";
+import { THEME } from "../../utils/constants";
 
 interface SettingsModalProps {
 	isOpen: boolean;

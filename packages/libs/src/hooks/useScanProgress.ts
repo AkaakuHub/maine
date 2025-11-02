@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
-import { useScanStore } from "../stores/scan-store";
+import { useCallback, useEffect, useRef } from "react";
 import type { ScanProgressEvent } from "../libs/sse-connection-store";
+import { useScanStore } from "../stores/scan-store";
 import { createApiUrl } from "../utils/api";
 
 /**

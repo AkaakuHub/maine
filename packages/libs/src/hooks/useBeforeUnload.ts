@@ -1,6 +1,7 @@
-import { useEffect, useCallback, useRef } from "react";
-import { createApiUrl } from "../utils/api";
+import { useCallback, useEffect, useRef } from "react";
+import { AuthAPI } from "../api/auth";
 import type { VideoProgressData } from "../types/progress";
+import { createApiUrl } from "../utils/api";
 
 interface UseBeforeUnloadOptions {
 	onBeforeUnload?: (data: VideoProgressData) => void;
@@ -39,24 +40,7 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 		[enableLocalStorageBackup],
 	);
 
-	// sendBeacon APIで確実に進捗を送信する関数
-	const sendProgressWithBeacon = useCallback(
-		(data: VideoProgressData): boolean => {
-			try {
-				const blob = new Blob([JSON.stringify(data)], {
-					type: "application/json",
-				});
-
-				return navigator.sendBeacon(createApiUrl("/progress"), blob);
-			} catch (error) {
-				console.error("Failed to send progress with sendBeacon:", error);
-				return false;
-			}
-		},
-		[],
-	);
-
-	// 通常のfetch APIで進捗を送信する関数（フォールバック）
+	// 通常のfetch APIで進捗を送信する関数（認証付き）
 	const sendProgressWithFetch = useCallback(
 		async (data: VideoProgressData): Promise<boolean> => {
 			try {
@@ -64,6 +48,7 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 					method: "PUT",
 					headers: {
 						"Content-Type": "application/json",
+						...AuthAPI.getAuthHeaders(),
 					},
 					body: JSON.stringify(data),
 					keepalive: true, // ページ離脱時でも送信継続
@@ -79,7 +64,7 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 	);
 
 	// 進捗保存を実行する関数
-	const saveProgressOnUnload = useCallback(() => {
+	const saveProgressOnUnload = useCallback(async () => {
 		const data = lastProgressDataRef.current;
 		if (!data || !hasUnsavedChangesRef.current) return;
 
@@ -88,10 +73,10 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 			onBeforeUnload(data);
 		}
 
-		// sendBeacon APIで送信を試行
-		const beaconSent = sendProgressWithBeacon(data);
+		// 認証付きfetchで送信（sendBeaconの代わり）
+		const fetchSent = await sendProgressWithFetch(data);
 
-		if (beaconSent) {
+		if (fetchSent) {
 			hasUnsavedChangesRef.current = false;
 
 			// 成功した場合はLocalStorageバックアップを削除
@@ -102,8 +87,13 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 					console.warn("Failed to remove progress backup:", error);
 				}
 			}
+		} else {
+			// 送信失敗時はバックアップを保持（次回起動時に復元）
+			console.warn(
+				"Progress save failed on unload, backup kept for next session",
+			);
 		}
-	}, [onBeforeUnload, sendProgressWithBeacon, enableLocalStorageBackup]);
+	}, [onBeforeUnload, sendProgressWithFetch, enableLocalStorageBackup]);
 
 	// 保存されていない変更があるかチェック
 	const markAsSaved = useCallback(() => {
@@ -138,7 +128,10 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 	useEffect(() => {
 		// beforeunloadイベントリスナー
 		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-			saveProgressOnUnload();
+			// 同期的に進捗保存を試行
+			saveProgressOnUnload().catch((error) => {
+				console.error("Error saving progress on beforeunload:", error);
+			});
 
 			// 保存されていない変更がある場合は確認ダイアログを表示
 			if (hasUnsavedChangesRef.current) {
@@ -153,13 +146,17 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 
 		// pagehideイベントリスナー（モバイル対応）
 		const handlePageHide = () => {
-			saveProgressOnUnload();
+			saveProgressOnUnload().catch((error) => {
+				console.error("Error saving progress on pagehide:", error);
+			});
 		};
 
 		// visibilitychangeイベントリスナー（タブの非表示検知）
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === "hidden") {
-				saveProgressOnUnload();
+				saveProgressOnUnload().catch((error) => {
+					console.error("Error saving progress on visibility change:", error);
+				});
 			}
 		};
 

@@ -1,10 +1,10 @@
-import {
-	type ScanScheduleSettings,
-	SCHEDULE_INTERVAL_LABELS,
-	WEEKDAY_LABELS,
-	SCHEDULE_SETTINGS_CONSTRAINTS,
-} from "../../../types/scanScheduleSettings";
 import { ToggleButton } from "../../../components/ui/RadioGroup";
+import {
+	SCHEDULE_INTERVAL_LABELS,
+	SCHEDULE_SETTINGS_CONSTRAINTS,
+	type ScanScheduleSettings,
+	WEEKDAY_LABELS,
+} from "../../../types/scanScheduleSettings";
 import { formatTime } from "../utils/timeFormatters";
 
 interface ScheduleSettingsProps {

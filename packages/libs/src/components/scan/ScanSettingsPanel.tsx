@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import {
-	Settings,
-	RotateCcw,
-	Save,
-	Loader2,
 	AlertCircle,
 	CheckCircle,
 	Info,
+	Loader2,
+	RotateCcw,
+	Save,
+	Settings,
 } from "lucide-react";
-import { cn } from "../../libs/utils";
+import { useCallback, useEffect, useState } from "react";
 import { ToggleButton } from "../../components/ui/RadioGroup";
+import { cn } from "../../libs/utils";
 import {
-	type ScanSettings,
 	DEFAULT_SCAN_SETTINGS,
 	SCAN_SETTINGS_CONSTRAINTS,
+	type ScanSettings,
 } from "../../types/scanSettings";
 import { createApiUrl } from "../../utils/api";
 

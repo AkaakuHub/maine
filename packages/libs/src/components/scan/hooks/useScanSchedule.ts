@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+	DEFAULT_SCHEDULE_SETTINGS,
 	type ScanScheduleSettings,
 	type SchedulerStatus,
-	DEFAULT_SCHEDULE_SETTINGS,
 } from "../../../types/scanScheduleSettings";
+import { createApiUrl } from "../../../utils/api";
 import type { Message } from "../types";
 import { toSafeDate } from "../utils/timeFormatters";
-import { createApiUrl } from "../../../utils/api";
 
 export function useScanSchedule() {
 	const [settings, setSettings] = useState<ScanScheduleSettings>(

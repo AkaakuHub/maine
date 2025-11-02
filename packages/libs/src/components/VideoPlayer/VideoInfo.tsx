@@ -1,8 +1,8 @@
 "use client";
 
+import type { VideoInfoType } from "../../types/VideoInfo";
 import ActionButtons from "./ActionButtons";
 import VideoDescription from "./VideoDescription";
-import type { VideoInfoType } from "../../types/VideoInfo";
 
 interface VideoInfoProps {
 	videoInfo: VideoInfoType;

@@ -1,6 +1,6 @@
 import { Calendar, Loader2 } from "lucide-react";
-import type { SchedulerStatus } from "../../../types/scanScheduleSettings";
 import { SafeDateDisplay } from "../../../components/common/SafeDateDisplay";
+import type { SchedulerStatus } from "../../../types/scanScheduleSettings";
 import { toSafeDate } from "../utils/timeFormatters";
 
 interface ScheduleStatusProps {

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AuthAPI } from "../api/auth";
 import type { VideoFileData } from "../type";
 import { createApiUrl } from "../utils/api";
-import { AuthAPI } from "../api/auth";
 
 interface UseVideosFilters {
 	search?: string;
@@ -129,7 +129,7 @@ export function useVideos(options: UseVideosOptions = {}): UseVideosReturn {
 			}
 
 			interface ApiResponse {
-				videos?: VideoFileData[];
+				videos: VideoFileData[];
 				pagination?: {
 					page: number;
 					limit: number;

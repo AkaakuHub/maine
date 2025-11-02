@@ -1,18 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
 import {
+	AlertCircle,
 	CheckCircle,
-	XCircle,
 	Loader2,
 	Wifi,
 	WifiOff,
-	AlertCircle,
+	XCircle,
 } from "lucide-react";
-import { cn } from "../../libs/utils";
-import { useScanProgress } from "../../hooks/useScanProgress";
-import { ScanControlButtons } from "./ScanControlButtons";
+import { useMemo } from "react";
 import { SafeDateDisplay } from "../../components/common/SafeDateDisplay";
+import { useScanProgress } from "../../hooks/useScanProgress";
+import { cn } from "../../libs/utils";
+import { ScanControlButtons } from "./ScanControlButtons";
 
 // 時間をフォーマットするヘルパー関数
 const formatDuration = (seconds: number): string => {

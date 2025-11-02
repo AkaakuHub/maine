@@ -1,9 +1,9 @@
 "use client";
 
+import { Check, Edit, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { Edit, Trash2, Check, X } from "lucide-react";
-import { cn } from "../../libs/utils";
 import { ToggleButton } from "../../components/ui/RadioGroup";
+import { cn } from "../../libs/utils";
 import type { ChapterSkipRule } from "../../types/Settings";
 
 interface SkipRuleItemProps {

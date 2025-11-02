@@ -24,10 +24,17 @@ type SearchVideosResponse = {
 	totalFound: number;
 	message: string;
 	error?: string;
+	pagination?: {
+		page: number;
+		limit: number;
+		total: number;
+		totalPages: number;
+	};
 };
 
 @ApiTags("videos")
 @Controller("videos")
+@UseGuards(JwtAuthGuard)
 export class VideosController {
 	private readonly logger = new Logger(VideosController.name);
 
@@ -44,7 +51,6 @@ export class VideosController {
 		description: "完全一致フラグ",
 	})
 	@ApiResponse({ status: 200, description: "動画検索結果" })
-	@UseGuards(JwtAuthGuard)
 	async searchVideos(
 		@Query() query: SearchVideosDto,
 		@Request() req,
@@ -73,11 +79,19 @@ export class VideosController {
 				this.logger.log(
 					`No videos found for search query: "${query.search}", returning empty result`,
 				);
+				const page = query.page || 1;
+				const limit = query.limit || 20;
 				return {
 					success: true,
 					videos: [],
 					totalFound: 0,
 					message: "動画が見つかりませんでした",
+					pagination: {
+						page,
+						limit,
+						total: 0,
+						totalPages: 0,
+					},
 				};
 			}
 
@@ -116,14 +130,32 @@ export class VideosController {
 					(video) => video.filePath === query.search,
 				);
 
+				// ページネーション情報を計算
+				const page = query.page || 1;
+				const limit = query.limit || 20;
+				const total = filteredVideos.length;
+				const totalPages = Math.ceil(total / limit);
+
 				// フィルタリング結果でsearchResultを更新
 				return {
 					...searchResult,
 					videos: filteredVideos,
 					totalFound: filteredVideos.length,
 					message: `${filteredVideos.length}件の動画が見つかりました`,
+					pagination: {
+						page,
+						limit,
+						total,
+						totalPages,
+					},
 				};
 			}
+
+			// ページネーション情報を計算
+			const page = query.page || 1;
+			const limit = query.limit || 20;
+			const total = accessibleVideos.length;
+			const totalPages = Math.ceil(total / limit);
 
 			// 権限チェック済みの動画を返す
 			return {
@@ -131,6 +163,12 @@ export class VideosController {
 				videos: accessibleVideos,
 				totalFound: accessibleVideos.length,
 				message: `${accessibleVideos.length}件の動画が見つかりました`,
+				pagination: {
+					page,
+					limit,
+					total,
+					totalPages,
+				},
 			};
 		} catch (error) {
 			this.logger.error("Video search error:", error);

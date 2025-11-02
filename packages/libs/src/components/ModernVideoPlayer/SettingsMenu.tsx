@@ -1,22 +1,22 @@
 import {
-	Settings,
-	Clock,
-	Play,
 	Camera,
-	ChevronRight,
-	ChevronLeft,
-	Download,
-	SkipForward,
-	Plus,
-	Trash2,
-	Edit,
 	Check,
+	ChevronLeft,
+	ChevronRight,
+	Clock,
+	Download,
+	Edit,
+	Play,
+	Plus,
+	Settings,
+	SkipForward,
+	Trash2,
 } from "lucide-react";
-import { cn } from "../../libs/utils";
-import type { SettingsView } from "./types";
-import { useChapterSkipStore } from "../../stores/chapterSkipStore";
 import { useState } from "react";
+import { cn } from "../../libs/utils";
+import { useChapterSkipStore } from "../../stores/chapterSkipStore";
 import type { ChapterSkipRule } from "../../types/Settings";
+import type { SettingsView } from "./types";
 
 interface SettingsMenuProps {
 	show: boolean;

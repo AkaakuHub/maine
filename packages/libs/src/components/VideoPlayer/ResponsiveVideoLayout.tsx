@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import ModernVideoPlayer from "../../components/ModernVideoPlayer";
-import VideoInfo from "./VideoInfo";
-import RelatedVideos from "./RelatedVideos";
+import { useEffect, useState } from "react";
 import HelpModal from "../../components/HelpModal";
-import type { VideoInfoType } from "../../types/VideoInfo";
+import ModernVideoPlayer from "../../components/ModernVideoPlayer";
 import type { VideoFileData } from "../../type";
+import type { VideoInfoType } from "../../types/VideoInfo";
+import RelatedVideos from "./RelatedVideos";
+import VideoInfo from "./VideoInfo";
 
 interface ResponsiveVideoLayoutProps {
 	videoSrc: string;

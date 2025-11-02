@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from "react";
-import { useProgress } from "./useProgress";
-import { useBeforeUnload } from "./useBeforeUnload";
+import { useCallback, useEffect, useRef } from "react";
 import type { VideoProgressData } from "../types/progress";
+import { useBeforeUnload } from "./useBeforeUnload";
+import { useProgress } from "./useProgress";
 
 interface UseVideoProgressOptions {
 	filePath: string;
@@ -9,12 +9,22 @@ interface UseVideoProgressOptions {
 	onProgressSaved?: (data: VideoProgressData) => void;
 }
 
+// 定期的進捗保存の設定
+const AUTO_SAVE_INTERVAL = 30000; // 30秒ごとに保存
+const AUTO_SAVE_PROGRESS_THRESHOLD = 5; // 5%以上進んだら保存
+const SEEK_THRESHOLD = 5; // 5秒以上のシークで即時保存
+
 export function useVideoProgress({
 	filePath,
 	enableBackup = true,
 	onProgressSaved,
 }: UseVideoProgressOptions) {
 	const { updateProgress, getProgress, loading, error } = useProgress();
+
+	// 定期保存用のref
+	const lastSavedTimeRef = useRef<number>(0);
+	const lastSavedProgressRef = useRef<number>(0);
+	const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 	// useBeforeUnloadフックで離脱時保存を処理
 	const {
@@ -43,6 +53,68 @@ export function useVideoProgress({
 		restoreAndSendBackup();
 	}, [filePath, restoreFromBackup, sendProgressWithFetch]);
 
+	// 定期的進捗保存関数
+	const autoSaveProgress = useCallback(
+		async (progressData: VideoProgressData) => {
+			const currentTime = progressData.watchTime || 0;
+			const currentProgress = progressData.watchProgress || 0;
+			const lastSavedTime = lastSavedTimeRef.current;
+			const lastSavedProgress = lastSavedProgressRef.current;
+
+			// 保存条件のチェック
+			const timeDiff = Math.abs(currentTime - lastSavedTime);
+			const progressDiff = Math.abs(currentProgress - lastSavedProgress);
+			const shouldSaveByTime = timeDiff >= AUTO_SAVE_INTERVAL / 1000; // 30秒以上経過
+			const shouldSaveByProgress = progressDiff >= AUTO_SAVE_PROGRESS_THRESHOLD; // 5%以上進捗
+			const shouldSaveBySeek = timeDiff >= SEEK_THRESHOLD; // 5秒以上のシーク操作
+
+			// 保存条件が満たされた場合の詳細ログ
+			if (shouldSaveByTime || shouldSaveByProgress || shouldSaveBySeek) {
+				console.log("Progress save conditions met:", {
+					currentTime,
+					currentProgress,
+					lastSavedTime,
+					lastSavedProgress,
+					timeDiff,
+					progressDiff,
+					shouldSaveByTime,
+					shouldSaveByProgress,
+					shouldSaveBySeek,
+					progressData,
+				});
+
+				try {
+					const result = await updateProgress(progressData);
+					console.log("Progress save result:", result);
+
+					if (result) {
+						lastSavedTimeRef.current = currentTime;
+						lastSavedProgressRef.current = currentProgress;
+						markAsSaved();
+
+						if (onProgressSaved) {
+							onProgressSaved(progressData);
+						}
+					} else {
+						console.warn("Progress save returned null/falsy");
+					}
+				} catch (error) {
+					console.error("Auto save progress failed:", error);
+				}
+			}
+		},
+		[updateProgress, markAsSaved, onProgressSaved],
+	);
+
+	// 定期保存タイマーのクリーンアップ
+	useEffect(() => {
+		return () => {
+			if (autoSaveTimerRef.current) {
+				clearTimeout(autoSaveTimerRef.current);
+			}
+		};
+	}, []);
+
 	// 時間更新ハンドラー（ModernVideoPlayerから呼ばれる）
 	const handleTimeUpdate = useCallback(
 		(currentTime: number, duration: number) => {
@@ -59,10 +131,15 @@ export function useVideoProgress({
 				watchProgress: progress,
 			};
 
-			// 離脱時保存用のデータのみ更新（API送信なし）
+			// 離脱時保存用のデータを更新
 			updateProgressData(progressData);
+
+			// 定期的進捗保存を実行（非同期でバックグラウンドで実行）
+			autoSaveProgress(progressData).catch((error) => {
+				console.error("Auto save failed in handleTimeUpdate:", error);
+			});
 		},
-		[filePath, updateProgressData],
+		[filePath, updateProgressData, autoSaveProgress],
 	);
 
 	// Like状態を更新する関数
@@ -105,11 +182,46 @@ export function useVideoProgress({
 		],
 	);
 
+	// 初回進捗読み込み関数
+	const loadInitialProgress =
+		useCallback(async (): Promise<VideoProgressData | null> => {
+			if (!filePath) return null;
+
+			console.log("Loading initial progress for:", filePath);
+			try {
+				const progressData = await getProgress(filePath);
+				console.log("Initial progress data loaded:", progressData);
+
+				if (progressData) {
+					// VideoProgressData型に変換
+					const videoProgressData: VideoProgressData = {
+						filePath: progressData.filePath,
+						watchTime: progressData.watchTime ?? 0,
+						watchProgress: progressData.watchProgress,
+						isLiked: progressData.isLiked,
+					};
+
+					// 最終保存時間と進捗を初期化
+					lastSavedTimeRef.current = videoProgressData.watchTime ?? 0;
+					lastSavedProgressRef.current = videoProgressData.watchProgress ?? 0;
+					console.log("Progress initialized:", {
+						lastSavedTime: lastSavedTimeRef.current,
+						lastSavedProgress: lastSavedProgressRef.current,
+					});
+					return videoProgressData;
+				}
+			} catch (error) {
+				console.error("Failed to load initial progress:", error);
+			}
+			return null;
+		}, [filePath, getProgress]);
+
 	return {
 		// 主要な関数
 		handleTimeUpdate,
 		updateLikeStatus,
 		getProgress,
+		loadInitialProgress,
 
 		// 状態
 		loading,

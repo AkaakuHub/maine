@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Home, Share2, Settings } from "lucide-react";
+import { ArrowLeft, Home, Settings, Share2 } from "lucide-react";
 
 interface NavigationProps {
 	onGoBack: () => void;

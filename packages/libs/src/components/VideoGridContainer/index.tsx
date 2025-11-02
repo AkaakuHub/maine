@@ -1,8 +1,8 @@
 "use client";
 
-import type { VideoFileData } from "../../type";
 import VideoCard from "../../components/VideoCard";
 import { cn } from "../../libs/utils";
+import type { VideoFileData } from "../../type";
 
 interface VideoGridProps {
 	videos: VideoFileData[];

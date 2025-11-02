@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { HTMLVideoElementWithFullscreen } from "../types";
 
 interface UseVideoSkipProps {

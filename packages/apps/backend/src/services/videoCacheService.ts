@@ -747,57 +747,22 @@ class VideoCacheService {
 				`[searchVideos] Found ${videos.length} videos matching query`,
 			);
 
-			// 各動画の進捗情報を個別に取得
-			const videosWithProgress = await Promise.all(
-				videos.map(async (v) => {
-					try {
-						const progress = await prisma.videoProgress.findFirst({
-							where: { filePath: v.filePath },
-						});
-
-						return {
-							id: v.id,
-							title: v.title,
-							fileName: v.fileName,
-							filePath: v.filePath,
-							fileSize: Number(v.fileSize),
-							fileModifiedAt: v.lastModified,
-							episode: v.episode ?? undefined,
-							year: v.year ?? undefined,
-							duration: v.duration ?? undefined,
-							thumbnailPath: v.thumbnail_path ?? undefined,
-							watchProgress: progress?.watchProgress ?? 0,
-							watchTime: progress?.watchTime ?? 0,
-							isLiked: progress?.isLiked ?? false,
-							lastWatched: progress?.lastWatched ?? undefined,
-						};
-					} catch (progressError) {
-						console.error(
-							`[searchVideos] Progress error for ${v.filePath}:`,
-							progressError,
-						);
-						return {
-							id: v.id,
-							title: v.title,
-							fileName: v.fileName,
-							filePath: v.filePath,
-							fileSize: Number(v.fileSize),
-							fileModifiedAt: v.lastModified,
-							episode: v.episode ?? undefined,
-							year: v.year ?? undefined,
-							duration: v.duration ?? undefined,
-							thumbnailPath: v.thumbnail_path ?? undefined,
-							watchProgress: 0,
-							watchTime: 0,
-							isLiked: false,
-							lastWatched: undefined,
-						};
-					}
-				}),
-			);
+			// 動画の基本情報を返す（進捗情報は含めない）
+			const videosWithProgress = videos.map((v) => ({
+				id: v.id,
+				title: v.title,
+				fileName: v.fileName,
+				filePath: v.filePath,
+				fileSize: Number(v.fileSize),
+				fileModifiedAt: v.lastModified,
+				episode: v.episode ?? undefined,
+				year: v.year ?? undefined,
+				duration: v.duration ?? undefined,
+				thumbnailPath: v.thumbnail_path ?? undefined,
+			}));
 
 			console.log(
-				`[searchVideos] Returning ${videosWithProgress.length} videos with progress`,
+				`[searchVideos] Returning ${videosWithProgress.length} videos`,
 			);
 
 			return {
@@ -827,57 +792,22 @@ class VideoCacheService {
 
 			console.log(`[getAllVideos] Found ${videos.length} videos in database`);
 
-			// 各動画の進捗情報を個別に取得
-			const videosWithProgress = await Promise.all(
-				videos.map(async (v) => {
-					try {
-						const progress = await prisma.videoProgress.findFirst({
-							where: { filePath: v.filePath },
-						});
-
-						return {
-							id: v.id,
-							title: v.title,
-							fileName: v.fileName,
-							filePath: v.filePath,
-							fileSize: Number(v.fileSize),
-							fileModifiedAt: v.lastModified,
-							episode: v.episode ?? undefined,
-							year: v.year ?? undefined,
-							duration: v.duration ?? undefined,
-							thumbnailPath: v.thumbnail_path ?? undefined,
-							watchProgress: progress?.watchProgress ?? 0,
-							watchTime: progress?.watchTime ?? 0,
-							isLiked: progress?.isLiked ?? false,
-							lastWatched: progress?.lastWatched ?? undefined,
-						};
-					} catch (progressError) {
-						console.error(
-							`[getAllVideos] Progress error for ${v.filePath}:`,
-							progressError,
-						);
-						return {
-							id: v.id,
-							title: v.title,
-							fileName: v.fileName,
-							filePath: v.filePath,
-							fileSize: Number(v.fileSize),
-							fileModifiedAt: v.lastModified,
-							episode: v.episode ?? undefined,
-							year: v.year ?? undefined,
-							duration: v.duration ?? undefined,
-							thumbnailPath: v.thumbnail_path ?? undefined,
-							watchProgress: 0,
-							watchTime: 0,
-							isLiked: false,
-							lastWatched: undefined,
-						};
-					}
-				}),
-			);
+			// 動画の基本情報を返す（進捗情報は含めない）
+			const videosWithProgress = videos.map((v) => ({
+				id: v.id,
+				title: v.title,
+				fileName: v.fileName,
+				filePath: v.filePath,
+				fileSize: Number(v.fileSize),
+				fileModifiedAt: v.lastModified,
+				episode: v.episode ?? undefined,
+				year: v.year ?? undefined,
+				duration: v.duration ?? undefined,
+				thumbnailPath: v.thumbnail_path ?? undefined,
+			}));
 
 			console.log(
-				`[getAllVideos] Returning ${videosWithProgress.length} videos with progress`,
+				`[getAllVideos] Returning ${videosWithProgress.length} videos`,
 			);
 			return videosWithProgress;
 		} catch (error) {

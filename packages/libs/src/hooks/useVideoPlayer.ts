@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import type { VideoInfoType } from "../types/VideoInfo";
-import type { VideoFileData } from "../type";
-import { useVideoProgress } from "./useVideoProgress";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigationRefresh } from "../contexts/NavigationRefreshContext";
+import type { VideoFileData } from "../type";
+import type { VideoInfoType } from "../types/VideoInfo";
 import { createApiUrl } from "../utils/api";
+import { useVideoProgress } from "./useVideoProgress";
 
 export function useVideoPlayer({
 	videoId,
@@ -33,11 +33,13 @@ export function useVideoPlayer({
 	const [isInWatchlist, setIsInWatchlist] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 
-	// ビデオ進捗管理（ページ離脱時のみ保存）
+	// ビデオ進捗管理（定期保存 + 離脱時保存）
 	const videoProgressHook = useVideoProgress({
 		filePath: videoData?.filePath || "",
 		enableBackup: true,
-		onProgressSaved: () => {},
+		onProgressSaved: () => {
+			// 進捗保存時のコールバック（必要に応じて拡張）
+		},
 	});
 
 	// 説明欄を取得する関数
@@ -109,9 +111,14 @@ export function useVideoPlayer({
 				const videoUrl = createApiUrl(`/video/${id}`);
 				setVideoSrc(videoUrl);
 
-				// いいね状態とウォッチリスト状態を設定
-				setIsLiked(videoData.isLiked);
-				setIsInWatchlist(videoData.isInWatchlist);
+				// いいね状態とウォッチリスト状態を設定（デフォルト値）
+				setIsLiked(false);
+				setIsInWatchlist(false);
+
+				// 進捗データを非同期で読み込み
+				videoProgressHook.loadInitialProgress().catch((error) => {
+					console.error("Failed to load initial progress:", error);
+				});
 			} catch (error) {
 				console.error("Error loading video by videoId:", error);
 				// ネットワークエラーやその他のエラーの場合
@@ -123,7 +130,7 @@ export function useVideoPlayer({
 				}
 			}
 		},
-		[fetchDescription],
+		[fetchDescription, videoProgressHook.loadInitialProgress],
 	);
 
 	const initializePlayer = useCallback(async () => {
@@ -149,12 +156,12 @@ export function useVideoPlayer({
 		initializePlayer();
 	}, [initializePlayer]);
 
-	// ビデオの時間更新ハンドラー（新しいuseVideoProgressフックを使用）
+	// ビデオの時間更新ハンドラー（定期保存＋シーク対応）
 	const handleTimeUpdate = useCallback(
 		(currentTime: number, duration: number) => {
 			if (!videoData || !duration) return;
 
-			// 新しいフックのhandleTimeUpdateを呼び出し
+			// 新しいフックのhandleTimeUpdateを呼び出し（定期保存＋シーク対応）
 			videoProgressHook.handleTimeUpdate(currentTime, duration);
 		},
 		[videoData, videoProgressHook],
@@ -263,6 +270,8 @@ export function useVideoPlayer({
 		toggleWatchlist,
 		toggleDescription,
 		handleTimeUpdate,
+		// 進捗機能も公開
+		loadInitialProgress: videoProgressHook.loadInitialProgress,
 		// 進捗保存の状態とエラー情報も公開
 		progressLoading: videoProgressHook.loading,
 		progressError: videoProgressHook.error,

@@ -1,17 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../common/database/prisma.service";
 
-type VideoProgressData = {
-	filePath: string;
-	watchTime: number | null;
-	watchProgress: number;
-	isLiked: boolean;
-	likedAt: Date | null;
-	isInWatchlist: boolean;
-	watchlistAt: Date | null;
-	lastWatched: Date | null;
-};
-
 @Injectable()
 export class ProgressService {
 	private readonly logger = new Logger(ProgressService.name);
@@ -27,39 +16,29 @@ export class ProgressService {
 				};
 			}
 
-			// ユーザーが指定されている場合はユーザー付きで検索
-			let videoProgress: VideoProgressData | null = null;
-
-			if (userId) {
-				videoProgress = await this.prisma.videoProgress.findUnique({
-					where: { filePath_userId: { filePath, userId } },
-					select: {
-						filePath: true,
-						watchTime: true,
-						watchProgress: true,
-						isLiked: true,
-						likedAt: true,
-						isInWatchlist: true,
-						watchlistAt: true,
-						lastWatched: true,
+			if (!userId) {
+				// ユーザーがいない場合はデフォルト値を返す
+				return {
+					success: true,
+					data: {
+						filePath,
+						watchTime: 0,
+						watchProgress: 0,
+						isLiked: false,
+						lastWatched: null,
 					},
-				});
-			} else {
-				// 後方互換性のため、最初に一致するレコードを検索
-				videoProgress = await this.prisma.videoProgress.findFirst({
-					where: { filePath },
-					select: {
-						filePath: true,
-						watchTime: true,
-						watchProgress: true,
-						isLiked: true,
-						likedAt: true,
-						isInWatchlist: true,
-						watchlistAt: true,
-						lastWatched: true,
-					},
-				});
+				};
 			}
+
+			// VideoProgressテーブルからユーザーの進捗データを取得
+			const videoProgress = await this.prisma.videoProgress.findUnique({
+				where: {
+					filePath_userId: {
+						filePath,
+						userId,
+					},
+				},
+			});
 
 			if (!videoProgress) {
 				// 進捗データが存在しない場合はデフォルト値を返す
@@ -70,9 +49,6 @@ export class ProgressService {
 						watchTime: 0,
 						watchProgress: 0,
 						isLiked: false,
-						likedAt: null,
-						isInWatchlist: false,
-						watchlistAt: null,
 						lastWatched: null,
 					},
 				};
@@ -80,7 +56,13 @@ export class ProgressService {
 
 			return {
 				success: true,
-				data: videoProgress,
+				data: {
+					filePath,
+					watchTime: videoProgress.watchTime ?? 0,
+					watchProgress: videoProgress.watchProgress,
+					isLiked: videoProgress.isLiked,
+					lastWatched: videoProgress.lastWatched,
+				},
 			};
 		} catch (error) {
 			this.logger.error("Error fetching video progress:", error);
@@ -97,18 +79,23 @@ export class ProgressService {
 			watchTime?: number;
 			watchProgress?: number;
 			isLiked?: boolean;
-			isInWatchlist?: boolean;
 		},
 		userId?: string,
 	) {
 		try {
-			const { filePath, watchTime, watchProgress, isLiked, isInWatchlist } =
-				data;
+			const { filePath, watchTime, watchProgress, isLiked } = data;
 
 			if (!filePath) {
 				return {
 					success: false,
 					error: "ファイルパスが必要です",
+				};
+			}
+
+			if (!userId) {
+				return {
+					success: false,
+					error: "ユーザーIDが必要です",
 				};
 			}
 
@@ -118,9 +105,6 @@ export class ProgressService {
 				lastWatched?: Date;
 				watchProgress?: number;
 				isLiked?: boolean;
-				likedAt?: Date | null;
-				isInWatchlist?: boolean;
-				watchlistAt?: Date | null;
 				updatedAt: Date;
 			} = {
 				updatedAt: new Date(),
@@ -139,93 +123,39 @@ export class ProgressService {
 			// ライク状態の更新
 			if (typeof isLiked === "boolean") {
 				updateData.isLiked = isLiked;
-				updateData.likedAt = isLiked ? new Date() : null;
 			}
 
-			// ウォッチリスト状態の更新
-			if (typeof isInWatchlist === "boolean") {
-				updateData.isInWatchlist = isInWatchlist;
-				updateData.watchlistAt = isInWatchlist ? new Date() : null;
-			}
-
-			// ユーザーが指定されている場合はユーザー付きでupsert
-			const upsertData = {
-				...updateData,
-				...(userId && { userId }),
-			};
-
-			// ユーザーが指定されている場合のみupsertを使用
-			let updatedVideo: VideoProgressData | null = null;
-
-			if (userId) {
-				updatedVideo = await this.prisma.videoProgress.upsert({
-					where: { filePath_userId: { filePath, userId } },
-					update: upsertData,
-					create: {
+			// VideoProgressをupsert
+			const updatedVideo = await this.prisma.videoProgress.upsert({
+				where: {
+					filePath_userId: {
 						filePath,
-						...upsertData,
+						userId,
 					},
-					select: {
-						filePath: true,
-						watchTime: true,
-						watchProgress: true,
-						isLiked: true,
-						likedAt: true,
-						isInWatchlist: true,
-						watchlistAt: true,
-						lastWatched: true,
-					},
-				});
-			} else {
-				// 後方互換性：既存のレコードを更新または作成
-				const existingRecord = await this.prisma.videoProgress.findFirst({
-					where: { filePath },
-				});
-
-				if (existingRecord) {
-					updatedVideo = await this.prisma.videoProgress.update({
-						where: { id: existingRecord.id },
-						data: upsertData,
-						select: {
-							filePath: true,
-							watchTime: true,
-							watchProgress: true,
-							isLiked: true,
-							likedAt: true,
-							isInWatchlist: true,
-							watchlistAt: true,
-							lastWatched: true,
-						},
-					});
-				} else {
-					updatedVideo = await this.prisma.videoProgress.create({
-						data: {
-							filePath,
-							...upsertData,
-						},
-						select: {
-							filePath: true,
-							watchTime: true,
-							watchProgress: true,
-							isLiked: true,
-							likedAt: true,
-							isInWatchlist: true,
-							watchlistAt: true,
-							lastWatched: true,
-						},
-					});
-				}
-			}
+				},
+				update: updateData,
+				create: {
+					filePath,
+					userId,
+					...updateData,
+				},
+			});
 
 			return {
 				success: true,
-				data: updatedVideo,
+				data: {
+					filePath,
+					watchTime: updatedVideo.watchTime ?? 0,
+					watchProgress: updatedVideo.watchProgress,
+					isLiked: updatedVideo.isLiked,
+					lastWatched: updatedVideo.lastWatched,
+				},
 			};
 		} catch (error) {
-			this.logger.error("Error updating video:", error);
+			this.logger.error("Error updating video progress:", error);
 			return {
 				success: false,
-				error: "動画の更新に失敗しました",
+				error: "動画進捗の更新に失敗しました",
 			};
 		}
 	}

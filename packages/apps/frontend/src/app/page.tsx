@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, Suspense, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
+	AuthGuard,
 	EmptyState,
 	HeaderSection,
 	LoadingState,
@@ -10,14 +9,15 @@ import {
 	SearchSection,
 	SettingsModal,
 	TabNavigation,
+	VideoContent,
 	useAppStateStore,
 	useNavigationRefresh,
 	useVideoActions,
 	useVideos,
 	useWarningDialog,
-	VideoContent,
-	AuthGuard,
 } from "@maine/libs";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef } from "react";
 
 const HomeContent = () => {
 	const router = useRouter();
