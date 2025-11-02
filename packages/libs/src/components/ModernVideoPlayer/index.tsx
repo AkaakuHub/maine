@@ -25,6 +25,7 @@ import { useVideoInteraction } from "./hooks/useVideoInteraction";
 import { useVideoPlayerSettings } from "./hooks/useVideoPlayerSettings";
 import { useVideoScreenshot } from "./hooks/useVideoScreenshot";
 import { useVideoSkip } from "./hooks/useVideoSkip";
+import { usePlaylistNavigation } from "./hooks/usePlaylistNavigation";
 
 const ModernVideoPlayer = ({
 	src,
@@ -35,6 +36,10 @@ const ModernVideoPlayer = ({
 	className = "",
 	onShowHelp,
 	onError,
+	onVideoEnd,
+	playlistVideos = [],
+	onVideoSelect,
+	videoId,
 }: ModernVideoPlayerProps) => {
 	// Refs
 	const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
@@ -64,6 +69,33 @@ const ModernVideoPlayer = ({
 		icon: "play" | "pause";
 	} | null>(null);
 
+	const { isFullscreen, toggleFullscreen } = useVideoFullscreen({
+		containerRef,
+		videoRef,
+	});
+
+	// 現在の動画IDを取得
+	const currentVideoId = videoId || "";
+
+	// プレイストナビゲーションフック
+	const { playNextVideo, hasNextVideo } = usePlaylistNavigation({
+		playlistVideos,
+		currentVideoId,
+		onVideoSelect,
+	});
+
+	// 動画終了時のハンドラー
+	const handleVideoEnd = useCallback(() => {
+		// プレイリストがあれば次の動画を自動再生
+		if (hasNextVideo && playNextVideo()) {
+			return;
+		}
+		// 次の動画がない場合は元のハンドラーを呼び出す
+		if (onVideoEnd) {
+			onVideoEnd();
+		}
+	}, [hasNextVideo, playNextVideo, onVideoEnd]);
+
 	const {
 		isPlaying,
 		currentTime,
@@ -82,11 +114,7 @@ const ModernVideoPlayer = ({
 		playbackRate,
 		isMuted,
 		onTimeUpdate,
-	});
-
-	const { isFullscreen, toggleFullscreen } = useVideoFullscreen({
-		containerRef,
-		videoRef,
+		onVideoEnd: handleVideoEnd,
 	});
 
 	const { predictedTime, skipQueue, skipForward, skipBackward } = useVideoSkip({

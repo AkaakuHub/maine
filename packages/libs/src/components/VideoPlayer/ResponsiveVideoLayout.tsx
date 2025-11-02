@@ -89,6 +89,12 @@ export function ResponsiveVideoLayout({
 							onShowHelp={() => setShowHelpModal(true)}
 							onError={onVideoError}
 							className="h-full not-lg:max-h-[50vh] w-full"
+							playlistVideos={playlistVideos || []}
+							onVideoSelect={onVideoSelect}
+							onVideoEnd={() => {
+								// 動画終了時の追加処理があればここに記述
+							}}
+							videoId={videoData?.videoId}
 						/>
 					</div>
 				</div>

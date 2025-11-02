@@ -8,6 +8,7 @@ interface UseVideoElementProps {
 	playbackRate: number;
 	isMuted: boolean;
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
+	onVideoEnd?: () => void;
 }
 
 interface VideoElementState {
@@ -30,6 +31,7 @@ export function useVideoElement({
 	playbackRate,
 	isMuted,
 	onTimeUpdate,
+	onVideoEnd,
 }: UseVideoElementProps): VideoElementState {
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(0);
@@ -149,17 +151,25 @@ export function useVideoElement({
 
 		const handleWaiting = () => setIsBuffering(true);
 		const handleCanPlay = () => setIsBuffering(false);
+		const handleVideoEnd = () => {
+			setIsPlaying(false);
+			if (onVideoEnd) {
+				onVideoEnd();
+			}
+		};
 
 		video.addEventListener("timeupdate", handleTimeUpdate);
 		video.addEventListener("loadedmetadata", handleLoadedMetadata);
 		video.addEventListener("waiting", handleWaiting);
 		video.addEventListener("canplay", handleCanPlay);
+		video.addEventListener("ended", handleVideoEnd);
 
 		return () => {
 			video.removeEventListener("timeupdate", handleTimeUpdate);
 			video.removeEventListener("loadedmetadata", handleLoadedMetadata);
 			video.removeEventListener("waiting", handleWaiting);
 			video.removeEventListener("canplay", handleCanPlay);
+			video.removeEventListener("ended", handleVideoEnd);
 		};
 	}, [
 		videoRef,
@@ -169,6 +179,7 @@ export function useVideoElement({
 		volume,
 		isMuted,
 		isSeeking,
+		onVideoEnd,
 	]);
 
 	return {

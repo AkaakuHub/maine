@@ -1,3 +1,5 @@
+import { PlaylistVideo } from "src/types/Playlist";
+
 // フルスクリーン用の型定義
 export interface HTMLVideoElementWithFullscreen extends HTMLVideoElement {
 	webkitRequestFullscreen?: () => Promise<void>;
@@ -31,6 +33,10 @@ export interface ModernVideoPlayerProps {
 	className?: string;
 	onShowHelp?: () => void;
 	onError?: (error: string) => void;
+	onVideoEnd?: () => void;
+	playlistVideos?: PlaylistVideo[];
+	onVideoSelect?: (video: PlaylistVideo) => void;
+	videoId?: string;
 }
 
 export type SettingsView =
