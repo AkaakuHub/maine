@@ -74,7 +74,7 @@ model VideoMetadata {
   duration              Int?
   metadata_extracted_at DateTime?
   thumbnail_path        String?
-  videoId               String?   @unique
+  videoId               String    @unique
 
   // Relations
   playlists             VideoPlaylist[]

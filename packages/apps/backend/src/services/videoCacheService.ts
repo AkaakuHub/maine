@@ -304,13 +304,18 @@ class VideoCacheService {
 				// 最初のプレイリスト情報を取得（複数ある場合は最初のものを使用）
 				const firstPlaylist =
 					record.playlists.length > 0 ? record.playlists[0] : null;
+				if (!record.videoId) {
+					throw new Error(
+						`既存レコードにvideoIdが存在しません: ${record.filePath}. DB移行を確認してください。`,
+					);
+				}
 				return [
 					record.filePath,
 					{
 						...record,
 						fileSize: Number(record.fileSize), // BigIntをnumberに変換
 						thumbnailPath: record.thumbnail_path,
-						videoId: record.videoId || "", // videoIdを含める
+						videoId: record.videoId,
 						playlistId: firstPlaylist?.playlist.id,
 						playlistName: firstPlaylist?.playlist.name,
 					} as ProcessedVideoRecord,
@@ -692,130 +697,230 @@ class VideoCacheService {
 	): Promise<number> {
 		this.progressCalculator.resetPhaseTimer();
 
-		// データベース更新フェーズ開始
+		const { uniqueRecords, duplicateGroups } =
+			this.deduplicateVideoRecords(allDbRecords);
+
+		if (duplicateGroups.length > 0) {
+			console.warn(
+				`[SCAN][database] Detected ${duplicateGroups.length} duplicate videoId entries. Keeping the most recently modified file for each hash.`,
+			);
+			for (const group of duplicateGroups) {
+				const skipped = group.skipped
+					.map((record) => record.filePath)
+					.join(", ");
+				console.warn(
+					`[SCAN][database] videoId=${group.videoId} kept=${group.kept.filePath} skipped=[${skipped}]`,
+				);
+			}
+		}
+
 		sseStore.broadcast({
 			type: "phase",
 			scanId,
 			phase: "database",
 			progress: 0,
-			processedFiles: allDbRecords.length,
-			totalFiles: allDbRecords.length,
+			processedFiles: uniqueRecords.length,
+			totalFiles: uniqueRecords.length,
 			message: "データベース更新中...",
 		});
 
-		let deletedFilePaths: string[] = [];
+		const existingRecords = await prisma.videoMetadata.findMany({
+			select: { filePath: true },
+		});
+		const existingFilePaths = new Set(existingRecords.map((r) => r.filePath));
+		const currentFilePaths = new Set(uniqueRecords.map((r) => r.filePath));
+		const deletedFilePaths = [...existingFilePaths].filter(
+			(path) => !currentFilePaths.has(path),
+		);
 
-		await prisma.$transaction(
-			async (tx: Prisma.TransactionClient) => {
-				// 1. 既存レコードのファイルパス一覧を取得
-				const existingRecords = await tx.videoMetadata.findMany({
-					select: { filePath: true },
-				});
-				const existingFilePaths = new Set(
-					existingRecords.map((r) => r.filePath),
-				);
+		if (deletedFilePaths.length > 0) {
+			await prisma.videoMetadata.deleteMany({
+				where: {
+					filePath: { in: deletedFilePaths },
+				},
+			});
+		}
 
-				// 2. 現在のスキャン結果のファイルパス一覧
-				const currentFilePaths = new Set(allDbRecords.map((r) => r.filePath));
+		const dbBatchSize = Math.max(1, this.scanSettings.batchSize);
+		const recordChunks = this.chunkRecords(uniqueRecords, dbBatchSize);
+		let processedDbCount = 0;
 
-				// 3. 削除されたファイルを特定
-				deletedFilePaths = [...existingFilePaths].filter(
-					(path) => !currentFilePaths.has(path),
-				);
-
-				// 4. 削除されたファイルのレコードを削除
-				if (deletedFilePaths.length > 0) {
-					await tx.videoMetadata.deleteMany({
-						where: {
-							filePath: { in: deletedFilePaths },
-						},
-					});
-				}
-
-				// 5. 各レコードをupsert（存在すれば更新、なければ挿入）
-				for (const record of allDbRecords) {
-					// VideoMetadataをupsert
-					const _videoRecord = await tx.videoMetadata.upsert({
-						where: { id: record.id },
-						update: {
-							filePath: record.filePath,
-							fileName: record.fileName,
-							title: record.title,
-							fileSize: BigInt(record.fileSize),
-							episode: record.episode,
-							year: record.year,
-							duration: record.duration,
-							thumbnail_path: record.thumbnailPath,
-							lastModified: record.lastModified,
-							metadata_extracted_at: record.duration ? new Date() : null,
-							videoId: record.videoId, // SHA-256ハッシュID (32文字)
-						},
-						create: {
-							id: record.id,
-							filePath: record.filePath,
-							fileName: record.fileName,
-							title: record.title,
-							fileSize: BigInt(record.fileSize),
-							episode: record.episode,
-							year: record.year,
-							duration: record.duration,
-							thumbnail_path: record.thumbnailPath,
-							lastModified: record.lastModified,
-							metadata_extracted_at: record.duration ? new Date() : null,
-							videoId: record.videoId, // SHA-256ハッシュID (32文字)
-						},
-					});
-
-					// 6. プレイリスト関連を処理
-					if (record.playlistId) {
-						// 既存のVideoPlaylist関係を確認
-						const existingRelation = await tx.videoPlaylist.findFirst({
-							where: {
+		for (const chunk of recordChunks) {
+			await prisma.$transaction(
+				async (tx: Prisma.TransactionClient) => {
+					for (const record of chunk) {
+						await tx.videoMetadata.upsert({
+							where: { videoId: record.videoId },
+							update: {
+								id: record.id,
+								filePath: record.filePath,
+								fileName: record.fileName,
+								title: record.title,
+								fileSize: BigInt(record.fileSize),
+								episode: record.episode,
+								year: record.year,
+								duration: record.duration,
+								thumbnail_path: record.thumbnailPath,
+								lastModified: record.lastModified,
+								metadata_extracted_at: record.duration ? new Date() : null,
 								videoId: record.videoId,
-								playlistId: record.playlistId,
+							},
+							create: {
+								id: record.id,
+								filePath: record.filePath,
+								fileName: record.fileName,
+								title: record.title,
+								fileSize: BigInt(record.fileSize),
+								episode: record.episode,
+								year: record.year,
+								duration: record.duration,
+								thumbnail_path: record.thumbnailPath,
+								lastModified: record.lastModified,
+								metadata_extracted_at: record.duration ? new Date() : null,
+								videoId: record.videoId,
 							},
 						});
 
-						if (!existingRelation) {
-							// 新しい関係を作成
-							await tx.videoPlaylist.create({
-								data: {
+						if (record.playlistId && record.videoId) {
+							const existingRelation = await tx.videoPlaylist.findFirst({
+								where: {
 									videoId: record.videoId,
 									playlistId: record.playlistId,
 								},
 							});
-						}
-					} else {
-						console.log(`No playlistId for video: ${record.fileName}`);
-					}
 
-					// 7. 古いプレイリスト関係をクリーンアップ（この動画が持つ他のプレイリスト関係を削除）
-					await tx.videoPlaylist.deleteMany({
-						where: {
-							videoId: record.videoId,
-							playlistId: record.playlistId
-								? {
-										not: record.playlistId,
-									}
-								: undefined,
-						},
-					});
-				}
-			},
-			{ timeout: SCAN.TRANSACTION_TIMEOUT_MS },
-		);
+							if (!existingRelation) {
+								await tx.videoPlaylist.create({
+									data: {
+										videoId: record.videoId,
+										playlistId: record.playlistId,
+									},
+								});
+							}
+						}
+
+						if (record.videoId) {
+							await tx.videoPlaylist.deleteMany({
+								where: {
+									videoId: record.videoId,
+									playlistId: record.playlistId
+										? {
+												not: record.playlistId,
+											}
+										: undefined,
+								},
+							});
+						}
+					}
+				},
+				{ timeout: SCAN.TRANSACTION_TIMEOUT_MS },
+			);
+
+			processedDbCount += chunk.length;
+			this.broadcastDatabaseProgress(
+				scanId,
+				processedDbCount,
+				uniqueRecords.length,
+				chunk[chunk.length - 1]?.fileName,
+			);
+		}
 
 		sseStore.broadcast({
 			type: "complete",
 			scanId,
 			phase: "database",
 			progress: 100,
-			processedFiles: allDbRecords.length,
-			totalFiles: allDbRecords.length,
-			message: `スキャン完了: ${allDbRecords.length}ファイル処理完了`,
+			processedFiles: uniqueRecords.length,
+			totalFiles: uniqueRecords.length,
+			message: `スキャン完了: ${uniqueRecords.length}ファイル処理完了`,
 		});
 
 		return deletedFilePaths.length;
+	}
+
+	private deduplicateVideoRecords(records: ProcessedVideoRecord[]): {
+		uniqueRecords: ProcessedVideoRecord[];
+		duplicateGroups: Array<{
+			videoId: string;
+			kept: ProcessedVideoRecord;
+			skipped: ProcessedVideoRecord[];
+		}>;
+	} {
+		const recordMap = new Map<string, ProcessedVideoRecord>();
+		const duplicates: Array<{
+			videoId: string;
+			kept: ProcessedVideoRecord;
+			skipped: ProcessedVideoRecord[];
+		}> = [];
+
+		for (const record of records) {
+			const key = record.videoId;
+			const existing = recordMap.get(key);
+
+			if (!existing) {
+				recordMap.set(key, record);
+				continue;
+			}
+
+			const shouldReplace =
+				record.lastModified.getTime() > existing.lastModified.getTime();
+			const keptRecord = shouldReplace ? record : existing;
+			const skippedRecord = shouldReplace ? existing : record;
+
+			if (shouldReplace) {
+				recordMap.set(key, record);
+			}
+
+			const duplicateEntry = duplicates.find((entry) => entry.videoId === key);
+			if (duplicateEntry) {
+				duplicateEntry.kept = keptRecord;
+				duplicateEntry.skipped.push(skippedRecord);
+			} else {
+				duplicates.push({
+					videoId: key,
+					kept: keptRecord,
+					skipped: [skippedRecord],
+				});
+			}
+		}
+
+		return {
+			uniqueRecords: Array.from(recordMap.values()),
+			duplicateGroups: duplicates,
+		};
+	}
+
+	private chunkRecords<T>(records: T[], chunkSize: number): T[][] {
+		if (chunkSize <= 0) {
+			return [records];
+		}
+
+		const chunks: T[][] = [];
+		for (let i = 0; i < records.length; i += chunkSize) {
+			chunks.push(records.slice(i, i + chunkSize));
+		}
+		return chunks;
+	}
+
+	private broadcastDatabaseProgress(
+		scanId: string,
+		processed: number,
+		total: number,
+		currentFile?: string,
+	): void {
+		const normalizedProgress =
+			total > 0 ? Math.min(50 + (processed / total) * 50, 99.9) : 50;
+
+		sseStore.broadcast({
+			type: "progress",
+			scanId,
+			phase: "database",
+			progress: normalizedProgress,
+			processedFiles: processed,
+			totalFiles: total,
+			currentFile,
+			message: `データベース更新中 (${processed}/${total})`,
+		});
 	}
 
 	private async scanDirectory(directory: string): Promise<VideoFile[]> {
