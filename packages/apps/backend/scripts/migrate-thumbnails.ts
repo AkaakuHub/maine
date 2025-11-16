@@ -1,7 +1,8 @@
-import { promises as fs } from "node:fs";
-import { existsSync } from "node:fs";
+import { promises as fs, existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 import { PrismaClient } from "@prisma/client";
+
+loadEnvFileIfNeeded();
 
 const prisma = new PrismaClient();
 const THUMBNAIL_DIR = path.resolve(process.cwd(), "data", "thumbnails");
@@ -122,3 +123,77 @@ migrateThumbnails()
 	.finally(async () => {
 		await prisma.$disconnect();
 	});
+
+function loadEnvFileIfNeeded() {
+	if (process.env.DATABASE_URL) {
+		return;
+	}
+
+	const backendRoot = path.resolve(__dirname, "..", "..");
+	const searchCandidates = [
+		path.resolve(process.cwd(), ".env"),
+		path.resolve(process.cwd(), ".env.local"),
+		path.resolve(backendRoot, ".env"),
+		path.resolve(backendRoot, ".env.local"),
+	].filter((envPath, index, all) => all.indexOf(envPath) === index);
+
+	for (const envPath of searchCandidates) {
+		if (!existsSync(envPath)) {
+			continue;
+		}
+
+		mergeEnvFromFile(envPath);
+		if (process.env.DATABASE_URL) {
+			console.log(`Loaded environment variables from ${envPath}`);
+			return;
+		}
+	}
+
+	const defaultSqlitePath = path.resolve(backendRoot, "prisma", "dev.db");
+	if (existsSync(defaultSqlitePath)) {
+		process.env.DATABASE_URL = `file:${defaultSqlitePath}`;
+		console.warn(
+			"DATABASE_URL was not set. Falling back to local prisma/dev.db file.",
+		);
+		return;
+	}
+
+	throw new Error(
+		"DATABASE_URL is not configured. Set it or add it to packages/apps/backend/.env.",
+	);
+}
+
+function mergeEnvFromFile(envPath: string) {
+	const raw = readFileSync(envPath, "utf8");
+	for (const line of raw.split(/\r?\n/)) {
+		if (!line || line.trim().startsWith("#")) {
+			continue;
+		}
+
+		const match = line.match(/^\s*([A-Z0-9_\.\-]+)\s*=\s*(.*)\s*$/i);
+		if (!match) {
+			continue;
+		}
+
+		const key = match[1];
+		let value = match[2] ?? "";
+
+		if (
+			(value.startsWith("\"") && value.endsWith("\"")) ||
+			(value.startsWith("'") && value.endsWith("'"))
+		) {
+			value = value.slice(1, -1);
+		} else {
+			const hashIndex = value.indexOf("#");
+			if (hashIndex !== -1) {
+				value = value.slice(0, hashIndex).trimEnd();
+			}
+		}
+
+		value = value.replace(/\\n/g, "\n").replace(/\\r/g, "\r");
+
+		if (!(key in process.env)) {
+			process.env[key] = value;
+		}
+	}
+}
