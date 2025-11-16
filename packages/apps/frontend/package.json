@@ -5,11 +5,11 @@
 	"scripts": {
 		"dev": "next dev",
 		"dev:https": "next dev --experimental-https",
-		"build": "NODE_ENV=production next build",
+		"build": "cross-env NODE_ENV=production next build",
 		"build:open": "opennextjs-cloudflare build",
 		"start": "next start",
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-		"deploy": "NODE_ENV=production opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+		"deploy": "cross-env NODE_ENV=production opennextjs-cloudflare build && opennextjs-cloudflare deploy",
 		"cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
 		"lint": "biome lint --write ./src",
 		"format": "biome format --write ./src",
@@ -30,6 +30,7 @@
 		"@types/node": "^22.15.29",
 		"@types/react": "^19.1.6",
 		"@types/react-dom": "^19.1.5",
+		"cross-env": "^10.1.0",
 		"tailwindcss": "^4.1.8",
 		"typescript": "^5.8.3",
 		"wrangler": "^4.45.3"
