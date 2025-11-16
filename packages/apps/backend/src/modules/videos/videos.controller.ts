@@ -2,7 +2,6 @@ import {
 	BadRequestException,
 	Controller,
 	Get,
-	Post,
 	Logger,
 	Query,
 	UseGuards,
@@ -214,27 +213,6 @@ export class VideosController {
 			this.logger.error("Get directories error:", error);
 			throw new BadRequestException({
 				error: "Failed to get directories",
-				details: error instanceof Error ? error.message : "Unknown error",
-			});
-		}
-	}
-
-	@Post("migrate-playlists")
-	@ApiResponse({ status: 200, description: "プレイリストマイグレーション成功" })
-	@ApiResponse({ status: 500, description: "マイグレーション失敗" })
-	async migratePlaylists() {
-		try {
-			this.logger.log("Starting playlist migration via API");
-			const count = await this.videosService.migrateExistingPlaylists();
-			return {
-				success: true,
-				message: `Successfully migrated ${count} videos to playlists`,
-				processedCount: count,
-			};
-		} catch (error) {
-			this.logger.error("Playlist migration failed:", error);
-			throw new BadRequestException({
-				error: "Failed to migrate playlists",
 				details: error instanceof Error ? error.message : "Unknown error",
 			});
 		}

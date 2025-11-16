@@ -19,7 +19,7 @@ export interface VideoData {
 	scannedAt: Date;
 	thumbnailPath: string | undefined | null;
 	metadataExtractedAt: Date | null;
-	videoId: string | null; // SHA-256ハッシュID (64文字)
+	videoId: string; // SHA-256ハッシュID (64文字)
 	playlistId?: string | null; // プレイリストID
 	playlistName?: string | null; // プレイリスト名
 }
@@ -43,141 +43,7 @@ export class VideosService {
 	 * 既存動画にvideoIdを一括設定（マイグレーション用）
 	 * @returns 処理した動画数
 	 */
-	async migrateExistingVideos(): Promise<number> {
-		this.logger.log("Starting migration of existing videos to videoId...");
-
-		try {
-			// videoIdが未設定の動画を取得
-			const videosWithoutId = await this.prisma.videoMetadata.findMany({
-				where: { videoId: null },
-				select: { id: true, filePath: true },
-			});
-
-			let processedCount = 0;
-
-			for (const video of videosWithoutId) {
-				try {
-					const videoId = await this.generateVideoId(video.filePath);
-
-					await this.prisma.videoMetadata.update({
-						where: { id: video.id },
-						data: { videoId },
-					});
-
-					processedCount++;
-					this.logger.log(
-						`Migrated video ${processedCount}/${videosWithoutId.length}: ${video.filePath} -> ${videoId}`,
-					);
-				} catch (error) {
-					this.logger.error(
-						`Failed to migrate video: ${video.filePath}`,
-						error,
-					);
-				}
-			}
-
-			this.logger.log(
-				`Migration completed. Processed ${processedCount} videos.`,
-			);
-			return processedCount;
-		} catch (error) {
-			this.logger.error("Migration failed", error);
-			throw new Error("Migration failed");
-		}
-	}
-
-	/**
-	 * 既存動画にプレイリストを一括設定（マイグレーション用）
-	 * @returns 処理した動画数
-	 */
-	async migrateExistingPlaylists(): Promise<number> {
-		this.logger.log("Starting migration of existing videos to playlists...");
-
-		try {
-			// プレイリスト検出器を使用して現在のプレイリストを取得
-			const { PlaylistDetector, getVideoDirectories } = await import(
-				"../../libs/fileUtils"
-			);
-			const playlistDetector = new PlaylistDetector();
-			const videoDirectories = getVideoDirectories();
-
-			this.logger.log(`Detecting playlists in: ${videoDirectories.join(", ")}`);
-			const detectedPlaylists =
-				await playlistDetector.detectPlaylists(videoDirectories);
-			this.logger.log(
-				`Found ${detectedPlaylists.length} playlists for migration`,
-			);
-
-			// 1. videoIdがある動画をすべて取得
-			const allVideos = await this.prisma.videoMetadata.findMany({
-				where: {
-					videoId: { not: null },
-				},
-				select: { id: true, filePath: true, fileName: true, videoId: true },
-			});
-
-			this.logger.log(
-				`Processing ${allVideos.length} videos for playlist assignment`,
-			);
-
-			let processedCount = 0;
-
-			for (const video of allVideos) {
-				try {
-					// PlaylistDetectorを使用してプレイリストを割り当て
-					const playlist = playlistDetector.assignPlaylist(
-						video.filePath,
-						detectedPlaylists,
-					);
-
-					if (playlist) {
-						// videoIdがnullの場合はスキップ
-						if (!video.videoId) {
-							this.logger.warn(
-								`Skipping video without videoId: ${video.fileName}`,
-							);
-							continue;
-						}
-
-						// 既存の関係を削除
-						await this.prisma.videoPlaylist.deleteMany({
-							where: { videoId: video.videoId },
-						});
-
-						// 新しい関係を作成
-						await this.prisma.videoPlaylist.create({
-							data: {
-								videoId: video.videoId,
-								playlistId: playlist.id,
-							},
-						});
-
-						processedCount++;
-						this.logger.log(
-							`Migrated playlist for video ${processedCount}/${allVideos.length}: ${video.fileName} -> ${playlist.name}`,
-						);
-					} else {
-						this.logger.log(
-							`No playlist assigned for video: ${video.fileName}`,
-						);
-					}
-				} catch (error) {
-					this.logger.error(
-						`Failed to migrate playlist for video: ${video.filePath}`,
-						error,
-					);
-				}
-			}
-
-			this.logger.log(
-				`Playlist migration completed. Processed ${processedCount} videos.`,
-			);
-			return processedCount;
-		} catch (error) {
-			this.logger.error("Playlist migration failed", error);
-			throw error;
-		}
-	}
+	// 既存データ用ユーティリティは不要（Prismaのマイグレーションで管理）
 
 	// videoIdから動画情報を取得するAPIエンドポイント
 	async getVideoByVideoIdForApi(videoId: string) {
