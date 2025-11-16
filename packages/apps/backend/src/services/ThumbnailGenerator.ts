@@ -1,9 +1,8 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import { mkdir, copyFile } from "node:fs/promises";
+import { mkdir, copyFile, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
-import { createHash } from "node:crypto";
 import { FFPROBE } from "../utils/constants";
 import type { VideoMetadata } from "./FFprobeMetadataExtractor";
 
@@ -42,6 +41,7 @@ export class ThumbnailGenerator {
 	 */
 	async generateThumbnail(
 		videoFilePath: string,
+		videoId: string,
 		existingMetadata: VideoMetadata,
 		options: ThumbnailOptions = {},
 	): Promise<ThumbnailResult> {
@@ -51,8 +51,8 @@ export class ThumbnailGenerator {
 				width = FFPROBE.DEFAULT_THUMBNAIL_WIDTH,
 			} = options;
 
-			// サムネイルファイルパスを生成
-			const thumbnailPath = this.generateThumbnailPath(videoFilePath);
+			// videoIdベースのサムネイルパスを生成
+			const thumbnailPath = this.getThumbnailFullPath(videoId);
 
 			// 既にサムネイルが存在する場合、ビデオファイルとの更新時刻を比較
 			if (existsSync(thumbnailPath)) {
@@ -66,7 +66,7 @@ export class ThumbnailGenerator {
 					return {
 						success: true,
 						thumbnailPath,
-						relativePath: this.getThumbnailRelativePath(videoFilePath),
+						relativePath: this.getThumbnailRelativePathByVideoId(videoId),
 						fileSize: thumbnailStat.size,
 					};
 				}
@@ -78,7 +78,7 @@ export class ThumbnailGenerator {
 				return await this.copyExistingWebp(
 					existingWebpPath,
 					thumbnailPath,
-					videoFilePath,
+					videoId,
 				);
 			}
 
@@ -112,7 +112,7 @@ export class ThumbnailGenerator {
 			return {
 				success: true,
 				thumbnailPath,
-				relativePath: this.getThumbnailRelativePath(videoFilePath),
+				relativePath: this.getThumbnailRelativePathByVideoId(videoId),
 				fileSize: stat.size,
 			};
 		} catch (error) {
@@ -126,23 +126,16 @@ export class ThumbnailGenerator {
 			};
 		}
 	}
-	/**
-	 * サムネイルファイルパスを生成（ハッシュベース）
-	 */
-	private generateThumbnailPath(videoFilePath: string): string {
-		// ファイルパスのハッシュを生成（特殊文字対応）
-		const hash = createHash("sha256").update(videoFilePath).digest("hex");
-		const thumbnailFileName = `${hash}.webp`;
-
-		return join(this.thumbnailBaseDir, thumbnailFileName);
+	private getThumbnailFileName(videoId: string): string {
+		return `${videoId}.webp`;
 	}
 
-	/**
-	 * サムネイルの相対パス（API配信用）を取得
-	 */
-	getThumbnailRelativePath(videoFilePath: string): string {
-		const hash = createHash("sha256").update(videoFilePath).digest("hex");
-		return `${hash}.webp`;
+	private getThumbnailFullPath(videoId: string): string {
+		return join(this.thumbnailBaseDir, this.getThumbnailFileName(videoId));
+	}
+
+	getThumbnailRelativePathByVideoId(videoId: string): string {
+		return this.getThumbnailFileName(videoId);
 	}
 
 	/**
@@ -185,16 +178,25 @@ export class ThumbnailGenerator {
 	/**
 	 * サムネイルファイルが存在するかチェック
 	 */
-	async thumbnailExists(videoFilePath: string): Promise<boolean> {
-		const thumbnailPath = this.generateThumbnailPath(videoFilePath);
+	async thumbnailExistsByVideoId(videoId: string): Promise<boolean> {
+		const thumbnailPath = this.getThumbnailFullPath(videoId);
 		return existsSync(thumbnailPath);
 	}
 
-	/**
-	 * サムネイルファイルパスを取得（存在チェックなし）
-	 */
-	getThumbnailPath(videoFilePath: string): string {
-		return this.generateThumbnailPath(videoFilePath);
+	getThumbnailPathByVideoId(videoId: string): string {
+		return this.getThumbnailFullPath(videoId);
+	}
+
+	async deleteThumbnailByVideoId(videoId: string): Promise<void> {
+		const thumbnailPath = this.getThumbnailFullPath(videoId);
+		if (!existsSync(thumbnailPath)) {
+			return;
+		}
+		try {
+			await unlink(thumbnailPath);
+		} catch (error) {
+			console.warn(`Failed to delete thumbnail for videoId=${videoId}:`, error);
+		}
 	}
 
 	/**
@@ -217,7 +219,7 @@ export class ThumbnailGenerator {
 	private async copyExistingWebp(
 		sourcePath: string,
 		destinationPath: string,
-		videoFilePath: string,
+		videoId: string,
 	): Promise<ThumbnailResult> {
 		try {
 			// サムネイル保存ディレクトリを作成
@@ -237,7 +239,7 @@ export class ThumbnailGenerator {
 			return {
 				success: true,
 				thumbnailPath: destinationPath,
-				relativePath: this.getThumbnailRelativePath(videoFilePath),
+				relativePath: this.getThumbnailRelativePathByVideoId(videoId),
 				fileSize: stat.size,
 			};
 		} catch (error) {

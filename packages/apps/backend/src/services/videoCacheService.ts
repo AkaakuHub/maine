@@ -629,6 +629,7 @@ class VideoCacheService {
 					videoFile.filePath,
 				);
 				const parsedInfo = parseVideoFileName(videoFile.fileName);
+				const videoId = await generateFileContentHash(videoFile.filePath);
 
 				// サムネイル生成（既に取得したメタデータを使用）
 				let thumbnailPath: string | null = null;
@@ -636,6 +637,7 @@ class VideoCacheService {
 					const thumbnailResult =
 						await this.thumbnailGenerator.generateThumbnail(
 							videoFile.filePath,
+							videoId,
 							metadata,
 						);
 					if (thumbnailResult.success) {
@@ -651,7 +653,6 @@ class VideoCacheService {
 					this.detectedPlaylists,
 				);
 
-				const videoId = await generateFileContentHash(videoFile.filePath);
 				records.push({
 					id: videoFile.filePath,
 					filePath: videoFile.filePath,
@@ -725,13 +726,20 @@ class VideoCacheService {
 		});
 
 		const existingRecords = await prisma.videoMetadata.findMany({
-			select: { filePath: true },
+			select: { filePath: true, videoId: true },
 		});
 		const existingFilePaths = new Set(existingRecords.map((r) => r.filePath));
+		const existingFileToVideoId = new Map(
+			existingRecords.map((record) => [record.filePath, record.videoId]),
+		);
 		const currentFilePaths = new Set(uniqueRecords.map((r) => r.filePath));
 		const deletedFilePaths = [...existingFilePaths].filter(
 			(path) => !currentFilePaths.has(path),
 		);
+
+		const deletedVideoIds = deletedFilePaths
+			.map((path) => existingFileToVideoId.get(path))
+			.filter((id): id is string => Boolean(id));
 
 		if (deletedFilePaths.length > 0) {
 			await prisma.videoMetadata.deleteMany({
@@ -823,6 +831,16 @@ class VideoCacheService {
 				uniqueRecords.length,
 				chunk[chunk.length - 1]?.fileName,
 			);
+		}
+
+		const activeVideoIds = new Set(
+			uniqueRecords.map((record) => record.videoId),
+		);
+		const orphanThumbnailVideoIds = deletedVideoIds.filter(
+			(videoId) => !activeVideoIds.has(videoId),
+		);
+		for (const videoId of orphanThumbnailVideoIds) {
+			await this.thumbnailGenerator.deleteThumbnailByVideoId(videoId);
 		}
 
 		sseStore.broadcast({

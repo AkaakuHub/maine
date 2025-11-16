@@ -103,6 +103,7 @@ export class ScanStreamProcessor {
 					const metadata = await self.ffprobeExtractor.extractMetadata(
 						videoFile.filePath,
 					);
+					const videoId = await generateFileContentHash(videoFile.filePath);
 
 					// サムネイル生成（既に取得したメタデータを使用）
 					let thumbnailPath: string | null = null;
@@ -110,6 +111,7 @@ export class ScanStreamProcessor {
 						const thumbnailResult =
 							await self.thumbnailGenerator.generateThumbnail(
 								videoFile.filePath,
+								videoId,
 								metadata, // 既に取得済みのメタデータを渡す
 								{}, // options
 							);
@@ -130,7 +132,6 @@ export class ScanStreamProcessor {
 					);
 
 					// DBレコードとして準備
-					const videoId = await generateFileContentHash(videoFile.filePath);
 					const record: ProcessedVideoRecord = {
 						id: videoFile.filePath,
 						filePath: videoFile.filePath,
