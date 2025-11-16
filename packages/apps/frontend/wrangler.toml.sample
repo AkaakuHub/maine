@@ -8,5 +8,5 @@ main = ".open-next/worker.js"
   binding = "ASSETS"
 
 [[routes]]
-  pattern       = "se-hasu-honsitsu.akaaku.net"
+  pattern       = "some-frontend-domain.example.com"
   custom_domain = true

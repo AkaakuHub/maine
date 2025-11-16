@@ -69,3 +69,5 @@ dist/
 certificates
 
 .open-next
+
+wrangler.toml
