@@ -568,6 +568,45 @@ class VideoCacheService {
 			message: "メタデータとサムネイル処理中...",
 		});
 
+		const totalFiles = allVideoFiles.length;
+		let processedCount = 0;
+
+		const broadcastMetadataProgress = (file: VideoFile) => {
+			if (totalFiles === 0) {
+				return;
+			}
+
+			const progressMetrics = this.progressCalculator.calculateProgressMetrics(
+				processedCount,
+				totalFiles,
+			);
+			const progressValue = (processedCount / totalFiles) * 50;
+
+			sseStore.broadcast({
+				type: "progress",
+				scanId,
+				phase: "metadata",
+				progress: progressValue,
+				processedFiles: processedCount,
+				totalFiles,
+				currentFile: file.fileName,
+				message: `メタデータ処理中 (${processedCount}/${totalFiles}) - ${file.fileName}`,
+				processingSpeed: progressMetrics.processingSpeed,
+				estimatedTimeRemaining: progressMetrics.estimatedTimeRemaining,
+				phaseStartTime: this.progressCalculator.currentPhaseStartTime
+					? new Date(
+							this.progressCalculator.currentPhaseStartTime,
+						).toISOString()
+					: undefined,
+				totalElapsedTime: progressMetrics.totalElapsedTime,
+				currentPhaseElapsed: progressMetrics.currentPhaseElapsed,
+			});
+
+			console.log(
+				`[SCAN][metadata][parallel] ${processedCount}/${totalFiles} processing ${file.filePath}`,
+			);
+		};
+
 		const concurrentOperations = this.scanSettings.maxConcurrentOperations;
 		const chunkSize = Math.ceil(allVideoFiles.length / concurrentOperations);
 
@@ -623,6 +662,9 @@ class VideoCacheService {
 					playlistId: playlist?.id,
 					playlistName: playlist?.name,
 				});
+
+				processedCount++;
+				broadcastMetadataProgress(videoFile);
 			}
 			return records;
 		});

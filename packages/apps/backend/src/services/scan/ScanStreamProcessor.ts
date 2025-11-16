@@ -78,6 +78,11 @@ export class ScanStreamProcessor {
 	): Promise<ProcessedVideoRecord[]> {
 		const results: ProcessedVideoRecord[] = [];
 		let processedCount = 0;
+		const totalFiles = allVideoFiles.length;
+
+		if (totalFiles === 0) {
+			return results;
+		}
 
 		// ファイル配列をストリームソースに変換
 		const fileStream = Readable.from(allVideoFiles);
@@ -144,46 +149,48 @@ export class ScanStreamProcessor {
 
 					processedCount++;
 
-					// プログレス更新（設定された間隔で）
-					if (processedCount % self.settings.progressUpdateInterval === 0) {
-						// メモリ使用量をチェック
-						const memUsage = self.getMemoryUsage();
-						if (memUsage.used > self.settings.memoryThresholdMB) {
-							console.warn(
-								`⚠️ Memory threshold exceeded: ${memUsage.used}MB > ${self.settings.memoryThresholdMB}MB`,
-							);
-
-							// メモリプレッシャー時の処理調整
-							await new Promise((resolve) =>
-								setTimeout(resolve, self.settings.sleepInterval * 2),
-							);
-						}
-
-						// 進捗イベント送信
-						const progressMetrics = self.calculateProgressMetrics(
-							processedCount,
-							allVideoFiles.length,
+					// メモリ使用量をチェック
+					const memUsage = self.getMemoryUsage();
+					if (memUsage.used > self.settings.memoryThresholdMB) {
+						console.warn(
+							`⚠️ Memory threshold exceeded: ${memUsage.used}MB > ${self.settings.memoryThresholdMB}MB`,
 						);
 
-						const progressEvent: ScanProgressEvent = {
-							type: "progress",
-							scanId,
-							phase: "metadata",
-							progress: (processedCount / allVideoFiles.length) * 50, // メタデータ処理は50%まで
-							processedFiles: processedCount,
-							totalFiles: allVideoFiles.length,
-							currentFile: videoFile.fileName,
-							message: `ストリーム処理中 (${processedCount}/${allVideoFiles.length}) - Memory: ${memUsage.used}MB`,
-							processingSpeed: progressMetrics.processingSpeed,
-							estimatedTimeRemaining: progressMetrics.estimatedTimeRemaining,
-							phaseStartTime: self.phaseStartTime
-								? new Date(self.phaseStartTime).toISOString()
-								: undefined,
-							totalElapsedTime: progressMetrics.totalElapsedTime,
-							currentPhaseElapsed: progressMetrics.currentPhaseElapsed,
-						};
-						sseStore.broadcast(progressEvent);
+						// メモリプレッシャー時の処理調整
+						await new Promise((resolve) =>
+							setTimeout(resolve, self.settings.sleepInterval * 2),
+						);
 					}
+
+					// 進捗イベント送信（1ファイルごと）
+					const progressMetrics = self.calculateProgressMetrics(
+						processedCount,
+						totalFiles,
+					);
+					const progressValue = (processedCount / totalFiles) * 50;
+
+					const progressEvent: ScanProgressEvent = {
+						type: "progress",
+						scanId,
+						phase: "metadata",
+						progress: progressValue, // メタデータ処理は50%まで
+						processedFiles: processedCount,
+						totalFiles,
+						currentFile: videoFile.fileName,
+						message: `ストリーム処理中 (${processedCount}/${totalFiles}) - ${videoFile.fileName}`,
+						processingSpeed: progressMetrics.processingSpeed,
+						estimatedTimeRemaining: progressMetrics.estimatedTimeRemaining,
+						phaseStartTime: self.phaseStartTime
+							? new Date(self.phaseStartTime).toISOString()
+							: undefined,
+						totalElapsedTime: progressMetrics.totalElapsedTime,
+						currentPhaseElapsed: progressMetrics.currentPhaseElapsed,
+					};
+
+					console.log(
+						`[SCAN][metadata][stream] ${processedCount}/${totalFiles} processing ${videoFile.filePath}`,
+					);
+					sseStore.broadcast(progressEvent);
 
 					callback(null, record);
 				} catch (fileError) {
