@@ -173,6 +173,13 @@ export const useAuthStore = () => {
 			notifyListeners();
 		},
 
+		setUser: (user: UserProfile | null) => {
+			authState.user = user;
+			authState.isAuthenticated = !!user;
+			saveToStorage();
+			notifyListeners();
+		},
+
 		checkAuth: async () => {
 			if (!AuthAPI.isAuthenticated()) {
 				authState.user = null;

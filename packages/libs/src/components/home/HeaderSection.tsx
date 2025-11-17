@@ -9,6 +9,7 @@ import {
 	Settings,
 	Shield,
 	User,
+	UserCog,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import PWAInstallPrompt from "../../components/PWAInstallPrompt";
@@ -188,6 +189,18 @@ export function HeaderSection({
 												<div className="text-xs">{user.email}</div>
 												<div className="text-xs mt-1">役割: {user.role}</div>
 											</div>
+											<hr className="my-1 border-border" />
+											<button
+												type="button"
+												onClick={() => {
+													setIsUserMenuOpen(false);
+													router?.push("/account");
+												}}
+												className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text hover:bg-surface-elevated rounded-md transition-colors"
+											>
+												<UserCog className="w-4 h-4" />
+												マイページ
+											</button>
 											<hr className="my-1 border-border" />
 											<button
 												type="button"

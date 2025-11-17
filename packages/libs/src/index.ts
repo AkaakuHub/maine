@@ -17,6 +17,8 @@ export { AuthGuard } from "./components/auth/auth-guard";
 // プレイリスト関連
 export type { PlaylistVideo } from "./types/Playlist";
 export { AuthAPI } from "./api/auth";
+export { AccountAPI } from "./api/account";
+export type { AccountProfile } from "./api/account";
 export { HeaderSection } from "./components/home/HeaderSection";
 export { TabNavigation } from "./components/home/TabNavigation";
 export { SearchSection } from "./components/home/SearchSection";

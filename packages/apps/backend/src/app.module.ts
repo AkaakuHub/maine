@@ -13,6 +13,7 @@ import { SettingsModule } from "./modules/settings/settings.module";
 import { SystemModule } from "./modules/system/system.module";
 import { VideosModule } from "./modules/videos/videos.module";
 import { PlaylistsModule } from "./modules/playlists/playlists.module";
+import { UsersModule } from "./modules/users/users.module";
 
 @Module({
 	imports: [
@@ -31,6 +32,7 @@ import { PlaylistsModule } from "./modules/playlists/playlists.module";
 		SystemModule,
 		ScheduleModule,
 		PlaylistsModule,
+		UsersModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
