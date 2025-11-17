@@ -1,14 +1,26 @@
-import { IsString, Matches, MinLength } from "class-validator";
+import { IsString, Length, Matches } from "class-validator";
+
+const HEX_PATTERN = /^[0-9a-f]+$/i;
+const AUTH_SALT_HEX_LENGTH = 32;
+const PASSWORD_VERIFIER_MIN = 32;
+const PASSWORD_VERIFIER_MAX = 256;
 
 export class UpdatePasswordDto {
 	@IsString()
-	@MinLength(8, { message: "現在のパスワードを入力してください" })
-	currentPassword!: string;
+	@Length(10, 2048, { message: "challengeTokenを指定してください" })
+	challengeToken!: string;
 
 	@IsString()
-	@MinLength(8, { message: "新しいパスワードは8文字以上で入力してください" })
-	@Matches(/^(?=.*[a-zA-Z])(?=.*\d).+$/, {
-		message: "新しいパスワードは英字と数字を含めてください",
-	})
-	newPassword!: string;
+	@Matches(/^[0-9a-f]+$/i, { message: "responseは16進数で指定してください" })
+	response!: string;
+
+	@IsString()
+	@Matches(HEX_PATTERN, { message: "newSaltは16進数で指定してください" })
+	@Length(AUTH_SALT_HEX_LENGTH, AUTH_SALT_HEX_LENGTH)
+	newSalt!: string;
+
+	@IsString()
+	@Matches(HEX_PATTERN, { message: "newVerifierは16進数で指定してください" })
+	@Length(PASSWORD_VERIFIER_MIN, PASSWORD_VERIFIER_MAX)
+	newVerifier!: string;
 }

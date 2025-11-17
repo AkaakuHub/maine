@@ -144,6 +144,16 @@ function AccountContent() {
 			setPasswordError("新しいパスワードが一致しません");
 			return;
 		}
+		if (passwordForm.currentPassword === passwordForm.newPassword) {
+			setPasswordError("現在と異なるパスワードを設定してください");
+			return;
+		}
+
+		const usernameForUpdate = profile?.username ?? user?.username;
+		if (!usernameForUpdate) {
+			setPasswordError("ユーザー情報の取得に失敗しました");
+			return;
+		}
 
 		setPasswordSaving(true);
 		setPasswordSuccess(null);
@@ -151,6 +161,7 @@ function AccountContent() {
 
 		try {
 			await AccountAPI.updatePassword({
+				username: usernameForUpdate,
 				currentPassword: passwordForm.currentPassword,
 				newPassword: passwordForm.newPassword,
 			});

@@ -30,9 +30,9 @@ async function migratePassword(username: string, password: string) {
 		throw new Error(`ユーザー ${username} が見つかりません`);
 	}
 
-	const passwordHash = await bcrypt.hash(password, 10);
 	const authSalt = generateAuthSalt();
 	const passwordVerifier = derivePasswordVerifier(password, authSalt);
+	const passwordHash = await bcrypt.hash(passwordVerifier, 10);
 
 	await prisma.user.update({
 		where: { id: user.id },

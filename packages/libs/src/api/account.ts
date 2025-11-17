@@ -1,5 +1,10 @@
 import { AuthAPI, type UserProfile } from "./auth";
 import { createApiUrl } from "../utils/api";
+import {
+	computeChallengeResponseClient,
+	deriveVerifier,
+	generateClientSalt,
+} from "../utils/password-crypto";
 
 export interface AccountProfile extends UserProfile {
 	createdAt: string;
@@ -12,6 +17,7 @@ interface UpdateProfilePayload {
 }
 
 interface UpdatePasswordPayload {
+	username: string;
 	currentPassword: string;
 	newPassword: string;
 }
@@ -58,13 +64,39 @@ export const AccountAPI = {
 	async updatePassword(
 		payload: UpdatePasswordPayload,
 	): Promise<{ message: string }> {
+		const challenge = await AuthAPI.requestChallenge(payload.username);
+		const currentVerifier = await deriveVerifier(
+			payload.currentPassword,
+			challenge.salt,
+			challenge.iterations,
+			challenge.keyLength,
+			challenge.digest,
+		);
+		const signature = await computeChallengeResponseClient(
+			currentVerifier,
+			challenge.challenge,
+		);
+		const newSalt = generateClientSalt();
+		const newVerifier = await deriveVerifier(
+			payload.newPassword,
+			newSalt,
+			challenge.iterations,
+			challenge.keyLength,
+			challenge.digest,
+		);
+
 		const response = await fetch(createApiUrl("users/me/password"), {
 			method: "PATCH",
 			headers: {
 				"Content-Type": "application/json",
 				...AuthAPI.getAuthHeaders(),
 			},
-			body: JSON.stringify(payload),
+			body: JSON.stringify({
+				challengeToken: challenge.challengeToken,
+				response: signature,
+				newSalt,
+				newVerifier,
+			}),
 			cache: "no-store",
 		});
 		return handleResponse<{ message: string }>(response);

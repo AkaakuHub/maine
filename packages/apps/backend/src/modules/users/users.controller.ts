@@ -40,7 +40,11 @@ export class UsersController {
 		@Request() req: RequestWithUser,
 		@Body() body: UpdatePasswordDto,
 	) {
-		await this.usersService.updatePassword(req.user.userId, body);
+		await this.usersService.updatePassword(
+			req.user.userId,
+			req.user.username,
+			body,
+		);
 		return { message: "パスワードを更新しました" };
 	}
 }

@@ -1,4 +1,9 @@
 import { createApiUrl } from "../utils/api";
+import {
+	computeChallengeResponseClient,
+	deriveVerifier,
+	generateClientSalt,
+} from "../utils/password-crypto";
 
 interface LoginCredentials {
 	username: string;
@@ -53,70 +58,6 @@ const removeToken = (): void => {
 	if (typeof window === "undefined") return;
 	localStorage.removeItem("access_token");
 };
-
-const textEncoder = new TextEncoder();
-
-const hexToArrayBuffer = (hex: string): ArrayBuffer => {
-	const length = hex.length / 2;
-	const buffer = new Uint8Array(length);
-	for (let i = 0; i < length; i += 1) {
-		buffer[i] = Number.parseInt(hex.substr(i * 2, 2), 16);
-	}
-	return buffer.buffer;
-};
-
-const arrayBufferToHex = (buffer: ArrayBuffer): string => {
-	const byteArray = new Uint8Array(buffer);
-	let hex = "";
-	for (const byte of byteArray) {
-		hex += byte.toString(16).padStart(2, "0");
-	}
-	return hex;
-};
-
-const ensureCrypto = () => {
-	if (typeof window === "undefined" || !window.crypto?.subtle) {
-		throw new Error("このブラウザは安全な暗号処理に対応していません");
-	}
-};
-
-async function deriveVerifier(
-	password: string,
-	saltHex: string,
-	iterations: number,
-	keyLength: number,
-	digest: string,
-): Promise<string> {
-	ensureCrypto();
-	const keyMaterial = await window.crypto.subtle.importKey(
-		"raw",
-		textEncoder.encode(password),
-		{ name: "PBKDF2" },
-		false,
-		["deriveBits"],
-	);
-	const derivedBits = await window.crypto.subtle.deriveBits(
-		{
-			name: "PBKDF2",
-			salt: hexToArrayBuffer(saltHex),
-			iterations,
-			hash: digest,
-		},
-		keyMaterial,
-		keyLength * 8,
-	);
-	return arrayBufferToHex(derivedBits);
-}
-
-async function computeChallengeResponseClient(
-	verifierHex: string,
-	challenge: string,
-): Promise<string> {
-	ensureCrypto();
-	const data = textEncoder.encode(`${verifierHex}:${challenge}`);
-	const hash = await window.crypto.subtle.digest("SHA-256", data);
-	return arrayBufferToHex(hash);
-}
 
 async function extractErrorMessage(
 	response: Response,
@@ -213,12 +154,25 @@ export const AuthAPI = {
 	},
 
 	async registerFirstUser(userData: FirstUserData): Promise<AuthResponse> {
+		const challenge = await requestLoginChallenge(userData.username);
+		const salt = generateClientSalt();
+		const verifier = await deriveVerifier(
+			userData.password,
+			salt,
+			challenge.iterations,
+			challenge.keyLength,
+			challenge.digest,
+		);
 		const response = await fetch(createApiUrl("auth/first-user"), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify(userData),
+			body: JSON.stringify({
+				username: userData.username,
+				passwordSalt: salt,
+				passwordVerifier: verifier,
+			}),
 		});
 
 		if (!response.ok) {
@@ -233,12 +187,26 @@ export const AuthAPI = {
 	},
 
 	async register(userData: RegisterData): Promise<AuthResponse> {
+		const challenge = await requestLoginChallenge(userData.username);
+		const salt = generateClientSalt();
+		const verifier = await deriveVerifier(
+			userData.password,
+			salt,
+			challenge.iterations,
+			challenge.keyLength,
+			challenge.digest,
+		);
 		const response = await fetch(createApiUrl("auth/register"), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify(userData),
+			body: JSON.stringify({
+				username: userData.username,
+				email: userData.email,
+				passwordSalt: salt,
+				passwordVerifier: verifier,
+			}),
 		});
 
 		if (!response.ok) {

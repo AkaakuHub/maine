@@ -8,14 +8,14 @@ import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../../common/database/prisma.service";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateUserProfileDto } from "./dto/update-user-profile.dto";
-import {
-	derivePasswordVerifier,
-	generateAuthSalt,
-} from "../../auth/password.utils";
+import { AuthService } from "../../auth/auth.service";
 
 @Injectable()
 export class UsersService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly authService: AuthService,
+	) {}
 
 	async getCurrentUser(userId: string) {
 		const user = await this.prisma.user.findUnique({
@@ -79,38 +79,30 @@ export class UsersService {
 		}
 	}
 
-	async updatePassword(userId: string, dto: UpdatePasswordDto) {
-		const user = await this.prisma.user.findUnique({
-			where: { id: userId },
-			select: { passwordHash: true },
-		});
-
-		if (!user) {
-			throw new NotFoundException("ユーザーが見つかりません");
-		}
-
-		const isCurrentValid = await bcrypt.compare(
-			dto.currentPassword,
-			user.passwordHash,
+	async updatePassword(
+		userId: string,
+		username: string,
+		dto: UpdatePasswordDto,
+	) {
+		const validatedUser = await this.authService.verifyChallengeResponse(
+			dto.challengeToken,
+			dto.response,
+			{ expectedUserId: userId, expectedUsername: username },
 		);
 
-		if (!isCurrentValid) {
-			throw new BadRequestException("現在のパスワードが正しくありません");
+		if (validatedUser.id !== userId) {
+			throw new BadRequestException("ユーザー情報が一致しません");
 		}
 
-		if (dto.currentPassword === dto.newPassword) {
-			throw new BadRequestException(
-				"新しいパスワードは現在のパスワードと異なる必要があります",
-			);
-		}
-
-		const newHash = await bcrypt.hash(dto.newPassword, 10);
-		const authSalt = generateAuthSalt();
-		const passwordVerifier = derivePasswordVerifier(dto.newPassword, authSalt);
+		const newHash = await bcrypt.hash(dto.newVerifier, 10);
 
 		await this.prisma.user.update({
 			where: { id: userId },
-			data: { passwordHash: newHash, authSalt, passwordVerifier },
+			data: {
+				passwordHash: newHash,
+				authSalt: dto.newSalt,
+				passwordVerifier: dto.newVerifier,
+			},
 		});
 
 		return { success: true };

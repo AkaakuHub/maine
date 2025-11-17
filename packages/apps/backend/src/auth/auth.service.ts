@@ -10,7 +10,6 @@ import { randomBytes } from "node:crypto";
 import {
 	challengeCryptoConfig,
 	computeChallengeResponse,
-	derivePasswordVerifier,
 	generateAuthSalt,
 	safeCompareHex,
 } from "./password.utils";
@@ -24,6 +23,18 @@ interface ChallengeTokenPayload {
 	exp?: number;
 }
 
+interface ChallengeValidationOptions {
+	expectedUsername?: string;
+	expectedUserId?: string;
+}
+
+interface ValidatedUser {
+	id: string;
+	username: string;
+	email: string | null;
+	role: string;
+}
+
 @Injectable()
 export class AuthService {
 	constructor(
@@ -32,7 +43,7 @@ export class AuthService {
 	) {}
 
 	async register(registerDto: RegisterDto) {
-		const { username, email, password } = registerDto;
+		const { username, email, passwordSalt, passwordVerifier } = registerDto;
 
 		// 既存ユーザーの数をチェック
 		const userCount = await this.prisma.user.count();
@@ -51,9 +62,7 @@ export class AuthService {
 		}
 
 		// パスワードのハッシュ化
-		const hashedPassword = await bcrypt.hash(password, 10);
-		const authSalt = generateAuthSalt();
-		const passwordVerifier = derivePasswordVerifier(password, authSalt);
+		const hashedPassword = await bcrypt.hash(passwordVerifier, 10);
 
 		// 最初のユーザーの場合は自動的に管理者にする
 		const role = userCount === 0 ? "ADMIN" : "USER";
@@ -65,7 +74,7 @@ export class AuthService {
 				email,
 				passwordHash: hashedPassword,
 				passwordVerifier,
-				authSalt,
+				authSalt: passwordSalt,
 				role,
 			},
 		});
@@ -98,8 +107,11 @@ export class AuthService {
 		};
 	}
 
-	async login(loginDto: LoginDto) {
-		const { username, challengeToken, response } = loginDto;
+	private async consumeChallenge(
+		challengeToken: string,
+		response: string,
+		options?: ChallengeValidationOptions,
+	): Promise<ValidatedUser> {
 		let challengePayload: ChallengeTokenPayload;
 		try {
 			challengePayload = this.jwtService.verify<ChallengeTokenPayload>(
@@ -110,12 +122,22 @@ export class AuthService {
 			throw new UnauthorizedException("チャレンジが無効または期限切れです");
 		}
 
-		if (challengePayload.username !== username) {
+		if (
+			options?.expectedUsername &&
+			challengePayload.username !== options.expectedUsername
+		) {
+			throw new UnauthorizedException("チャレンジとユーザーが一致しません");
+		}
+
+		if (
+			options?.expectedUserId &&
+			challengePayload.sub !== options.expectedUserId
+		) {
 			throw new UnauthorizedException("チャレンジとユーザーが一致しません");
 		}
 
 		const user = await this.prisma.user.findUnique({
-			where: { username },
+			where: { username: challengePayload.username },
 			select: {
 				id: true,
 				username: true,
@@ -168,6 +190,28 @@ export class AuthService {
 		if (versionUpdate.count === 0) {
 			throw new UnauthorizedException("このチャレンジは既に使用済みです");
 		}
+
+		return {
+			id: user.id,
+			username: user.username,
+			email: user.email,
+			role: user.role,
+		};
+	}
+
+	async verifyChallengeResponse(
+		challengeToken: string,
+		response: string,
+		options?: ChallengeValidationOptions,
+	): Promise<ValidatedUser> {
+		return this.consumeChallenge(challengeToken, response, options);
+	}
+
+	async login(loginDto: LoginDto) {
+		const { username, challengeToken, response } = loginDto;
+		const user = await this.verifyChallengeResponse(challengeToken, response, {
+			expectedUsername: username,
+		});
 
 		const payload = { sub: user.id, username: user.username, role: user.role };
 		const access_token = this.jwtService.sign(payload);
@@ -308,7 +352,7 @@ export class AuthService {
 	}
 
 	async registerFirstUser(firstUserDto: FirstUserDto) {
-		const { username, password } = firstUserDto;
+		const { username, passwordSalt, passwordVerifier } = firstUserDto;
 
 		// 既存ユーザーがいる場合は最初のユーザー登録を許可しない
 		const hasExistingUsers = await this.hasExistingUsers();
@@ -317,9 +361,7 @@ export class AuthService {
 		}
 
 		// パスワードのハッシュ化
-		const hashedPassword = await bcrypt.hash(password, 10);
-		const authSalt = generateAuthSalt();
-		const passwordVerifier = derivePasswordVerifier(password, authSalt);
+		const hashedPassword = await bcrypt.hash(passwordVerifier, 10);
 
 		// 最初のユーザーを管理者として作成
 		const user = await this.prisma.user.create({
@@ -328,7 +370,7 @@ export class AuthService {
 				email: `${username}@maine.local`, // 自動的にメールアドレスを生成
 				passwordHash: hashedPassword,
 				passwordVerifier,
-				authSalt,
+				authSalt: passwordSalt,
 				role: "ADMIN",
 			},
 		});

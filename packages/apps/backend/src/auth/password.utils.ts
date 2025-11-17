@@ -5,14 +5,14 @@ import {
 	timingSafeEqual,
 } from "node:crypto";
 
-const iterations = Number(process.env.AUTH_CHALLENGE_ITERATIONS ?? "120000");
-const keyLength = Number(process.env.AUTH_CHALLENGE_KEY_LENGTH ?? "32");
-const digest = (process.env.AUTH_CHALLENGE_DIGEST ?? "sha256").toLowerCase();
+const iterations = 120000;
+const keyLength = 32;
+const digest = "sha256";
 const webDigestMap: Record<string, string> = {
 	sha256: "SHA-256",
 	sha512: "SHA-512",
 };
-const tokenExpiry = process.env.AUTH_CHALLENGE_EXPIRY ?? "5m";
+const tokenExpiry = "5m";
 
 export const challengeCryptoConfig = {
 	iterations,

@@ -14,7 +14,7 @@
 	],
 	"workspaces": {
 		"packages/apps/backend": {
-			"entry": ["src/main.ts"],
+			"entry": ["src/main.ts", "scripts/migrate-password.ts"],
 			"project": ["src/**/*.ts*"]
 		},
 		"packages/apps/frontend": {
