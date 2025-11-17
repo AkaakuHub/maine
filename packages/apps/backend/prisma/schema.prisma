@@ -12,6 +12,9 @@ model User {
   username      String       @unique
   email         String?      @unique
   passwordHash  String       @map("password_hash")
+  passwordVerifier String?   @map("password_verifier")
+  authSalt      String?      @map("auth_salt")
+  challengeVersion Int       @default(0) @map("challenge_version")
   role          String       @default("USER")
   isActive      Boolean      @default(true) @map("is_active")
   createdAt     DateTime     @default(now()) @map("created_at")

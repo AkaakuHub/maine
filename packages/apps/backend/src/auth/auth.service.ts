@@ -1,10 +1,28 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import type { JwtSignOptions } from "@nestjs/jwt";
 import { PrismaService } from "../common/database/prisma.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { FirstUserDto } from "./dto/first-user.dto";
 import * as bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
+import {
+	challengeCryptoConfig,
+	computeChallengeResponse,
+	derivePasswordVerifier,
+	generateAuthSalt,
+	safeCompareHex,
+} from "./password.utils";
+
+interface ChallengeTokenPayload {
+	sub: string;
+	username: string;
+	challenge: string;
+	version: number;
+	iat?: number;
+	exp?: number;
+}
 
 @Injectable()
 export class AuthService {
@@ -34,6 +52,8 @@ export class AuthService {
 
 		// パスワードのハッシュ化
 		const hashedPassword = await bcrypt.hash(password, 10);
+		const authSalt = generateAuthSalt();
+		const passwordVerifier = derivePasswordVerifier(password, authSalt);
 
 		// 最初のユーザーの場合は自動的に管理者にする
 		const role = userCount === 0 ? "ADMIN" : "USER";
@@ -44,6 +64,8 @@ export class AuthService {
 				username,
 				email,
 				passwordHash: hashedPassword,
+				passwordVerifier,
+				authSalt,
 				role,
 			},
 		});
@@ -77,28 +99,76 @@ export class AuthService {
 	}
 
 	async login(loginDto: LoginDto) {
-		const { username, password } = loginDto;
+		const { username, challengeToken, response } = loginDto;
+		let challengePayload: ChallengeTokenPayload;
+		try {
+			challengePayload = this.jwtService.verify<ChallengeTokenPayload>(
+				challengeToken,
+				{ ignoreExpiration: false },
+			);
+		} catch {
+			throw new UnauthorizedException("チャレンジが無効または期限切れです");
+		}
 
-		// ユーザーの検索
+		if (challengePayload.username !== username) {
+			throw new UnauthorizedException("チャレンジとユーザーが一致しません");
+		}
+
 		const user = await this.prisma.user.findUnique({
 			where: { username },
+			select: {
+				id: true,
+				username: true,
+				email: true,
+				role: true,
+				passwordVerifier: true,
+				isActive: true,
+				challengeVersion: true,
+			},
 		});
 
-		if (!user) {
+		if (!user || !user.passwordVerifier || !user.isActive) {
 			throw new UnauthorizedException(
 				"ユーザー名またはパスワードが正しくありません",
 			);
 		}
 
-		// パスワードの検証
-		const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-		if (!isPasswordValid) {
+		if (
+			challengePayload.sub !== "anonymous" &&
+			challengePayload.sub !== user.id
+		) {
+			throw new UnauthorizedException("チャレンジが無効です");
+		}
+
+		if (user.challengeVersion !== challengePayload.version) {
+			throw new UnauthorizedException("このチャレンジは失効しています");
+		}
+
+		const expectedResponse = computeChallengeResponse(
+			user.passwordVerifier,
+			challengePayload.challenge,
+		);
+
+		if (!safeCompareHex(expectedResponse, response)) {
 			throw new UnauthorizedException(
 				"ユーザー名またはパスワードが正しくありません",
 			);
 		}
 
-		// JWTトークンの生成
+		const versionUpdate = await this.prisma.user.updateMany({
+			where: {
+				id: user.id,
+				challengeVersion: challengePayload.version,
+			},
+			data: {
+				challengeVersion: challengePayload.version + 1,
+			},
+		});
+
+		if (versionUpdate.count === 0) {
+			throw new UnauthorizedException("このチャレンジは既に使用済みです");
+		}
+
 		const payload = { sub: user.id, username: user.username, role: user.role };
 		const access_token = this.jwtService.sign(payload);
 
@@ -110,6 +180,57 @@ export class AuthService {
 				email: user.email,
 				role: user.role,
 			},
+		};
+	}
+
+	async createLoginChallenge(username: string) {
+		const user = await this.prisma.user.findUnique({
+			where: { username },
+			select: {
+				id: true,
+				authSalt: true,
+				passwordVerifier: true,
+				challengeVersion: true,
+			},
+		});
+
+		const challenge = randomBytes(32).toString("hex");
+		const salt = user?.authSalt ?? generateAuthSalt();
+		const nextVersion = (user?.challengeVersion ?? 0) + 1;
+
+		if (user) {
+			if (!user.passwordVerifier) {
+				throw new UnauthorizedException(
+					"このアカウントはパスワードの再設定が必要です。管理者に連絡してください。",
+				);
+			}
+
+			await this.prisma.user.update({
+				where: { id: user.id },
+				data: {
+					authSalt: salt,
+					challengeVersion: nextVersion,
+				},
+			});
+		}
+
+		const challengeToken = this.jwtService.sign(
+			{
+				sub: user?.id ?? "anonymous",
+				username,
+				challenge,
+				version: nextVersion,
+			},
+			{ expiresIn: challengeCryptoConfig.tokenExpiry } as JwtSignOptions,
+		);
+
+		return {
+			challenge,
+			challengeToken,
+			salt,
+			iterations: challengeCryptoConfig.iterations,
+			keyLength: challengeCryptoConfig.keyLength,
+			digest: challengeCryptoConfig.webDigest,
 		};
 	}
 
@@ -197,6 +318,8 @@ export class AuthService {
 
 		// パスワードのハッシュ化
 		const hashedPassword = await bcrypt.hash(password, 10);
+		const authSalt = generateAuthSalt();
+		const passwordVerifier = derivePasswordVerifier(password, authSalt);
 
 		// 最初のユーザーを管理者として作成
 		const user = await this.prisma.user.create({
@@ -204,6 +327,8 @@ export class AuthService {
 				username,
 				email: `${username}@maine.local`, // 自動的にメールアドレスを生成
 				passwordHash: hashedPassword,
+				passwordVerifier,
+				authSalt,
 				role: "ADMIN",
 			},
 		});

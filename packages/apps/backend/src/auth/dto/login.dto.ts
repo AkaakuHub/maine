@@ -7,5 +7,9 @@ export class LoginDto {
 
 	@IsString()
 	@IsNotEmpty()
-	password: string;
+	challengeToken: string;
+
+	@IsString()
+	@IsNotEmpty()
+	response: string;
 }

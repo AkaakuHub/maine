@@ -12,6 +12,7 @@ import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { FirstUserDto } from "./dto/first-user.dto";
+import { ChallengeRequestDto } from "./dto/challenge-request.dto";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 
 @Controller("auth")
@@ -53,6 +54,11 @@ export class AuthController {
 	@Post("register")
 	async register(@Body() registerDto: RegisterDto) {
 		return this.authService.register(registerDto);
+	}
+
+	@Post("challenge")
+	async createChallenge(@Body() challengeDto: ChallengeRequestDto) {
+		return this.authService.createLoginChallenge(challengeDto.username);
 	}
 
 	@Post("login")

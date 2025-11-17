@@ -185,8 +185,10 @@ function LoginContent() {
 
 						{/* エラーメッセージ */}
 						{error && (
-							<div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md">
-								{error}
+							<div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md space-y-1">
+								{error.split("\n").map((line) => (
+									<p key={`login-error-${line}`}>{line}</p>
+								))}
 							</div>
 						)}
 

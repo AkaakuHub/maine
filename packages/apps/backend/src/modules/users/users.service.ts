@@ -8,6 +8,10 @@ import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../../common/database/prisma.service";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateUserProfileDto } from "./dto/update-user-profile.dto";
+import {
+	derivePasswordVerifier,
+	generateAuthSalt,
+} from "../../auth/password.utils";
 
 @Injectable()
 export class UsersService {
@@ -101,10 +105,12 @@ export class UsersService {
 		}
 
 		const newHash = await bcrypt.hash(dto.newPassword, 10);
+		const authSalt = generateAuthSalt();
+		const passwordVerifier = derivePasswordVerifier(dto.newPassword, authSalt);
 
 		await this.prisma.user.update({
 			where: { id: userId },
-			data: { passwordHash: newHash },
+			data: { passwordHash: newHash, authSalt, passwordVerifier },
 		});
 
 		return { success: true };
