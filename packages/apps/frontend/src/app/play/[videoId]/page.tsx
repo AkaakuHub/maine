@@ -12,12 +12,13 @@ import {
 	type PlaylistVideo,
 } from "@maine/libs";
 import { WifiOff } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function PlayPage() {
 	const router = useRouter();
 	const params = useParams();
+	const searchParams = useSearchParams();
 	const { isOnline } = useNetworkStatus();
 	const { triggerVideoRefresh } = useNavigationRefresh();
 	const [showNetworkWarning, setShowNetworkWarning] = useState(false);
@@ -25,15 +26,27 @@ export default function PlayPage() {
 	const [showSettings, setShowSettings] = useState(false);
 
 	// ナビゲーション用のコールバック
+	const rawReturnTo = searchParams?.get("returnTo") || null;
+	const returnToPath = useMemo(() => {
+		if (!rawReturnTo) {
+			return null;
+		}
+		return rawReturnTo.startsWith("/") ? rawReturnTo : null;
+	}, [rawReturnTo]);
+
 	const handleGoBackCallback = useCallback(() => {
 		triggerVideoRefresh();
-		router.back();
-	}, [router, triggerVideoRefresh]);
+		if (returnToPath) {
+			router.push(returnToPath);
+		} else {
+			router.back();
+		}
+	}, [router, triggerVideoRefresh, returnToPath]);
 
 	const handleGoHomeCallback = useCallback(() => {
 		triggerVideoRefresh();
-		router.push("/");
-	}, [router, triggerVideoRefresh]);
+		router.push(returnToPath ?? "/");
+	}, [router, triggerVideoRefresh, returnToPath]);
 
 	// URLからvideoIdを取得
 	const rawVideoId = params.videoId;

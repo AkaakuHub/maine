@@ -3,6 +3,7 @@ import { create } from "zustand";
 export type SortBy = "title" | "year" | "episode" | "createdAt";
 export type SortOrder = "asc" | "desc";
 export type ViewMode = "grid" | "list";
+export type HomeTab = "streaming" | "continue";
 
 interface AppStateStore {
 	// 検索状態
@@ -14,12 +15,14 @@ interface AppStateStore {
 
 	// 表示設定
 	viewMode: ViewMode;
+	activeTab: HomeTab;
 
 	// 設定モーダル
 	showSettings: boolean;
 
 	// ページネーション
 	currentPage: number;
+	continuePage: number;
 
 	// URL履歴管理
 	shouldCreateHistoryEntry: boolean;
@@ -31,15 +34,17 @@ interface AppStateStore {
 	setSortBy: (sortBy: SortBy) => void;
 	setSortOrder: (sortOrder: SortOrder) => void;
 	setViewMode: (mode: ViewMode) => void;
+	setActiveTab: (tab: HomeTab) => void;
 	setShowSettings: (show: boolean) => void;
 	setCurrentPage: (page: number) => void;
+	setContinuePage: (page: number) => void;
 
 	// Compound actions
 	handleSearch: () => void;
 	handleClearSearch: () => void;
 	toggleSortOrder: () => void;
 	resetPagination: () => void;
-	handleTabChange: (resetSearch?: boolean) => void;
+	handleTabChange: (tab: HomeTab, resetSearch?: boolean) => void;
 	handleShowSettings: () => void;
 	handleCloseSettings: () => void;
 
@@ -57,8 +62,10 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 	sortBy: "title",
 	sortOrder: "asc",
 	viewMode: "grid",
+	activeTab: "streaming",
 	showSettings: false,
 	currentPage: 1,
+	continuePage: 1,
 	shouldCreateHistoryEntry: false,
 
 	// Basic setters
@@ -72,8 +79,10 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		set({ sortOrder, currentPage: 1 });
 	},
 	setViewMode: (mode) => set({ viewMode: mode }),
+	setActiveTab: (tab) => set({ activeTab: tab }),
 	setShowSettings: (show) => set({ showSettings: show }),
 	setCurrentPage: (page) => set({ currentPage: page }),
+	setContinuePage: (page) => set({ continuePage: page }),
 	setShouldCreateHistoryEntry: (should) =>
 		set({ shouldCreateHistoryEntry: should }),
 
@@ -100,7 +109,12 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 	},
 
 	handleClearSearch: () => {
-		set({ searchTerm: "", searchQuery: "", currentPage: 1 });
+		set({
+			searchTerm: "",
+			searchQuery: "",
+			currentPage: 1,
+			shouldCreateHistoryEntry: true,
+		});
 	},
 
 	toggleSortOrder: () => {
@@ -113,15 +127,19 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		set({ currentPage: 1 });
 	},
 
-	handleTabChange: (resetSearch = false) => {
-		const updates: Partial<
-			Pick<AppStateStore, "currentPage" | "searchTerm" | "searchQuery">
-		> = {
-			currentPage: 1,
+	handleTabChange: (tab, resetSearch = false) => {
+		const updates: Partial<AppStateStore> = {
+			activeTab: tab,
+			shouldCreateHistoryEntry: true,
 		};
-		if (resetSearch) {
-			updates.searchTerm = "";
-			updates.searchQuery = "";
+		if (tab === "streaming") {
+			updates.currentPage = 1;
+			if (resetSearch) {
+				updates.searchTerm = "";
+				updates.searchQuery = "";
+			}
+		} else {
+			updates.continuePage = 1;
 		}
 		set(updates);
 	},
@@ -134,33 +152,53 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 		const searchQuery = params.get("search") || "";
 		const sortBy = (params.get("sortBy") as SortBy) || "title";
 		const sortOrder = (params.get("sortOrder") as SortOrder) || "asc";
-		const currentPage = Number.parseInt(params.get("page") || "1", 10);
+		const streamingPage = Number.parseInt(params.get("page") || "1", 10);
+		const continuePage = Number.parseInt(params.get("continuePage") || "1", 10);
+		const tabParam = params.get("tab") as HomeTab | null;
+		const activeTab: HomeTab =
+			tabParam === "continue" ? "continue" : "streaming";
 
-		// 検索クエリがある場合は検索を実行、ない場合は空の状態を設定
+		const normalizedStreamingPage = Number.isNaN(streamingPage)
+			? 1
+			: Math.max(1, streamingPage);
+		const normalizedContinuePage = Number.isNaN(continuePage)
+			? 1
+			: Math.max(1, continuePage);
+
 		const trimmedQuery = searchQuery.trim();
+		const baseState = {
+			sortBy,
+			sortOrder,
+			currentPage: normalizedStreamingPage,
+			continuePage: normalizedContinuePage,
+			activeTab,
+			shouldCreateHistoryEntry: false,
+		};
+
 		if (trimmedQuery) {
 			set({
+				...baseState,
 				searchTerm: trimmedQuery,
 				searchQuery: trimmedQuery,
-				sortBy,
-				sortOrder,
-				currentPage: Math.max(1, currentPage),
-				shouldCreateHistoryEntry: false, // URLからの初期化なので履歴エントリは作成しない
 			});
 		} else {
 			set({
+				...baseState,
 				searchTerm: "",
 				searchQuery: "",
-				sortBy,
-				sortOrder,
-				currentPage: Math.max(1, currentPage),
-				shouldCreateHistoryEntry: false,
 			});
 		}
 	},
 
 	getSearchParams: () => {
-		const { searchQuery, sortBy, sortOrder, currentPage } = get();
+		const {
+			searchQuery,
+			sortBy,
+			sortOrder,
+			currentPage,
+			continuePage,
+			activeTab,
+		} = get();
 		const params = new URLSearchParams();
 
 		// searchQueryが空でない場合のみURLに含める
@@ -178,6 +216,14 @@ export const useAppStateStore = create<AppStateStore>((set, get) => ({
 
 		if (currentPage > 1) {
 			params.set("page", currentPage.toString());
+		}
+
+		if (continuePage > 1) {
+			params.set("continuePage", continuePage.toString());
+		}
+
+		if (activeTab !== "streaming") {
+			params.set("tab", activeTab);
 		}
 
 		return params;

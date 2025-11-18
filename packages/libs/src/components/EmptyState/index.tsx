@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Film, FolderOpen, Home, Search } from "lucide-react";
+import { Download, Film, FolderOpen, Home, Search, Clock3 } from "lucide-react";
 import { cn } from "../../libs/utils";
 import Button from "../ui/Button";
 
@@ -10,7 +10,8 @@ interface EmptyStateProps {
 		| "no-search-results"
 		| "loading-error"
 		| "no-offline-videos"
-		| "video-not-found";
+		| "video-not-found"
+		| "continue-empty";
 	searchTerm?: string;
 	errorMessage?: string; // カスタムエラーメッセージ
 	onRetry?: () => void;
@@ -121,6 +122,21 @@ const EmptyState = ({
 							ホームに戻る
 						</Button>
 					) : null,
+				};
+
+			case "continue-empty":
+				return {
+					icon: <Clock3 className="h-20 w-20 text-text-secondary" />,
+					title: "視聴履歴がありません",
+					description: (
+						<div className="space-y-2">
+							<p>視聴開始した動画がここに表示されます。</p>
+							<p className="text-sm">
+								動画を再生すると自動的に履歴が保存されます。
+							</p>
+						</div>
+					),
+					action: null,
 				};
 
 			default:

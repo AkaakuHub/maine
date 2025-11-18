@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { SearchVideosDto } from "./dto/search-videos.dto";
+import { ContinueWatchingQueryDto } from "./dto/continue-watching.dto";
 import type { VideoData } from "./videos.service";
 import { VideosService } from "./videos.service";
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
@@ -216,5 +217,25 @@ export class VideosController {
 				details: error instanceof Error ? error.message : "Unknown error",
 			});
 		}
+	}
+
+	@Get("continue")
+	@ApiResponse({ status: 200, description: "視聴途中の動画一覧" })
+	async getContinueWatching(
+		@Query() query: ContinueWatchingQueryDto,
+		@Request() req,
+	): Promise<SearchVideosResponse> {
+		const userId = req.user?.userId;
+		if (!userId) {
+			throw new ForbiddenException("認証が必要です");
+		}
+
+		const page = query.page || 1;
+		const limit = query.limit || 20;
+
+		return this.videosService.getContinueWatchingVideos(userId, {
+			page,
+			limit,
+		});
 	}
 }

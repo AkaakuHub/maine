@@ -11,6 +11,7 @@ import {
 	TabNavigation,
 	VideoContent,
 	useAppStateStore,
+	useContinueWatchingVideos,
 	useNavigationRefresh,
 	useVideoActions,
 	useVideos,
@@ -42,10 +43,13 @@ const HomeContent = () => {
 		// 表示設定
 		viewMode,
 		setViewMode,
+		activeTab,
 
 		// ページネーション
 		currentPage,
 		setCurrentPage,
+		continuePage,
+		setContinuePage,
 
 		// 設定モーダル
 		showSettings,
@@ -57,6 +61,7 @@ const HomeContent = () => {
 		getSearchParams,
 		shouldCreateHistoryEntry,
 		setShouldCreateHistoryEntry,
+		handleTabChange,
 	} = useAppStateStore();
 
 	// URL初期化: ページロード時にURLから状態を復元
@@ -95,12 +100,33 @@ const HomeContent = () => {
 	]);
 
 	// 動画再生処理
+	const buildReturnPath = useCallback(() => {
+		const params = getSearchParams();
+		const query = params.toString();
+		return query ? `/?${query}` : "/";
+	}, [getSearchParams]);
+
 	const handlePlayVideo = useCallback(
 		(videoId: string) => {
-			const url = `/play/${videoId}`;
-			router.push(url);
+			const returnPath = buildReturnPath();
+			const basePath = `/play/${videoId}`;
+			const targetUrl =
+				returnPath === "/"
+					? basePath
+					: `${basePath}?returnTo=${encodeURIComponent(returnPath)}`;
+			router.push(targetUrl);
 		},
-		[router],
+		[router, buildReturnPath],
+	);
+
+	const handleSwitchTab = useCallback(
+		(tab: "streaming" | "continue") => {
+			if (tab === activeTab) {
+				return;
+			}
+			handleTabChange(tab);
+		},
+		[activeTab, handleTabChange],
 	);
 
 	// 警告ダイアログの状態管理
@@ -131,13 +157,28 @@ const HomeContent = () => {
 		enabled: isInitialized.current, // URL初期化完了後に有効化
 	});
 
+	const {
+		videos: continueVideos,
+		loading: continueLoading,
+		error: continueError,
+		pagination: continuePagination,
+		refetch: refetchContinue,
+		hasNextPage: continueHasNextPage,
+		hasPrevPage: continueHasPrevPage,
+	} = useContinueWatchingVideos({
+		page: continuePage,
+		limit: PAGINATION.DEFAULT_LIMIT,
+		enabled: isInitialized.current,
+	});
+
 	// 動画ページから戻ってきた際に進捗情報を更新するためのリフレッシュ処理
 	useEffect(() => {
 		if (shouldRefreshVideos) {
 			refetchVideos();
+			refetchContinue();
 			consumeRefresh();
 		}
-	}, [shouldRefreshVideos, refetchVideos, consumeRefresh]);
+	}, [shouldRefreshVideos, refetchVideos, refetchContinue, consumeRefresh]);
 
 	// エラーハンドリングとコンテンツ状態
 	const { handleRetry, hasContent } = useVideoActions({
@@ -164,6 +205,8 @@ const HomeContent = () => {
 		);
 	}
 
+	const continueHasContent = continueVideos.length > 0;
+
 	return (
 		<main className="min-h-screen bg-surface-variant">
 			{/* ヘッダーセクション */}
@@ -177,41 +220,91 @@ const HomeContent = () => {
 						router={router}
 					/>
 
-					<TabNavigation />
+					<TabNavigation activeTab={activeTab} onTabChange={handleSwitchTab} />
 
-					<SearchSection
-						searchTerm={searchTerm}
-						sortBy={sortBy}
-						sortOrder={sortOrder}
-						onSearchTermChange={setSearchTerm}
-						onSetIsComposing={setIsComposing}
-						onSearch={handleSearch}
-						onClearSearch={handleClearSearch}
-						onSortByChange={setSortBy}
-						onSortOrderToggle={toggleSortOrder}
-						videosLoading={videosLoading}
-						videos={videos}
-						pagination={pagination}
-					/>
+					{activeTab === "streaming" && (
+						<SearchSection
+							searchTerm={searchTerm}
+							sortBy={sortBy}
+							sortOrder={sortOrder}
+							onSearchTermChange={setSearchTerm}
+							onSetIsComposing={setIsComposing}
+							onSearch={handleSearch}
+							onClearSearch={handleClearSearch}
+							onSortByChange={setSortBy}
+							onSortOrderToggle={toggleSortOrder}
+							videosLoading={videosLoading}
+							videos={videos}
+							pagination={pagination}
+						/>
+					)}
 				</div>
 			</div>
 
 			{/* コンテンツエリア */}
-			<VideoContent
-				viewMode={viewMode}
-				videos={videos}
-				videosLoading={videosLoading}
-				searchQuery={searchQuery}
-				hasContent={hasContent}
-				pagination={pagination}
-				currentPage={currentPage}
-				hasPrevPage={hasPrevPage}
-				hasNextPage={hasNextPage}
-				onShowStreamingWarning={handleShowStreamingWarning}
-				onPageChange={setCurrentPage}
-				onRetry={handleRetry}
-				onPlay={handlePlayVideo}
-			/>
+			{activeTab === "streaming" ? (
+				<VideoContent
+					viewMode={viewMode}
+					videos={videos}
+					videosLoading={videosLoading}
+					searchQuery={searchQuery}
+					hasContent={hasContent}
+					pagination={pagination}
+					currentPage={currentPage}
+					hasPrevPage={hasPrevPage}
+					hasNextPage={hasNextPage}
+					onShowStreamingWarning={handleShowStreamingWarning}
+					onPageChange={setCurrentPage}
+					onRetry={handleRetry}
+					onPlay={handlePlayVideo}
+				/>
+			) : (
+				<>
+					<div className="bg-surface border-b border-border">
+						<div className="container mx-auto px-6 py-6">
+							<div className="bg-surface-elevated rounded-lg p-5 border border-border/60">
+								<h2 className="text-xl font-semibold text-text mb-1">
+									続きから視聴
+								</h2>
+								<p className="text-text-secondary text-sm">
+									視聴途中の動画を最新の視聴順に表示します。
+								</p>
+							</div>
+						</div>
+					</div>
+
+					{continueError ? (
+						<div className="container mx-auto px-6 py-6">
+							<EmptyState
+								type="loading-error"
+								errorMessage={continueError}
+								onRetry={() => {
+									void refetchContinue();
+								}}
+							/>
+						</div>
+					) : continueVideos.length === 0 && !continueLoading ? (
+						<div className="container mx-auto px-6 py-6">
+							<EmptyState type="continue-empty" />
+						</div>
+					) : (
+						<VideoContent
+							viewMode={viewMode}
+							videos={continueVideos}
+							videosLoading={continueLoading}
+							searchQuery=""
+							hasContent={continueHasContent}
+							pagination={continuePagination}
+							currentPage={continuePage}
+							hasPrevPage={continueHasPrevPage}
+							hasNextPage={continueHasNextPage}
+							onShowStreamingWarning={handleShowStreamingWarning}
+							onPageChange={setContinuePage}
+							onPlay={handlePlayVideo}
+						/>
+					)}
+				</>
+			)}
 
 			{/* 設定モーダル */}
 			<SettingsModal isOpen={showSettings} onClose={handleCloseSettings} />

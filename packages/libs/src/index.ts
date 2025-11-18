@@ -4,6 +4,7 @@ export { NavigationRefreshProvider } from "./contexts/NavigationRefreshContext";
 
 // page.tsx
 export { useVideos } from "./hooks/useVideos";
+export { useContinueWatchingVideos } from "./hooks/useContinueWatchingVideos";
 export { useWarningDialog } from "./hooks/useWarningDialog";
 export { useNetworkStatus } from "./hooks/useNetworkStatus";
 export { useVideoActions } from "./hooks/useVideoActions";

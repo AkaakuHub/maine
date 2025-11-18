@@ -24,6 +24,12 @@ export interface VideoData {
 	playlistName?: string | null; // プレイリスト名
 }
 
+interface ContinueWatchingVideo extends VideoData {
+	watchTime: number;
+	watchProgress: number;
+	lastWatched: Date | null;
+}
+
 @Injectable()
 export class VideosService {
 	private readonly logger = new Logger(VideosService.name);
@@ -380,6 +386,113 @@ export class VideosService {
 		} catch (error) {
 			this.logger.error("Error getting directories:", error);
 			throw error;
+		}
+	}
+
+	async getContinueWatchingVideos(
+		userId: string,
+		options?: { page?: number; limit?: number },
+	): Promise<SearchResult> {
+		try {
+			const page = Math.max(1, options?.page || 1);
+			const limit = Math.min(
+				options?.limit || PAGINATION.DEFAULT_LIMIT,
+				PAGINATION.MAX_LIMIT,
+			);
+			const skip = (page - 1) * limit;
+
+			const progressWhere: Prisma.VideoProgressWhereInput = {
+				userId,
+				OR: [{ watchProgress: { gt: 0 } }, { watchTime: { gt: 0 } }],
+			};
+
+			const totalCount = await this.prisma.videoProgress.count({
+				where: progressWhere,
+			});
+
+			if (totalCount === 0) {
+				return {
+					success: true,
+					videos: [],
+					totalFound: 0,
+					message: "視聴途中の動画はありません",
+					pagination: {
+						page,
+						limit,
+						total: 0,
+						totalPages: 0,
+					},
+				};
+			}
+
+			const progressEntries = await this.prisma.videoProgress.findMany({
+				where: progressWhere,
+				orderBy: [{ lastWatched: "desc" }, { updatedAt: "desc" }],
+				skip,
+				take: limit,
+			});
+
+			const filePaths = progressEntries.map((entry) => entry.filePath);
+			const videos = await this.prisma.videoMetadata.findMany({
+				where: {
+					filePath: {
+						in: filePaths,
+					},
+				},
+			});
+
+			const videoMap = new Map(videos.map((video) => [video.filePath, video]));
+			const continueVideos: ContinueWatchingVideo[] = [];
+			for (const progress of progressEntries) {
+				const video = videoMap.get(progress.filePath);
+				if (!video) {
+					continue;
+				}
+
+				continueVideos.push({
+					id: video.id,
+					title: video.title,
+					fileName: video.fileName,
+					filePath: video.filePath,
+					fileSize: video.fileSize ? Number(video.fileSize) : 0,
+					duration: video.duration,
+					episode: video.episode,
+					year: video.year ? video.year.toString() : null,
+					lastModified: video.lastModified,
+					scannedAt: video.scannedAt,
+					thumbnailPath: video.thumbnail_path,
+					metadataExtractedAt: video.metadata_extracted_at,
+					videoId: video.videoId,
+					watchTime: progress.watchTime ?? 0,
+					watchProgress: progress.watchProgress ?? 0,
+					lastWatched: progress.lastWatched,
+				});
+			}
+
+			return {
+				success: true,
+				videos: continueVideos,
+				totalFound: continueVideos.length,
+				message:
+					continueVideos.length > 0
+						? `${continueVideos.length}件の視聴途中の動画が見つかりました`
+						: "視聴途中の動画はありません",
+				pagination: {
+					page,
+					limit,
+					total: totalCount,
+					totalPages: Math.ceil(totalCount / limit),
+				},
+			};
+		} catch (error) {
+			this.logger.error("Error fetching continue watching videos:", error);
+			return {
+				success: false,
+				videos: [],
+				totalFound: 0,
+				message: "視聴途中の動画の取得に失敗しました",
+				error: error instanceof Error ? error.message : "不明なエラー",
+			};
 		}
 	}
 }
