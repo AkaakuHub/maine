@@ -10,6 +10,8 @@ import {
 	AlertTriangle,
 	ArrowLeft,
 	CheckCircle2,
+	Eye,
+	EyeOff,
 	KeyRound,
 	Loader2,
 	LogOut,
@@ -47,6 +49,11 @@ function AccountContent() {
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
+	});
+	const [passwordVisibility, setPasswordVisibility] = useState({
+		current: false,
+		new: false,
+		confirm: false,
 	});
 	const [passwordSaving, setPasswordSaving] = useState(false);
 	const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
@@ -90,6 +97,13 @@ function AccountContent() {
 		setPasswordForm((prev) => ({ ...prev, [field]: value }));
 		setPasswordSuccess(null);
 		setPasswordError(null);
+	};
+
+	const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {
+		setPasswordVisibility((prev) => ({
+			...prev,
+			[field]: !prev[field],
+		}));
 	};
 
 	const handleProfileSubmit = async (
@@ -423,20 +437,38 @@ function AccountContent() {
 									>
 										現在のパスワード
 									</label>
-									<input
-										id="current-password"
-										type="password"
-										value={passwordForm.currentPassword}
-										onChange={(event) =>
-											handlePasswordChange(
-												"currentPassword",
-												event.target.value,
-											)
-										}
-										className="w-full px-3 py-2 rounded-lg border border-border bg-surface-elevated text-text focus:outline-none focus:ring-2 focus:ring-primary"
-										required
-										autoComplete="current-password"
-									/>
+									<div className="relative">
+										<input
+											id="current-password"
+											type={passwordVisibility.current ? "text" : "password"}
+											value={passwordForm.currentPassword}
+											onChange={(event) =>
+												handlePasswordChange(
+													"currentPassword",
+													event.target.value,
+												)
+											}
+											className="w-full px-3 py-2 pr-10 rounded-lg border border-border bg-surface-elevated text-text focus:outline-none focus:ring-2 focus:ring-primary"
+											required
+											autoComplete="current-password"
+										/>
+										<button
+											type="button"
+											onClick={() => togglePasswordVisibility("current")}
+											className="absolute inset-y-0 right-2 flex items-center text-text-secondary hover:text-text"
+											aria-label={
+												passwordVisibility.current
+													? "現在のパスワードを非表示"
+													: "現在のパスワードを表示"
+											}
+										>
+											{passwordVisibility.current ? (
+												<EyeOff className="h-4 w-4" />
+											) : (
+												<Eye className="h-4 w-4" />
+											)}
+										</button>
+									</div>
 								</div>
 								<div>
 									<label
@@ -445,18 +477,36 @@ function AccountContent() {
 									>
 										新しいパスワード
 									</label>
-									<input
-										id="new-password"
-										type="password"
-										value={passwordForm.newPassword}
-										onChange={(event) =>
-											handlePasswordChange("newPassword", event.target.value)
-										}
-										className="w-full px-3 py-2 rounded-lg border border-border bg-surface-elevated text-text focus:outline-none focus:ring-2 focus:ring-primary"
-										required
-										minLength={8}
-										autoComplete="new-password"
-									/>
+									<div className="relative">
+										<input
+											id="new-password"
+											type={passwordVisibility.new ? "text" : "password"}
+											value={passwordForm.newPassword}
+											onChange={(event) =>
+												handlePasswordChange("newPassword", event.target.value)
+											}
+											className="w-full px-3 py-2 pr-10 rounded-lg border border-border bg-surface-elevated text-text focus:outline-none focus:ring-2 focus:ring-primary"
+											required
+											minLength={8}
+											autoComplete="new-password"
+										/>
+										<button
+											type="button"
+											onClick={() => togglePasswordVisibility("new")}
+											className="absolute inset-y-0 right-2 flex items-center text-text-secondary hover:text-text"
+											aria-label={
+												passwordVisibility.new
+													? "新しいパスワードを非表示"
+													: "新しいパスワードを表示"
+											}
+										>
+											{passwordVisibility.new ? (
+												<EyeOff className="h-4 w-4" />
+											) : (
+												<Eye className="h-4 w-4" />
+											)}
+										</button>
+									</div>
 								</div>
 								<div>
 									<label
@@ -465,21 +515,39 @@ function AccountContent() {
 									>
 										新しいパスワード（確認）
 									</label>
-									<input
-										id="new-password-confirm"
-										type="password"
-										value={passwordForm.confirmPassword}
-										onChange={(event) =>
-											handlePasswordChange(
-												"confirmPassword",
-												event.target.value,
-											)
-										}
-										className="w-full px-3 py-2 rounded-lg border border-border bg-surface-elevated text-text focus:outline-none focus:ring-2 focus:ring-primary"
-										required
-										minLength={8}
-										autoComplete="new-password"
-									/>
+									<div className="relative">
+										<input
+											id="new-password-confirm"
+											type={passwordVisibility.confirm ? "text" : "password"}
+											value={passwordForm.confirmPassword}
+											onChange={(event) =>
+												handlePasswordChange(
+													"confirmPassword",
+													event.target.value,
+												)
+											}
+											className="w-full px-3 py-2 pr-10 rounded-lg border border-border bg-surface-elevated text-text focus:outline-none focus:ring-2 focus:ring-primary"
+											required
+											minLength={8}
+											autoComplete="new-password"
+										/>
+										<button
+											type="button"
+											onClick={() => togglePasswordVisibility("confirm")}
+											className="absolute inset-y-0 right-2 flex items-center text-text-secondary hover:text-text"
+											aria-label={
+												passwordVisibility.confirm
+													? "確認用パスワードを非表示"
+													: "確認用パスワードを表示"
+											}
+										>
+											{passwordVisibility.confirm ? (
+												<EyeOff className="h-4 w-4" />
+											) : (
+												<Eye className="h-4 w-4" />
+											)}
+										</button>
+									</div>
 								</div>
 							</div>
 

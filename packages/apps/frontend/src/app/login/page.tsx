@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthAPI, AuthGuard, useAuthStore } from "@maine/libs";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -14,6 +15,7 @@ function LoginContent() {
 		email: "",
 		password: "",
 	});
+	const [showPassword, setShowPassword] = useState(false);
 
 	const { login, register, registerFirstUser, isLoading, error, clearError } =
 		useAuthStore();
@@ -81,6 +83,11 @@ function LoginContent() {
 			email: "",
 			password: "",
 		});
+		setShowPassword(false);
+	};
+
+	const togglePasswordVisibility = () => {
+		setShowPassword((prev) => !prev);
 	};
 
 	// ローディング中
@@ -170,17 +177,33 @@ function LoginContent() {
 							>
 								パスワード
 							</label>
-							<input
-								id="password"
-								name="password"
-								type="password"
-								required
-								value={formData.password}
-								onChange={handleChange}
-								className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-								placeholder="パスワードを入力"
-								minLength={6}
-							/>
+							<div className="relative">
+								<input
+									id="password"
+									name="password"
+									type={showPassword ? "text" : "password"}
+									required
+									value={formData.password}
+									onChange={handleChange}
+									className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent pr-10"
+									placeholder="パスワードを入力"
+									minLength={6}
+								/>
+								<button
+									type="button"
+									onClick={togglePasswordVisibility}
+									className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+									aria-label={
+										showPassword ? "パスワードを非表示" : "パスワードを表示"
+									}
+								>
+									{showPassword ? (
+										<EyeOff className="h-4 w-4" />
+									) : (
+										<Eye className="h-4 w-4" />
+									)}
+								</button>
+							</div>
 						</div>
 
 						{/* エラーメッセージ */}
