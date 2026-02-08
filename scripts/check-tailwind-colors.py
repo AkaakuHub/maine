@@ -7,6 +7,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
 
+def _force_utf8_stdio() -> None:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+_force_utf8_stdio()
+
 DEFAULT_COLORS: Sequence[str] = (
     "white",
     "black",

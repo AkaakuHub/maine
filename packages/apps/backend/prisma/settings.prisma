@@ -38,6 +38,8 @@ model UserSettings {
 // スキャン設定
 model ScanSettings {
   id                        String   @id @default("scan_settings")
+  // "lightweight" | "full"
+  scanMode                  String   @default("lightweight")
   batchSize                 Int      @default(50)
   progressUpdateInterval    Int      @default(100)
   sleepInterval             Int      @default(1)

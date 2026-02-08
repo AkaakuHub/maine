@@ -24,7 +24,7 @@ pre-commit:
         - rebase
     tailwind-colors-check-front:
       glob: "packages/apps/frontend/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
-      run: python3 scripts/check-tailwind-colors.py packages/apps/frontend/src
+      run: python scripts/check-tailwind-colors.py packages/apps/frontend/src
       stage_fixed: true
       skip:
         - merge
@@ -75,7 +75,7 @@ pre-commit:
         - rebase
     tailwind-colors-check-libs:
       glob: "packages/libs/**/*.{vue,tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
-      run: python3 scripts/check-tailwind-colors.py packages/libs/src
+      run: python scripts/check-tailwind-colors.py packages/libs/src
       stage_fixed: true
       skip:
         - merge

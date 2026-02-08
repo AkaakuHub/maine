@@ -8,6 +8,9 @@ interface TimeRange {
 }
 
 export interface ScanSettings {
+	// スキャンモード
+	scanMode: "lightweight" | "full";
+
 	// 基本設定
 	batchSize: number; // バッチサイズ（1-200）
 	progressUpdateInterval: number; // 進捗更新間隔（ファイル数）
@@ -30,6 +33,9 @@ export interface ScanSettings {
 }
 
 const DEFAULT_SCAN_SETTINGS: ScanSettings = {
+	// デフォルトは軽量モード（ffmpeg/ffprobeを使用しない）
+	scanMode: "lightweight",
+
 	// 基本設定
 	batchSize: 50,
 	progressUpdateInterval: 10,
@@ -106,6 +112,7 @@ export class ScanSettingsService {
 
 			if (savedSettings) {
 				this.scanSettings = {
+					scanMode: savedSettings.scanMode as "lightweight" | "full",
 					batchSize: savedSettings.batchSize,
 					progressUpdateInterval: savedSettings.progressUpdateInterval,
 					sleepInterval: savedSettings.sleepInterval,
@@ -143,6 +150,7 @@ export class ScanSettingsService {
 			await this.settingsDb.scanSettings.upsert({
 				where: { id: "scan_settings" },
 				update: {
+					scanMode: this.scanSettings.scanMode,
 					batchSize: this.scanSettings.batchSize,
 					progressUpdateInterval: this.scanSettings.progressUpdateInterval,
 					sleepInterval: this.scanSettings.sleepInterval,
@@ -158,6 +166,7 @@ export class ScanSettingsService {
 				},
 				create: {
 					id: "scan_settings",
+					scanMode: this.scanSettings.scanMode,
 					batchSize: this.scanSettings.batchSize,
 					progressUpdateInterval: this.scanSettings.progressUpdateInterval,
 					sleepInterval: this.scanSettings.sleepInterval,

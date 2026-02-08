@@ -103,7 +103,9 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 	// LocalStorageからバックアップを復元する関数
 	const restoreFromBackup = useCallback((): VideoProgressData | null => {
 		if (!enableLocalStorageBackup) return null;
-
+		if (typeof window === "undefined") {
+			return null;
+		}
 		try {
 			const backup = localStorage.getItem("video-progress-backup");
 			if (!backup) return null;

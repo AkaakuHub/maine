@@ -114,6 +114,42 @@ class VideoCacheService {
 		await this.saveScanSettings();
 	}
 
+	private async loadScanSettings(): Promise<void> {
+		const savedSettings = await this.settingsDb.scanSettings.findUnique({
+			where: { id: "scan_settings" },
+		});
+
+		if (!savedSettings) {
+			return;
+		}
+
+		this.scanSettings = {
+			scanMode: savedSettings.scanMode as "lightweight" | "full",
+			batchSize: savedSettings.batchSize,
+			progressUpdateInterval: savedSettings.progressUpdateInterval,
+			sleepInterval: savedSettings.sleepInterval,
+			processingPriority: savedSettings.processingPriority as
+				| "low"
+				| "normal"
+				| "high",
+			maxConcurrentOperations: savedSettings.maxConcurrentOperations,
+			memoryThresholdMB: savedSettings.memoryThresholdMB,
+			autoPauseOnHighCPU: savedSettings.autoPauseOnHighCPU,
+			autoPauseThreshold: savedSettings.autoPauseThreshold,
+			autoPauseTimeRange: {
+				enabled: false,
+				startHour: savedSettings.autoPauseStartHour,
+				endHour: savedSettings.autoPauseEndHour,
+			},
+			enableDetailedLogging: savedSettings.enableDetailedLogging,
+			showResourceMonitoring: savedSettings.enableResourceMonitoring,
+			enablePerformanceMetrics: true,
+		};
+
+		this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
+		this.initializeStreamProcessorWithPlaylists(this.detectedPlaylists);
+	}
+
 	/**
 	 * プレイリストをデータベースと同期
 	 */
@@ -166,6 +202,7 @@ class VideoCacheService {
 			await this.settingsDb.scanSettings.upsert({
 				where: { id: "scan_settings" },
 				update: {
+					scanMode: this.scanSettings.scanMode,
 					batchSize: this.scanSettings.batchSize,
 					progressUpdateInterval: this.scanSettings.progressUpdateInterval,
 					sleepInterval: this.scanSettings.sleepInterval,
@@ -181,6 +218,7 @@ class VideoCacheService {
 				},
 				create: {
 					id: "scan_settings",
+					scanMode: this.scanSettings.scanMode,
 					batchSize: this.scanSettings.batchSize,
 					progressUpdateInterval: this.scanSettings.progressUpdateInterval,
 					sleepInterval: this.scanSettings.sleepInterval,
@@ -225,6 +263,7 @@ class VideoCacheService {
 		this.resetScanControl();
 
 		try {
+			await this.loadScanSettings();
 			this.progressCalculator.startTotalTimer();
 
 			// 1. プレイリストを検出して同期
@@ -570,7 +609,10 @@ class VideoCacheService {
 			progress: 0,
 			processedFiles: 0,
 			totalFiles: allVideoFiles.length,
-			message: "メタデータとサムネイル処理中...",
+			message:
+				this.scanSettings.scanMode === "lightweight"
+					? "軽量メタデータ処理中..."
+					: "メタデータとサムネイル処理中...",
 		});
 
 		const totalFiles = allVideoFiles.length;
@@ -625,26 +667,45 @@ class VideoCacheService {
 			for (const videoFile of chunk) {
 				await this.checkScanControl(scanId);
 
-				const metadata = await this.ffprobeExtractor.extractMetadata(
-					videoFile.filePath,
-				);
+				let fileSize: number;
+				let lastModified: Date;
+				let duration: number | null;
+				let extractedMetadata: Awaited<
+					ReturnType<FFprobeMetadataExtractor["extractMetadata"]>
+				> | null = null;
+
+				if (this.scanSettings.scanMode === "lightweight") {
+					const stat = await fs.stat(videoFile.filePath);
+					fileSize = stat.size;
+					lastModified = stat.mtime;
+					duration = null;
+				} else {
+					extractedMetadata = await this.ffprobeExtractor.extractMetadata(
+						videoFile.filePath,
+					);
+					fileSize = extractedMetadata.fileSize;
+					lastModified = extractedMetadata.lastModified;
+					duration = extractedMetadata.duration;
+				}
 				const parsedInfo = parseVideoFileName(videoFile.fileName);
 				const videoId = await generateFileContentHash(videoFile.filePath);
 
 				// サムネイル生成（既に取得したメタデータを使用）
 				let thumbnailPath: string | null = null;
-				try {
-					const thumbnailResult =
-						await this.thumbnailGenerator.generateThumbnail(
-							videoFile.filePath,
-							videoId,
-							metadata,
-						);
-					if (thumbnailResult.success) {
-						thumbnailPath = thumbnailResult.relativePath;
+				if (this.scanSettings.scanMode !== "lightweight" && extractedMetadata) {
+					try {
+						const thumbnailResult =
+							await this.thumbnailGenerator.generateThumbnail(
+								videoFile.filePath,
+								videoId,
+								extractedMetadata,
+							);
+						if (thumbnailResult.success) {
+							thumbnailPath = thumbnailResult.relativePath;
+						}
+					} catch (error) {
+						console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
 					}
-				} catch (error) {
-					console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
 				}
 
 				// プレイリストの割り当て
@@ -658,12 +719,12 @@ class VideoCacheService {
 					filePath: videoFile.filePath,
 					fileName: videoFile.fileName,
 					title: parsedInfo.cleanTitle,
-					fileSize: metadata.fileSize,
+					fileSize,
 					episode: this.extractEpisode(videoFile.fileName) ?? null,
 					year: parsedInfo.broadcastDate?.getFullYear() ?? null,
-					duration: metadata.duration,
+					duration,
 					thumbnailPath,
-					lastModified: metadata.lastModified,
+					lastModified,
 					videoId, // SHA-256ハッシュID (32文字)
 					playlistId: playlist?.id,
 					playlistName: playlist?.name,

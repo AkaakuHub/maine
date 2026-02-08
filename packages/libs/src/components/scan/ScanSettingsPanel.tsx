@@ -353,6 +353,18 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 						基本設定
 					</h4>
 					<div className="space-y-4">
+						<SelectInput
+							label="スキャンモード"
+							value={settings.scanMode}
+							onChange={(value) =>
+								updateSetting("scanMode", value as "lightweight" | "full")
+							}
+							options={[
+								{ value: "lightweight", label: "軽量（ffmpeg/ffprobe不使用）" },
+								{ value: "full", label: "フル（メタデータ/サムネ生成）" },
+							]}
+							description="軽量モードはffmpeg/ffprobeを使用しません（duration/thumbnailは未取得）"
+						/>
 						<NumberInput
 							label="バッチサイズ"
 							value={settings.batchSize}

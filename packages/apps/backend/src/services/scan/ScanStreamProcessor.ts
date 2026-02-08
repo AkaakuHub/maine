@@ -1,5 +1,6 @@
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { stat } from "node:fs/promises";
 import { parseVideoFileName } from "../../utils/videoFileNameParser";
 import type { ScanSettings } from "../../types/scanSettings";
 import { SCAN } from "../../utils/constants";
@@ -99,27 +100,45 @@ export class ScanStreamProcessor {
 					// 制御状態をチェック（一時停止・キャンセル）
 					await self.checkScanControl(scanId);
 
-					// FFprobeでメタデータを抽出
-					const metadata = await self.ffprobeExtractor.extractMetadata(
-						videoFile.filePath,
-					);
+					let fileSize: number;
+					let lastModified: Date;
+					let duration: number | null;
+					let extractedMetadata: Awaited<
+						ReturnType<FFprobeMetadataExtractor["extractMetadata"]>
+					> | null = null;
+
+					if (self.settings.scanMode === "lightweight") {
+						const fileStat = await stat(videoFile.filePath);
+						fileSize = fileStat.size;
+						lastModified = fileStat.mtime;
+						duration = null;
+					} else {
+						extractedMetadata = await self.ffprobeExtractor.extractMetadata(
+							videoFile.filePath,
+						);
+						fileSize = extractedMetadata.fileSize;
+						lastModified = extractedMetadata.lastModified;
+						duration = extractedMetadata.duration;
+					}
 					const videoId = await generateFileContentHash(videoFile.filePath);
 
 					// サムネイル生成（既に取得したメタデータを使用）
 					let thumbnailPath: string | null = null;
-					try {
-						const thumbnailResult =
-							await self.thumbnailGenerator.generateThumbnail(
-								videoFile.filePath,
-								videoId,
-								metadata, // 既に取得済みのメタデータを渡す
-								{}, // options
-							);
-						if (thumbnailResult.success) {
-							thumbnailPath = thumbnailResult.relativePath; // API配信用の相対パスをDB保存
+					if (self.settings.scanMode !== "lightweight" && extractedMetadata) {
+						try {
+							const thumbnailResult =
+								await self.thumbnailGenerator.generateThumbnail(
+									videoFile.filePath,
+									videoId,
+									extractedMetadata, // 既に取得済みのメタデータを渡す
+									{}, // options
+								);
+							if (thumbnailResult.success) {
+								thumbnailPath = thumbnailResult.relativePath; // API配信用の相対パスをDB保存
+							}
+						} catch (error) {
+							console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
 						}
-					} catch (error) {
-						console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
 					}
 
 					// 既存のパーサーを使用してタイトル情報抽出
@@ -137,12 +156,12 @@ export class ScanStreamProcessor {
 						filePath: videoFile.filePath,
 						fileName: videoFile.fileName,
 						title: parsedInfo.cleanTitle,
-						fileSize: metadata.fileSize,
+						fileSize,
 						episode: self.extractEpisode(videoFile.fileName) ?? null,
 						year: parsedInfo.broadcastDate?.getFullYear() ?? null,
-						duration: metadata.duration,
+						duration,
 						thumbnailPath,
-						lastModified: metadata.lastModified,
+						lastModified,
 						videoId, // SHA-256ハッシュID (32文字)
 						playlistId: playlist?.id,
 						playlistName: playlist?.name,

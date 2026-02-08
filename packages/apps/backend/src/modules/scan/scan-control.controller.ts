@@ -3,6 +3,7 @@ import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import type { ScanProgressEvent } from "../../common/sse/sse-connection.store";
 import { sseStore } from "../../common/sse/sse-connection.store";
+import { videoCacheService } from "../../services/videoCacheService";
 
 interface ControlRequestBody {
 	action: "pause" | "resume" | "cancel";
@@ -70,11 +71,19 @@ export class ScanControlController {
 			};
 			sseStore.broadcast(event);
 
+			// 実際のスキャン制御（videoCacheService側のフラグを更新）
+			const controlResult =
+				body.action === "pause"
+					? await videoCacheService.pauseScan(body.scanId)
+					: body.action === "resume"
+						? await videoCacheService.resumeScan(body.scanId)
+						: await videoCacheService.cancelScan(body.scanId);
+
 			return {
-				success: true,
+				success: controlResult.success,
 				action: body.action,
 				scanId: body.scanId,
-				message: `Scan ${body.action} command sent successfully`,
+				message: controlResult.message,
 			};
 		} catch (error) {
 			console.error("Scan control API error:", error);

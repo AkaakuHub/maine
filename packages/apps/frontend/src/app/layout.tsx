@@ -54,8 +54,20 @@ export default function RootLayout({
 					dangerouslySetInnerHTML={{
 						__html: `
 							try {
-								const theme = localStorage.getItem('theme') || 'dark';
-								if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+								const w = typeof window !== "undefined" ? window : undefined;
+								const ls = w && w.localStorage;
+								const theme =
+									ls && typeof ls.getItem === "function"
+										? (ls.getItem("theme") || "dark")
+										: "dark";
+
+								if (
+									theme === "dark" ||
+									(theme === "system" &&
+										w &&
+										w.matchMedia &&
+										w.matchMedia("(prefers-color-scheme: dark)").matches)
+								) {
 									document.documentElement.classList.add('dark');
 								} else {
 									document.documentElement.classList.remove('dark');

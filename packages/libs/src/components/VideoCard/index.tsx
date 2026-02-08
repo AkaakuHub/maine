@@ -1,6 +1,6 @@
 "use client";
 
-import { Radio } from "lucide-react";
+import { ImageOff, Radio } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import { cn, formatFileSize } from "../../libs/utils";
 import type { VideoFileData } from "../../type";
@@ -99,15 +99,20 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 						/>
 					) : (
 						// フォールバック: 装飾的なグリッド
-						<div className="absolute inset-0 opacity-10">
-							<div
-								className="w-full h-full"
-								style={{
-									backgroundImage:
-										"linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-									backgroundSize: "20px 20px",
-								}}
-							/>
+						<div className="absolute inset-0">
+							<div className="absolute inset-0 opacity-10">
+								<div
+									className="w-full h-full"
+									style={{
+										backgroundImage:
+											"linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+										backgroundSize: "20px 20px",
+									}}
+								/>
+							</div>
+							<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+								<ImageOff className="h-8 w-8 text-text-secondary opacity-70" />
+							</div>
 						</div>
 					)}
 					{/* エピソード番号 */}

@@ -4,6 +4,9 @@
 import { SCAN } from "../utils/constants";
 
 export interface ScanSettings {
+	// スキャンモード
+	scanMode: "lightweight" | "full";
+
 	// 基本設定
 	batchSize: number; // バッチサイズ（1-200）
 	progressUpdateInterval: number; // 進捗更新間隔（ファイル数）
@@ -30,6 +33,9 @@ export interface ScanSettings {
 }
 
 export const DEFAULT_SCAN_SETTINGS: ScanSettings = {
+	// デフォルトは軽量モード（ffmpeg/ffprobeを使用しない）
+	scanMode: "lightweight",
+
 	// 基本設定（constants.tsから参照）
 	batchSize: SCAN.DEFAULT_BATCH_SIZE,
 	progressUpdateInterval: SCAN.DEFAULT_PROGRESS_UPDATE_INTERVAL,
