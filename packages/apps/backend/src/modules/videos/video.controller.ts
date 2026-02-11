@@ -5,7 +5,7 @@ import { ApiQuery, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
 import type { Response } from "express";
 import { VideosService } from "./videos.service";
 import { isValidVideoId } from "../../utils/videoIdValidation";
-import { allowedOrigins } from "../../config/cors.config";
+import { getAllowedOrigins, isOriginAllowed } from "../../config/cors.config";
 
 @ApiTags("video")
 @Controller("video")
@@ -13,8 +13,10 @@ export class VideoController {
 	constructor(private readonly videosService: VideosService) {}
 
 	private getCorsHeaders(requestOrigin?: string): Record<string, string> {
+		const allowedOrigins = getAllowedOrigins();
+
 		// リクエストのオリジンが許可リストにあるかチェック
-		if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+		if (requestOrigin && isOriginAllowed(requestOrigin)) {
 			return {
 				"Access-Control-Allow-Origin": requestOrigin,
 				"Access-Control-Allow-Credentials": "true",

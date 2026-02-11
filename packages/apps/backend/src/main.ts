@@ -2,7 +2,7 @@ import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
-import { corsOptions } from "./config/cors.config";
+import { createCorsOptions, getAllowedOrigins } from "./config/cors.config";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as https from "node:https";
@@ -11,7 +11,13 @@ async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 
 	// CORS設定
-	app.enableCors(corsOptions);
+	const allowedOrigins = getAllowedOrigins();
+	app.enableCors(createCorsOptions());
+	console.log(
+		"[CORS] CORS_ORIGINS(raw):",
+		process.env.CORS_ORIGINS ?? "(not set)",
+	);
+	console.log("[CORS] allowed origins(normalized):", allowedOrigins.join(", "));
 
 	// バリデーションパイプのグローバル設定
 	app.useGlobalPipes(
