@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
+import { randomUUID } from "node:crypto";
 import { prisma } from "../libs/prisma";
 import type { Prisma } from "@prisma/client";
 import {
@@ -8,7 +9,6 @@ import {
 	getVideoDirectories,
 	directoryExists,
 	PlaylistDetector,
-	generateFileContentHash,
 	type PlaylistData,
 } from "../libs/fileUtils";
 import type { SearchResult, VideoFileData } from "../type";
@@ -306,6 +306,7 @@ class VideoCacheService {
 		unchangedFiles: VideoFile[];
 		newFiles: VideoFile[];
 		unchangedRecords: ProcessedVideoRecord[];
+		existingIdByPath: Map<string, string>;
 	}> {
 		// 既存レコードを一括取得（プレイリスト情報も含める）
 		const existingRecords = await prisma.videoMetadata.findMany({
@@ -320,7 +321,6 @@ class VideoCacheService {
 				duration: true,
 				thumbnail_path: true,
 				lastModified: true,
-				videoId: true,
 				playlists: {
 					select: {
 						playlist: {
@@ -334,24 +334,21 @@ class VideoCacheService {
 				},
 			},
 		});
+		const existingIdByPath = new Map(
+			existingRecords.map((record) => [record.filePath, record.id]),
+		);
 
 		const existingRecordMap = new Map(
 			existingRecords.map((record) => {
 				// 最初のプレイリスト情報を取得（複数ある場合は最初のものを使用）
 				const firstPlaylist =
 					record.playlists.length > 0 ? record.playlists[0] : null;
-				if (!record.videoId) {
-					throw new Error(
-						`既存レコードにvideoIdが存在しません: ${record.filePath}. DB移行を確認してください。`,
-					);
-				}
 				return [
 					record.filePath,
 					{
 						...record,
 						fileSize: Number(record.fileSize), // BigIntをnumberに変換
 						thumbnailPath: record.thumbnail_path,
-						videoId: record.videoId,
 						playlistId: firstPlaylist?.playlist.id,
 						playlistName: firstPlaylist?.playlist.name,
 					} as ProcessedVideoRecord,
@@ -401,6 +398,7 @@ class VideoCacheService {
 			unchangedFiles,
 			newFiles,
 			unchangedRecords,
+			existingIdByPath,
 		};
 	}
 
@@ -427,8 +425,13 @@ class VideoCacheService {
 		);
 
 		// Phase 1.5: ファイル変更検出（差分スキャン）
-		const { changedFiles, unchangedFiles, newFiles, unchangedRecords } =
-			await this.detectFileChanges(allVideoFiles);
+		const {
+			changedFiles,
+			unchangedFiles,
+			newFiles,
+			unchangedRecords,
+			existingIdByPath,
+		} = await this.detectFileChanges(allVideoFiles);
 
 		// 処理統計をログ出力
 		console.log(`スキャン統計:
@@ -449,11 +452,13 @@ class VideoCacheService {
 				processedDbRecords = await this.streamProcessor.processFiles(
 					changedFiles,
 					scanId,
+					existingIdByPath,
 				);
 			} else {
 				processedDbRecords = await this.performParallelProcessing(
 					changedFiles,
 					scanId,
+					existingIdByPath,
 				);
 			}
 		}
@@ -595,6 +600,7 @@ class VideoCacheService {
 	private async performParallelProcessing(
 		allVideoFiles: VideoFile[],
 		scanId: string,
+		existingIdByPath: Map<string, string>,
 	): Promise<ProcessedVideoRecord[]> {
 		this.progressCalculator.resetPhaseTimer();
 
@@ -617,6 +623,16 @@ class VideoCacheService {
 
 		const broadcastMetadataProgress = (file: VideoFile) => {
 			if (totalFiles === 0) {
+				return;
+			}
+			const updateInterval = Math.max(
+				1,
+				this.scanSettings.progressUpdateInterval,
+			);
+			if (
+				processedCount % updateInterval !== 0 &&
+				processedCount !== totalFiles
+			) {
 				return;
 			}
 
@@ -646,9 +662,11 @@ class VideoCacheService {
 				currentPhaseElapsed: progressMetrics.currentPhaseElapsed,
 			});
 
-			console.log(
-				`[SCAN][metadata][parallel] ${processedCount}/${totalFiles} processing ${file.filePath}`,
-			);
+			if (this.scanSettings.enableDetailedLogging) {
+				console.log(
+					`[SCAN][metadata][parallel] ${processedCount}/${totalFiles} processing ${file.filePath}`,
+				);
+			}
 		};
 
 		const concurrentOperations = this.scanSettings.maxConcurrentOperations;
@@ -685,7 +703,8 @@ class VideoCacheService {
 					duration = extractedMetadata.duration;
 				}
 				const parsedInfo = parseVideoFileName(videoFile.fileName);
-				const videoId = await generateFileContentHash(videoFile.filePath);
+				const recordId =
+					existingIdByPath.get(videoFile.filePath) ?? randomUUID();
 
 				// サムネイル生成（既に取得したメタデータを使用）
 				let thumbnailPath: string | null = null;
@@ -694,7 +713,7 @@ class VideoCacheService {
 						const thumbnailResult =
 							await this.thumbnailGenerator.generateThumbnail(
 								videoFile.filePath,
-								videoId,
+								recordId,
 								extractedMetadata,
 							);
 						if (thumbnailResult.success) {
@@ -712,7 +731,7 @@ class VideoCacheService {
 				);
 
 				records.push({
-					id: videoFile.filePath,
+					id: recordId,
 					filePath: videoFile.filePath,
 					fileName: videoFile.fileName,
 					title: parsedInfo.cleanTitle,
@@ -722,7 +741,6 @@ class VideoCacheService {
 					duration,
 					thumbnailPath,
 					lastModified,
-					videoId, // SHA-256ハッシュID (32文字)
 					playlistId: playlist?.id,
 					playlistName: playlist?.name,
 				});
@@ -761,14 +779,14 @@ class VideoCacheService {
 
 		if (duplicateGroups.length > 0) {
 			console.warn(
-				`[SCAN][database] Detected ${duplicateGroups.length} duplicate videoId entries. Keeping the most recently modified file for each hash.`,
+				`[SCAN][database] Detected ${duplicateGroups.length} duplicate filePath entries. Keeping the most recently modified file.`,
 			);
 			for (const group of duplicateGroups) {
 				const skipped = group.skipped
 					.map((record) => record.filePath)
 					.join(", ");
 				console.warn(
-					`[SCAN][database] videoId=${group.videoId} kept=${group.kept.filePath} skipped=[${skipped}]`,
+					`[SCAN][database] filePath=${group.filePath} kept=${group.kept.filePath} skipped=[${skipped}]`,
 				);
 			}
 		}
@@ -784,19 +802,19 @@ class VideoCacheService {
 		});
 
 		const existingRecords = await prisma.videoMetadata.findMany({
-			select: { filePath: true, videoId: true },
+			select: { filePath: true, id: true },
 		});
 		const existingFilePaths = new Set(existingRecords.map((r) => r.filePath));
-		const existingFileToVideoId = new Map(
-			existingRecords.map((record) => [record.filePath, record.videoId]),
+		const existingFileToId = new Map(
+			existingRecords.map((record) => [record.filePath, record.id]),
 		);
 		const currentFilePaths = new Set(uniqueRecords.map((r) => r.filePath));
 		const deletedFilePaths = [...existingFilePaths].filter(
 			(path) => !currentFilePaths.has(path),
 		);
 
-		const deletedVideoIds = deletedFilePaths
-			.map((path) => existingFileToVideoId.get(path))
+		const deletedIds = deletedFilePaths
+			.map((path) => existingFileToId.get(path))
 			.filter((id): id is string => Boolean(id));
 
 		if (deletedFilePaths.length > 0) {
@@ -816,9 +834,8 @@ class VideoCacheService {
 				async (tx: Prisma.TransactionClient) => {
 					for (const record of chunk) {
 						await tx.videoMetadata.upsert({
-							where: { videoId: record.videoId },
+							where: { filePath: record.filePath },
 							update: {
-								id: record.id,
 								filePath: record.filePath,
 								fileName: record.fileName,
 								title: record.title,
@@ -829,7 +846,6 @@ class VideoCacheService {
 								thumbnail_path: record.thumbnailPath,
 								lastModified: record.lastModified,
 								metadata_extracted_at: record.duration ? new Date() : null,
-								videoId: record.videoId,
 							},
 							create: {
 								id: record.id,
@@ -843,14 +859,13 @@ class VideoCacheService {
 								thumbnail_path: record.thumbnailPath,
 								lastModified: record.lastModified,
 								metadata_extracted_at: record.duration ? new Date() : null,
-								videoId: record.videoId,
 							},
 						});
 
-						if (record.playlistId && record.videoId) {
+						if (record.playlistId) {
 							const existingRelation = await tx.videoPlaylist.findFirst({
 								where: {
-									videoId: record.videoId,
+									videoMetadataId: record.id,
 									playlistId: record.playlistId,
 								},
 							});
@@ -858,25 +873,23 @@ class VideoCacheService {
 							if (!existingRelation) {
 								await tx.videoPlaylist.create({
 									data: {
-										videoId: record.videoId,
+										videoMetadataId: record.id,
 										playlistId: record.playlistId,
 									},
 								});
 							}
 						}
 
-						if (record.videoId) {
-							await tx.videoPlaylist.deleteMany({
-								where: {
-									videoId: record.videoId,
-									playlistId: record.playlistId
-										? {
-												not: record.playlistId,
-											}
-										: undefined,
-								},
-							});
-						}
+						await tx.videoPlaylist.deleteMany({
+							where: {
+								videoMetadataId: record.id,
+								playlistId: record.playlistId
+									? {
+											not: record.playlistId,
+										}
+									: undefined,
+							},
+						});
 					}
 				},
 				{ timeout: SCAN.TRANSACTION_TIMEOUT_MS },
@@ -891,14 +904,10 @@ class VideoCacheService {
 			);
 		}
 
-		const activeVideoIds = new Set(
-			uniqueRecords.map((record) => record.videoId),
-		);
-		const orphanThumbnailVideoIds = deletedVideoIds.filter(
-			(videoId) => !activeVideoIds.has(videoId),
-		);
-		for (const videoId of orphanThumbnailVideoIds) {
-			await this.thumbnailGenerator.deleteThumbnailByVideoId(videoId);
+		const activeIds = new Set(uniqueRecords.map((record) => record.id));
+		const orphanThumbnailIds = deletedIds.filter((id) => !activeIds.has(id));
+		for (const id of orphanThumbnailIds) {
+			await this.thumbnailGenerator.deleteThumbnailById(id);
 		}
 
 		sseStore.broadcast({
@@ -917,20 +926,20 @@ class VideoCacheService {
 	private deduplicateVideoRecords(records: ProcessedVideoRecord[]): {
 		uniqueRecords: ProcessedVideoRecord[];
 		duplicateGroups: Array<{
-			videoId: string;
+			filePath: string;
 			kept: ProcessedVideoRecord;
 			skipped: ProcessedVideoRecord[];
 		}>;
 	} {
 		const recordMap = new Map<string, ProcessedVideoRecord>();
 		const duplicates: Array<{
-			videoId: string;
+			filePath: string;
 			kept: ProcessedVideoRecord;
 			skipped: ProcessedVideoRecord[];
 		}> = [];
 
 		for (const record of records) {
-			const key = record.videoId;
+			const key = record.filePath;
 			const existing = recordMap.get(key);
 
 			if (!existing) {
@@ -947,13 +956,13 @@ class VideoCacheService {
 				recordMap.set(key, record);
 			}
 
-			const duplicateEntry = duplicates.find((entry) => entry.videoId === key);
+			const duplicateEntry = duplicates.find((entry) => entry.filePath === key);
 			if (duplicateEntry) {
 				duplicateEntry.kept = keptRecord;
 				duplicateEntry.skipped.push(skippedRecord);
 			} else {
 				duplicates.push({
-					videoId: key,
+					filePath: key,
 					kept: keptRecord,
 					skipped: [skippedRecord],
 				});

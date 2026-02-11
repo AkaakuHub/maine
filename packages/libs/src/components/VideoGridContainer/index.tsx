@@ -8,7 +8,7 @@ interface VideoGridProps {
 	videos: VideoFileData[];
 	className?: string;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (videoId: string) => void;
+	onPlay?: (id: string) => void;
 }
 
 const VideoGrid = ({

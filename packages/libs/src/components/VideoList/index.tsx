@@ -20,7 +20,7 @@ interface VideoListProps {
 	videos: VideoFileData[];
 	className?: string;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (videoId: string) => void;
+	onPlay?: (id: string) => void;
 }
 
 const VideoListItem = ({
@@ -29,7 +29,7 @@ const VideoListItem = ({
 }: {
 	video: VideoFileData;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (videoId: string) => void;
+	onPlay?: (id: string) => void;
 }) => {
 	const [showMenu, setShowMenu] = useState(false);
 	const [watchProgress, setWatchProgress] = useState<number>(0);
@@ -102,7 +102,7 @@ const VideoListItem = ({
 	const handlePlayClick = (e: React.MouseEvent | React.KeyboardEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		onPlay?.(video.videoId);
+		onPlay?.(video.id);
 	};
 
 	return (

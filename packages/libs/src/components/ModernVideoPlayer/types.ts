@@ -36,7 +36,7 @@ export interface ModernVideoPlayerProps {
 	onVideoEnd?: () => void;
 	playlistVideos?: PlaylistVideo[];
 	onVideoSelect?: (video: PlaylistVideo) => void;
-	videoId?: string;
+	id?: string;
 }
 
 export type SettingsView =

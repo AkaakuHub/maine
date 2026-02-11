@@ -1,6 +1,5 @@
 import * as path from "node:path";
 import { promises as fs } from "node:fs";
-import { createReadStream } from "node:fs";
 import * as crypto from "node:crypto";
 
 /**
@@ -161,36 +160,6 @@ export interface PlaylistData {
 	createdAt: Date;
 	updatedAt: Date;
 	isActive: boolean;
-}
-
-/**
- * ファイルコンテンツからSHA256ハッシュを生成（大きなファイル対応）
- */
-export async function generateFileContentHash(
-	filePath: string,
-): Promise<string> {
-	try {
-		const hash = crypto.createHash("sha256");
-		const stream = createReadStream(filePath);
-
-		return new Promise((resolve, reject) => {
-			stream.on("data", (chunk) => {
-				hash.update(chunk);
-			});
-
-			stream.on("end", () => {
-				resolve(hash.digest("hex"));
-			});
-
-			stream.on("error", (error) => {
-				reject(
-					new Error(`Failed to generate hash for file ${filePath}: ${error}`),
-				);
-			});
-		});
-	} catch (error) {
-		throw new Error(`Failed to generate hash for file ${filePath}: ${error}`);
-	}
 }
 
 /**

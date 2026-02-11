@@ -3,7 +3,7 @@ import type { PlaylistVideo } from "../../../types/Playlist";
 
 interface UsePlaylistNavigationProps {
 	playlistVideos: PlaylistVideo[];
-	currentVideoId?: string;
+	currentId?: string;
 	onVideoSelect?: (video: PlaylistVideo) => void;
 }
 
@@ -19,16 +19,14 @@ interface UsePlaylistNavigationReturn {
 
 export function usePlaylistNavigation({
 	playlistVideos,
-	currentVideoId,
+	currentId,
 	onVideoSelect,
 }: UsePlaylistNavigationProps): UsePlaylistNavigationReturn {
 	// 現の動画のインデックスを取得
 	const getCurrentVideoIndex = useCallback((): number => {
-		if (!currentVideoId || !playlistVideos.length) return -1;
-		return playlistVideos.findIndex(
-			(video) => video.videoId === currentVideoId,
-		);
-	}, [currentVideoId, playlistVideos]);
+		if (!currentId || !playlistVideos.length) return -1;
+		return playlistVideos.findIndex((video) => video.id === currentId);
+	}, [currentId, playlistVideos]);
 
 	// 次の動画を取得
 	const getNextVideo = useCallback((): PlaylistVideo | null => {

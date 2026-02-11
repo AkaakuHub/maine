@@ -4,12 +4,12 @@ import { PrismaService } from "../../common/database/prisma.service";
 import { AuthModule } from "../../auth/auth.module";
 import { VideoController } from "./video.controller";
 import { VideosController } from "./videos.controller";
-import { VideoIdController } from "./videoId.controller";
+import { VideoInfoController } from "./video-info.controller";
 import { VideosService } from "./videos.service";
 
 @Module({
 	imports: [DatabaseModule, AuthModule],
-	controllers: [VideosController, VideoController, VideoIdController],
+	controllers: [VideosController, VideoController, VideoInfoController],
 	providers: [VideosService, PrismaService],
 	exports: [VideosService],
 })

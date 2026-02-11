@@ -1,6 +1,7 @@
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { stat } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { parseVideoFileName } from "../../utils/videoFileNameParser";
 import type { ScanSettings } from "../../types/scanSettings";
 import { SCAN } from "../../utils/constants";
@@ -8,10 +9,7 @@ import { FFprobeMetadataExtractor } from "../../services/FFprobeMetadataExtracto
 import { ThumbnailGenerator } from "../../services/ThumbnailGenerator";
 import type { ScanProgressEvent } from "../../common/sse/sse-connection.store";
 import { sseStore } from "../../common/sse/sse-connection.store";
-import {
-	PlaylistDetector,
-	generateFileContentHash,
-} from "../../libs/fileUtils";
+import { PlaylistDetector } from "../../libs/fileUtils";
 import type { PlaylistData } from "../../libs/fileUtils";
 
 export interface ProcessedVideoRecord {
@@ -25,7 +23,6 @@ export interface ProcessedVideoRecord {
 	duration: number | null;
 	thumbnailPath: string | null;
 	lastModified: Date;
-	videoId: string; // SHA-256ハッシュID (32文字)
 	playlistId?: string;
 	playlistName?: string;
 }
@@ -76,6 +73,7 @@ export class ScanStreamProcessor {
 	async processFiles(
 		allVideoFiles: VideoFile[],
 		scanId: string,
+		existingIdByPath: Map<string, string> = new Map(),
 	): Promise<ProcessedVideoRecord[]> {
 		const results: ProcessedVideoRecord[] = [];
 		let processedCount = 0;
@@ -120,7 +118,8 @@ export class ScanStreamProcessor {
 						lastModified = extractedMetadata.lastModified;
 						duration = extractedMetadata.duration;
 					}
-					const videoId = await generateFileContentHash(videoFile.filePath);
+					const recordId =
+						existingIdByPath.get(videoFile.filePath) ?? randomUUID();
 
 					// サムネイル生成（既に取得したメタデータを使用）
 					let thumbnailPath: string | null = null;
@@ -129,7 +128,7 @@ export class ScanStreamProcessor {
 							const thumbnailResult =
 								await self.thumbnailGenerator.generateThumbnail(
 									videoFile.filePath,
-									videoId,
+									recordId,
 									extractedMetadata, // 既に取得済みのメタデータを渡す
 									{}, // options
 								);
@@ -152,7 +151,7 @@ export class ScanStreamProcessor {
 
 					// DBレコードとして準備
 					const record: ProcessedVideoRecord = {
-						id: videoFile.filePath,
+						id: recordId,
 						filePath: videoFile.filePath,
 						fileName: videoFile.fileName,
 						title: parsedInfo.cleanTitle,
@@ -162,7 +161,6 @@ export class ScanStreamProcessor {
 						duration,
 						thumbnailPath,
 						lastModified,
-						videoId, // SHA-256ハッシュID (32文字)
 						playlistId: playlist?.id,
 						playlistName: playlist?.name,
 					};
@@ -183,34 +181,46 @@ export class ScanStreamProcessor {
 					}
 
 					// 進捗イベント送信（1ファイルごと）
-					const progressMetrics = self.calculateProgressMetrics(
-						processedCount,
-						totalFiles,
+					const updateInterval = Math.max(
+						1,
+						self.settings.progressUpdateInterval,
 					);
-					const progressValue = (processedCount / totalFiles) * 50;
+					const shouldEmitProgress =
+						processedCount % updateInterval === 0 ||
+						processedCount === totalFiles;
 
-					const progressEvent: ScanProgressEvent = {
-						type: "progress",
-						scanId,
-						phase: "metadata",
-						progress: progressValue, // メタデータ処理は50%まで
-						processedFiles: processedCount,
-						totalFiles,
-						currentFile: videoFile.fileName,
-						message: `ストリーム処理中 (${processedCount}/${totalFiles}) - ${videoFile.fileName}`,
-						processingSpeed: progressMetrics.processingSpeed,
-						estimatedTimeRemaining: progressMetrics.estimatedTimeRemaining,
-						phaseStartTime: self.phaseStartTime
-							? new Date(self.phaseStartTime).toISOString()
-							: undefined,
-						totalElapsedTime: progressMetrics.totalElapsedTime,
-						currentPhaseElapsed: progressMetrics.currentPhaseElapsed,
-					};
+					if (shouldEmitProgress) {
+						const progressMetrics = self.calculateProgressMetrics(
+							processedCount,
+							totalFiles,
+						);
+						const progressValue = (processedCount / totalFiles) * 50;
 
-					console.log(
-						`[SCAN][metadata][stream] ${processedCount}/${totalFiles} processing ${videoFile.filePath}`,
-					);
-					sseStore.broadcast(progressEvent);
+						const progressEvent: ScanProgressEvent = {
+							type: "progress",
+							scanId,
+							phase: "metadata",
+							progress: progressValue, // メタデータ処理は50%まで
+							processedFiles: processedCount,
+							totalFiles,
+							currentFile: videoFile.fileName,
+							message: `ストリーム処理中 (${processedCount}/${totalFiles}) - ${videoFile.fileName}`,
+							processingSpeed: progressMetrics.processingSpeed,
+							estimatedTimeRemaining: progressMetrics.estimatedTimeRemaining,
+							phaseStartTime: self.phaseStartTime
+								? new Date(self.phaseStartTime).toISOString()
+								: undefined,
+							totalElapsedTime: progressMetrics.totalElapsedTime,
+							currentPhaseElapsed: progressMetrics.currentPhaseElapsed,
+						};
+
+						if (self.settings.enableDetailedLogging) {
+							console.log(
+								`[SCAN][metadata][stream] ${processedCount}/${totalFiles} processing ${videoFile.filePath}`,
+							);
+						}
+						sseStore.broadcast(progressEvent);
+					}
 
 					callback(null, record);
 				} catch (fileError) {

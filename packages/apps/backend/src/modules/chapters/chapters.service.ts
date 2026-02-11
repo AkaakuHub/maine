@@ -114,19 +114,16 @@ export class ChaptersService {
 		return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toFixed(3).padStart(6, "0")}`;
 	}
 
-	/**
-	 * videoIdからfilePathを取得
-	 */
-	async getFilePathByVideoId(videoId: string): Promise<string | null> {
+	async getFilePathById(id: string): Promise<string | null> {
 		try {
 			const video = await this.prisma.videoMetadata.findUnique({
-				where: { videoId },
+				where: { id },
 				select: { filePath: true },
 			});
 
 			return video?.filePath || null;
 		} catch (error) {
-			this.logger.error("Error getting filePath by videoId:", error);
+			this.logger.error("Error getting filePath by id:", error);
 			return null;
 		}
 	}

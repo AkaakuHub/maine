@@ -48,9 +48,8 @@ export default function PlayPage() {
 		router.push(returnToPath ?? "/");
 	}, [router, triggerVideoRefresh, returnToPath]);
 
-	// URLからvideoIdを取得
-	const rawVideoId = params.videoId;
-	const videoId = Array.isArray(rawVideoId) ? rawVideoId[0] : rawVideoId;
+	const rawId = params.id;
+	const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
 	const {
 		videoData,
@@ -75,7 +74,7 @@ export default function PlayPage() {
 		playlistVideos,
 		playlistLoading,
 	} = useVideoPlayer({
-		videoId,
+		id,
 		onGoBack: handleGoBackCallback,
 		onGoHome: handleGoHomeCallback,
 	});
@@ -267,8 +266,7 @@ export default function PlayPage() {
 				playlistVideos={playlistVideos}
 				playlistLoading={playlistLoading}
 				onVideoSelect={(video: PlaylistVideo) => {
-					// 動画を選択したときは、videoIdでページを遷移
-					router.push(`/play/${video.videoId}`);
+					router.push(`/play/${video.id}`);
 				}}
 			/>
 

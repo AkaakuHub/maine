@@ -234,7 +234,6 @@ export class PlaylistsController {
 				episode: number | null;
 				year: number | null;
 				thumbnailPath: string | null;
-				videoId: string | null;
 				addedAt: Date;
 				timestamp: number;
 			}> = [];
@@ -261,7 +260,6 @@ export class PlaylistsController {
 						episode: videoRelation.video.episode,
 						year: videoRelation.video.year,
 						thumbnailPath: videoRelation.video.thumbnail_path,
-						videoId: videoRelation.video.videoId,
 						addedAt: videoRelation.addedAt,
 						timestamp,
 					});

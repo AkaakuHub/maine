@@ -17,10 +17,10 @@ public class VideoStreamingManager : MonoBehaviour
 {
     [Header("Video URLs")]
     [Tooltip("実際の動画ファイルURL（バックエンドサーバー）")]
-    public string videoUrl = "http://localhost:3001/api/video/VIDEO_ID_HERE";
+    public string videoUrl = "http://localhost:3001/api/video/ID_HERE";
 
     [Tooltip("動画情報取得APIのURL")]
-    public string videoInfoUrl = "http://localhost:3001/api/videos/by-video-id/VIDEO_ID_HERE";
+    public string videoInfoUrl = "http://localhost:3001/api/videos/by-id/ID_HERE";
 
     [Header("Proxy Settings")]
     [Tooltip("ローカルプロキシが使用するポート")]

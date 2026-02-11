@@ -10,11 +10,11 @@ import { AuthAPI } from "../api/auth";
 import { usePlaylistVideos } from "./usePlaylists";
 
 export function useVideoPlayer({
-	videoId,
+	id,
 	onGoBack,
 	onGoHome,
 }: {
-	videoId?: string;
+	id?: string;
 	onGoBack?: () => void;
 	onGoHome?: () => void;
 } = {}) {
@@ -26,7 +26,7 @@ export function useVideoPlayer({
 		episode: "",
 		fullTitle: "",
 		filePath: "",
-		videoId: "",
+		id: "",
 	});
 	const [videoSrc, setVideoSrc] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -71,17 +71,14 @@ export function useVideoPlayer({
 		[],
 	);
 
-	// videoIdで動画を読み込む関数
-	const loadVideoByVideoId = useCallback(
+	// idで動画を読み込む関数
+	const loadVideoById = useCallback(
 		async (id: string) => {
 			try {
 				setError(null);
-				const response = await fetch(
-					createApiUrl(`/videos/by-video-id/${id}`),
-					{
-						headers: AuthAPI.getAuthHeaders(),
-					},
-				);
+				const response = await fetch(createApiUrl(`/videos/by-id/${id}`), {
+					headers: AuthAPI.getAuthHeaders(),
+				});
 
 				if (!response.ok) {
 					// 401/403エラーの場合は権限なしエラーメッセージを設定
@@ -123,7 +120,7 @@ export function useVideoPlayer({
 					episode: videoData.episode?.toString() || "",
 					fullTitle: videoData.title,
 					filePath: videoData.filePath,
-					videoId: videoData.videoId,
+					id: videoData.id,
 					description: description,
 					genre: videoData.genre || "動画",
 					year: videoData.year?.toString() || "不明",
@@ -143,7 +140,7 @@ export function useVideoPlayer({
 					console.error("Failed to load initial progress:", error);
 				});
 			} catch (error) {
-				console.error("Error loading video by videoId:", error);
+				console.error("Error loading video by id:", error);
 				// ネットワークエラーやその他のエラーの場合
 				if (
 					!(error instanceof Error) ||
@@ -157,8 +154,8 @@ export function useVideoPlayer({
 	);
 
 	const initializePlayer = useCallback(async () => {
-		if (!videoId) {
-			console.error("No videoId provided");
+		if (!id) {
+			console.error("No id provided");
 			setIsLoading(false);
 			return;
 		}
@@ -166,14 +163,13 @@ export function useVideoPlayer({
 		setIsLoading(true);
 
 		try {
-			// videoId方式のみ
-			await loadVideoByVideoId(videoId);
+			await loadVideoById(id);
 		} catch (error) {
 			console.error("Failed to load video:", error);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [videoId, loadVideoByVideoId]);
+	}, [id, loadVideoById]);
 
 	useEffect(() => {
 		initializePlayer();
@@ -253,16 +249,13 @@ export function useVideoPlayer({
 	};
 
 	const handleDownload = useCallback(async () => {
-		if (!videoData?.videoId) {
-			console.error("No video data or video ID available");
+		if (!videoData?.id) {
+			console.error("No video data or id available");
 			return;
 		}
 
 		try {
-			// ダウンロードリンクを作成（videoIdを使用）
-			const downloadUrl = createApiUrl(
-				`/video/${videoData.videoId}?download=true`,
-			);
+			const downloadUrl = createApiUrl(`/video/${videoData.id}?download=true`);
 			const link = document.createElement("a");
 			link.href = downloadUrl;
 			link.download = videoData.fileName || "video.mp4";

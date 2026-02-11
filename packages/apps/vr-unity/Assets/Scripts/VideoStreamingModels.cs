@@ -18,7 +18,6 @@ public class VideoInfo
     public string scannedAt;
     public string thumbnailPath;
     public string metadataExtractedAt;
-    public string videoId;
     public double watchProgress;
     public double watchTime;
     public bool isLiked;

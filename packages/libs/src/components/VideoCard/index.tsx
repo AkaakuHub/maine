@@ -14,7 +14,7 @@ interface VideoCardProps {
 	priority?: boolean;
 	className?: string;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (videoId: string) => void;
+	onPlay?: (id: string) => void;
 }
 
 const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
@@ -64,7 +64,7 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 	const handlePlayClick = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		onPlay?.(video.videoId);
+		onPlay?.(video.id);
 	};
 
 	return (

@@ -9,14 +9,14 @@ import type { PlaylistVideo } from "../../types/Playlist";
 
 interface PlaylistVideoListProps {
 	videos: PlaylistVideo[];
-	currentVideoId?: string;
+	currentId?: string;
 	onVideoSelect?: (video: PlaylistVideo) => void;
 	className?: string;
 }
 
 export function PlaylistVideoList({
 	videos,
-	currentVideoId,
+	currentId,
 	onVideoSelect,
 	className,
 }: PlaylistVideoListProps) {
@@ -80,7 +80,7 @@ export function PlaylistVideoList({
 			{expanded && (
 				<div className="space-y-2 max-h-96 overflow-y-auto">
 					{videos.map((video, _index) => {
-						const isCurrentVideo = video.videoId === currentVideoId;
+						const isCurrentVideo = video.id === currentId;
 
 						return (
 							<button

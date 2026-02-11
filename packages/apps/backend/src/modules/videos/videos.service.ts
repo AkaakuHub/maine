@@ -2,7 +2,6 @@ import { PAGINATION } from "../../utils";
 import { Injectable, Logger } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
-import { generateFileContentHash } from "../../libs/fileUtils";
 import * as fs from "node:fs";
 import { SearchResult } from "../../type";
 
@@ -19,7 +18,6 @@ export interface VideoData {
 	scannedAt: Date;
 	thumbnailPath: string | undefined | null;
 	metadataExtractedAt: Date | null;
-	videoId: string; // SHA-256ハッシュID (64文字)
 	playlistId?: string | null; // プレイリストID
 	playlistName?: string | null; // プレイリスト名
 }
@@ -36,28 +34,12 @@ export class VideosService {
 
 	constructor(private readonly prisma: PrismaService) {}
 
-	/**
-	 * ファイルコンテンツからSHA-256ハッシュを生成
-	 * @param filePath 動画ファイルのフルパス
-	 * @returns 64文字のSHA-256ハッシュ文字列
-	 */
-	async generateVideoId(filePath: string): Promise<string> {
-		return await generateFileContentHash(filePath);
-	}
-
-	/**
-	 * 既存動画にvideoIdを一括設定（マイグレーション用）
-	 * @returns 処理した動画数
-	 */
-	// 既存データ用ユーティリティは不要（Prismaのマイグレーションで管理）
-
-	// videoIdから動画情報を取得するAPIエンドポイント
-	async getVideoByVideoIdForApi(videoId: string) {
+	async getVideoByIdForApi(id: string) {
 		try {
-			this.logger.log(`Getting video by videoId: ${videoId}`);
+			this.logger.log(`Getting video by id: ${id}`);
 
 			const video = await this.prisma.videoMetadata.findUnique({
-				where: { videoId },
+				where: { id },
 				include: {
 					playlists: {
 						include: {
@@ -95,14 +77,13 @@ export class VideosService {
 				scannedAt: video.scannedAt,
 				thumbnailPath: video.thumbnail_path,
 				metadataExtractedAt: video.metadata_extracted_at,
-				videoId: video.videoId,
 				playlistId: firstPlaylist?.playlist.id,
 				playlistName: firstPlaylist?.playlist.name,
 			};
 
 			return { success: true, video: videoData };
 		} catch (error) {
-			this.logger.error("Error getting video by videoId:", error);
+			this.logger.error("Error getting video by id:", error);
 			return { success: false, error: "Internal server error" };
 		}
 	}
@@ -194,7 +175,6 @@ export class VideosService {
 				scannedAt: v.scannedAt,
 				thumbnailPath: v.thumbnail_path,
 				metadataExtractedAt: v.metadata_extracted_at,
-				videoId: v.videoId,
 			}));
 
 			this.logger.log(`Returning ${videosWithProgress.length} videos`);
@@ -245,7 +225,6 @@ export class VideosService {
 					scannedAt: true,
 					thumbnail_path: true,
 					metadata_extracted_at: true,
-					videoId: true, // videoIdを取得
 				},
 			});
 
@@ -266,7 +245,6 @@ export class VideosService {
 				scannedAt: video.scannedAt,
 				thumbnailPath: video.thumbnail_path,
 				metadataExtractedAt: video.metadata_extracted_at,
-				videoId: video.videoId,
 			};
 		} catch (error) {
 			this.logger.error("Error getting video:", error);
@@ -462,7 +440,6 @@ export class VideosService {
 					scannedAt: video.scannedAt,
 					thumbnailPath: video.thumbnail_path,
 					metadataExtractedAt: video.metadata_extracted_at,
-					videoId: video.videoId,
 					watchTime: progress.watchTime ?? 0,
 					watchProgress: progress.watchProgress ?? 0,
 					lastWatched: progress.lastWatched,

@@ -29,7 +29,7 @@ export { PAGINATION } from "./utils/constants";
 export { EmptyState } from "./components/EmptyState";
 export { LoadingState } from "./components/LoadingState";
 
-// play/[videoId]/page.tsx
+// play/[id]/page.tsx
 export { Navigation } from "./components/VideoPlayer/Navigation";
 export { LoadingScreen } from "./components/VideoPlayer/LoadingScreen";
 export { ResponsiveVideoLayout } from "./components/VideoPlayer/ResponsiveVideoLayout";

@@ -22,7 +22,7 @@ export function useWarningDialog() {
 		if (warningVideoData) {
 			handleCloseStreamingWarning();
 			setTimeout(() => {
-				window.location.href = `/play/${encodeURIComponent(warningVideoData.videoId)}`;
+				window.location.href = `/play/${encodeURIComponent(warningVideoData.id)}`;
 			}, 0);
 		}
 	}, [warningVideoData, handleCloseStreamingWarning]);

@@ -39,7 +39,7 @@ const ModernVideoPlayer = ({
 	onVideoEnd,
 	playlistVideos = [],
 	onVideoSelect,
-	videoId,
+	id,
 }: ModernVideoPlayerProps) => {
 	// Refs
 	const videoRef = useRef<HTMLVideoElementWithFullscreen>(null);
@@ -75,12 +75,12 @@ const ModernVideoPlayer = ({
 	});
 
 	// 現在の動画IDを取得
-	const currentVideoId = videoId || "";
+	const currentId = id || "";
 
 	// プレイストナビゲーションフック
 	const { playNextVideo, hasNextVideo } = usePlaylistNavigation({
 		playlistVideos,
-		currentVideoId,
+		currentId,
 		onVideoSelect,
 	});
 

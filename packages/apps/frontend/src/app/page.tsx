@@ -107,9 +107,9 @@ const HomeContent = () => {
 	}, [getSearchParams]);
 
 	const handlePlayVideo = useCallback(
-		(videoId: string) => {
+		(id: string) => {
 			const returnPath = buildReturnPath();
-			const basePath = `/play/${videoId}`;
+			const basePath = `/play/${id}`;
 			const targetUrl =
 				returnPath === "/"
 					? basePath

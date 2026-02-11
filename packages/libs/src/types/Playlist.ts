@@ -20,6 +20,5 @@ export interface PlaylistVideo {
 	episode: number | null;
 	year: number | null;
 	thumbnailPath: string | null;
-	videoId: string | null;
 	addedAt: Date;
 }

@@ -44,7 +44,6 @@ async function migrateThumbnails() {
 			id: true,
 			filePath: true,
 			fileName: true,
-			videoId: true,
 			thumbnail_path: true,
 		},
 	});
@@ -52,13 +51,13 @@ async function migrateThumbnails() {
 	stats.total = videos.length;
 
 	for (const video of videos) {
-		const targetRelative = `${video.videoId}.webp`;
+		const targetRelative = `${video.id}.webp`;
 		const currentRelative = video.thumbnail_path?.trim();
 
 		if (!currentRelative) {
 			stats.noThumbnailInfo += 1;
 			console.warn(
-				`[SKIP:no-thumbnail] videoId=${video.videoId} (${video.fileName}) has no thumbnail_path record`,
+				`[SKIP:no-thumbnail] id=${video.id} (${video.fileName}) has no thumbnail_path record`,
 			);
 			continue;
 		}
@@ -74,7 +73,7 @@ async function migrateThumbnails() {
 		if (!existsSync(currentAbsolute)) {
 			stats.missingFile += 1;
 			console.warn(
-				`[SKIP:missing-file] ${currentAbsolute} not found for videoId=${video.videoId}`,
+				`[SKIP:missing-file] ${currentAbsolute} not found for id=${video.id}`,
 			);
 			continue;
 		}
@@ -100,7 +99,7 @@ async function migrateThumbnails() {
 			await fs.rename(currentAbsolute, targetAbsolute);
 			stats.renamed += 1;
 			console.log(
-				`[RENAMED] ${currentRelative} -> ${targetRelative} for videoId=${video.videoId}`,
+				`[RENAMED] ${currentRelative} -> ${targetRelative} for id=${video.id}`,
 			);
 		}
 

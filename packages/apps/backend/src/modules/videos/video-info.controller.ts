@@ -18,23 +18,23 @@ import { PermissionsService } from "../../auth/permissions.service";
 @ApiTags("videos")
 @Controller("videos")
 @UseGuards(JwtAuthGuard)
-export class VideoIdController {
-	private readonly logger = new Logger(VideoIdController.name);
+export class VideoInfoController {
+	private readonly logger = new Logger(VideoInfoController.name);
 
 	constructor(
 		private readonly videosService: VideosService,
 		private readonly permissionsService: PermissionsService,
 	) {}
 
-	@Get("by-video-id/:videoId")
-	@ApiParam({ name: "videoId", description: "64文字のSHA-256ハッシュID" })
+	@Get("by-id/:id")
+	@ApiParam({ name: "id", description: "動画ID" })
 	@ApiResponse({ status: 200, description: "動画情報の取得成功" })
 	@ApiResponse({ status: 404, description: "動画が見つからない" })
-	@ApiResponse({ status: 400, description: "無効なvideoId" })
+	@ApiResponse({ status: 400, description: "無効なID" })
 	@ApiResponse({ status: 401, description: "認証が必要" })
 	@ApiResponse({ status: 403, description: "アクセス権限なし" })
-	async getVideoByVideoId(
-		@Param("videoId") videoId: string,
+	async getVideoById(
+		@Param("id") id: string,
 		@Request() req: ExpressRequest & { user?: { userId: string } },
 	) {
 		// ユーザーIDを取得
@@ -46,15 +46,7 @@ export class VideoIdController {
 			throw new ForbiddenException("認証が必要です");
 		}
 
-		// videoIdの形式を検証
-		if (!/^[a-f0-9]{64}$/i.test(videoId)) {
-			throw new HttpException(
-				"Invalid videoId format. Expected 64-character SHA-256 hash.",
-				HttpStatus.BAD_REQUEST,
-			);
-		}
-
-		const result = await this.videosService.getVideoByVideoIdForApi(videoId);
+		const result = await this.videosService.getVideoByIdForApi(id);
 
 		if (!result.success || !result.video) {
 			throw new HttpException(

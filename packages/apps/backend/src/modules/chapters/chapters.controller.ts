@@ -30,9 +30,9 @@ export class ChaptersController {
 
 	@Get()
 	@ApiQuery({
-		name: "videoId",
+		name: "id",
 		required: true,
-		description: "64文字のSHA-256ハッシュID",
+		description: "動画ID",
 	})
 	@ApiQuery({
 		name: "format",
@@ -45,26 +45,18 @@ export class ChaptersController {
 	@ApiResponse({ status: 404, description: "ファイルが見つからない" })
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
 	async getVideoChapters(
-		@Query("videoId") videoId: string,
+		@Query("id") id: string,
 		@Query("format") format?: string,
 		@Res({ passthrough: true }) res?: Response,
 	): Promise<GetVideoChaptersResponse> {
 		try {
-			if (!videoId) {
+			if (!id) {
 				throw new BadRequestException({
-					error: "videoIdが必要です",
+					error: "idが必要です",
 				});
 			}
 
-			// videoIdの形式を検証
-			if (!/^[a-f0-9]{64}$/i.test(videoId)) {
-				throw new BadRequestException({
-					error: "Invalid videoId format. Expected 64-character SHA-256 hash.",
-				});
-			}
-
-			// videoIdからfilePathを取得
-			const filePath = await this.chaptersService.getFilePathByVideoId(videoId);
+			const filePath = await this.chaptersService.getFilePathById(id);
 			if (!filePath) {
 				throw new BadRequestException({
 					error: "動画が見つかりません",

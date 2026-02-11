@@ -27,7 +27,7 @@ interface VideoContentProps {
 	hasNextPage: boolean;
 	onShowStreamingWarning: (video: VideoFileData) => void;
 	onPageChange: (page: number) => void;
-	onPlay?: (videoId: string) => void;
+	onPlay?: (id: string) => void;
 	onRetry?: () => void;
 }
 

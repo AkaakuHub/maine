@@ -94,7 +94,7 @@ export function ResponsiveVideoLayout({
 							onVideoEnd={() => {
 								// 動画終了時の追加処理があればここに記述
 							}}
-							videoId={videoData?.videoId}
+							id={videoData?.id}
 						/>
 					</div>
 				</div>
@@ -120,7 +120,7 @@ export function ResponsiveVideoLayout({
 						<div className="p-4 border-t border-border">
 							<PlaylistVideoList
 								videos={playlistVideos || []}
-								currentVideoId={videoData?.videoId}
+								currentId={videoData?.id}
 								onVideoSelect={onVideoSelect}
 								className="mt-2"
 							/>

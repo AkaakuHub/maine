@@ -77,7 +77,6 @@ model VideoMetadata {
   duration              Int?
   metadata_extracted_at DateTime?
   thumbnail_path        String?
-  videoId               String    @unique
 
   // Relations
   playlists             VideoPlaylist[]
@@ -85,7 +84,6 @@ model VideoMetadata {
   @@index([title])
   @@index([fileName])
   @@index([filePath])
-  @@index([videoId])
   @@map("video_metadata")
 }
 
@@ -108,18 +106,18 @@ model Playlist {
 }
 
 model VideoPlaylist {
-  id         String   @id @default(cuid())
-  videoId    String
-  playlistId String
-  addedAt    DateTime @default(now())
+  id              String   @id @default(cuid())
+  videoMetadataId String   @map("video_metadata_id")
+  playlistId      String
+  addedAt         DateTime @default(now())
 
   // Relations
-  video      VideoMetadata @relation(fields: [videoId], references: [videoId], onDelete: Cascade)
+  video      VideoMetadata @relation(fields: [videoMetadataId], references: [id], onDelete: Cascade)
   playlist   Playlist      @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 
-  @@unique([videoId, playlistId])
+  @@unique([videoMetadataId, playlistId])
   @@index([playlistId])
-  @@index([videoId])
+  @@index([videoMetadataId])
   @@map("video_playlist")
 }
 
