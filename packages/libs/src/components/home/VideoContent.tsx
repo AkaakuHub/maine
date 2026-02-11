@@ -1,10 +1,14 @@
 "use client";
 
-import VideoGridContainer from "../../components/VideoGridContainer";
-import VideoList from "../../components/VideoList";
-import Button from "../../components/ui/Button";
+import { Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Virtuoso } from "react-virtuoso";
+import VideoCard from "../../components/VideoCard";
+import { VideoListItem } from "../../components/VideoList";
+import { cn } from "../../libs/utils";
 import type { ViewMode } from "../../stores/appStateStore";
 import type { VideoFileData } from "../../type";
+import { INFINITE_SCROLL } from "../../utils/constants";
 import { EmptyState } from "../EmptyState";
 import { LoadingState } from "../LoadingState";
 
@@ -22,14 +26,36 @@ interface VideoContentProps {
 	searchQuery: string;
 	hasContent: boolean;
 	pagination: PaginationData;
-	currentPage: number;
-	hasPrevPage: boolean;
 	hasNextPage: boolean;
+	isFetchingNextPage: boolean;
 	onShowStreamingWarning: (video: VideoFileData) => void;
-	onPageChange: (page: number) => void;
+	onLoadNextPage: () => Promise<void>;
 	onPlay?: (id: string) => void;
 	onRetry?: () => void;
 }
+
+const resolveGridColumns = (screenWidth: number): number => {
+	for (const rule of INFINITE_SCROLL.GRID_COLUMN_BREAKPOINTS) {
+		if (screenWidth >= rule.minWidth) {
+			return rule.columns;
+		}
+	}
+
+	return 1;
+};
+
+const createGridRows = (
+	videos: VideoFileData[],
+	columns: number,
+): VideoFileData[][] => {
+	const rows: VideoFileData[][] = [];
+
+	for (let index = 0; index < videos.length; index += columns) {
+		rows.push(videos.slice(index, index + columns));
+	}
+
+	return rows;
+};
 
 export function VideoContent({
 	viewMode,
@@ -38,82 +64,149 @@ export function VideoContent({
 	searchQuery,
 	hasContent,
 	pagination,
-	currentPage,
-	hasPrevPage,
 	hasNextPage,
+	isFetchingNextPage,
 	onShowStreamingWarning,
-	onPageChange,
+	onLoadNextPage,
 	onPlay,
 }: VideoContentProps) {
-	// ローディング状態 - 初期状態でのみフルスクリーンローディングを表示
+	const [gridColumns, setGridColumns] = useState(1);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const syncColumns = () => {
+			setGridColumns(resolveGridColumns(window.innerWidth));
+		};
+
+		syncColumns();
+		window.addEventListener("resize", syncColumns);
+
+		return () => {
+			window.removeEventListener("resize", syncColumns);
+		};
+	}, []);
+
+	const gridRows = useMemo(
+		() => createGridRows(videos, Math.max(1, gridColumns)),
+		[videos, gridColumns],
+	);
+
 	if (videosLoading && !hasContent) {
 		return <LoadingState type="initial" message="検索中..." />;
 	}
 
-	return (
-		<div className="container mx-auto px-6 py-6">
-			{/* コンテンツ */}
-			{(() => {
-				if (videosLoading) {
-					return <LoadingState type="search" message="動画を読み込み中..." />;
-				}
+	if (videos.length === 0 && searchQuery) {
+		return (
+			<div className="container mx-auto px-6 py-6">
+				<EmptyState type="no-search-results" searchTerm={searchQuery} />
+			</div>
+		);
+	}
 
-				if (videos.length === 0 && searchQuery) {
-					return (
-						<EmptyState type="no-search-results" searchTerm={searchQuery} />
-					);
-				}
+	if (videos.length === 0 && !videosLoading) {
+		return (
+			<div className="container mx-auto px-6 py-6">
+				<EmptyState type="no-videos" />
+			</div>
+		);
+	}
 
-				if (videos.length === 0 && !videosLoading) {
-					return <EmptyState type="no-videos" />;
-				}
+	const handleEndReached = () => {
+		if (hasNextPage && !isFetchingNextPage) {
+			void onLoadNextPage();
+		}
+	};
 
-				// 動画がある場合は表示
-				return viewMode === "grid" ? (
-					<VideoGridContainer
-						videos={videos}
-						onShowStreamingWarning={onShowStreamingWarning}
-						onPlay={onPlay}
-					/>
-				) : (
-					<VideoList
-						videos={videos}
-						onShowStreamingWarning={onShowStreamingWarning}
-						onPlay={onPlay}
-					/>
-				);
-			})()}
+	const handleAtBottomStateChange = (isAtBottom: boolean) => {
+		if (isAtBottom && hasNextPage && !isFetchingNextPage) {
+			void onLoadNextPage();
+		}
+	};
 
-			{/* ページネーション */}
-			{pagination.totalPages > 1 && (
-				<div className="flex justify-center items-center space-x-4 mt-8">
-					<Button
-						onClick={() => onPageChange(currentPage - 1)}
-						disabled={!hasPrevPage || videosLoading}
-						variant="secondary"
-						size="sm"
-					>
-						前のページ
-					</Button>
-
-					<span className="text-text">
-						{pagination.page} / {pagination.totalPages} ページ (
-						{pagination.total}件中{" "}
-						{(pagination.page - 1) * pagination.limit + 1}-
-						{Math.min(pagination.page * pagination.limit, pagination.total)}
-						件)
-					</span>
-
-					<Button
-						onClick={() => onPageChange(currentPage + 1)}
-						disabled={!hasNextPage || videosLoading}
-						variant="secondary"
-						size="sm"
-					>
-						次のページ
-					</Button>
+	const Footer = () => {
+		if (isFetchingNextPage) {
+			return (
+				<div className="container mx-auto px-6 py-6">
+					<div className="flex items-center justify-center gap-2 text-text-secondary">
+						<Loader2 className="h-4 w-4 animate-spin" />
+						<span className="text-sm">読み込み中...</span>
+					</div>
 				</div>
-			)}
+			);
+		}
+
+		if (!hasNextPage && pagination.total > 0) {
+			return (
+				<div className="container mx-auto px-6 pb-8">
+					<p className="text-center text-sm text-text-secondary">
+						全 {pagination.total} 件を表示しました
+					</p>
+				</div>
+			);
+		}
+
+		return <div className="h-6" />;
+	};
+
+	if (viewMode === "grid") {
+		return (
+			<div className="pb-6">
+				<Virtuoso
+					useWindowScroll
+					data={gridRows}
+					endReached={handleEndReached}
+					atBottomStateChange={handleAtBottomStateChange}
+					increaseViewportBy={INFINITE_SCROLL.GRID_OVERSCAN}
+					components={{ Footer }}
+					itemContent={(rowIndex, rowVideos) => (
+						<div className="container mx-auto px-6">
+							<div
+								className={cn(rowIndex === 0 ? "pt-6" : "", "pb-6 grid gap-6")}
+								style={{
+									gridTemplateColumns: `repeat(${Math.max(1, gridColumns)}, minmax(0, 1fr))`,
+								}}
+							>
+								{rowVideos.map((video, columnIndex) => (
+									<VideoCard
+										key={video.id}
+										video={video}
+										priority={rowIndex === 0 && columnIndex < 6}
+										onShowStreamingWarning={onShowStreamingWarning}
+										onPlay={onPlay}
+									/>
+								))}
+							</div>
+						</div>
+					)}
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<div className="pb-6">
+			<Virtuoso
+				useWindowScroll
+				data={videos}
+				endReached={handleEndReached}
+				atBottomStateChange={handleAtBottomStateChange}
+				increaseViewportBy={INFINITE_SCROLL.LIST_OVERSCAN}
+				components={{ Footer }}
+				itemContent={(index, video) => (
+					<div className="container mx-auto px-6">
+						<div className={cn(index === 0 ? "pt-6" : "", "pb-3")}>
+							<VideoListItem
+								video={video}
+								onShowStreamingWarning={onShowStreamingWarning}
+								onPlay={onPlay}
+							/>
+						</div>
+					</div>
+				)}
+			/>
 		</div>
 	);
 }

@@ -16,21 +16,13 @@ import { createApiUrl } from "../../utils/api";
 import { parseVideoFileName } from "../../utils/videoFileNameParser";
 import { AuthAPI } from "../../api/auth";
 
-interface VideoListProps {
-	videos: VideoFileData[];
-	className?: string;
+interface VideoListItemProps {
+	video: VideoFileData;
 	onShowStreamingWarning?: (video: VideoFileData) => void;
 	onPlay?: (id: string) => void;
 }
 
-const VideoListItem = ({
-	video,
-	onPlay,
-}: {
-	video: VideoFileData;
-	onShowStreamingWarning?: (video: VideoFileData) => void;
-	onPlay?: (id: string) => void;
-}) => {
+export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 	const [showMenu, setShowMenu] = useState(false);
 	const [watchProgress, setWatchProgress] = useState<number>(0);
 	const [isLoadingProgress, setIsLoadingProgress] = useState<boolean>(false);
@@ -261,25 +253,3 @@ const VideoListItem = ({
 		</div>
 	);
 };
-
-const VideoList = ({
-	videos,
-	className,
-	onShowStreamingWarning,
-	onPlay,
-}: VideoListProps) => {
-	return (
-		<div className={cn("space-y-3", className)}>
-			{videos.map((video) => (
-				<VideoListItem
-					key={video.id}
-					video={video}
-					onShowStreamingWarning={onShowStreamingWarning}
-					onPlay={onPlay}
-				/>
-			))}
-		</div>
-	);
-};
-
-export default VideoList;

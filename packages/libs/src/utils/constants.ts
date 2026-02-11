@@ -10,6 +10,20 @@ export const PAGINATION = {
 	MIN_LIMIT: 1,
 } as const;
 
+// 無限スクロール関連
+export const INFINITE_SCROLL = {
+	GRID_OVERSCAN: 400,
+	LIST_OVERSCAN: 300,
+	GRID_COLUMN_BREAKPOINTS: [
+		{ minWidth: 1536, columns: 6 },
+		{ minWidth: 1280, columns: 5 },
+		{ minWidth: 1024, columns: 4 },
+		{ minWidth: 768, columns: 3 },
+		{ minWidth: 480, columns: 2 },
+		{ minWidth: 0, columns: 1 },
+	],
+} as const;
+
 // スキャン関連
 export const SCAN = {
 	// デフォルト設定値

@@ -46,11 +46,6 @@ const HomeContent = () => {
 		activeTab,
 
 		// ページネーション
-		currentPage,
-		setCurrentPage,
-		continuePage,
-		setContinuePage,
-
 		// 設定モーダル
 		showSettings,
 		handleShowSettings,
@@ -141,7 +136,8 @@ const HomeContent = () => {
 		pagination,
 		refetch: refetchVideos,
 		hasNextPage,
-		hasPrevPage,
+		loadNextPage: loadNextVideosPage,
+		isFetchingNextPage: isFetchingNextVideosPage,
 	} = useVideos({
 		filters: {
 			search: searchQuery,
@@ -151,7 +147,7 @@ const HomeContent = () => {
 			sortOrder,
 		},
 		pagination: {
-			page: currentPage,
+			page: PAGINATION.DEFAULT_PAGE,
 			limit: PAGINATION.DEFAULT_LIMIT,
 		},
 		enabled: isInitialized.current, // URL初期化完了後に有効化
@@ -164,9 +160,10 @@ const HomeContent = () => {
 		pagination: continuePagination,
 		refetch: refetchContinue,
 		hasNextPage: continueHasNextPage,
-		hasPrevPage: continueHasPrevPage,
+		loadNextPage: loadNextContinuePage,
+		isFetchingNextPage: isFetchingNextContinuePage,
 	} = useContinueWatchingVideos({
-		page: continuePage,
+		page: PAGINATION.DEFAULT_PAGE,
 		limit: PAGINATION.DEFAULT_LIMIT,
 		enabled: isInitialized.current,
 	});
@@ -250,11 +247,10 @@ const HomeContent = () => {
 					searchQuery={searchQuery}
 					hasContent={hasContent}
 					pagination={pagination}
-					currentPage={currentPage}
-					hasPrevPage={hasPrevPage}
 					hasNextPage={hasNextPage}
+					isFetchingNextPage={isFetchingNextVideosPage}
 					onShowStreamingWarning={handleShowStreamingWarning}
-					onPageChange={setCurrentPage}
+					onLoadNextPage={loadNextVideosPage}
 					onRetry={handleRetry}
 					onPlay={handlePlayVideo}
 				/>
@@ -295,11 +291,10 @@ const HomeContent = () => {
 							searchQuery=""
 							hasContent={continueHasContent}
 							pagination={continuePagination}
-							currentPage={continuePage}
-							hasPrevPage={continueHasPrevPage}
 							hasNextPage={continueHasNextPage}
+							isFetchingNextPage={isFetchingNextContinuePage}
 							onShowStreamingWarning={handleShowStreamingWarning}
-							onPageChange={setContinuePage}
+							onLoadNextPage={loadNextContinuePage}
 							onPlay={handlePlayVideo}
 						/>
 					)}
