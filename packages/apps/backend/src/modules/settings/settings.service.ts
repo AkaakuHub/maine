@@ -1,26 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaClient } from "../../../prisma/generated/settings";
-
-const globalForSettingsPrisma = globalThis as unknown as {
-	settingsPrisma: PrismaClient | undefined;
-};
+import { prisma } from "../../libs/prisma";
 
 @Injectable()
 export class SettingsService {
 	private readonly logger = new Logger(SettingsService.name);
-	private readonly prisma: PrismaClient;
-
-	constructor() {
-		this.prisma = globalForSettingsPrisma.settingsPrisma ?? new PrismaClient();
-		if (process.env.NODE_ENV !== "production") {
-			globalForSettingsPrisma.settingsPrisma = this.prisma;
-		}
-	}
 
 	// チャプタースキップルール関連
 	async getChapterSkipRules() {
 		try {
-			const rules = await this.prisma.chapterSkipRule.findMany({
+			const rules = await prisma.chapterSkipRule.findMany({
 				orderBy: { createdAt: "asc" },
 			});
 			return { success: true, rules };
@@ -39,7 +27,7 @@ export class SettingsService {
 			const trimmedPattern = data.pattern.trim();
 
 			// 重複チェック
-			const existingRule = await this.prisma.chapterSkipRule.findFirst({
+			const existingRule = await prisma.chapterSkipRule.findFirst({
 				where: { pattern: trimmedPattern },
 			});
 
@@ -51,7 +39,7 @@ export class SettingsService {
 				};
 			}
 
-			const rule = await this.prisma.chapterSkipRule.create({
+			const rule = await prisma.chapterSkipRule.create({
 				data: {
 					pattern: trimmedPattern,
 					enabled: data.enabled ?? true,
@@ -77,7 +65,7 @@ export class SettingsService {
 			// pattern重複チェック（変更の場合）
 			if (data.pattern !== undefined) {
 				const trimmedPattern = data.pattern.trim();
-				const existingRule = await this.prisma.chapterSkipRule.findFirst({
+				const existingRule = await prisma.chapterSkipRule.findFirst({
 					where: { pattern: trimmedPattern, id: { not: id } },
 				});
 
@@ -106,7 +94,7 @@ export class SettingsService {
 				updateData.enabled = data.enabled;
 			}
 
-			const rule = await this.prisma.chapterSkipRule.update({
+			const rule = await prisma.chapterSkipRule.update({
 				where: { id },
 				data: updateData,
 			});
@@ -124,7 +112,7 @@ export class SettingsService {
 
 	async deleteChapterSkipRule(id: string) {
 		try {
-			await this.prisma.chapterSkipRule.delete({
+			await prisma.chapterSkipRule.delete({
 				where: { id },
 			});
 
@@ -141,12 +129,12 @@ export class SettingsService {
 	// ユーザー設定関連
 	async getUserSettings() {
 		try {
-			let settings = await this.prisma.userSettings.findUnique({
+			let settings = await prisma.userSettings.findUnique({
 				where: { id: "user_settings" },
 			});
 
 			if (!settings) {
-				settings = await this.prisma.userSettings.create({
+				settings = await prisma.userSettings.create({
 					data: { id: "user_settings" },
 				});
 			}
@@ -172,7 +160,7 @@ export class SettingsService {
 		skipNotificationShow?: boolean;
 	}) {
 		try {
-			const settings = await this.prisma.userSettings.upsert({
+			const settings = await prisma.userSettings.upsert({
 				where: { id: "user_settings" },
 				update: data,
 				create: { id: "user_settings", ...data },

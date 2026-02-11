@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaClient as SettingsPrismaClient } from "../../../prisma/generated/settings";
+import { prisma } from "../../libs/prisma";
 
 interface TimeRange {
 	enabled: boolean;
@@ -64,11 +64,9 @@ const DEFAULT_SCAN_SETTINGS: ScanSettings = {
 @Injectable()
 export class ScanSettingsService {
 	private readonly logger = new Logger(ScanSettingsService.name);
-	private settingsDb: SettingsPrismaClient;
 	private scanSettings: ScanSettings = DEFAULT_SCAN_SETTINGS;
 
 	constructor() {
-		this.settingsDb = new SettingsPrismaClient();
 		this.loadScanSettings();
 	}
 
@@ -106,7 +104,7 @@ export class ScanSettingsService {
 	 */
 	private async loadScanSettings(): Promise<void> {
 		try {
-			const savedSettings = await this.settingsDb.scanSettings.findUnique({
+			const savedSettings = await prisma.scanSettings.findUnique({
 				where: { id: "scan_settings" },
 			});
 
@@ -147,7 +145,7 @@ export class ScanSettingsService {
 	 */
 	private async saveScanSettings(): Promise<void> {
 		try {
-			await this.settingsDb.scanSettings.upsert({
+			await prisma.scanSettings.upsert({
 				where: { id: "scan_settings" },
 				update: {
 					scanMode: this.scanSettings.scanMode,

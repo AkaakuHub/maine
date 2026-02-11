@@ -2,25 +2,19 @@
  * スキャンスケジュール設定の永続化サービス
  * DB操作とTypeScript型の相互変換を管理
  */
-import { PrismaClient as SettingsPrismaClient } from "../../prisma/generated/settings";
+import { prisma } from "../libs/prisma";
 import {
 	type ScanScheduleSettings,
 	DEFAULT_SCHEDULE_SETTINGS,
 } from "../types/scanScheduleSettings";
 
 export class ScanSchedulePersistenceService {
-	private settingsDb: SettingsPrismaClient;
-
-	constructor() {
-		this.settingsDb = new SettingsPrismaClient();
-	}
-
 	/**
 	 * スケジュール設定をDBから読み込み
 	 */
 	async loadSettings(): Promise<ScanScheduleSettings> {
 		try {
-			const record = await this.settingsDb.scanScheduleSettings.findUnique({
+			const record = await prisma.scanScheduleSettings.findUnique({
 				where: { id: "scan_schedule_settings" },
 			});
 
@@ -47,7 +41,7 @@ export class ScanSchedulePersistenceService {
 		try {
 			const dbData = this.typeScriptToDb(settings);
 
-			await this.settingsDb.scanScheduleSettings.upsert({
+			await prisma.scanScheduleSettings.upsert({
 				where: { id: "scan_schedule_settings" },
 				update: dbData,
 				create: {
@@ -68,10 +62,9 @@ export class ScanSchedulePersistenceService {
 	 */
 	async initializeDefaultSettings(): Promise<void> {
 		try {
-			const existingRecord =
-				await this.settingsDb.scanScheduleSettings.findUnique({
-					where: { id: "scan_schedule_settings" },
-				});
+			const existingRecord = await prisma.scanScheduleSettings.findUnique({
+				where: { id: "scan_schedule_settings" },
+			});
 
 			if (!existingRecord) {
 				await this.saveSettings(DEFAULT_SCHEDULE_SETTINGS);
@@ -139,6 +132,6 @@ export class ScanSchedulePersistenceService {
 	 * データベース接続をクローズ
 	 */
 	async close(): Promise<void> {
-		await this.settingsDb.$disconnect();
+		// 共通 Prisma クライアントを利用しているため、ここでは何もしない。
 	}
 }

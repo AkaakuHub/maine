@@ -2,7 +2,6 @@ import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { prisma } from "../libs/prisma";
 import type { Prisma } from "@prisma/client";
-import { PrismaClient as SettingsPrismaClient } from "../../prisma/generated/settings";
 import {
 	normalizePath,
 	isVideoFile,
@@ -42,7 +41,6 @@ class VideoCacheService {
 	private updateProgress = -1;
 	private currentScanId: string | null = null;
 	private scanSettings: ScanSettings = DEFAULT_SCAN_SETTINGS;
-	private settingsDb: SettingsPrismaClient;
 
 	// 分離されたモジュール
 	private resourceMonitor: ScanResourceMonitor;
@@ -67,7 +65,6 @@ class VideoCacheService {
 	};
 
 	private constructor() {
-		this.settingsDb = new SettingsPrismaClient();
 		this.resourceMonitor = new ScanResourceMonitor(this.scanSettings);
 		this.checkpointManager = new ScanCheckpointManager();
 		this.progressCalculator = new ScanProgressCalculator();
@@ -115,7 +112,7 @@ class VideoCacheService {
 	}
 
 	private async loadScanSettings(): Promise<void> {
-		const savedSettings = await this.settingsDb.scanSettings.findUnique({
+		const savedSettings = await prisma.scanSettings.findUnique({
 			where: { id: "scan_settings" },
 		});
 
@@ -199,7 +196,7 @@ class VideoCacheService {
 
 	private async saveScanSettings(): Promise<void> {
 		try {
-			await this.settingsDb.scanSettings.upsert({
+			await prisma.scanSettings.upsert({
 				where: { id: "scan_settings" },
 				update: {
 					scanMode: this.scanSettings.scanMode,
