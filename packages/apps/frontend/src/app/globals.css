@@ -67,6 +67,7 @@ body {
 	color: var(--color-text);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	min-height: 100vh;
 }
 
 .dark {
@@ -107,14 +108,12 @@ body {
 	--color-surface-pressed: #475569;
 }
 
-/* Smooth scrolling for better UX + Prevent scrollbar layout shift */
+/* Smooth scrolling + reserve scrollbar space to prevent layout shift */
 html {
 	scroll-behavior: smooth;
-	/* Modern solution: Reserve space for scrollbar to prevent layout shifts */
-	scrollbar-gutter: stable;
-	/* Fallback for older browsers: Calculate scrollbar width and add margin */
-	margin-left: calc(100vw - 100%);
 	overflow-x: hidden;
+	overflow-y: scroll;
+	scrollbar-gutter: stable both-edges;
 }
 
 /* Custom scrollbar styling */
