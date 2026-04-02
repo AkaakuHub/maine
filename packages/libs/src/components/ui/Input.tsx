@@ -28,10 +28,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 	) => {
 		const baseClasses = cn(
 			"w-full bg-surface border border-border rounded-lg text-text placeholder-text-muted",
-			"focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
+			"focus:outline-none focus-visible:outline-none",
 			"transition-all duration-200",
 			"disabled:opacity-50 disabled:cursor-not-allowed",
-			error && "border-error focus:ring-error focus:border-error",
+			error && "border-error",
 		);
 
 		const variantClasses = {
