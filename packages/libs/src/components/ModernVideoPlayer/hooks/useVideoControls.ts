@@ -44,29 +44,6 @@ export function useVideoControls({
 		}, 3000);
 	}, [isPlaying]);
 
-	// 設定パネルの外側クリック検知
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				settingsRef.current &&
-				!settingsRef.current.contains(event.target as Node) &&
-				settingsButtonRef.current &&
-				!settingsButtonRef.current.contains(event.target as Node)
-			) {
-				setShowSettings(false);
-				setSettingsView("main");
-			}
-		};
-
-		if (showSettings) {
-			document.addEventListener("mousedown", handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, [showSettings]);
-
 	// マウス移動でコントロール表示
 	useEffect(() => {
 		resetControlsTimeout();

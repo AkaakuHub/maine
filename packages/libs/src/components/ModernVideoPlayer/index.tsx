@@ -70,6 +70,8 @@ const ModernVideoPlayer = ({
 		key: number;
 		icon: "play" | "pause";
 	} | null>(null);
+	const [isSettingsRendered, setIsSettingsRendered] = useState(false);
+	const settingsCloseTimeoutRef = useRef<number | null>(null);
 
 	const { isFullscreen, toggleFullscreen } = useVideoFullscreen({
 		containerRef,
@@ -138,6 +140,28 @@ const ModernVideoPlayer = ({
 	} = useVideoControls({
 		isPlaying,
 	});
+
+	const openSettingsMenu = useCallback(() => {
+		if (settingsCloseTimeoutRef.current !== null) {
+			window.clearTimeout(settingsCloseTimeoutRef.current);
+			settingsCloseTimeoutRef.current = null;
+		}
+		setIsSettingsRendered(true);
+		setShowSettings(true);
+		setSettingsView("main");
+	}, [setShowSettings, setSettingsView]);
+
+	const closeSettingsMenu = useCallback(() => {
+		setShowSettings(false);
+		if (settingsCloseTimeoutRef.current !== null) {
+			window.clearTimeout(settingsCloseTimeoutRef.current);
+		}
+		settingsCloseTimeoutRef.current = window.setTimeout(() => {
+			setIsSettingsRendered(false);
+			setSettingsView("main");
+			settingsCloseTimeoutRef.current = null;
+		}, 200);
+	}, [setShowSettings, setSettingsView]);
 
 	const { takeScreenshot } = useVideoScreenshot({
 		videoRef,
@@ -274,6 +298,24 @@ const ModernVideoPlayer = ({
 		prevIsPlayingRef.current = isPlaying;
 	}, [isMobile, isPlaying, triggerDesktopFlash]);
 
+	useEffect(() => {
+		if (showSettings) {
+			if (settingsCloseTimeoutRef.current !== null) {
+				window.clearTimeout(settingsCloseTimeoutRef.current);
+				settingsCloseTimeoutRef.current = null;
+			}
+			setIsSettingsRendered(true);
+		}
+	}, [showSettings]);
+
+	useEffect(() => {
+		return () => {
+			if (settingsCloseTimeoutRef.current !== null) {
+				window.clearTimeout(settingsCloseTimeoutRef.current);
+			}
+		};
+	}, []);
+
 	const handleSingleTap = useCallback(() => {
 		if (isMobile) {
 			if (showControls) {
@@ -392,7 +434,13 @@ const ModernVideoPlayer = ({
 				onToggleMute={toggleMute}
 				onVolumeChange={handleVolumeChange}
 				onSetIsShowRestTime={(fn) => setIsShowRestTime(fn(isShowRestTime))}
-				onSetShowSettings={setShowSettings}
+				onSetShowSettings={(show) => {
+					if (show) {
+						openSettingsMenu();
+						return;
+					}
+					closeSettingsMenu();
+				}}
 				onSetSettingsView={setSettingsView}
 				onTakeScreenshot={takeScreenshot}
 				onTogglePictureInPicture={togglePictureInPicture}
@@ -400,21 +448,25 @@ const ModernVideoPlayer = ({
 			/>
 
 			{/* 設定メニュー */}
-			<SettingsMenu
-				show={showSettings}
-				settingsView={settingsView}
-				setSettingsView={setSettingsView}
-				skipSeconds={skipSeconds}
-				skipOptions={skipOptions}
-				playbackRate={playbackRate}
-				autoDownloadScreenshot={autoDownloadScreenshot}
-				isPlaylistAutoplayEnabled={isPlaylistAutoplayEnabled}
-				onSkipSecondsChange={handleSkipSecondsChange}
-				onPlaybackRateChange={handlePlaybackRateChange}
-				onScreenshotSettingChange={handleScreenshotSettingChange}
-				onPlaylistAutoplayChange={setIsPlaylistAutoplayEnabled}
-				settingsRef={settingsRef}
-			/>
+			{isSettingsRendered ? (
+				<SettingsMenu
+					show={isSettingsRendered}
+					isOpen={showSettings}
+					settingsView={settingsView}
+					setSettingsView={setSettingsView}
+					skipSeconds={skipSeconds}
+					skipOptions={skipOptions}
+					playbackRate={playbackRate}
+					autoDownloadScreenshot={autoDownloadScreenshot}
+					isPlaylistAutoplayEnabled={isPlaylistAutoplayEnabled}
+					onSkipSecondsChange={handleSkipSecondsChange}
+					onPlaybackRateChange={handlePlaybackRateChange}
+					onScreenshotSettingChange={handleScreenshotSettingChange}
+					onPlaylistAutoplayChange={setIsPlaylistAutoplayEnabled}
+					onClose={closeSettingsMenu}
+					settingsRef={settingsRef}
+				/>
+			) : null}
 		</div>
 	);
 };
