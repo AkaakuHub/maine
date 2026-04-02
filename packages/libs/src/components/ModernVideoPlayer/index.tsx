@@ -257,12 +257,10 @@ const ModernVideoPlayer = ({
 		if (!videoRef.current) return;
 		videoRef.current.playbackRate = rate;
 		setPlaybackRate(rate);
-		setShowSettings(false);
 	};
 
 	const handleSkipSecondsChange = (seconds: number) => {
 		setSkipSeconds(seconds);
-		setShowSettings(false);
 	};
 
 	const handleScreenshotSettingChange = (enabled: boolean) => {
