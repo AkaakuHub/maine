@@ -1,15 +1,7 @@
 "use client";
 
-import {
-	Calendar,
-	Clock,
-	HardDrive,
-	Info,
-	MoreHorizontal,
-	Play,
-	Radio,
-} from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Calendar, Clock, HardDrive, Play, Radio } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { cn, formatFileSize } from "../../libs/utils";
 import type { VideoFileData } from "../../type";
 import { createApiUrl } from "../../utils/api";
@@ -23,10 +15,8 @@ interface VideoListItemProps {
 }
 
 export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
-	const [showMenu, setShowMenu] = useState(false);
 	const [watchProgress, setWatchProgress] = useState<number>(0);
 	const [isLoadingProgress, setIsLoadingProgress] = useState<boolean>(false);
-	const menuRef = useRef<HTMLDivElement>(null);
 
 	// ファイル名から番組情報をパース
 	const parsedInfo = useMemo(() => {
@@ -66,30 +56,6 @@ export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 		fetchProgress();
 	}, [video.filePath]);
 
-	// メニューの外側クリックでメニューを閉じる
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-				setShowMenu(false);
-			}
-		};
-
-		if (showMenu) {
-			document.addEventListener("mousedown", handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, [showMenu]);
-
-	// メニューボタンのクリック
-	const handleMenuClick = (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setShowMenu(!showMenu);
-	};
-
 	// 再生ボタンのクリック処理
 	const handlePlayClick = (e: React.MouseEvent | React.KeyboardEvent) => {
 		e.preventDefault();
@@ -100,7 +66,7 @@ export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 	return (
 		<div
 			className={cn(
-				"group bg-surface/30 hover:bg-surface/50 backdrop-blur-sm rounded-xl border border-border-muted/50 hover:border-primary/30 transition-all duration-300",
+				"group rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:border-primary/30 hover:bg-surface-elevated hover:shadow-lg",
 			)}
 		>
 			<div
@@ -114,34 +80,34 @@ export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 			>
 				<div className="flex items-center gap-4">
 					{/* サムネイル */}
-					<div className="relative w-28 h-16 bg-surface-variant rounded-lg overflow-hidden flex-shrink-0">
+					<div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-xl border border-border bg-surface-variant">
 						{video.thumbnailPath ? (
 							<img
 								src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
 								alt={video.title}
-								className="w-full h-full object-cover"
+								className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
 								loading="lazy"
 							/>
 						) : (
-							<div className="w-full h-full flex items-center justify-center">
+							<div className="flex h-full w-full items-center justify-center">
 								<Play className="h-6 w-6 text-text-secondary group-hover:text-text transition-colors" />
 							</div>
 						)}
 
 						{/* 再生ボタンオーバーレイ */}
-						<div className="absolute inset-0 bg-overlay opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+						<div className="absolute inset-0 flex items-center justify-center bg-overlay/50 opacity-0 transition-opacity group-hover:opacity-100">
 							<Play className="h-8 w-8 text-text" />
 						</div>
 					</div>
 
 					{/* メインコンテンツ */}
 					<div className="flex-1 min-w-0">
-						<div className="flex items-start justify-between gap-4">
-							<div className="flex-1 min-w-0">
-								<h3 className="font-semibold text-text mb-1 truncate text-lg">
+						<div className="flex items-start gap-4">
+							<div className="min-w-0 flex-1">
+								<h3 className="mb-1 truncate text-lg font-semibold text-text">
 									{parsedInfo.cleanTitle || video.title}
 								</h3>
-								<p className="text-sm text-text-secondary truncate mb-2">
+								<p className="mb-2 truncate text-sm text-text-secondary">
 									{video.fileName}
 								</p>
 
@@ -149,15 +115,15 @@ export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 								{(parsedInfo.broadcastStation ||
 									parsedInfo.weeklySchedule ||
 									parsedInfo.broadcastDate) && (
-									<div className="flex flex-wrap gap-2 mb-2">
+									<div className="mb-2 flex flex-wrap gap-2">
 										{parsedInfo.broadcastStation && (
-											<span className="inline-flex items-center gap-1 text-xs bg-success text-text-inverse px-2 py-1 rounded-full">
+											<span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-elevated px-2 py-1 text-xs text-text">
 												<Radio className="h-3 w-3" />
 												{parsedInfo.broadcastStation}
 											</span>
 										)}
 										{parsedInfo.weeklySchedule && (
-											<span className="inline-flex items-center gap-1 text-xs bg-warning text-text-inverse px-2 py-1 rounded-full">
+											<span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-elevated px-2 py-1 text-xs text-text">
 												<Clock className="h-3 w-3" />
 												{parsedInfo.weeklySchedule}
 											</span>
@@ -195,39 +161,6 @@ export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 										<span>{formatFileSize(video.fileSize)}</span>
 									</div>
 								</div>
-							</div>
-
-							{/* アクションボタン */}
-							<div className="flex items-center gap-2 relative" ref={menuRef}>
-								<button
-									type="button"
-									className="p-2 text-text-secondary hover:text-text hover:bg-surface-elevated/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-									onClick={(e) => {
-										e.preventDefault();
-									}}
-								>
-									<Info className="h-4 w-4" />
-								</button>
-								<button
-									type="button"
-									className="p-2 text-text-secondary hover:text-text hover:bg-surface-elevated/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-									onClick={handleMenuClick}
-								>
-									<MoreHorizontal className="h-4 w-4" />
-								</button>
-
-								{/* コンテキストメニュー */}
-								{showMenu && (
-									<div className="absolute right-0 top-full mt-2 bg-surface border border-border-muted rounded-lg shadow-xl z-20 min-w-[160px]">
-										<button
-											type="button"
-											onClick={() => setShowMenu(false)}
-											className="w-full px-4 py-2 text-left text-text hover:bg-surface-elevated rounded-lg transition-colors"
-										>
-											閉じる
-										</button>
-									</div>
-								)}
 							</div>
 						</div>
 

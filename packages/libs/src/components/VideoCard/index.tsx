@@ -70,10 +70,8 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 	return (
 		<div
 			className={cn(
-				"group relative overflow-hidden rounded-2xl bg-surface transition-all duration-300 ease-out",
-				"hover:z-10 hover:shadow-xl",
-				"border border-border hover:border-border",
-				"backdrop-blur-sm",
+				"group relative overflow-hidden rounded-2xl border border-border bg-surface transition-all duration-300 ease-out",
+				"shadow-sm hover:z-10 hover:border-primary/30 hover:bg-surface-elevated hover:shadow-xl",
 				className,
 			)}
 		>
@@ -89,12 +87,12 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 				className="block cursor-pointer w-full text-left border-0 bg-transparent p-0"
 			>
 				{/* サムネイル */}
-				<div className="relative aspect-video bg-surface-variant overflow-hidden">
+				<div className="relative aspect-video overflow-hidden bg-surface-variant">
 					{video.thumbnailPath ? (
 						<img
 							src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
 							alt={video.title}
-							className="w-full h-full object-cover"
+							className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
 							loading="lazy"
 						/>
 					) : (
@@ -117,8 +115,8 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 					)}
 					{/* エピソード番号 */}
 					{video.episode && (
-						<div className="absolute top-3 left-3">
-							<div className="bg-surface-elevated/75 backdrop-blur-sm px-2 rounded">
+						<div className="absolute left-3 top-3">
+							<div className="rounded-md border border-border/40 bg-surface/85 px-2 backdrop-blur-sm">
 								<span className="text-text text-xs font-semibold">
 									{video.episode}話
 								</span>
@@ -128,14 +126,14 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 					{/* 動画時間 */}
 					{video.duration && (
 						<div className="absolute bottom-3 right-3">
-							<div className="bg-surface-elevated/75 backdrop-blur-sm px-2 py-1 rounded text-text text-xs font-medium">
+							<div className="rounded-md border border-border/40 bg-surface/85 px-2 py-1 text-xs font-medium text-text backdrop-blur-sm">
 								{formatDuration(video.duration)}
 							</div>
 						</div>
 					)}
 
 					{watchProgress > 0 && (
-						<div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated">
+						<div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated/90">
 							<div
 								className={cn(
 									"h-full bg-error transition-all duration-300",
@@ -150,16 +148,16 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 				</div>
 
 				{/* コンテンツ */}
-				<div className="border-t border-border p-4">
-					<h3 className="font-bold text-text mb-3 line-clamp-2 leading-tight text-base">
+				<div className="border-t border-border bg-surface px-4 py-4">
+					<h3 className="mb-3 line-clamp-2 text-base font-bold leading-tight text-text">
 						{parsedInfo.cleanTitle || video.title}
 					</h3>
 
 					{/* 放送局情報 */}
 					{parsedInfo.broadcastStation && (
-						<div className="flex items-center gap-2 mb-3">
+						<div className="mb-3 flex items-center gap-2">
 							<div className="flex items-center gap-1">
-								<div className="w-6 h-6 bg-surface-elevated rounded-full flex items-center justify-center">
+								<div className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated">
 									<Radio className="h-3 w-3 text-text-secondary" />
 								</div>
 								<span className="text-sm text-text-secondary font-medium">

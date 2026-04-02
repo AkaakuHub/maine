@@ -47,8 +47,8 @@ export function SearchSection({
 	return (
 		<div className="container mx-auto px-6">
 			{/* 検索・フィルターセクション（ストリーミングタブのみ） */}
-			<div className="bg-surface-elevated rounded-lg p-4">
-				<div className="flex flex-col lg:flex-row gap-4">
+			<div className="rounded-2xl border border-border bg-surface px-4 py-4 shadow-sm sm:px-5">
+				<div className="flex flex-col gap-4 lg:flex-row lg:items-center">
 					{/* 検索入力 */}
 					<div className="flex-1">
 						<Input
@@ -61,18 +61,23 @@ export function SearchSection({
 							onCompositionEnd={() => onSetIsComposing(false)}
 							variant="search"
 							leftIcon={<Search className="h-5 w-5" />}
+							className="rounded-xl border-border bg-surface-elevated shadow-sm"
 							rightContent={
 								<>
 									{searchTerm && (
 										<button
 											type="button"
 											onClick={onClearSearch}
-											className="p-1 text-text-secondary hover:text-text transition-colors rounded-md hover:bg-surface-elevated"
+											className="rounded-lg p-1 text-text-secondary transition-colors hover:bg-surface hover:text-text"
 										>
 											<X className="h-4 w-4" />
 										</button>
 									)}
-									<Button onClick={onSearch} size="sm" className="h-8">
+									<Button
+										onClick={onSearch}
+										size="sm"
+										className="h-9 rounded-lg px-4 shadow-sm"
+									>
 										検索
 									</Button>
 								</>
@@ -85,7 +90,7 @@ export function SearchSection({
 						<select
 							value={sortBy}
 							onChange={(e) => onSortByChange(e.target.value as SortBy)}
-							className="px-3 py-2 bg-surface border border-border rounded-lg text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
+							className="rounded-xl border border-border bg-surface-elevated px-3 py-2.5 text-sm text-text shadow-sm transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
 						>
 							<option value="title">タイトル順</option>
 							<option value="year">年度順</option>
@@ -96,7 +101,7 @@ export function SearchSection({
 						<button
 							type="button"
 							onClick={onSortOrderToggle}
-							className="flex items-center justify-center px-3 py-2 bg-surface border border-border rounded-lg text-text hover:bg-surface-elevated transition-all duration-200"
+							className="flex items-center justify-center rounded-xl border border-border bg-surface-elevated px-3 py-2.5 text-text shadow-sm transition-all duration-200 hover:bg-surface"
 							title={sortOrder === "asc" ? "昇順" : "降順"}
 						>
 							{sortOrder === "asc" ? (
@@ -109,7 +114,7 @@ export function SearchSection({
 				</div>
 
 				{/* Status Indicator */}
-				<div className="mt-4 pt-3 border-t border-border">
+				<div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
 					<div className="flex items-center gap-2 text-sm text-text-secondary">
 						{videosLoading && (
 							<Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -121,6 +126,9 @@ export function SearchSection({
 									? `${videos.length} 動画を表示中`
 									: `${videos.length} / ${pagination.total} 動画を表示中`}
 						</span>
+					</div>
+					<div className="rounded-full bg-surface-elevated px-3 py-1 text-xs font-medium text-text-secondary">
+						page {pagination.page} / {Math.max(1, pagination.totalPages)}
 					</div>
 				</div>
 			</div>
