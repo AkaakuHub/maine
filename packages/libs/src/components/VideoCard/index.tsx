@@ -70,9 +70,9 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 	return (
 		<div
 			className={cn(
-				"group relative bg-surface/60 rounded-2xl overflow-hidden transition-all duration-300 ease-out",
+				"group relative overflow-hidden rounded-2xl bg-surface transition-all duration-300 ease-out",
 				"hover:z-10 hover:shadow-xl",
-				"border border-border/30 hover:border-border/60",
+				"border border-border hover:border-border",
 				"backdrop-blur-sm",
 				className,
 			)}
@@ -133,10 +133,24 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 							</div>
 						</div>
 					)}
+
+					{watchProgress > 0 && (
+						<div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated">
+							<div
+								className={cn(
+									"h-full bg-error transition-all duration-300",
+									isLoadingProgress && "opacity-50",
+								)}
+								style={{
+									width: `${Math.min(100, Math.max(0, watchProgress))}%`,
+								}}
+							/>
+						</div>
+					)}
 				</div>
 
 				{/* コンテンツ */}
-				<div className="p-4">
+				<div className="border-t border-border p-4">
 					<h3 className="font-bold text-text mb-3 line-clamp-2 leading-tight text-base">
 						{parsedInfo.cleanTitle || video.title}
 					</h3>
@@ -188,21 +202,6 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 					</div>
 				</div>
 			</button>
-
-			{/* 進行状況バー（視聴進捗があれば表示） */}
-			{watchProgress > 0 && (
-				<div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated">
-					<div
-						className={cn(
-							"h-full bg-error transition-all duration-300",
-							isLoadingProgress && "opacity-50",
-						)}
-						style={{
-							width: `${Math.min(100, Math.max(0, watchProgress))}%`,
-						}}
-					/>
-				</div>
-			)}
 		</div>
 	);
 };
