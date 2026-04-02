@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { VIDEO_PLAYER } from "../../../utils/constants";
 
 interface VideoPlayerSettings {
 	volume: number;
@@ -6,6 +7,7 @@ interface VideoPlayerSettings {
 	skipSeconds: number;
 	isShowRestTime: boolean;
 	autoDownloadScreenshot: boolean;
+	isPlaylistAutoplayEnabled: boolean;
 }
 
 interface VideoPlayerSettingsHandlers {
@@ -14,6 +16,7 @@ interface VideoPlayerSettingsHandlers {
 	setSkipSeconds: (seconds: number) => void;
 	setIsShowRestTime: (show: boolean) => void;
 	setAutoDownloadScreenshot: (enabled: boolean) => void;
+	setIsPlaylistAutoplayEnabled: (enabled: boolean) => void;
 }
 
 export function useVideoPlayerSettings(): VideoPlayerSettings &
@@ -21,31 +24,41 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 	// LocalStorageから設定を読み込み
 	const [volume, setVolumeState] = useState(() => {
 		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("video-player-volume");
-			return saved ? Number.parseFloat(saved) : 1;
+			const saved = localStorage.getItem(VIDEO_PLAYER.STORAGE_KEYS.VOLUME);
+			return saved ? Number.parseFloat(saved) : VIDEO_PLAYER.DEFAULT_VOLUME;
 		}
-		return 1;
+		return VIDEO_PLAYER.DEFAULT_VOLUME;
 	});
 
 	const [playbackRate, setPlaybackRateState] = useState(() => {
 		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("video-player-playback-rate");
-			return saved ? Number.parseFloat(saved) : 1;
+			const saved = localStorage.getItem(
+				VIDEO_PLAYER.STORAGE_KEYS.PLAYBACK_RATE,
+			);
+			return saved
+				? Number.parseFloat(saved)
+				: VIDEO_PLAYER.DEFAULT_PLAYBACK_RATE;
 		}
-		return 1;
+		return VIDEO_PLAYER.DEFAULT_PLAYBACK_RATE;
 	});
 
 	const [skipSeconds, setSkipSecondsState] = useState(() => {
 		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("video-player-skip-seconds");
-			return saved ? Number.parseInt(saved, 10) : 10;
+			const saved = localStorage.getItem(
+				VIDEO_PLAYER.STORAGE_KEYS.SKIP_SECONDS,
+			);
+			return saved
+				? Number.parseInt(saved, 10)
+				: VIDEO_PLAYER.DEFAULT_SKIP_SECONDS;
 		}
-		return 10;
+		return VIDEO_PLAYER.DEFAULT_SKIP_SECONDS;
 	});
 
 	const [isShowRestTime, setIsShowRestTimeState] = useState(() => {
 		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("video-player-show-rest-time");
+			const saved = localStorage.getItem(
+				VIDEO_PLAYER.STORAGE_KEYS.SHOW_REST_TIME,
+			);
 			return saved === "true";
 		}
 		return false;
@@ -54,37 +67,70 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 	const [autoDownloadScreenshot, setAutoDownloadScreenshotState] = useState(
 		() => {
 			if (typeof window !== "undefined") {
-				const saved = localStorage.getItem("screenshot-auto-download");
+				const saved = localStorage.getItem(
+					VIDEO_PLAYER.STORAGE_KEYS.AUTO_DOWNLOAD_SCREENSHOT,
+				);
 				return saved === "true";
 			}
 			return false;
 		},
 	);
 
+	const [isPlaylistAutoplayEnabled, setIsPlaylistAutoplayEnabledState] =
+		useState(() => {
+			if (typeof window !== "undefined") {
+				const saved = localStorage.getItem(
+					VIDEO_PLAYER.STORAGE_KEYS.PLAYLIST_AUTOPLAY,
+				);
+				return saved !== "false";
+			}
+			return true;
+		});
+
 	// LocalStorageに保存するハンドラー関数
 	const setVolume = useCallback((volume: number) => {
 		setVolumeState(volume);
-		localStorage.setItem("video-player-volume", volume.toString());
+		localStorage.setItem(VIDEO_PLAYER.STORAGE_KEYS.VOLUME, volume.toString());
 	}, []);
 
 	const setPlaybackRate = useCallback((rate: number) => {
 		setPlaybackRateState(rate);
-		localStorage.setItem("video-player-playback-rate", rate.toString());
+		localStorage.setItem(
+			VIDEO_PLAYER.STORAGE_KEYS.PLAYBACK_RATE,
+			rate.toString(),
+		);
 	}, []);
 
 	const setSkipSeconds = useCallback((seconds: number) => {
 		setSkipSecondsState(seconds);
-		localStorage.setItem("video-player-skip-seconds", seconds.toString());
+		localStorage.setItem(
+			VIDEO_PLAYER.STORAGE_KEYS.SKIP_SECONDS,
+			seconds.toString(),
+		);
 	}, []);
 
 	const setIsShowRestTime = useCallback((show: boolean) => {
 		setIsShowRestTimeState(show);
-		localStorage.setItem("video-player-show-rest-time", show.toString());
+		localStorage.setItem(
+			VIDEO_PLAYER.STORAGE_KEYS.SHOW_REST_TIME,
+			show.toString(),
+		);
 	}, []);
 
 	const setAutoDownloadScreenshot = useCallback((enabled: boolean) => {
 		setAutoDownloadScreenshotState(enabled);
-		localStorage.setItem("screenshot-auto-download", enabled.toString());
+		localStorage.setItem(
+			VIDEO_PLAYER.STORAGE_KEYS.AUTO_DOWNLOAD_SCREENSHOT,
+			enabled.toString(),
+		);
+	}, []);
+
+	const setIsPlaylistAutoplayEnabled = useCallback((enabled: boolean) => {
+		setIsPlaylistAutoplayEnabledState(enabled);
+		localStorage.setItem(
+			VIDEO_PLAYER.STORAGE_KEYS.PLAYLIST_AUTOPLAY,
+			enabled.toString(),
+		);
 	}, []);
 
 	return {
@@ -93,10 +139,12 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 		skipSeconds,
 		isShowRestTime,
 		autoDownloadScreenshot,
+		isPlaylistAutoplayEnabled,
 		setVolume,
 		setPlaybackRate,
 		setSkipSeconds,
 		setIsShowRestTime,
 		setAutoDownloadScreenshot,
+		setIsPlaylistAutoplayEnabled,
 	};
 }

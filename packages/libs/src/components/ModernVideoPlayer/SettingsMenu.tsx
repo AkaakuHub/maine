@@ -26,9 +26,11 @@ interface SettingsMenuProps {
 	skipOptions: number[];
 	playbackRate: number;
 	autoDownloadScreenshot: boolean;
+	isPlaylistAutoplayEnabled: boolean;
 	onSkipSecondsChange: (seconds: number) => void;
 	onPlaybackRateChange: (rate: number) => void;
 	onScreenshotSettingChange: (enabled: boolean) => void;
+	onPlaylistAutoplayChange: (enabled: boolean) => void;
 	settingsRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -40,9 +42,11 @@ export default function SettingsMenu({
 	skipOptions,
 	playbackRate,
 	autoDownloadScreenshot,
+	isPlaylistAutoplayEnabled,
 	onSkipSecondsChange,
 	onPlaybackRateChange,
 	onScreenshotSettingChange,
+	onPlaylistAutoplayChange,
 	settingsRef,
 }: SettingsMenuProps) {
 	const chapterSkipStore = useChapterSkipStore();
@@ -124,6 +128,31 @@ export default function SettingsMenu({
 								{chapterSkipStore.rules.filter((r) => r.enabled).length}個
 							</span>
 							<ChevronRight className="h-4 w-4" />
+						</div>
+					</button>
+					<button
+						type="button"
+						onClick={() => onPlaylistAutoplayChange(!isPlaylistAutoplayEnabled)}
+						className="w-full flex items-center justify-between px-3 py-2 text-sm text-text-secondary hover:bg-primary/20 hover:text-primary rounded transition-colors"
+					>
+						<div className="flex items-center gap-2 min-w-32">
+							<Play className="h-4 w-4" />
+							<span className="text-start">プレイリスト自動再生</span>
+						</div>
+						<div className="flex items-center gap-1">
+							<span
+								className={cn(
+									"text-xs",
+									isPlaylistAutoplayEnabled
+										? "text-primary"
+										: "text-text-muted",
+								)}
+							>
+								{isPlaylistAutoplayEnabled ? "オン" : "オフ"}
+							</span>
+							{isPlaylistAutoplayEnabled ? (
+								<Check className="h-4 w-4 text-primary" />
+							) : null}
 						</div>
 					</button>
 				</div>

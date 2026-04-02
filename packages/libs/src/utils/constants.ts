@@ -94,6 +94,20 @@ export const THEME = {
 	DEFAULT_MODE: "dark",
 } as const;
 
+export const VIDEO_PLAYER = {
+	DEFAULT_VOLUME: 1,
+	DEFAULT_PLAYBACK_RATE: 1,
+	DEFAULT_SKIP_SECONDS: 10,
+	STORAGE_KEYS: {
+		VOLUME: "video-player-volume",
+		PLAYBACK_RATE: "video-player-playback-rate",
+		SKIP_SECONDS: "video-player-skip-seconds",
+		SHOW_REST_TIME: "video-player-show-rest-time",
+		AUTO_DOWNLOAD_SCREENSHOT: "screenshot-auto-download",
+		PLAYLIST_AUTOPLAY: "video-player-playlist-autoplay",
+	},
+} as const;
+
 // 動画時間フォーマット関数
 export const formatDuration = (seconds: number): string => {
 	const hours = Math.floor(seconds / 3600);

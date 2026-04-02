@@ -54,11 +54,13 @@ const ModernVideoPlayer = ({
 		skipSeconds,
 		isShowRestTime,
 		autoDownloadScreenshot,
+		isPlaylistAutoplayEnabled,
 		setVolume,
 		setPlaybackRate,
 		setSkipSeconds,
 		setIsShowRestTime,
 		setAutoDownloadScreenshot,
+		setIsPlaylistAutoplayEnabled,
 	} = settings;
 
 	const [isMuted, setIsMuted] = useState(false);
@@ -87,14 +89,14 @@ const ModernVideoPlayer = ({
 	// 動画終了時のハンドラー
 	const handleVideoEnd = useCallback(() => {
 		// プレイリストがあれば次の動画を自動再生
-		if (hasNextVideo && playNextVideo()) {
+		if (isPlaylistAutoplayEnabled && hasNextVideo && playNextVideo()) {
 			return;
 		}
 		// 次の動画がない場合は元のハンドラーを呼び出す
 		if (onVideoEnd) {
 			onVideoEnd();
 		}
-	}, [hasNextVideo, playNextVideo, onVideoEnd]);
+	}, [isPlaylistAutoplayEnabled, hasNextVideo, playNextVideo, onVideoEnd]);
 
 	const {
 		isPlaying,
@@ -406,9 +408,11 @@ const ModernVideoPlayer = ({
 				skipOptions={skipOptions}
 				playbackRate={playbackRate}
 				autoDownloadScreenshot={autoDownloadScreenshot}
+				isPlaylistAutoplayEnabled={isPlaylistAutoplayEnabled}
 				onSkipSecondsChange={handleSkipSecondsChange}
 				onPlaybackRateChange={handlePlaybackRateChange}
 				onScreenshotSettingChange={handleScreenshotSettingChange}
+				onPlaylistAutoplayChange={setIsPlaylistAutoplayEnabled}
 				settingsRef={settingsRef}
 			/>
 		</div>

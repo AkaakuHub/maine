@@ -32,7 +32,8 @@ export function usePlaylistNavigation({
 	const getNextVideo = useCallback((): PlaylistVideo | null => {
 		const currentIndex = getCurrentVideoIndex();
 		if (currentIndex === -1) return null;
-		const nextIndex = (currentIndex + 1) % playlistVideos.length;
+		const nextIndex = currentIndex + 1;
+		if (nextIndex >= playlistVideos.length) return null;
 		return playlistVideos[nextIndex];
 	}, [playlistVideos, getCurrentVideoIndex]);
 
