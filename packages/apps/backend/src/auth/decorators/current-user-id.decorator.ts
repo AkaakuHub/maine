@@ -1,7 +1,7 @@
 import {
 	createParamDecorator,
 	ExecutionContext,
-	ForbiddenException,
+	UnauthorizedException,
 } from "@nestjs/common";
 
 type RequestWithOptionalUser = {
@@ -16,7 +16,7 @@ export const CurrentUserId = createParamDecorator(
 		const userId = request.user?.userId;
 
 		if (!userId) {
-			throw new ForbiddenException("認証が必要です");
+			throw new UnauthorizedException("認証が必要です");
 		}
 
 		return userId;
