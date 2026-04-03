@@ -8,6 +8,7 @@ interface ChapterSkipStore {
 	isLoading: boolean;
 	error: string | null;
 	fetchRules: () => Promise<void>;
+	clearRules: () => void;
 	addRule: (pattern: string, enabled?: boolean) => Promise<void>;
 	updateRule: (
 		id: string,
@@ -42,6 +43,14 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 			set({ error, isLoading: false });
 			console.error("Failed to fetch chapter skip rules:", err);
 		}
+	},
+
+	clearRules: () => {
+		set({
+			rules: [],
+			isLoading: false,
+			error: null,
+		});
 	},
 
 	addRule: async (pattern: string, enabled = true) => {
@@ -138,11 +147,3 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 		await updateRule(id, { enabled: !rule.enabled });
 	},
 }));
-
-// 初期データ読み込み（クライアントサイドのみ）
-if (typeof window !== "undefined") {
-	const isLoginPath = window.location.pathname.startsWith("/login");
-	if (!isLoginPath && AuthAPI.isAuthenticated()) {
-		void useChapterSkipStore.getState().fetchRules();
-	}
-}
