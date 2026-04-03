@@ -2,11 +2,11 @@
 
 import { Calendar, Clock, HardDrive, Play, Radio } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { createThumbnailUrl } from "../../application/services/media-resource-service";
+import { loadVideoProgress } from "../../application/services/progress-service";
 import { cn, formatFileSize } from "../../libs/utils";
 import type { VideoFileData } from "../../type";
-import { createApiUrl } from "../../utils/api";
 import { parseVideoFileName } from "../../utils/videoFileNameParser";
-import { AuthAPI } from "../../api/auth";
 
 interface VideoListItemProps {
 	video: VideoFileData;
@@ -31,20 +31,9 @@ export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 
 			try {
 				setIsLoadingProgress(true);
-				const response = await fetch(
-					createApiUrl(
-						`/progress?filePath=${encodeURIComponent(video.filePath)}`,
-					),
-					{
-						headers: AuthAPI.getAuthHeaders(),
-					},
-				);
-
-				if (response.ok) {
-					const result = await response.json();
-					if (result.success && result.data?.watchProgress !== undefined) {
-						setWatchProgress(result.data.watchProgress);
-					}
+				const progress = await loadVideoProgress(video.filePath);
+				if (progress.watchProgress !== undefined) {
+					setWatchProgress(progress.watchProgress);
 				}
 			} catch (error) {
 				console.warn("Failed to fetch progress for video list item:", error);
@@ -83,7 +72,7 @@ export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 					<div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-xl border border-border bg-surface-variant">
 						{video.thumbnailPath ? (
 							<img
-								src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
+								src={createThumbnailUrl(video.thumbnailPath)}
 								alt={video.title}
 								className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
 								loading="lazy"

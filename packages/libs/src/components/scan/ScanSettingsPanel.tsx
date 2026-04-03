@@ -17,7 +17,11 @@ import {
 	SCAN_SETTINGS_CONSTRAINTS,
 	type ScanSettings,
 } from "../../types/scanSettings";
-import { createApiUrl } from "../../utils/api";
+import {
+	fetchScanSettings,
+	resetScanSettings,
+	saveScanSettings,
+} from "../../application/services/scan-service";
 
 interface ScanSettingsPanelProps {
 	className?: string;
@@ -41,21 +45,15 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 	const loadSettings = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const response = await fetch(createApiUrl("/scan/settings"));
-			if (response.ok) {
-				const data = await response.json();
-				setSettings(data.settings);
-			} else {
-				const error = await response.json();
-				setMessage({
-					type: "error",
-					text: `設定の読み込みに失敗しました: ${error.error}`,
-				});
-			}
-		} catch {
+			const loadedSettings = await fetchScanSettings();
+			setSettings(loadedSettings);
+		} catch (error) {
 			setMessage({
 				type: "error",
-				text: "設定の読み込み中にエラーが発生しました",
+				text:
+					error instanceof Error
+						? `設定の読み込みに失敗しました: ${error.message}`
+						: "設定の読み込み中にエラーが発生しました",
 			});
 		} finally {
 			setIsLoading(false);
@@ -67,23 +65,17 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 		setIsSaving(true);
 		setMessage(null);
 		try {
-			const response = await fetch(createApiUrl("/scan/settings"), {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(settings),
+			const updatedSettings = await saveScanSettings(settings);
+			setSettings(updatedSettings);
+			setMessage({ type: "success", text: "設定を保存しました" });
+		} catch (error) {
+			setMessage({
+				type: "error",
+				text:
+					error instanceof Error
+						? `設定の保存に失敗しました: ${error.message}`
+						: "設定の保存中にエラーが発生しました",
 			});
-
-			if (response.ok) {
-				setMessage({ type: "success", text: "設定を保存しました" });
-			} else {
-				const error = await response.json();
-				setMessage({
-					type: "error",
-					text: `設定の保存に失敗しました: ${error.error}`,
-				});
-			}
-		} catch {
-			setMessage({ type: "error", text: "設定の保存中にエラーが発生しました" });
 		} finally {
 			setIsSaving(false);
 		}
@@ -94,28 +86,19 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 		setIsLoading(true);
 		setMessage(null);
 		try {
-			const response = await fetch(createApiUrl("/scan/settings"), {
-				method: "PUT",
+			const defaultSettings = await resetScanSettings();
+			setSettings(defaultSettings);
+			setMessage({
+				type: "info",
+				text: "設定をデフォルトにリセットしました",
 			});
-
-			if (response.ok) {
-				const data = await response.json();
-				setSettings(data.settings);
-				setMessage({
-					type: "info",
-					text: "設定をデフォルトにリセットしました",
-				});
-			} else {
-				const error = await response.json();
-				setMessage({
-					type: "error",
-					text: `設定のリセットに失敗しました: ${error.error}`,
-				});
-			}
-		} catch {
+		} catch (error) {
 			setMessage({
 				type: "error",
-				text: "設定のリセット中にエラーが発生しました",
+				text:
+					error instanceof Error
+						? `設定のリセットに失敗しました: ${error.message}`
+						: "設定のリセット中にエラーが発生しました",
 			});
 		} finally {
 			setIsLoading(false);

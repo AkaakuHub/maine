@@ -4,9 +4,11 @@ import {
 	type ScanScheduleSettings,
 	type SchedulerStatus,
 } from "../../../types/scanScheduleSettings";
-import { createApiUrl } from "../../../utils/api";
 import type { Message } from "../types";
-import { toSafeDate } from "../utils/timeFormatters";
+import {
+	fetchScanSchedule,
+	saveScanSchedule,
+} from "../../../application/services/scan-service";
 
 export function useScanSchedule() {
 	const [settings, setSettings] = useState<ScanScheduleSettings>(
@@ -21,34 +23,16 @@ export function useScanSchedule() {
 	const loadData = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const response = await fetch(createApiUrl("/scan/schedule"));
-			if (response.ok) {
-				const data = await response.json();
-				setSettings(data.settings);
-
-				// Convert date strings to Date objects in status
-				if (data.status) {
-					const convertedStatus: SchedulerStatus = {
-						...data.status,
-						nextExecution: toSafeDate(data.status.nextExecution),
-						lastExecution: toSafeDate(data.status.lastExecution),
-						currentExecutionStartTime: toSafeDate(
-							data.status.currentExecutionStartTime,
-						),
-					};
-					setStatus(convertedStatus);
-				}
-			} else {
-				const error = await response.json();
-				setMessage({
-					type: "error",
-					text: `設定の読み込みに失敗しました: ${error.error}`,
-				});
-			}
-		} catch {
+			const data = await fetchScanSchedule();
+			setSettings(data.settings);
+			setStatus(data.status);
+		} catch (error) {
 			setMessage({
 				type: "error",
-				text: "設定の読み込み中にエラーが発生しました",
+				text:
+					error instanceof Error
+						? `設定の読み込みに失敗しました: ${error.message}`
+						: "設定の読み込み中にエラーが発生しました",
 			});
 		} finally {
 			setIsLoading(false);
@@ -60,37 +44,18 @@ export function useScanSchedule() {
 		setIsSaving(true);
 		setMessage(null);
 		try {
-			const response = await fetch(createApiUrl("/scan/schedule"), {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(settings),
+			const data = await saveScanSchedule(settings);
+			setSettings(data.settings);
+			setStatus(data.status);
+			setMessage({ type: "success", text: "スケジュール設定を保存しました" });
+		} catch (error) {
+			setMessage({
+				type: "error",
+				text:
+					error instanceof Error
+						? `設定の保存に失敗しました: ${error.message}`
+						: "設定の保存中にエラーが発生しました",
 			});
-
-			if (response.ok) {
-				const data = await response.json();
-
-				// Convert date strings to Date objects in status
-				if (data.status) {
-					const convertedStatus: SchedulerStatus = {
-						...data.status,
-						nextExecution: toSafeDate(data.status.nextExecution),
-						lastExecution: toSafeDate(data.status.lastExecution),
-						currentExecutionStartTime: toSafeDate(
-							data.status.currentExecutionStartTime,
-						),
-					};
-					setStatus(convertedStatus);
-				}
-				setMessage({ type: "success", text: "スケジュール設定を保存しました" });
-			} else {
-				const error = await response.json();
-				setMessage({
-					type: "error",
-					text: `設定の保存に失敗しました: ${error.error}`,
-				});
-			}
-		} catch {
-			setMessage({ type: "error", text: "設定の保存中にエラーが発生しました" });
 		} finally {
 			setIsSaving(false);
 		}

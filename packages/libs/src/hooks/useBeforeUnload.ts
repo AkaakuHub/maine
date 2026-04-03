@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
-import { AuthAPI } from "../api/auth";
+import {
+	getStoredItem,
+	removeStoredItem,
+	setStoredItem,
+} from "../application/services/session-storage-service";
 import type { VideoProgressData } from "../types/progress";
-import { createApiUrl } from "../utils/api";
+import { saveVideoProgress } from "../application/services/progress-service";
 
 interface UseBeforeUnloadOptions {
 	onBeforeUnload?: (data: VideoProgressData) => void;
@@ -22,7 +26,7 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 			// LocalStorageにバックアップ保存
 			if (enableLocalStorageBackup) {
 				try {
-					localStorage.setItem(
+					setStoredItem(
 						"video-progress-backup",
 						JSON.stringify({
 							...data,
@@ -44,17 +48,8 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 	const sendProgressWithFetch = useCallback(
 		async (data: VideoProgressData): Promise<boolean> => {
 			try {
-				const response = await fetch(createApiUrl("/progress"), {
-					method: "PUT",
-					headers: {
-						"Content-Type": "application/json",
-						...AuthAPI.getAuthHeaders(),
-					},
-					body: JSON.stringify(data),
-					keepalive: true, // ページ離脱時でも送信継続
-				});
-
-				return response.ok;
+				await saveVideoProgress(data, { keepalive: true });
+				return true;
 			} catch (error) {
 				console.error("Failed to send progress with fetch:", error);
 				return false;
@@ -82,7 +77,7 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 			// 成功した場合はLocalStorageバックアップを削除
 			if (enableLocalStorageBackup) {
 				try {
-					localStorage.removeItem("video-progress-backup");
+					removeStoredItem("video-progress-backup");
 				} catch (error) {
 					console.warn("Failed to remove progress backup:", error);
 				}
@@ -107,14 +102,14 @@ export function useBeforeUnload(options: UseBeforeUnloadOptions = {}) {
 			return null;
 		}
 		try {
-			const backup = localStorage.getItem("video-progress-backup");
+			const backup = getStoredItem("video-progress-backup");
 			if (!backup) return null;
 
 			const data = JSON.parse(backup);
 
 			// 5分以上古いバックアップは無視
 			if (Date.now() - data.timestamp > 5 * 60 * 1000) {
-				localStorage.removeItem("video-progress-backup");
+				removeStoredItem("video-progress-backup");
 				return null;
 			}
 

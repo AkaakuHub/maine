@@ -9,8 +9,8 @@ import {
 	ScanSettingsPanel,
 	SettingsModal,
 	cn,
-	createApiUrl,
 	formatCurrentTime,
+	startScan,
 	useScanProgress,
 } from "@maine/libs";
 import {
@@ -54,16 +54,7 @@ function ScanManagementContent() {
 		try {
 			// スキャン状態をリセット
 			scanProgress.resetScanState();
-
-			// スキャン開始リクエスト
-			const response = await fetch(createApiUrl("/scan/start"), {
-				method: "POST",
-			});
-
-			if (!response.ok) {
-				const error = await response.json();
-				console.error("Failed to start scan:", error);
-			}
+			await startScan();
 		} catch (error) {
 			console.error("Scan start request failed:", error);
 		} finally {

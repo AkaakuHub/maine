@@ -2,12 +2,12 @@
 
 import { ImageOff, Radio } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
+import { createThumbnailUrl } from "../../application/services/media-resource-service";
+import { loadVideoProgress } from "../../application/services/progress-service";
 import { cn, formatFileSize } from "../../libs/utils";
 import type { VideoFileData } from "../../type";
-import { createApiUrl } from "../../utils/api";
 import { formatDuration } from "../../utils/constants";
 import { parseVideoFileName } from "../../utils/videoFileNameParser";
-import { AuthAPI } from "../../api/auth";
 
 interface VideoCardProps {
 	video: VideoFileData;
@@ -35,20 +35,9 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 
 			try {
 				setIsLoadingProgress(true);
-				const response = await fetch(
-					createApiUrl(
-						`/progress?filePath=${encodeURIComponent(video.filePath)}`,
-					),
-					{
-						headers: AuthAPI.getAuthHeaders(),
-					},
-				);
-
-				if (response.ok) {
-					const result = await response.json();
-					if (result.success && result.data?.watchProgress !== undefined) {
-						setWatchProgress(result.data.watchProgress);
-					}
+				const progress = await loadVideoProgress(video.filePath);
+				if (progress.watchProgress !== undefined) {
+					setWatchProgress(progress.watchProgress);
 				}
 			} catch (error) {
 				console.warn("Failed to fetch progress for video card:", error);
@@ -67,6 +56,14 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 		onPlay?.(video.id);
 	};
 
+	const handlePlayKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			e.stopPropagation();
+			onPlay?.(video.id);
+		}
+	};
+
 	return (
 		<div
 			className={cn(
@@ -78,19 +75,14 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 			<button
 				type="button"
 				onClick={handlePlayClick}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						handlePlayClick(e as unknown as React.MouseEvent);
-					}
-				}}
+				onKeyDown={handlePlayKeyDown}
 				className="block cursor-pointer w-full text-left border-0 bg-transparent p-0"
 			>
 				{/* サムネイル */}
 				<div className="relative aspect-video overflow-hidden bg-surface-variant">
 					{video.thumbnailPath ? (
 						<img
-							src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
+							src={createThumbnailUrl(video.thumbnailPath)}
 							alt={video.title}
 							className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
 							loading="lazy"

@@ -1,29 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AuthAPI } from "../api/auth";
 import type { VideoFileData } from "../type";
-import { createApiUrl } from "../utils/api";
 import { PAGINATION } from "../utils/constants";
+import { fetchContinueWatchingVideos } from "../application/services/video-service";
+import {
+	getFallbackPagination,
+	mergeUniqueItems,
+	normalizePagination,
+	type ApiPaginationInfo,
+	type PaginationInfo,
+} from "../application/support/pagination";
 
 interface UseContinueWatchingOptions {
 	page?: number;
 	limit?: number;
 	enabled?: boolean;
-}
-
-interface PaginationInfo {
-	page: number;
-	limit: number;
-	total: number;
-	totalPages: number;
-}
-
-interface ApiPaginationInfo {
-	page?: unknown;
-	limit?: unknown;
-	total?: unknown;
-	totalPages?: unknown;
 }
 
 interface UseContinueWatchingApiResponse {
@@ -42,79 +34,6 @@ interface UseContinueWatchingReturn {
 	loadNextPage: () => Promise<void>;
 	isFetchingNextPage: boolean;
 }
-
-const getFallbackPagination = (
-	page: number,
-	limit: number,
-	videosLength: number,
-): PaginationInfo => ({
-	page,
-	limit,
-	total: videosLength,
-	totalPages: videosLength > 0 ? 1 : 0,
-});
-
-const normalizeNumber = (value: unknown, fallback: number): number => {
-	if (typeof value === "number" && Number.isFinite(value)) {
-		return value;
-	}
-
-	if (typeof value === "string") {
-		const parsed = Number.parseInt(value, 10);
-		if (Number.isFinite(parsed)) {
-			return parsed;
-		}
-	}
-
-	return fallback;
-};
-
-const normalizePagination = (
-	pagination: ApiPaginationInfo | undefined,
-	fallback: PaginationInfo,
-): PaginationInfo => {
-	if (!pagination) {
-		return fallback;
-	}
-
-	const page = Math.max(
-		PAGINATION.DEFAULT_PAGE,
-		normalizeNumber(pagination.page, fallback.page),
-	);
-	const limit = Math.max(
-		PAGINATION.MIN_LIMIT,
-		normalizeNumber(pagination.limit, fallback.limit),
-	);
-	const total = Math.max(0, normalizeNumber(pagination.total, fallback.total));
-	const totalPages = Math.max(
-		0,
-		normalizeNumber(pagination.totalPages, fallback.totalPages),
-	);
-
-	return {
-		page,
-		limit,
-		total,
-		totalPages,
-	};
-};
-
-const mergeUniqueVideos = (
-	prevVideos: VideoFileData[],
-	nextVideos: VideoFileData[],
-): VideoFileData[] => {
-	const existingIds = new Set(prevVideos.map((video) => video.id));
-	const merged = [...prevVideos];
-
-	for (const video of nextVideos) {
-		if (!existingIds.has(video.id)) {
-			merged.push(video);
-			existingIds.add(video.id);
-		}
-	}
-
-	return merged;
-};
 
 export function useContinueWatchingVideos(
 	options: UseContinueWatchingOptions = {},
@@ -147,20 +66,7 @@ export function useContinueWatchingVideos(
 		async (targetPage: number): Promise<UseContinueWatchingApiResponse> => {
 			const params = new URLSearchParams(baseQuery);
 			params.set("page", targetPage.toString());
-
-			const response = await fetch(
-				createApiUrl(`/videos/continue?${params.toString()}`),
-				{
-					headers: AuthAPI.getAuthHeaders(),
-					signal: AbortSignal.timeout(30000),
-				},
-			);
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			return (await response.json()) as UseContinueWatchingApiResponse;
+			return fetchContinueWatchingVideos(params);
 		},
 		[baseQuery],
 	);
@@ -232,7 +138,7 @@ export function useContinueWatchingVideos(
 			}
 
 			const nextVideos = data.videos || [];
-			setVideos((prev) => mergeUniqueVideos(prev, nextVideos));
+			setVideos((prev) => mergeUniqueItems(prev, nextVideos));
 			setPagination((prev) => {
 				const fallback = getFallbackPagination(
 					nextPage,

@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import type { ChapterSkipRule } from "../types/Settings";
-import { createApiUrl } from "../utils/api";
+import {
+	createChapterSkipRule,
+	deleteChapterSkipRule,
+	fetchChapterSkipRules,
+	updateChapterSkipRule,
+} from "../application/services/scan-service";
 
 interface ChapterSkipStore {
 	rules: ChapterSkipRule[];
@@ -24,15 +29,8 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 	fetchRules: async () => {
 		try {
 			set({ isLoading: true, error: null });
-
-			const response = await fetch(createApiUrl("/settings/chapter-skip"));
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to fetch chapter skip rules");
-			}
-
-			set({ rules: data.data, isLoading: false });
+			const rules = await fetchChapterSkipRules();
+			set({ rules, isLoading: false });
 		} catch (err) {
 			const error = err instanceof Error ? err.message : "Unknown error";
 			set({ error, isLoading: false });
@@ -43,18 +41,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 	addRule: async (pattern: string, enabled = true) => {
 		try {
 			set({ error: null });
-
-			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ pattern, enabled }),
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to add chapter skip rule");
-			}
+			await createChapterSkipRule({ pattern, enabled });
 
 			await get().fetchRules();
 		} catch (err) {
@@ -70,18 +57,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 	) => {
 		try {
 			set({ error: null });
-
-			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ id, ...updates }),
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to update chapter skip rule");
-			}
+			await updateChapterSkipRule(id, updates);
 
 			await get().fetchRules();
 		} catch (err) {
@@ -94,19 +70,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 	deleteRule: async (id: string) => {
 		try {
 			set({ error: null });
-
-			const response = await fetch(
-				createApiUrl(`/settings/chapter-skip?id=${encodeURIComponent(id)}`),
-				{
-					method: "DELETE",
-				},
-			);
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to delete chapter skip rule");
-			}
+			await deleteChapterSkipRule(id);
 
 			await get().fetchRules();
 		} catch (err) {

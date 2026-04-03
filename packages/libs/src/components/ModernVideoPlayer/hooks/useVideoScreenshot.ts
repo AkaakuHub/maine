@@ -66,10 +66,6 @@ export function useVideoScreenshot({
 			return;
 		}
 
-		// iOS Safari対応: CORSチェック
-		if (video.src && video.src !== window.location.href && !video.crossOrigin) {
-		}
-
 		// キャンバスのサイズを動画に合わせる
 		canvas.width = video.videoWidth || 640;
 		canvas.height = video.videoHeight || 360;

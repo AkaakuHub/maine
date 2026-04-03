@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AuthAPI } from "../api/auth";
-import { createApiUrl } from "../utils/api";
 import type { PlaylistData, PlaylistVideo } from "../types/Playlist";
+import { fetchPlaylistVideos as fetchPlaylistVideosQuery } from "../application/services/video-service";
 
 interface UsePlaylistVideosReturn {
 	playlist: PlaylistData | null;
@@ -25,28 +24,7 @@ export function usePlaylistVideos(playlistId: string): UsePlaylistVideosReturn {
 		try {
 			setLoading(true);
 			setError(null);
-
-			const response = await fetch(
-				createApiUrl(`/playlists/${playlistId}/videos`),
-				{
-					headers: AuthAPI.getAuthHeaders(),
-				},
-			);
-
-			if (!response.ok) {
-				if (response.status === 401) {
-					throw new Error("認証が必要です");
-				}
-				if (response.status === 403) {
-					throw new Error("アクセス権限がありません");
-				}
-				if (response.status === 404) {
-					throw new Error("プレイリストが見つかりません");
-				}
-				throw new Error(`Failed to fetch playlist videos: ${response.status}`);
-			}
-
-			const data = await response.json();
+			const data = await fetchPlaylistVideosQuery(playlistId);
 			if (data.success) {
 				setPlaylist(data.playlist);
 				setVideos(data.videos);

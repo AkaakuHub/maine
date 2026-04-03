@@ -1,6 +1,15 @@
 "use client";
 
-import { AuthAPI, AuthGuard, cn, createApiUrl } from "@maine/libs";
+import {
+	AuthGuard,
+	cn,
+	fetchUsersWithPermissions,
+	fetchVideoDirectories,
+	grantDirectoryPermission,
+	type PermissionManagedUser,
+	revokeDirectoryPermission,
+	updateDirectoryPermission,
+} from "@maine/libs";
 import {
 	ChevronDown,
 	ChevronRight,
@@ -16,30 +25,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-interface User {
-	id: string;
-	username: string;
-	email: string;
-	role: string;
-	isActive: boolean;
-	permissions: Permission[];
-	_count: {
-		permissions: number;
-	};
-}
-
-interface Permission {
-	id: string;
-	userId: string;
-	directoryPath: string;
-	canRead: boolean;
-	user: {
-		id: string;
-		username: string;
-		email: string;
-	};
-}
-
 interface DirectoryNode {
 	path: string;
 	name: string;
@@ -48,8 +33,9 @@ interface DirectoryNode {
 
 function PermissionsManagementContent() {
 	const router = useRouter();
-	const [users, setUsers] = useState<User[]>([]);
-	const [selectedUser, setSelectedUser] = useState<User | null>(null);
+	const [users, setUsers] = useState<PermissionManagedUser[]>([]);
+	const [selectedUser, setSelectedUser] =
+		useState<PermissionManagedUser | null>(null);
 	const [directories, setDirectories] = useState<DirectoryNode[]>([]);
 	const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
 	const [isLoading, setIsLoading] = useState(true);
@@ -66,11 +52,7 @@ function PermissionsManagementContent() {
 	const fetchData = async () => {
 		try {
 			setIsLoading(true);
-			const response = await fetch(createApiUrl("permissions/users"), {
-				headers: AuthAPI.getAuthHeaders(),
-			});
-			if (!response.ok) throw new Error("データ取得に失敗しました");
-			const data = await response.json();
+			const data = await fetchUsersWithPermissions();
 			setUsers(data);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "エラーが発生しました");
@@ -86,14 +68,9 @@ function PermissionsManagementContent() {
 
 	const fetchAvailableDirectories = async () => {
 		try {
-			const response = await fetch(createApiUrl("videos/directories"), {
-				headers: AuthAPI.getAuthHeaders(),
-			});
-			if (response.ok) {
-				const dirs = await response.json();
-				const tree = buildTree(dirs);
-				setDirectories(tree);
-			}
+			const dirs = await fetchVideoDirectories();
+			const tree = buildTree(dirs);
+			setDirectories(tree);
 		} catch {
 			// エラーの場合は基本的な構造を設定
 			setDirectories([{ path: "/", name: "ルート", children: [] }]);
@@ -176,31 +153,9 @@ function PermissionsManagementContent() {
 				);
 			}
 
-			const response = await fetch(
-				createApiUrl(
-					`permissions/${userId}/${encodeURIComponent(directoryPath)}`,
-				),
-				{
-					method: "PUT",
-					headers: {
-						"Content-Type": "application/json",
-						...AuthAPI.getAuthHeaders(),
-					},
-					body: JSON.stringify({ canRead: newCanRead }),
-				},
-			);
-
-			if (!response.ok) {
-				// API失敗時は元の状態に戻す
-				setError("権限更新に失敗しました");
-				fetchData(); // 最新の状態を再取得
-				setLoadingPermissions((prev) => {
-					const newSet = new Set(prev);
-					newSet.delete(permissionKey);
-					return newSet;
-				});
-				return;
-			}
+			await updateDirectoryPermission(userId, directoryPath, {
+				canRead: newCanRead,
+			});
 
 			// API成功時は正しい状態を再取得して確定
 			fetchData();
@@ -239,22 +194,7 @@ function PermissionsManagementContent() {
 				);
 			}
 
-			const response = await fetch(
-				createApiUrl(
-					`permissions/${userId}/${encodeURIComponent(directoryPath)}`,
-				),
-				{
-					method: "DELETE",
-					headers: AuthAPI.getAuthHeaders(),
-				},
-			);
-
-			if (!response.ok) {
-				// API失敗時は元の状態に戻す
-				setError("権限削除に失敗しました");
-				fetchData(); // 最新の状態を再取得
-				return;
-			}
+			await revokeDirectoryPermission(userId, directoryPath);
 
 			// API成功時は正しい状態を再取得して確定
 			fetchData();
@@ -296,25 +236,11 @@ function PermissionsManagementContent() {
 				);
 			}
 
-			const response = await fetch(createApiUrl("permissions/grant"), {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					...AuthAPI.getAuthHeaders(),
-				},
-				body: JSON.stringify({
-					userId,
-					directoryPath,
-					canRead: true,
-				}),
+			await grantDirectoryPermission({
+				userId,
+				directoryPath,
+				canRead: true,
 			});
-
-			if (!response.ok) {
-				// API失敗時は元の状態に戻す
-				setError("権限付与に失敗しました");
-				fetchData(); // 最新の状態を再取得
-				return;
-			}
 
 			// API成功時は正しい状態を再取得して確定
 			fetchData();

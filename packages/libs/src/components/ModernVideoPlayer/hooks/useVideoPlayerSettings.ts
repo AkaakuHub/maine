@@ -1,4 +1,8 @@
 import { useCallback, useState } from "react";
+import {
+	getStoredItem,
+	setStoredItem,
+} from "../../../application/services/session-storage-service";
 import { VIDEO_PLAYER } from "../../../utils/constants";
 
 interface VideoPlayerSettings {
@@ -24,7 +28,7 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 	// LocalStorageから設定を読み込み
 	const [volume, setVolumeState] = useState(() => {
 		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem(VIDEO_PLAYER.STORAGE_KEYS.VOLUME);
+			const saved = getStoredItem(VIDEO_PLAYER.STORAGE_KEYS.VOLUME);
 			return saved ? Number.parseFloat(saved) : VIDEO_PLAYER.DEFAULT_VOLUME;
 		}
 		return VIDEO_PLAYER.DEFAULT_VOLUME;
@@ -32,9 +36,7 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 
 	const [playbackRate, setPlaybackRateState] = useState(() => {
 		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem(
-				VIDEO_PLAYER.STORAGE_KEYS.PLAYBACK_RATE,
-			);
+			const saved = getStoredItem(VIDEO_PLAYER.STORAGE_KEYS.PLAYBACK_RATE);
 			return saved
 				? Number.parseFloat(saved)
 				: VIDEO_PLAYER.DEFAULT_PLAYBACK_RATE;
@@ -44,9 +46,7 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 
 	const [skipSeconds, setSkipSecondsState] = useState(() => {
 		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem(
-				VIDEO_PLAYER.STORAGE_KEYS.SKIP_SECONDS,
-			);
+			const saved = getStoredItem(VIDEO_PLAYER.STORAGE_KEYS.SKIP_SECONDS);
 			return saved
 				? Number.parseInt(saved, 10)
 				: VIDEO_PLAYER.DEFAULT_SKIP_SECONDS;
@@ -56,9 +56,7 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 
 	const [isShowRestTime, setIsShowRestTimeState] = useState(() => {
 		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem(
-				VIDEO_PLAYER.STORAGE_KEYS.SHOW_REST_TIME,
-			);
+			const saved = getStoredItem(VIDEO_PLAYER.STORAGE_KEYS.SHOW_REST_TIME);
 			return saved === "true";
 		}
 		return false;
@@ -67,7 +65,7 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 	const [autoDownloadScreenshot, setAutoDownloadScreenshotState] = useState(
 		() => {
 			if (typeof window !== "undefined") {
-				const saved = localStorage.getItem(
+				const saved = getStoredItem(
 					VIDEO_PLAYER.STORAGE_KEYS.AUTO_DOWNLOAD_SCREENSHOT,
 				);
 				return saved === "true";
@@ -79,7 +77,7 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 	const [isPlaylistAutoplayEnabled, setIsPlaylistAutoplayEnabledState] =
 		useState(() => {
 			if (typeof window !== "undefined") {
-				const saved = localStorage.getItem(
+				const saved = getStoredItem(
 					VIDEO_PLAYER.STORAGE_KEYS.PLAYLIST_AUTOPLAY,
 				);
 				return saved !== "false";
@@ -90,36 +88,27 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 	// LocalStorageに保存するハンドラー関数
 	const setVolume = useCallback((volume: number) => {
 		setVolumeState(volume);
-		localStorage.setItem(VIDEO_PLAYER.STORAGE_KEYS.VOLUME, volume.toString());
+		setStoredItem(VIDEO_PLAYER.STORAGE_KEYS.VOLUME, volume.toString());
 	}, []);
 
 	const setPlaybackRate = useCallback((rate: number) => {
 		setPlaybackRateState(rate);
-		localStorage.setItem(
-			VIDEO_PLAYER.STORAGE_KEYS.PLAYBACK_RATE,
-			rate.toString(),
-		);
+		setStoredItem(VIDEO_PLAYER.STORAGE_KEYS.PLAYBACK_RATE, rate.toString());
 	}, []);
 
 	const setSkipSeconds = useCallback((seconds: number) => {
 		setSkipSecondsState(seconds);
-		localStorage.setItem(
-			VIDEO_PLAYER.STORAGE_KEYS.SKIP_SECONDS,
-			seconds.toString(),
-		);
+		setStoredItem(VIDEO_PLAYER.STORAGE_KEYS.SKIP_SECONDS, seconds.toString());
 	}, []);
 
 	const setIsShowRestTime = useCallback((show: boolean) => {
 		setIsShowRestTimeState(show);
-		localStorage.setItem(
-			VIDEO_PLAYER.STORAGE_KEYS.SHOW_REST_TIME,
-			show.toString(),
-		);
+		setStoredItem(VIDEO_PLAYER.STORAGE_KEYS.SHOW_REST_TIME, show.toString());
 	}, []);
 
 	const setAutoDownloadScreenshot = useCallback((enabled: boolean) => {
 		setAutoDownloadScreenshotState(enabled);
-		localStorage.setItem(
+		setStoredItem(
 			VIDEO_PLAYER.STORAGE_KEYS.AUTO_DOWNLOAD_SCREENSHOT,
 			enabled.toString(),
 		);
@@ -127,7 +116,7 @@ export function useVideoPlayerSettings(): VideoPlayerSettings &
 
 	const setIsPlaylistAutoplayEnabled = useCallback((enabled: boolean) => {
 		setIsPlaylistAutoplayEnabledState(enabled);
-		localStorage.setItem(
+		setStoredItem(
 			VIDEO_PLAYER.STORAGE_KEYS.PLAYLIST_AUTOPLAY,
 			enabled.toString(),
 		);

@@ -1,32 +1,4 @@
-// 再生進捗関連の型定義（現在の設計で使用）
-export interface VideoProgressData {
-	id: string;
-	filePath: string;
-	watchTime: number; // 視聴時間（秒）
-	watchProgress: number; // 進捗率（0-100）
-	isLiked: boolean;
-	lastWatched: Date | null;
-	createdAt: Date;
-	updatedAt: Date;
-}
-
-// 動画ファイル情報の型定義（リアルタイムスキャンで取得）
-export interface VideoFileData {
-	id: string;
-	title: string;
-	fileName: string;
-	filePath: string;
-	duration?: number;
-	thumbnailPath?: string;
-	fileSize: number;
-	episode?: number;
-	season?: string;
-	genre?: string;
-	year?: number;
-	fileModifiedAt?: Date; // ファイル更新日時（ファイル名から日付が取得できない場合のフォールバック）
-	playlistId?: string; // プレイリストID
-	playlistName?: string; // プレイリスト名
-}
+export type { VideoFileData } from "./domain/video/models";
 
 export type VideoControlProps = {
 	onPlayPause: React.MouseEventHandler<HTMLDivElement>;

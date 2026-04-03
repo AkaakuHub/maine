@@ -1,4 +1,9 @@
 import React from "react";
+import {
+	getStoredItem,
+	removeStoredItem,
+	setStoredItem,
+} from "../application/services/session-storage-service";
 import { AuthAPI, type UserProfile } from "../api/auth";
 
 // グローバルな状態管理
@@ -29,28 +34,24 @@ function notifyListeners() {
 const STORAGE_KEY = "auth-storage";
 
 function saveToStorage() {
-	if (typeof window !== "undefined") {
-		localStorage.setItem(
-			STORAGE_KEY,
-			JSON.stringify({
-				user: authState.user,
-				isAuthenticated: authState.isAuthenticated,
-			}),
-		);
-	}
+	setStoredItem(
+		STORAGE_KEY,
+		JSON.stringify({
+			user: authState.user,
+			isAuthenticated: authState.isAuthenticated,
+		}),
+	);
 }
 
 function loadFromStorage() {
-	if (typeof window !== "undefined") {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) {
-			try {
-				const data = JSON.parse(stored);
-				authState.user = data.user;
-				authState.isAuthenticated = data.isAuthenticated;
-			} catch {
-				// 無視
-			}
+	const stored = getStoredItem(STORAGE_KEY);
+	if (stored) {
+		try {
+			const data: PersistedAuthState = JSON.parse(stored);
+			authState.user = data.user;
+			authState.isAuthenticated = data.isAuthenticated;
+		} catch {
+			// 無視
 		}
 	}
 }
@@ -167,9 +168,7 @@ export const useAuthStore = () => {
 			authState.error = null;
 			authState.isLoading = false;
 			authState.userExists = null;
-			if (typeof window !== "undefined") {
-				localStorage.removeItem(STORAGE_KEY);
-			}
+			removeStoredItem(STORAGE_KEY);
 			notifyListeners();
 		},
 
@@ -209,7 +208,7 @@ export const useAuthStore = () => {
 					authState.error = null;
 					notifyListeners();
 				}
-			} catch (_error) {
+			} catch {
 				authState.user = null;
 				authState.isAuthenticated = false;
 				authState.isLoading = false;
@@ -230,7 +229,7 @@ export const useAuthStore = () => {
 				authState.userExists = response.exists;
 				notifyListeners();
 				return response.exists;
-			} catch (_error) {
+			} catch {
 				// エラーの場合は存在しないとみなす
 				authState.userExists = false;
 				notifyListeners();
@@ -244,3 +243,7 @@ export const useAuthStore = () => {
 		},
 	};
 };
+interface PersistedAuthState {
+	user: UserProfile | null;
+	isAuthenticated: boolean;
+}

@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+	getStoredItem,
+	setStoredItem,
+} from "../../application/services/session-storage-service";
 
 const RECENT_SEARCHES_STORAGE_KEY = "maine:recent-searches";
 const MAX_RECENT_SEARCHES = 8;
@@ -19,7 +23,7 @@ export function useRecentSearches() {
 		}
 
 		try {
-			const saved = window.localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY);
+			const saved = getStoredItem(RECENT_SEARCHES_STORAGE_KEY);
 			if (!saved) {
 				return;
 			}
@@ -47,10 +51,7 @@ export function useRecentSearches() {
 		}
 
 		try {
-			window.localStorage.setItem(
-				RECENT_SEARCHES_STORAGE_KEY,
-				JSON.stringify(nextSearches),
-			);
+			setStoredItem(RECENT_SEARCHES_STORAGE_KEY, JSON.stringify(nextSearches));
 		} catch {
 			// localStorageが使えない環境ではメモリ内だけに保持
 		}

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { ChevronRight, Play, Clock } from "lucide-react";
+import { useState } from "react";
+import { createThumbnailUrl } from "../../application/services/media-resource-service";
 import { cn } from "../../libs/utils";
-import Button from "../ui/Button";
-import { createApiUrl } from "../../utils/api";
 import type { PlaylistVideo } from "../../types/Playlist";
+import Button from "../ui/Button";
 
 interface PlaylistVideoListProps {
 	videos: PlaylistVideo[];
@@ -79,7 +79,7 @@ export function PlaylistVideoList({
 			{/* 動画リスト */}
 			{expanded && (
 				<div className="space-y-2 max-h-96 overflow-y-auto">
-					{videos.map((video, _index) => {
+					{videos.map((video) => {
 						const isCurrentVideo = video.id === currentId;
 
 						return (
@@ -98,7 +98,7 @@ export function PlaylistVideoList({
 								{video.thumbnailPath && (
 									<div className="relative w-16 h-12 sm:w-20 bg-surface rounded overflow-hidden flex-shrink-0">
 										<img
-											src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
+											src={createThumbnailUrl(video.thumbnailPath)}
 											alt={video.title}
 											className="w-full h-full object-cover"
 											loading="lazy"

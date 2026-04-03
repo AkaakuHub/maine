@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { fetchVideoChapters } from "../../../application/services/chapter-query-service";
 import type { VideoChapter } from "../../../services/chapterService";
 import { useChapterSkipStore } from "../../../stores/chapterSkipStore";
-import { createApiUrl } from "../../../utils/api";
 
 interface UseVideoChaptersProps {
 	src: string;
@@ -12,6 +12,16 @@ interface SkippedChapter {
 	chapterId: number;
 	title: string;
 	skippedAt: number;
+}
+
+function extractVideoIdFromSource(src: string): string | null {
+	const matchedVideoPath = src.match(/\/api\/video\/([^/?#]+)/);
+
+	if (!matchedVideoPath) {
+		return null;
+	}
+
+	return decodeURIComponent(matchedVideoPath[1]);
 }
 
 export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
@@ -34,21 +44,13 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 				setIsLoadingChapters(true);
 
 				// srcからidを抽出
-				const url = new URL(src, window.location.origin);
-				const id = url.pathname.replace(/^\/api\/video\//, "");
-
-				const response = await fetch(
-					createApiUrl(`/chapters?id=${encodeURIComponent(id)}`),
-				);
-
-				if (response.ok) {
-					const data = await response.json();
-					if (data.success && data.chapters) {
-						setChapters(data.chapters);
-					}
-				} else if (response.status === 400 || response.status === 404) {
-					// 動画ファイルが存在しない場合 - エラーを表示せず静かに処理
-					// console.debug("Chapters not available for this video");
+				const id = extractVideoIdFromSource(src);
+				if (!id) {
+					return;
+				}
+				const chapterList = await fetchVideoChapters(id);
+				if (chapterList) {
+					setChapters(chapterList);
 				}
 			} catch (error) {
 				// ネットワークエラーなどの場合のみエラーを表示

@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import type { ScanProgressEvent } from "../libs/sse-connection-store";
+import { createScanEventsUrl } from "../application/services/media-resource-service";
 import { useScanStore } from "../stores/scan-store";
-import { createApiUrl } from "../utils/api";
+import { sendScanControl as sendScanControlCommand } from "../application/services/scan-service";
 
 /**
  * Zustandベースのスキャン進捗追跡フック
@@ -51,7 +52,7 @@ export function useScanProgress() {
 		setConnectionState(false, 0);
 
 		try {
-			const eventSource = new EventSource(createApiUrl("/scan/events"));
+			const eventSource = new EventSource(createScanEventsUrl());
 			eventSourceRef.current = eventSource;
 
 			eventSource.onopen = () => {
@@ -167,25 +168,7 @@ export function useScanProgress() {
 			}
 
 			try {
-				const response = await fetch(createApiUrl("/scan/control"), {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						action,
-						scanId: scanId,
-					}),
-				});
-
-				if (!response.ok) {
-					const error = await response.json();
-					console.error(`Scan control ${action} failed:`, error);
-					return false;
-				}
-
-				await response.json();
-				return true;
+				return await sendScanControlCommand(action, scanId);
 			} catch (error) {
 				console.error(`Scan control ${action} request failed:`, error);
 				return false;

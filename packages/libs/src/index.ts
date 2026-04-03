@@ -35,7 +35,6 @@ export { LoadingScreen } from "./components/VideoPlayer/LoadingScreen";
 export { ResponsiveVideoLayout } from "./components/VideoPlayer/ResponsiveVideoLayout";
 // export { SettingsModal } from "./components/settings/SettingsModal";
 export { useVideoPlayer } from "./hooks/useVideoPlayer";
-
 // scan/page.tsx
 export { ScanProgressBar } from "./components/scan/ScanProgressBar";
 export { ScanControlButtons } from "./components/scan/ScanControlButtons";
@@ -44,6 +43,14 @@ export { ScanSchedulePanel } from "./components/scan/ScanSchedulePanel";
 export { SafeDateDisplay } from "./components/common/SafeDateDisplay";
 // export { SettingsModal } from "./components/settings/SettingsModal";
 export { formatCurrentTime } from "./utils/safeDateFormat";
-export { createApiUrl } from "./utils/api";
 export { useScanProgress } from "./hooks/useScanProgress";
 export { cn } from "./libs/utils";
+export { startScan } from "./application/services/scan-start-service";
+export {
+	fetchUsersWithPermissions,
+	fetchVideoDirectories,
+	grantDirectoryPermission,
+	updateDirectoryPermission,
+	revokeDirectoryPermission,
+} from "./application/services/permissions-service";
+export type { PermissionManagedUser } from "./application/services/permissions-service";

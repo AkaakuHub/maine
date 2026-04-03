@@ -1,12 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { copyPageUrl, sharePage } from "../application/services/share-service";
 import { useNavigationRefresh } from "../contexts/NavigationRefreshContext";
+import {
+	createVideoDownloadUrl,
+	createVideoStreamUrl,
+} from "../application/services/media-resource-service";
+import {
+	fetchProgramInfo,
+	fetchVideoById,
+} from "../application/services/video-service";
 import type { VideoFileData } from "../type";
 import type { VideoInfoType } from "../types/VideoInfo";
-import { createApiUrl } from "../utils/api";
 import { useVideoProgress } from "./useVideoProgress";
-import { AuthAPI } from "../api/auth";
 import { usePlaylistVideos } from "./usePlaylists";
 
 export function useVideoPlayer({
@@ -55,14 +62,7 @@ export function useVideoPlayer({
 	const fetchDescription = useCallback(
 		async (filePath: string): Promise<string> => {
 			try {
-				const response = await fetch(
-					createApiUrl(`/programInfo?filePath=${encodeURIComponent(filePath)}`),
-				);
-				if (!response.ok) {
-					return "";
-				}
-				const data = await response.json();
-				return data.success ? data.programInfo || "" : "";
+				return await fetchProgramInfo(filePath);
 			} catch (error) {
 				console.error("Error fetching description:", error);
 				return "";
@@ -76,37 +76,20 @@ export function useVideoPlayer({
 		async (id: string) => {
 			try {
 				setError(null);
-				const response = await fetch(createApiUrl(`/videos/by-id/${id}`), {
-					headers: AuthAPI.getAuthHeaders(),
-				});
-
-				if (!response.ok) {
-					// 401/403エラーの場合は権限なしエラーメッセージを設定
-					if (response.status === 401) {
-						setError("認証が必要です");
-						return;
-					}
-					if (response.status === 403) {
-						setError("この動画にアクセスする権限がありません");
-						return;
-					}
-					// 404エラーの場合は特別なエラーメッセージを設定
-					if (response.status === 404) {
-						setError("Video not found");
-						return;
-					}
-					throw new Error(`Failed to fetch video: ${response.status}`);
-				}
-
-				const data = await response.json();
+				const data = await fetchVideoById(id);
 
 				if (!data.success) {
-					// APIのsuccessがfalseの場合も404として扱う
 					if (data.error?.includes("not found")) {
 						setError("Video not found");
 						return;
 					}
+
 					throw new Error(data.error || "Video not found");
+				}
+
+				if (!data.video) {
+					setError("Video not found");
+					return;
 				}
 
 				const videoData: VideoFileData = data.video;
@@ -128,7 +111,7 @@ export function useVideoPlayer({
 				});
 
 				// 動画URLを生成
-				const videoUrl = createApiUrl(`/video/${id}`);
+				const videoUrl = createVideoStreamUrl(id);
 				setVideoSrc(videoUrl);
 
 				// いいね状態とウォッチリスト状態を設定（デフォルト値）
@@ -197,26 +180,27 @@ export function useVideoPlayer({
 	};
 
 	const handleShare = async () => {
-		if (navigator.share) {
-			try {
-				await navigator.share({
-					title: videoInfo.fullTitle,
-					url: window.location.href,
-				});
-			} catch {
-				// 共有がキャンセルされました
-			}
-		} else {
-			// フォールバック: クリップボードにコピー
-			if (navigator.clipboard?.writeText && window.isSecureContext) {
-				navigator.clipboard.writeText(window.location.href);
+		const shared = await sharePage(videoInfo.fullTitle);
+		if (shared) {
+			return;
+		}
+
+		try {
+			const copied = await copyPageUrl();
+			if (copied) {
 				alert("URLがクリップボードにコピーされました！");
-			} else {
-				console.warn(
-					"クリップボードAPIが使用できません（HTTPS接続またはlocalhostでのみ利用可能）",
-				);
-				alert("クリップボード機能はHTTPS接続またはlocalhostでのみ利用可能です");
+				return;
 			}
+
+			console.warn(
+				"クリップボードAPIが使用できません（HTTPS接続またはlocalhostでのみ利用可能）",
+			);
+			alert("クリップボード機能はHTTPS接続またはlocalhostでのみ利用可能です");
+		} catch {
+			console.warn(
+				"クリップボードAPIが使用できません（HTTPS接続またはlocalhostでのみ利用可能）",
+			);
+			alert("クリップボード機能はHTTPS接続またはlocalhostでのみ利用可能です");
 		}
 	};
 
@@ -255,7 +239,7 @@ export function useVideoPlayer({
 		}
 
 		try {
-			const downloadUrl = createApiUrl(`/video/${videoData.id}?download=true`);
+			const downloadUrl = createVideoDownloadUrl(videoData.id);
 			const link = document.createElement("a");
 			link.href = downloadUrl;
 			link.download = videoData.fileName || "video.mp4";

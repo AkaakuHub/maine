@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { createApiUrl } from "../../../utils/api";
+import { fetchThumbnailBlob } from "../../../application/services/thumbnail-service";
 import type { HTMLVideoElementWithFullscreen } from "../types";
 
 interface UseMediaSessionProps {
@@ -173,16 +173,7 @@ export function useMediaSession({
 	const createArtworkWithDataURL = useCallback(
 		async (thumbnailPath: string): Promise<MediaImage[]> => {
 			try {
-				// 複数サイズの画像URLを生成
-				const thumbnailUrl = createApiUrl(`/thumbnails/${thumbnailPath}`);
-
-				// 認証付きでサムネイルを取得
-				const response = await fetch(thumbnailUrl, { credentials: "include" });
-				if (!response.ok) {
-					throw new Error(`Failed to fetch thumbnail: ${response.statusText}`);
-				}
-
-				const tempBlob = await response.blob();
+				const tempBlob = await fetchThumbnailBlob(thumbnailPath);
 
 				// 画像を一旦読み込み
 				const img = document.createElement("img");

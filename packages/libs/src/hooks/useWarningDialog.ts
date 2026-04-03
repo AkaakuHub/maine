@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { navigateToPath } from "../application/services/navigation-service";
 import type { VideoFileData } from "../type";
 
 export function useWarningDialog() {
@@ -22,7 +23,7 @@ export function useWarningDialog() {
 		if (warningVideoData) {
 			handleCloseStreamingWarning();
 			setTimeout(() => {
-				window.location.href = `/play/${encodeURIComponent(warningVideoData.id)}`;
+				navigateToPath(`/play/${encodeURIComponent(warningVideoData.id)}`);
 			}, 0);
 		}
 	}, [warningVideoData, handleCloseStreamingWarning]);
