@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { AuthAPI } from "../../../api/auth";
 import { createApiUrl } from "../../../utils/api";
 import type { HTMLVideoElementWithFullscreen } from "../types";
 
@@ -177,7 +178,10 @@ export function useMediaSession({
 				const thumbnailUrl = createApiUrl(`/thumbnails/${thumbnailPath}`);
 
 				// 認証付きでサムネイルを取得
-				const response = await fetch(thumbnailUrl, { credentials: "include" });
+				const response = await fetch(thumbnailUrl, {
+					credentials: "include",
+					headers: AuthAPI.getAuthHeaders(),
+				});
 				if (!response.ok) {
 					throw new Error(`Failed to fetch thumbnail: ${response.statusText}`);
 				}

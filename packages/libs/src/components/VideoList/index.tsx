@@ -85,6 +85,7 @@ export const VideoListItem = ({ video, onPlay }: VideoListItemProps) => {
 							<img
 								src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
 								alt={video.title}
+								crossOrigin="use-credentials"
 								className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
 								loading="lazy"
 							/>

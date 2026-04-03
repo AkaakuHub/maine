@@ -100,6 +100,7 @@ export function PlaylistVideoList({
 										<img
 											src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
 											alt={video.title}
+											crossOrigin="use-credentials"
 											className="w-full h-full object-cover"
 											loading="lazy"
 										/>
