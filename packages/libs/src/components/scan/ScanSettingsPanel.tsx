@@ -10,6 +10,7 @@ import {
 	Settings,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { AuthAPI } from "../../api/auth";
 import { ToggleButton } from "../../components/ui/RadioGroup";
 import { cn } from "../../libs/utils";
 import {
@@ -41,7 +42,9 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 	const loadSettings = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const response = await fetch(createApiUrl("/scan/settings"));
+			const response = await fetch(createApiUrl("/scan/settings"), {
+				headers: AuthAPI.getAuthHeaders(),
+			});
 			if (response.ok) {
 				const data = await response.json();
 				setSettings(data.settings);
@@ -69,7 +72,10 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 		try {
 			const response = await fetch(createApiUrl("/scan/settings"), {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					...AuthAPI.getAuthHeaders(),
+				},
 				body: JSON.stringify(settings),
 			});
 
@@ -96,6 +102,7 @@ export function ScanSettingsPanel({ className }: ScanSettingsPanelProps) {
 		try {
 			const response = await fetch(createApiUrl("/scan/settings"), {
 				method: "PUT",
+				headers: AuthAPI.getAuthHeaders(),
 			});
 
 			if (response.ok) {

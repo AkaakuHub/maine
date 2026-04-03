@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AuthAPI } from "../../../api/auth";
 import type { VideoChapter } from "../../../services/chapterService";
 import { useChapterSkipStore } from "../../../stores/chapterSkipStore";
 import { createApiUrl } from "../../../utils/api";
@@ -39,6 +40,7 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 
 				const response = await fetch(
 					createApiUrl(`/chapters?id=${encodeURIComponent(id)}`),
+					{ headers: AuthAPI.getAuthHeaders() },
 				);
 
 				if (response.ok) {

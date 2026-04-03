@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { AuthAPI } from "../api/auth";
 import type { ScanProgressEvent } from "../libs/sse-connection-store";
 import { useScanStore } from "../stores/scan-store";
 import { createApiUrl } from "../utils/api";
@@ -171,6 +172,7 @@ export function useScanProgress() {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
+						...AuthAPI.getAuthHeaders(),
 					},
 					body: JSON.stringify({
 						action,

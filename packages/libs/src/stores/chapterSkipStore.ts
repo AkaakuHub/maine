@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { AuthAPI } from "../api/auth";
 import type { ChapterSkipRule } from "../types/Settings";
 import { createApiUrl } from "../utils/api";
 
@@ -25,7 +26,9 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 		try {
 			set({ isLoading: true, error: null });
 
-			const response = await fetch(createApiUrl("/settings/chapter-skip"));
+			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
+				headers: AuthAPI.getAuthHeaders(),
+			});
 			const data = await response.json();
 
 			if (!response.ok) {
@@ -46,7 +49,10 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 
 			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					...AuthAPI.getAuthHeaders(),
+				},
 				body: JSON.stringify({ pattern, enabled }),
 			});
 
@@ -73,7 +79,10 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 
 			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
 				method: "PUT",
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					...AuthAPI.getAuthHeaders(),
+				},
 				body: JSON.stringify({ id, ...updates }),
 			});
 
@@ -99,6 +108,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 				createApiUrl(`/settings/chapter-skip?id=${encodeURIComponent(id)}`),
 				{
 					method: "DELETE",
+					headers: AuthAPI.getAuthHeaders(),
 				},
 			);
 
