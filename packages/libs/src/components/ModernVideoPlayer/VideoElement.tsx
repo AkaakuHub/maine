@@ -36,9 +36,15 @@ export default function VideoElement({
 	desktopFlashIcon,
 	onError,
 }: VideoElementProps) {
-	const singleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const desktopFlashDeactivateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const desktopFlashHideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	);
+	const desktopFlashDeactivateTimeoutRef = useRef<ReturnType<
+		typeof setTimeout
+	> | null>(null);
+	const desktopFlashHideTimeoutRef = useRef<ReturnType<
+		typeof setTimeout
+	> | null>(null);
 	const [desktopFlashVisible, setDesktopFlashVisible] = useState(false);
 	const [desktopFlashActive, setDesktopFlashActive] = useState(false);
 	const [desktopFlashIconState, setDesktopFlashIconState] = useState<
@@ -88,7 +94,7 @@ export default function VideoElement({
 			<video
 				ref={videoRef}
 				src={src}
-				crossOrigin="anonymous"
+				crossOrigin="use-credentials"
 				className={cn(
 					"w-full h-full object-contain min-h-[20vh] not-lg:max-h-[50vh]",
 					isFullscreen && "flex-1",

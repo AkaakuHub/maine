@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AuthAPI } from "../../../api/auth";
+import { useChapterSkipRules } from "../../../hooks/useChapterSkipRules";
 import type { VideoChapter } from "../../../services/chapterService";
 import { useChapterSkipStore } from "../../../stores/chapterSkipStore";
 import { createApiUrl } from "../../../utils/api";
@@ -24,6 +26,7 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 
 	// チャプタースキップ設定を取得（リアルタイムで更新される）
 	const chapterSkipStore = useChapterSkipStore();
+	useChapterSkipRules({ enabled: true });
 
 	// チャプター情報を取得
 	useEffect(() => {
@@ -39,6 +42,7 @@ export function useVideoChapters({ src, videoRef }: UseVideoChaptersProps) {
 
 				const response = await fetch(
 					createApiUrl(`/chapters?id=${encodeURIComponent(id)}`),
+					{ headers: AuthAPI.getAuthHeaders() },
 				);
 
 				if (response.ok) {

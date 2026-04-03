@@ -160,17 +160,25 @@ export const useAuthStore = () => {
 			}
 		},
 
-		logout: () => {
-			AuthAPI.logout();
-			authState.user = null;
-			authState.isAuthenticated = false;
-			authState.error = null;
-			authState.isLoading = false;
-			authState.userExists = null;
-			if (typeof window !== "undefined") {
-				localStorage.removeItem(STORAGE_KEY);
+		logout: async () => {
+			try {
+				authState.error = null;
+				notifyListeners();
+				await AuthAPI.logout();
+				authState.user = null;
+				authState.isAuthenticated = false;
+				authState.error = null;
+				authState.isLoading = false;
+				authState.userExists = null;
+				if (typeof window !== "undefined") {
+					localStorage.removeItem(STORAGE_KEY);
+				}
+				notifyListeners();
+			} catch (error) {
+				authState.error =
+					error instanceof Error ? error.message : "ログアウトに失敗しました";
+				notifyListeners();
 			}
-			notifyListeners();
 		},
 
 		setUser: (user: UserProfile | null) => {

@@ -23,7 +23,7 @@ export function useVideoSkip({
 	skipSeconds,
 	duration,
 }: UseVideoSkipProps): VideoSkipState & VideoSkipHandlers {
-	const skipThrottleRef = useRef<NodeJS.Timeout | null>(null);
+	const skipThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const skipQueueRef = useRef<number>(0);
 	const [predictedTime, setPredictedTime] = useState<number | null>(null);
 

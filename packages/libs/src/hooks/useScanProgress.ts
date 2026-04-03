@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { AuthAPI } from "../api/auth";
 import type { ScanProgressEvent } from "../libs/sse-connection-store";
 import { useScanStore } from "../stores/scan-store";
 import { createApiUrl } from "../utils/api";
@@ -14,7 +15,9 @@ import { createApiUrl } from "../utils/api";
 export function useScanProgress() {
 	// EventSource管理用のref
 	const eventSourceRef = useRef<EventSource | null>(null);
-	const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	);
 	const reconnectAttemptsRef = useRef(0);
 	const isConnectingRef = useRef(false); // 重複接続防止フラグ
 
@@ -51,7 +54,9 @@ export function useScanProgress() {
 		setConnectionState(false, 0);
 
 		try {
-			const eventSource = new EventSource(createApiUrl("/scan/events"));
+			const eventSource = new EventSource(createApiUrl("/scan/events"), {
+				withCredentials: true,
+			});
 			eventSourceRef.current = eventSource;
 
 			eventSource.onopen = () => {
@@ -171,6 +176,7 @@ export function useScanProgress() {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
+						...AuthAPI.getAuthHeaders(),
 					},
 					body: JSON.stringify({
 						action,

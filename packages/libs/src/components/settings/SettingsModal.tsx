@@ -6,6 +6,7 @@ import { SettingsSection } from "../../components/settings/SettingsSection";
 import { SkipRuleForm } from "../../components/settings/SkipRuleForm";
 import { SkipRuleItem } from "../../components/settings/SkipRuleItem";
 import { ToggleButton } from "../../components/ui/RadioGroup";
+import { useChapterSkipRules } from "../../hooks/useChapterSkipRules";
 import { useTheme } from "../../hooks/useTheme";
 import { useChapterSkipStore } from "../../stores/chapterSkipStore";
 import type { ThemeMode } from "../../types/theme";
@@ -23,6 +24,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 		"appearance",
 	);
 	const modalRef = useRef<HTMLDivElement>(null);
+
+	useChapterSkipRules({ enabled: isOpen });
 
 	const toggleSection = (section: string) => {
 		setExpandedSection(expandedSection === section ? null : section);

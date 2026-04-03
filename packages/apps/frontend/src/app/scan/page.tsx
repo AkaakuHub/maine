@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	AuthAPI,
 	AuthGuard,
 	SafeDateDisplay,
 	ScanControlButtons,
@@ -58,6 +59,7 @@ function ScanManagementContent() {
 			// スキャン開始リクエスト
 			const response = await fetch(createApiUrl("/scan/start"), {
 				method: "POST",
+				headers: AuthAPI.getAuthHeaders(),
 			});
 
 			if (!response.ok) {

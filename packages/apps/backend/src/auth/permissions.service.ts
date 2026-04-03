@@ -1,9 +1,26 @@
 import { Injectable } from "@nestjs/common";
+import path from "node:path";
 import { PrismaService } from "../common/database/prisma.service";
 
 @Injectable()
 export class PermissionsService {
 	constructor(private readonly prisma: PrismaService) {}
+
+	private getPathModule(
+		targetPath: string,
+	): typeof path.posix | typeof path.win32 {
+		return targetPath.includes("\\") ? path.win32 : path.posix;
+	}
+
+	private getDirectoryPathFromFilePath(filePath: string): string {
+		const pathModule = this.getPathModule(filePath);
+		return pathModule.dirname(filePath);
+	}
+
+	async checkFileAccess(userId: string, filePath: string): Promise<boolean> {
+		const directoryPath = this.getDirectoryPathFromFilePath(filePath);
+		return this.checkDirectoryAccess(userId, directoryPath);
+	}
 
 	async checkDirectoryAccess(
 		userId: string,
@@ -48,17 +65,15 @@ export class PermissionsService {
 	 * 例: /Users/akaaku/Movies/yt-dlp-data -> ["/Users/akaaku/Movies", "/Users/akaaku", "/Users", "/"]
 	 */
 	private getParentDirectories(directoryPath: string): string[] {
+		const pathModule = this.getPathModule(directoryPath);
+		const rootPath = pathModule.parse(directoryPath).root || pathModule.sep;
 		const parents: string[] = [];
-		const parts = directoryPath.split("/").filter((part) => part.length > 0);
+		let currentPath = directoryPath;
 
-		// 上位ディレクトリを順番に追加
-		for (let i = parts.length - 1; i > 0; i--) {
-			const parentPath = `/${parts.slice(0, i).join("/")}`;
-			parents.push(parentPath);
+		while (currentPath !== rootPath) {
+			currentPath = pathModule.dirname(currentPath);
+			parents.push(currentPath);
 		}
-
-		// ルートディレクトリも追加
-		parents.push("/");
 
 		return parents;
 	}

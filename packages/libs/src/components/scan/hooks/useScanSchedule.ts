@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { AuthAPI } from "../../../api/auth";
 import {
 	DEFAULT_SCHEDULE_SETTINGS,
 	type ScanScheduleSettings,
@@ -21,7 +22,9 @@ export function useScanSchedule() {
 	const loadData = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const response = await fetch(createApiUrl("/scan/schedule"));
+			const response = await fetch(createApiUrl("/scan/schedule"), {
+				headers: AuthAPI.getAuthHeaders(),
+			});
 			if (response.ok) {
 				const data = await response.json();
 				setSettings(data.settings);
@@ -62,7 +65,10 @@ export function useScanSchedule() {
 		try {
 			const response = await fetch(createApiUrl("/scan/schedule"), {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					...AuthAPI.getAuthHeaders(),
+				},
 				body: JSON.stringify(settings),
 			});
 

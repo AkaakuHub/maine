@@ -83,6 +83,7 @@ async function requestLoginChallenge(
 ): Promise<LoginChallenge> {
 	const response = await fetch(createApiUrl("auth/challenge"), {
 		method: "POST",
+		credentials: "include",
 		headers: {
 			"Content-Type": "application/json",
 		},
@@ -109,7 +110,10 @@ export const AuthAPI = {
 		databaseReady: boolean;
 		message: string;
 	}> {
-		const response = await fetch(createApiUrl("auth/check-first-user"));
+		const response = await fetch(createApiUrl("auth/check-first-user"), {
+			credentials: "include",
+		});
+
 		if (!response.ok) {
 			throw new Error("初回ユーザーチェックに失敗しました");
 		}
@@ -132,6 +136,7 @@ export const AuthAPI = {
 
 		const response = await fetch(createApiUrl("auth/login"), {
 			method: "POST",
+			credentials: "include",
 			headers: {
 				"Content-Type": "application/json",
 			},
@@ -165,6 +170,7 @@ export const AuthAPI = {
 		);
 		const response = await fetch(createApiUrl("auth/first-user"), {
 			method: "POST",
+			credentials: "include",
 			headers: {
 				"Content-Type": "application/json",
 			},
@@ -198,6 +204,7 @@ export const AuthAPI = {
 		);
 		const response = await fetch(createApiUrl("auth/register"), {
 			method: "POST",
+			credentials: "include",
 			headers: {
 				"Content-Type": "application/json",
 			},
@@ -222,6 +229,7 @@ export const AuthAPI = {
 
 	async getProfile(): Promise<UserProfile> {
 		const response = await fetch(createApiUrl("auth/profile"), {
+			credentials: "include",
 			headers: this.getAuthHeaders(),
 		});
 
@@ -232,7 +240,17 @@ export const AuthAPI = {
 		return response.json() as Promise<UserProfile>;
 	},
 
-	logout(): void {
+	async logout(): Promise<void> {
+		const response = await fetch(createApiUrl("auth/logout"), {
+			method: "POST",
+			credentials: "include",
+			keepalive: true,
+		});
+
+		if (!response.ok) {
+			throw new Error("ログアウトに失敗しました");
+		}
+
 		removeToken();
 		window.location.href = "/login";
 	},
@@ -255,6 +273,7 @@ export const AuthAPI = {
 	// 新しいトークン検証API
 	async validateToken(): Promise<{ valid: boolean; user: UserProfile }> {
 		const response = await fetch(createApiUrl("auth/validate"), {
+			credentials: "include",
 			headers: this.getAuthHeaders(),
 		});
 
@@ -276,6 +295,7 @@ export const AuthAPI = {
 		userId: string;
 	}> {
 		const response = await fetch(createApiUrl("auth/check-user-exists"), {
+			credentials: "include",
 			headers: this.getAuthHeaders(),
 		});
 

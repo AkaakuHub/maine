@@ -92,6 +92,7 @@ const VideoCard = ({ video, className, onPlay }: VideoCardProps) => {
 						<img
 							src={createApiUrl(`/thumbnails/${video.thumbnailPath}`)}
 							alt={video.title}
+							crossOrigin="use-credentials"
 							className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
 							loading="lazy"
 						/>

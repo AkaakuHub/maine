@@ -24,7 +24,7 @@ export function useVideoProgress({
 	// 定期保存用のref
 	const lastSavedTimeRef = useRef<number>(0);
 	const lastSavedProgressRef = useRef<number>(0);
-	const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+	const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// useBeforeUnloadフックで離脱時保存を処理
 	const {

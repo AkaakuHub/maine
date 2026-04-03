@@ -57,6 +57,7 @@ export function useVideoPlayer({
 			try {
 				const response = await fetch(
 					createApiUrl(`/programInfo?filePath=${encodeURIComponent(filePath)}`),
+					{ headers: AuthAPI.getAuthHeaders() },
 				);
 				if (!response.ok) {
 					return "";

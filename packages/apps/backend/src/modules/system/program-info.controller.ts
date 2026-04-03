@@ -1,6 +1,15 @@
-import { Controller, Get, Logger, Query, Res } from "@nestjs/common";
+import {
+	Controller,
+	ForbiddenException,
+	Get,
+	Logger,
+	Query,
+	Res,
+} from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
+import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
+import { PermissionsService } from "../../auth/permissions.service";
 import { ProgramInfoService } from "./program-info.service";
 
 @ApiTags("program-info")
@@ -8,7 +17,10 @@ import { ProgramInfoService } from "./program-info.service";
 export class ProgramInfoController {
 	private readonly logger = new Logger(ProgramInfoController.name);
 
-	constructor(private readonly programInfoService: ProgramInfoService) {}
+	constructor(
+		private readonly programInfoService: ProgramInfoService,
+		private readonly permissionsService: PermissionsService,
+	) {}
 
 	@Get()
 	@ApiQuery({
@@ -21,9 +33,18 @@ export class ProgramInfoController {
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
 	async getProgramInfo(
 		@Query("filePath") filePath: string,
+		@CurrentUserId() userId: string,
 		@Res({ passthrough: true }) response: Response,
 	) {
 		try {
+			const hasAccess = await this.permissionsService.checkFileAccess(
+				userId,
+				filePath,
+			);
+			if (!hasAccess) {
+				throw new ForbiddenException("この動画にアクセスする権限がありません");
+			}
+
 			const result = await this.programInfoService.getProgramInfo(filePath);
 
 			if (!result.success) {

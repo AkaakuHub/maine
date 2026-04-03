@@ -10,11 +10,13 @@ import {
 } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
+import { AllowCookieAuth } from "../../auth/decorators/allow-cookie-auth.decorator";
 
 @ApiTags("media")
 @Controller("thumbnails")
 export class ThumbnailsController {
 	@Get("*path")
+	@AllowCookieAuth()
 	@ApiResponse({ status: 200, description: "サムネイル画像配信" })
 	@ApiResponse({ status: 400, description: "無効なパス" })
 	@ApiResponse({ status: 404, description: "サムネイルが見つからない" })

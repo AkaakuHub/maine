@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AuthAPI } from "../../api/auth";
 import { useAuthStore } from "../../stores/auth-store";
 import { useUserExistCheck } from "../../hooks/use-user-exist-check";
 
@@ -24,18 +25,25 @@ export function AuthGuard({
 	const [isChecking, setIsChecking] = useState(true);
 	const hasCheckedRef = useRef(false);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		const verifyAuth = async () => {
-			if (requireAuth && !isAuthenticated && !hasCheckedRef.current) {
-				hasCheckedRef.current = true;
+			if (hasCheckedRef.current) {
+				setIsChecking(false);
+				return;
+			}
+
+			hasCheckedRef.current = true;
+			const shouldVerifyAuth =
+				requireAuth || isAuthenticated || AuthAPI.isAuthenticated();
+
+			if (shouldVerifyAuth) {
 				await checkAuth();
 			}
 			setIsChecking(false);
 		};
 
-		verifyAuth();
-	}, [isAuthenticated, requireAuth]);
+		void verifyAuth();
+	}, [checkAuth, isAuthenticated, requireAuth]);
 
 	useEffect(() => {
 		if (!isChecking) {

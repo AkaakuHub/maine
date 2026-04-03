@@ -4,22 +4,17 @@ import {
 	Param,
 	HttpException,
 	HttpStatus,
-	UseGuards,
-	ForbiddenException,
-	Request,
 	Logger,
 } from "@nestjs/common";
 import { ApiTags, ApiParam, ApiResponse } from "@nestjs/swagger";
-import type { Request as ExpressRequest } from "express";
-import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 import { PermissionsService } from "../../auth/permissions.service";
+import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
 import { PrismaService } from "../../common/database/prisma.service";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
 @ApiTags("playlists")
 @Controller("playlists")
-@UseGuards(JwtAuthGuard)
 export class PlaylistsController {
 	private readonly logger = new Logger(PlaylistsController.name);
 
@@ -68,17 +63,7 @@ export class PlaylistsController {
 	@ApiResponse({ status: 200, description: "プレイリスト一覧取得成功" })
 	@ApiResponse({ status: 401, description: "認証が必要" })
 	@ApiResponse({ status: 403, description: "アクセス権限なし" })
-	async getPlaylists(
-		@Request() req: ExpressRequest & { user?: { userId: string } },
-	) {
-		const userId = req.user?.userId;
-		if (!userId) {
-			this.logger.error(
-				`No user ID found in request. User object: ${JSON.stringify(req.user)}`,
-			);
-			throw new ForbiddenException("認証が必要です");
-		}
-
+	async getPlaylists(@CurrentUserId() userId: string) {
 		try {
 			const playlists = await this.prisma.playlist.findMany({
 				where: { isActive: true },
@@ -128,15 +113,9 @@ export class PlaylistsController {
 				// プレイリスト内の動画のいずれかにアクセス権があるかチェック
 				let hasAccess = false;
 				for (const videoRelation of playlist.videos) {
-					const pathParts = videoRelation.video.filePath.split("/");
-					let videoDirectory = "/";
-					if (pathParts.length > 1) {
-						videoDirectory = pathParts.slice(0, -1).join("/") || "/";
-					}
-
-					const access = await this.permissionsService.checkDirectoryAccess(
+					const access = await this.permissionsService.checkFileAccess(
 						userId,
-						videoDirectory,
+						videoRelation.video.filePath,
 					);
 					if (access) {
 						hasAccess = true;
@@ -191,16 +170,8 @@ export class PlaylistsController {
 	@ApiResponse({ status: 404, description: "プレイリストが見つからない" })
 	async getPlaylistVideos(
 		@Param("id") playlistId: string,
-		@Request() req: ExpressRequest & { user?: { userId: string } },
+		@CurrentUserId() userId: string,
 	) {
-		const userId = req.user?.userId;
-		if (!userId) {
-			this.logger.error(
-				`No user ID found in request. User object: ${JSON.stringify(req.user)}`,
-			);
-			throw new ForbiddenException("認証が必要です");
-		}
-
 		try {
 			// プレイリストの存在確認
 			const playlist = await this.prisma.playlist.findUnique({
@@ -238,15 +209,9 @@ export class PlaylistsController {
 				timestamp: number;
 			}> = [];
 			for (const videoRelation of playlist.videos) {
-				const pathParts = videoRelation.video.filePath.split("/");
-				let videoDirectory = "/";
-				if (pathParts.length > 1) {
-					videoDirectory = pathParts.slice(0, -1).join("/") || "/";
-				}
-
-				const hasAccess = await this.permissionsService.checkDirectoryAccess(
+				const hasAccess = await this.permissionsService.checkFileAccess(
 					userId,
-					videoDirectory,
+					videoRelation.video.filePath,
 				);
 
 				if (hasAccess) {
