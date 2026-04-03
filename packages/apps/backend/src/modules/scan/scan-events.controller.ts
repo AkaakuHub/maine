@@ -5,20 +5,32 @@ import {
 	type SSEConnection,
 	sseStore,
 } from "../../common/sse/sse-connection.store";
+import { getAllowedOrigins, isOriginAllowed } from "../../config/cors.config";
+import { AllowCookieAuth } from "../../auth/decorators/allow-cookie-auth.decorator";
 
 @ApiTags("scan")
 @Controller("scan")
 export class SseController {
 	@Get("events")
+	@AllowCookieAuth()
 	@ApiResponse({ status: 200, description: "SSEイベントストリーム" })
 	async getScanEvents(@Res() response: Response) {
+		const requestOrigin = response.req.headers.origin;
+		const allowedOrigins = getAllowedOrigins();
+		const resolvedOrigin =
+			requestOrigin && isOriginAllowed(requestOrigin)
+				? requestOrigin
+				: allowedOrigins[0] || "";
+
 		// SSE用のヘッダー設定 - Next.js APIと全く同じ
 		const responseHeaders = {
 			"Content-Type": "text/event-stream",
 			"Cache-Control": "no-cache, no-transform",
 			Connection: "keep-alive",
-			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Origin": resolvedOrigin,
+			"Access-Control-Allow-Credentials": "true",
 			"Access-Control-Allow-Headers": "Cache-Control",
+			Vary: "Origin",
 		};
 
 		// レスポンスヘッダーを設定
@@ -123,6 +135,7 @@ export class SseController {
 	}
 
 	@Head("events")
+	@AllowCookieAuth()
 	@ApiResponse({ status: 200, description: "SSE健全性チェック" })
 	async healthCheck(@Res() response: Response) {
 		response.setHeader("Cache-Control", "no-cache");

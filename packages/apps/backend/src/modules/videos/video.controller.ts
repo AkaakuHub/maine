@@ -15,6 +15,7 @@ import { VideosService } from "./videos.service";
 import { getAllowedOrigins, isOriginAllowed } from "../../config/cors.config";
 import { PermissionsService } from "../../auth/permissions.service";
 import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
+import { AllowCookieAuth } from "../../auth/decorators/allow-cookie-auth.decorator";
 
 @ApiTags("video")
 @Controller("video")
@@ -61,6 +62,7 @@ export class VideoController {
 	}
 
 	@Get(":id")
+	@AllowCookieAuth()
 	@ApiParam({ name: "id", description: "動画ID" })
 	@ApiQuery({
 		name: "download",

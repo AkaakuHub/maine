@@ -88,7 +88,7 @@ export default function VideoElement({
 			<video
 				ref={videoRef}
 				src={src}
-				crossOrigin="anonymous"
+				crossOrigin="use-credentials"
 				className={cn(
 					"w-full h-full object-contain min-h-[20vh] not-lg:max-h-[50vh]",
 					isFullscreen && "flex-1",

@@ -52,7 +52,9 @@ export function useScanProgress() {
 		setConnectionState(false, 0);
 
 		try {
-			const eventSource = new EventSource(createApiUrl("/scan/events"));
+			const eventSource = new EventSource(createApiUrl("/scan/events"), {
+				withCredentials: true,
+			});
 			eventSourceRef.current = eventSource;
 
 			eventSource.onopen = () => {

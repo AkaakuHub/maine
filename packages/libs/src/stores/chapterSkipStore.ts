@@ -27,6 +27,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 			set({ isLoading: true, error: null });
 
 			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
+				credentials: "include",
 				headers: AuthAPI.getAuthHeaders(),
 			});
 			const data = await response.json();
@@ -49,6 +50,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 
 			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
 				method: "POST",
+				credentials: "include",
 				headers: {
 					"Content-Type": "application/json",
 					...AuthAPI.getAuthHeaders(),
@@ -79,6 +81,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 
 			const response = await fetch(createApiUrl("/settings/chapter-skip"), {
 				method: "PUT",
+				credentials: "include",
 				headers: {
 					"Content-Type": "application/json",
 					...AuthAPI.getAuthHeaders(),
@@ -108,6 +111,7 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 				createApiUrl(`/settings/chapter-skip?id=${encodeURIComponent(id)}`),
 				{
 					method: "DELETE",
+					credentials: "include",
 					headers: AuthAPI.getAuthHeaders(),
 				},
 			);
@@ -137,5 +141,8 @@ export const useChapterSkipStore = create<ChapterSkipStore>((set, get) => ({
 
 // 初期データ読み込み（クライアントサイドのみ）
 if (typeof window !== "undefined") {
-	useChapterSkipStore.getState().fetchRules();
+	const isLoginPath = window.location.pathname.startsWith("/login");
+	if (!isLoginPath && AuthAPI.isAuthenticated()) {
+		void useChapterSkipStore.getState().fetchRules();
+	}
 }

@@ -4,6 +4,45 @@ import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { PrismaService } from "../common/database/prisma.service";
 
+const ACCESS_TOKEN_COOKIE_NAME = "access_token";
+
+type RequestWithCookieAuthFlag = {
+	method?: string;
+	allowCookieAuth?: boolean;
+	headers?: {
+		cookie?: string;
+	};
+};
+
+function getTokenFromCookieHeader(cookieHeader?: string): string | null {
+	if (!cookieHeader) return null;
+
+	const cookies = cookieHeader.split(";");
+	for (const cookie of cookies) {
+		const [rawName, ...rawValueParts] = cookie.trim().split("=");
+		if (rawName !== ACCESS_TOKEN_COOKIE_NAME) {
+			continue;
+		}
+		const rawValue = rawValueParts.join("=");
+		return decodeURIComponent(rawValue);
+	}
+
+	return null;
+}
+
+function isSafeMethod(method?: string): boolean {
+	if (!method) return false;
+	const upper = method.toUpperCase();
+	return upper === "GET" || upper === "HEAD";
+}
+
+function canUseCookieAuth(request?: RequestWithCookieAuthFlag): boolean {
+	if (!request || !isSafeMethod(request.method)) {
+		return false;
+	}
+	return request.allowCookieAuth === true;
+}
+
 interface JwtPayload {
 	sub: string;
 	iat: number;
@@ -19,7 +58,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 		private readonly configService: ConfigService,
 	) {
 		super({
-			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+			jwtFromRequest: ExtractJwt.fromExtractors([
+				ExtractJwt.fromAuthHeaderAsBearerToken(),
+				(request) => {
+					if (!canUseCookieAuth(request)) {
+						return null;
+					}
+					const cookieHeader = (
+						request as RequestWithCookieAuthFlag | undefined
+					)?.headers?.cookie;
+					return getTokenFromCookieHeader(cookieHeader);
+				},
+			]),
 			ignoreExpiration: false,
 			secretOrKey: configService.get<string>("JWT_SECRET") as string,
 		});
