@@ -27,7 +27,7 @@ export function useVideoControls({
 	const [showSettings, setShowSettings] = useState(false);
 	const [settingsView, setSettingsView] = useState<SettingsView>("main");
 
-	const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const settingsRef = useRef<HTMLDivElement>(null);
 	const settingsButtonRef = useRef<HTMLButtonElement>(null);
 
