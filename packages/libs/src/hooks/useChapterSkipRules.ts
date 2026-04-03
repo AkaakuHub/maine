@@ -10,7 +10,8 @@ export function useChapterSkipRules({
 	enabled,
 }: UseChapterSkipRulesOptions): void {
 	const { isAuthenticated } = useAuthStore();
-	const chapterSkipStore = useChapterSkipStore();
+	const fetchRules = useChapterSkipStore((state) => state.fetchRules);
+	const clearRules = useChapterSkipStore((state) => state.clearRules);
 
 	useEffect(() => {
 		if (!enabled) {
@@ -18,10 +19,10 @@ export function useChapterSkipRules({
 		}
 
 		if (!isAuthenticated) {
-			chapterSkipStore.clearRules();
+			clearRules();
 			return;
 		}
 
-		void chapterSkipStore.fetchRules();
-	}, [chapterSkipStore, enabled, isAuthenticated]);
+		void fetchRules();
+	}, [clearRules, enabled, fetchRules, isAuthenticated]);
 }
