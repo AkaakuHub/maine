@@ -19,7 +19,6 @@
 				"name": "next"
 			}
 		],
-		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
 			"@maine/libs": ["../../libs/src/index"]

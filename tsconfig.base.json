@@ -7,7 +7,6 @@
 		"skipLibCheck": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
-		"baseUrl": ".",
 		"incremental": true,
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
