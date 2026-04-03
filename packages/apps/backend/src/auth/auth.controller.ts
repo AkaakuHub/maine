@@ -2,7 +2,6 @@ import {
 	Controller,
 	Post,
 	Body,
-	UseGuards,
 	Get,
 	Request,
 	BadRequestException,
@@ -13,13 +12,14 @@ import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { FirstUserDto } from "./dto/first-user.dto";
 import { ChallengeRequestDto } from "./dto/challenge-request.dto";
-import { JwtAuthGuard } from "./jwt-auth.guard";
+import { Public } from "./decorators/public.decorator";
 
 @Controller("auth")
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
 	@Get("check-first-user")
+	@Public()
 	async checkFirstUser() {
 		try {
 			const hasExistingUsers = await this.authService.hasExistingUsers();
@@ -40,6 +40,7 @@ export class AuthController {
 	}
 
 	@Post("first-user")
+	@Public()
 	async registerFirstUser(@Body() firstUserDto: FirstUserDto) {
 		// 既存ユーザーがいる場合は最初のユーザー登録を許可しない
 		const hasExistingUsers = await this.authService.hasExistingUsers();
@@ -52,28 +53,29 @@ export class AuthController {
 	}
 
 	@Post("register")
+	@Public()
 	async register(@Body() registerDto: RegisterDto) {
 		return this.authService.register(registerDto);
 	}
 
 	@Post("challenge")
+	@Public()
 	async createChallenge(@Body() challengeDto: ChallengeRequestDto) {
 		return this.authService.createLoginChallenge(challengeDto.username);
 	}
 
 	@Post("login")
+	@Public()
 	async login(@Body() loginDto: LoginDto) {
 		return this.authService.login(loginDto);
 	}
 
 	@Get("profile")
-	@UseGuards(JwtAuthGuard)
 	async getProfile(@Request() req: RequestWithUser) {
 		return req.user;
 	}
 
 	@Get("validate")
-	@UseGuards(JwtAuthGuard)
 	async validateToken(@Request() req: RequestWithUser) {
 		// トークンが有効な場合、ユーザー情報を返す
 		return {
@@ -83,6 +85,7 @@ export class AuthController {
 	}
 
 	@Get("check-user-exists")
+	@Public()
 	async checkUserExists(
 		@Request() req: { headers: { authorization?: string } },
 	) {

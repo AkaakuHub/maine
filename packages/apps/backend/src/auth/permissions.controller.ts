@@ -7,27 +7,28 @@ import {
 	Body,
 	Param,
 	UseGuards,
-	Request,
 	Query,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { PermissionsService } from "./permissions.service";
-import { JwtAuthGuard } from "./jwt-auth.guard";
 import { Roles } from "./decorators/roles.decorator";
 import { RolesGuard } from "./roles.guard";
+import { CurrentUserId } from "./decorators/current-user-id.decorator";
 
 @ApiTags("permissions")
 @Controller("permissions")
-@UseGuards(JwtAuthGuard)
 export class PermissionsController {
 	constructor(private readonly permissionsService: PermissionsService) {}
 
 	@Get("check")
 	@ApiOperation({ summary: "ディレクトリアクセス権限の確認" })
 	@ApiResponse({ status: 200, description: "アクセス権限の確認結果" })
-	async checkAccess(@Request() req, @Query("path") path: string) {
+	async checkAccess(
+		@CurrentUserId() userId: string,
+		@Query("path") path: string,
+	) {
 		const hasAccess = await this.permissionsService.checkDirectoryAccess(
-			req.user.userId,
+			userId,
 			path || "/",
 		);
 		return { hasAccess, path: path || "/" };
@@ -36,8 +37,8 @@ export class PermissionsController {
 	@Get("my-permissions")
 	@ApiOperation({ summary: "自分の権限一覧取得" })
 	@ApiResponse({ status: 200, description: "自分の権限一覧" })
-	async getMyPermissions(@Request() req) {
-		return this.permissionsService.getUserPermissions(req.user.userId);
+	async getMyPermissions(@CurrentUserId() userId: string) {
+		return this.permissionsService.getUserPermissions(userId);
 	}
 
 	@Get("users")

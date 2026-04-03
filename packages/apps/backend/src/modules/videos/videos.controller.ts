@@ -5,17 +5,15 @@ import {
 	Logger,
 	Query,
 	UseGuards,
-	ForbiddenException,
-	Request,
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { SearchVideosDto } from "./dto/search-videos.dto";
 import { ContinueWatchingQueryDto } from "./dto/continue-watching.dto";
 import type { VideoData } from "./videos.service";
 import { VideosService } from "./videos.service";
-import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 import { RolesGuard } from "../../auth/roles.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
+import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
 import { PermissionsService } from "../../auth/permissions.service";
 import { getVideoDirectories } from "../../libs/fileUtils";
 
@@ -35,7 +33,6 @@ type SearchVideosResponse = {
 
 @ApiTags("videos")
 @Controller("videos")
-@UseGuards(JwtAuthGuard)
 export class VideosController {
 	private readonly logger = new Logger(VideosController.name);
 
@@ -54,16 +51,8 @@ export class VideosController {
 	@ApiResponse({ status: 200, description: "動画検索結果" })
 	async searchVideos(
 		@Query() query: SearchVideosDto,
-		@Request() req,
+		@CurrentUserId() userId: string,
 	): Promise<SearchVideosResponse> {
-		// ユーザーIDを取得
-		const userId = req.user?.userId;
-		if (!userId) {
-			this.logger.error(
-				`No user ID found in request. User object: ${JSON.stringify(req.user)}`,
-			);
-			throw new ForbiddenException("認証が必要です");
-		}
 		try {
 			const searchResult = await this.videosService.searchVideos(
 				query.search || "",
@@ -109,14 +98,9 @@ export class VideosController {
 			// 各動画に対して権限チェックを行う
 			const accessibleVideos: VideoData[] = [];
 			for (const video of searchResult.videos) {
-				// 動画のディレクトリパスを取得
-				const pathParts = video.filePath.split("/");
-				const videoDirectory =
-					pathParts.length > 1 ? pathParts.slice(0, -1).join("/") || "/" : "/";
-
-				const hasAccess = await this.permissionsService.checkDirectoryAccess(
+				const hasAccess = await this.permissionsService.checkFileAccess(
 					userId,
-					videoDirectory,
+					video.filePath,
 				);
 
 				if (hasAccess) {
@@ -169,7 +153,7 @@ export class VideosController {
 	}
 
 	@Get("directories")
-	@UseGuards(JwtAuthGuard, RolesGuard)
+	@UseGuards(RolesGuard)
 	@Roles("ADMIN")
 	@ApiResponse({
 		status: 200,
@@ -223,13 +207,8 @@ export class VideosController {
 	@ApiResponse({ status: 200, description: "視聴途中の動画一覧" })
 	async getContinueWatching(
 		@Query() query: ContinueWatchingQueryDto,
-		@Request() req,
+		@CurrentUserId() userId: string,
 	): Promise<SearchVideosResponse> {
-		const userId = req.user?.userId;
-		if (!userId) {
-			throw new ForbiddenException("認証が必要です");
-		}
-
 		const page = query.page || 1;
 		const limit = query.limit || 20;
 

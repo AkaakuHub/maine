@@ -1,6 +1,7 @@
 import {
 	BadRequestException,
 	Controller,
+	ForbiddenException,
 	Get,
 	Logger,
 	Query,
@@ -8,6 +9,8 @@ import {
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
+import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
+import { PermissionsService } from "../../auth/permissions.service";
 import type { VideoChapter } from "./chapters.service";
 import { ChaptersService } from "./chapters.service";
 
@@ -26,7 +29,10 @@ type GetVideoChaptersResponse =
 export class ChaptersController {
 	private readonly logger = new Logger(ChaptersController.name);
 
-	constructor(private readonly chaptersService: ChaptersService) {}
+	constructor(
+		private readonly chaptersService: ChaptersService,
+		private readonly permissionsService: PermissionsService,
+	) {}
 
 	@Get()
 	@ApiQuery({
@@ -46,6 +52,7 @@ export class ChaptersController {
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
 	async getVideoChapters(
 		@Query("id") id: string,
+		@CurrentUserId() userId: string,
 		@Query("format") format?: string,
 		@Res({ passthrough: true }) res?: Response,
 	): Promise<GetVideoChaptersResponse> {
@@ -61,6 +68,14 @@ export class ChaptersController {
 				throw new BadRequestException({
 					error: "動画が見つかりません",
 				});
+			}
+
+			const hasAccess = await this.permissionsService.checkFileAccess(
+				userId,
+				filePath,
+			);
+			if (!hasAccess) {
+				throw new ForbiddenException("この動画にアクセスする権限がありません");
 			}
 
 			// ファイルの存在確認

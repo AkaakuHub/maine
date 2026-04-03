@@ -5,6 +5,16 @@ import { PrismaService } from "../common/database/prisma.service";
 export class PermissionsService {
 	constructor(private readonly prisma: PrismaService) {}
 
+	private getDirectoryPathFromFilePath(filePath: string): string {
+		const pathParts = filePath.split("/");
+		return pathParts.length > 1 ? pathParts.slice(0, -1).join("/") || "/" : "/";
+	}
+
+	async checkFileAccess(userId: string, filePath: string): Promise<boolean> {
+		const directoryPath = this.getDirectoryPathFromFilePath(filePath);
+		return this.checkDirectoryAccess(userId, directoryPath);
+	}
+
 	async checkDirectoryAccess(
 		userId: string,
 		directoryPath: string,

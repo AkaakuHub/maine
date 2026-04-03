@@ -1,15 +1,28 @@
 import { createReadStream } from "node:fs";
 import { access, constants } from "node:fs/promises";
-import { Controller, Get, Param, Query, Res, Headers } from "@nestjs/common";
+import {
+	Controller,
+	Get,
+	Param,
+	Query,
+	Res,
+	Headers,
+	ForbiddenException,
+} from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
 import type { Response } from "express";
 import { VideosService } from "./videos.service";
 import { getAllowedOrigins, isOriginAllowed } from "../../config/cors.config";
+import { PermissionsService } from "../../auth/permissions.service";
+import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
 
 @ApiTags("video")
 @Controller("video")
 export class VideoController {
-	constructor(private readonly videosService: VideosService) {}
+	constructor(
+		private readonly videosService: VideosService,
+		private readonly permissionsService: PermissionsService,
+	) {}
 
 	private getCorsHeaders(requestOrigin?: string): Record<string, string> {
 		const allowedOrigins = getAllowedOrigins();
@@ -57,12 +70,15 @@ export class VideoController {
 	@ApiResponse({ status: 200, description: "動画配信" })
 	@ApiResponse({ status: 206, description: "部分配信 (Rangeリクエスト)" })
 	@ApiResponse({ status: 400, description: "無効なID" })
+	@ApiResponse({ status: 401, description: "認証が必要" })
+	@ApiResponse({ status: 403, description: "アクセス権限なし" })
 	@ApiResponse({ status: 404, description: "動画が見つからない" })
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
 	async streamVideoById(
 		@Param("id") id: string,
 		@Res() res: Response,
 		@Headers() headers: Record<string, string>,
+		@CurrentUserId() userId: string,
 		@Query("download") isDownload?: string,
 	) {
 		try {
@@ -77,6 +93,15 @@ export class VideoController {
 					status: 404,
 				});
 				return;
+			}
+
+			const hasAccess = await this.permissionsService.checkFileAccess(
+				userId,
+				videoData.filePath,
+			);
+
+			if (!hasAccess) {
+				throw new ForbiddenException("この動画にアクセスする権限がありません");
 			}
 
 			// ファイル存在チェック

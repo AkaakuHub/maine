@@ -2,26 +2,28 @@ import {
 	BadRequestException,
 	Body,
 	Controller,
+	ForbiddenException,
 	Get,
 	Logger,
 	Post,
 	Put,
 	Query,
-	Request,
-	UseGuards,
 } from "@nestjs/common";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { UpdateProgressDto } from "./dto/update-progress.dto";
 import { ProgressService } from "./progress.service";
-import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
+import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
+import { PermissionsService } from "../../auth/permissions.service";
 
 @ApiTags("progress")
 @Controller("progress")
-@UseGuards(JwtAuthGuard)
 export class ProgressController {
 	private readonly logger = new Logger(ProgressController.name);
 
-	constructor(private readonly progressService: ProgressService) {}
+	constructor(
+		private readonly progressService: ProgressService,
+		private readonly permissionsService: PermissionsService,
+	) {}
 
 	@Get()
 	@ApiQuery({
@@ -31,12 +33,24 @@ export class ProgressController {
 	})
 	@ApiResponse({ status: 200, description: "動画進捗取得" })
 	@ApiResponse({ status: 400, description: "バリデーションエラー" })
+	@ApiResponse({ status: 403, description: "アクセス権限なし" })
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
-	async getVideoProgress(@Query("filePath") filePath: string, @Request() req) {
+	async getVideoProgress(
+		@Query("filePath") filePath: string,
+		@CurrentUserId() userId: string,
+	) {
 		try {
+			const hasAccess = await this.permissionsService.checkFileAccess(
+				userId,
+				filePath,
+			);
+			if (!hasAccess) {
+				throw new ForbiddenException("この動画にアクセスする権限がありません");
+			}
+
 			const result = await this.progressService.getVideoProgress(
 				filePath,
-				req.user.userId,
+				userId,
 			);
 
 			if (!result.success) {
@@ -63,15 +77,24 @@ export class ProgressController {
 	@Post()
 	@ApiResponse({ status: 200, description: "動画進捗更新" })
 	@ApiResponse({ status: 400, description: "バリデーションエラー" })
+	@ApiResponse({ status: 403, description: "アクセス権限なし" })
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
 	async updateVideoProgress(
 		@Body() updateData: UpdateProgressDto,
-		@Request() req,
+		@CurrentUserId() userId: string,
 	) {
 		try {
+			const hasAccess = await this.permissionsService.checkFileAccess(
+				userId,
+				updateData.filePath,
+			);
+			if (!hasAccess) {
+				throw new ForbiddenException("この動画にアクセスする権限がありません");
+			}
+
 			const result = await this.progressService.updateVideoProgress(
 				updateData,
-				req.user.userId,
+				userId,
 			);
 
 			if (!result.success) {
@@ -101,9 +124,9 @@ export class ProgressController {
 	@ApiResponse({ status: 500, description: "サーバーエラー" })
 	async updateVideoProgressPut(
 		@Body() updateData: UpdateProgressDto,
-		@Request() req,
+		@CurrentUserId() userId: string,
 	) {
 		// POSTと同じ処理
-		return this.updateVideoProgress(updateData, req);
+		return this.updateVideoProgress(updateData, userId);
 	}
 }
