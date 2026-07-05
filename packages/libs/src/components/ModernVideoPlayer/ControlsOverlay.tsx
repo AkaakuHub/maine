@@ -147,7 +147,7 @@ export default function ControlsOverlay({
 								<button
 									type="button"
 									onClick={onBack}
-									className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur hover:bg-primary/80 transition-colors"
+									className="inline-flex h-10 w-10 items-center justify-center text-white hover:text-primary transition-colors" // tailwind-ignore
 									aria-label="戻る"
 									title="戻る"
 								>
@@ -158,7 +158,7 @@ export default function ControlsOverlay({
 								<button
 									type="button"
 									onClick={onHome}
-									className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur hover:bg-primary/80 transition-colors"
+									className="inline-flex h-10 w-10 items-center justify-center text-white hover:text-primary transition-colors" // tailwind-ignore
 									aria-label="ホーム"
 									title="ホーム"
 								>
@@ -171,7 +171,7 @@ export default function ControlsOverlay({
 								<button
 									type="button"
 									onClick={onShare}
-									className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur hover:bg-success/80 transition-colors"
+									className="inline-flex h-10 w-10 items-center justify-center text-white hover:text-primary transition-colors" // tailwind-ignore
 									aria-label="共有"
 									title="共有"
 								>
@@ -182,7 +182,7 @@ export default function ControlsOverlay({
 								<button
 									type="button"
 									onClick={onOpenAppSettings}
-									className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur hover:bg-primary/80 transition-colors"
+									className="inline-flex h-10 w-10 items-center justify-center text-white hover:text-primary transition-colors" // tailwind-ignore
 									aria-label="アプリ設定"
 									title="アプリ設定"
 								>

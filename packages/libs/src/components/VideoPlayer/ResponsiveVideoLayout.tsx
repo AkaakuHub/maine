@@ -85,7 +85,7 @@ export function ResponsiveVideoLayout({
 				<button
 					type="button"
 					onClick={() => setIsDesktopSidebarOpen(true)}
-					className="hidden lg:inline-flex absolute right-4 top-4 z-40 h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur transition-colors hover:bg-primary/80"
+					className="hidden lg:inline-flex absolute right-4 top-16 z-40 h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur transition-colors hover:bg-primary/80"
 					aria-label="サイドバーを開く"
 					title="サイドバーを開く"
 				>
