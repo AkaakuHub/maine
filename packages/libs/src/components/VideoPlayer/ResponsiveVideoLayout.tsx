@@ -1,20 +1,24 @@
 "use client";
 
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import HelpModal from "../../components/HelpModal";
 import ModernVideoPlayer from "../../components/ModernVideoPlayer";
+import { cn } from "../../libs/utils";
 import type { VideoFileData } from "../../type";
 import type { VideoInfoType } from "../../types/VideoInfo";
 import type { PlaylistData, PlaylistVideo } from "../../types/Playlist";
+import { PlaylistVideoList } from "../PlaylistVideoList";
 import RelatedVideos from "./RelatedVideos";
 import VideoInfo from "./VideoInfo";
-import { PlaylistVideoList } from "../PlaylistVideoList";
 
 interface ResponsiveVideoLayoutProps {
 	videoSrc: string;
 	videoInfo: VideoInfoType;
 	videoData: VideoFileData;
 	onBack: () => void;
+	onHome: () => void;
+	onOpenSettings: () => void;
 	isLiked: boolean;
 	isInWatchlist: boolean;
 	showDescription: boolean;
@@ -38,6 +42,8 @@ export function ResponsiveVideoLayout({
 	videoInfo,
 	videoData,
 	onBack,
+	onHome,
+	onOpenSettings,
 	isLiked,
 	isInWatchlist,
 	showDescription,
@@ -54,6 +60,7 @@ export function ResponsiveVideoLayout({
 	onVideoSelect,
 }: ResponsiveVideoLayoutProps) {
 	const [showHelpModal, setShowHelpModal] = useState(false);
+	const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
 
 	// Escキーでヘルプモーダルを閉じる
 	useEffect(() => {
@@ -73,7 +80,19 @@ export function ResponsiveVideoLayout({
 		};
 	}, [showHelpModal]);
 	return (
-		<div className="h-[calc(100vh-64px)]">
+		<div className="relative h-screen">
+			{!isDesktopSidebarOpen ? (
+				<button
+					type="button"
+					onClick={() => setIsDesktopSidebarOpen(true)}
+					className="hidden lg:inline-flex absolute right-4 top-4 z-40 h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur transition-colors hover:bg-primary/80"
+					aria-label="サイドバーを開く"
+					title="サイドバーを開く"
+				>
+					<PanelRightOpen className="h-5 w-5" />
+				</button>
+			) : null}
+
 			{/* レスポンシブなメインコンテンツ */}
 			<div className="flex flex-col lg:flex-row lg:h-full min-h-0 overflow-y-scroll lg:overflow-y-auto hidden-scrollbar">
 				{/* 動画プレイヤーセクション - モバイル: full width, デスクトップ: flex-1 */}
@@ -84,6 +103,9 @@ export function ResponsiveVideoLayout({
 							title={videoInfo.fullTitle}
 							thumbnailPath={videoData?.thumbnailPath}
 							onBack={onBack}
+							onHome={onHome}
+							onShare={onShare}
+							onOpenAppSettings={onOpenSettings}
 							onTimeUpdate={onTimeUpdate}
 							initialTime={initialTime}
 							onShowHelp={() => setShowHelpModal(true)}
@@ -100,7 +122,25 @@ export function ResponsiveVideoLayout({
 				</div>
 
 				{/* コンテンツセクション - モバイル: 縦スタック, デスクトップ: サイドバー */}
-				<div className="flex-1 lg:w-96 lg:flex-initial lg:border-l lg:border-border bg-surface-variant lg:backdrop-blur-sm overflow-y-auto lg:max-h-full">
+				<div
+					className={cn(
+						"flex-1 bg-surface-variant overflow-y-auto",
+						isDesktopSidebarOpen
+							? "lg:w-96 lg:flex-initial lg:border-l lg:border-border lg:backdrop-blur-sm lg:max-h-full"
+							: "lg:hidden",
+					)}
+				>
+					<div className="hidden lg:flex justify-end p-3 pb-0">
+						<button
+							type="button"
+							onClick={() => setIsDesktopSidebarOpen(false)}
+							className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-elevated hover:text-text"
+							aria-label="サイドバーを閉じる"
+							title="サイドバーを閉じる"
+						>
+							<PanelRightClose className="h-5 w-5" />
+						</button>
+					</div>
 					{/* 動画情報 */}
 					<VideoInfo
 						videoInfo={videoInfo}

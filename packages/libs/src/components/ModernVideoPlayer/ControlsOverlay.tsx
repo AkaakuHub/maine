@@ -1,5 +1,7 @@
 import {
+	ArrowLeft,
 	Camera,
+	Home,
 	List,
 	Maximize,
 	Minimize,
@@ -9,6 +11,7 @@ import {
 	RotateCcw,
 	RotateCw,
 	Settings,
+	Share2,
 	SkipBack,
 	SkipForward,
 	Volume2,
@@ -52,6 +55,10 @@ interface ControlsOverlayProps {
 	onTakeScreenshot: () => void;
 	onTogglePictureInPicture: () => void;
 	onToggleFullscreen: () => void;
+	onBack?: () => void;
+	onHome?: () => void;
+	onShare?: () => void;
+	onOpenAppSettings?: () => void;
 }
 
 export default function ControlsOverlay({
@@ -86,9 +93,15 @@ export default function ControlsOverlay({
 	onTakeScreenshot,
 	onTogglePictureInPicture,
 	onToggleFullscreen,
+	onBack,
+	onHome,
+	onShare,
+	onOpenAppSettings,
 }: ControlsOverlayProps) {
 	const [showChapterList, setShowChapterList] = useState(false);
 	const isMobileLayout = variant === "mobile";
+	const hasNavigationControls =
+		onBack || onHome || onShare || onOpenAppSettings;
 
 	const timeDisplayButton = (
 		<button
@@ -118,252 +131,319 @@ export default function ControlsOverlay({
 	);
 
 	return (
-		<div
-			className={cn(
-				"absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay via-overlay/50 to-transparent transition-all duration-300 p-4",
-				show
-					? "opacity-100 visible"
-					: "opacity-0 invisible pointer-events-none",
-			)}
-		>
-			{/* チャプター対応プログレスバー */}
-			<ChapterProgressBar
-				duration={duration}
-				currentTime={currentTime}
-				chapters={chapters}
-				onSeek={onSeek}
-				onSeekStart={onSeekStart}
-				onSeekEnd={onSeekEnd}
-				getSeekStep={getSeekStep}
-				isSeeking={isSeeking}
-			/>
-
-			{/* 下部コントロール */}
-			<div className="flex items-center justify-between gap-6">
-				<div className="flex items-center gap-3 flex-1">
-					{isMobileLayout ? null : (
-						<button
-							type="button"
-							onClick={onTogglePlay}
-							className="text-white hover:text-primary transition-colors" // tailwind-ignore
-						>
-							{isPlaying ? (
-								<Pause className="h-6 w-6" />
-							) : (
-								<Play className="h-6 w-6" />
-							)}
-						</button>
+		<>
+			{hasNavigationControls ? (
+				<div
+					className={cn(
+						"absolute inset-x-0 top-0 bg-gradient-to-b from-overlay/80 via-overlay/30 to-transparent transition-all duration-300 px-4 pt-4 pb-10",
+						show
+							? "opacity-100 visible"
+							: "opacity-0 invisible pointer-events-none",
 					)}
-
-					{!isMobileLayout && (
+				>
+					<div className="flex items-center justify-between gap-3">
 						<div className="flex items-center gap-2">
-							<button
-								type="button"
-								onClick={onSkipBackward}
-								className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
-								title={`${skipSeconds}秒戻す`}
-							>
-								<RotateCcw className="h-5 w-5" />
-								<span className="text-xs w-6">{skipSeconds}s</span>
-							</button>
-
-							<button
-								type="button"
-								onClick={onSkipForward}
-								className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
-								title={`${skipSeconds}秒進む`}
-							>
-								<RotateCw className="h-5 w-5" />
-								<span className="text-xs w-6">{skipSeconds}s</span>
-							</button>
+							{onBack ? (
+								<button
+									type="button"
+									onClick={onBack}
+									className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur hover:bg-primary/80 transition-colors"
+									aria-label="戻る"
+									title="戻る"
+								>
+									<ArrowLeft className="h-5 w-5" />
+								</button>
+							) : null}
+							{onHome ? (
+								<button
+									type="button"
+									onClick={onHome}
+									className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur hover:bg-primary/80 transition-colors"
+									aria-label="ホーム"
+									title="ホーム"
+								>
+									<Home className="h-5 w-5" />
+								</button>
+							) : null}
 						</div>
-					)}
-
-					{!isMobileLayout && chapters.length > 0 && (
 						<div className="flex items-center gap-2">
-							<button
-								type="button"
-								onClick={() => {
-									const currentChapter = chapters.find(
-										(chapter) =>
-											currentTime >= chapter.startTime &&
-											currentTime <= chapter.endTime,
-									);
-									if (!currentChapter) return;
-
-									if (currentTime - currentChapter.startTime < 3) {
-										const prevChapterIndex =
-											chapters.findIndex((c) => c.id === currentChapter.id) - 1;
-										if (prevChapterIndex >= 0) {
-											onSeekToTime(chapters[prevChapterIndex].startTime);
-										}
-									} else {
-										onSeekToTime(currentChapter.startTime);
-									}
-								}}
-								className="text-white hover:text-primary transition-colors" // tailwind-ignore
-								title="前のチャプター"
-							>
-								<SkipBack className="h-5 w-5" />
-							</button>
-
-							<button
-								type="button"
-								onClick={() => {
-									const currentChapter = chapters.find(
-										(chapter) =>
-											currentTime >= chapter.startTime &&
-											currentTime <= chapter.endTime,
-									);
-									if (!currentChapter) return;
-
-									const nextChapterIndex =
-										chapters.findIndex((c) => c.id === currentChapter.id) + 1;
-									if (nextChapterIndex < chapters.length) {
-										onSeekToTime(chapters[nextChapterIndex].startTime);
-									}
-								}}
-								className="text-white hover:text-primary transition-colors" // tailwind-ignore
-								title="次のチャプター"
-							>
-								<SkipForward className="h-5 w-5" />
-							</button>
-
-							<button
-								type="button"
-								onClick={() => setShowChapterList(!showChapterList)}
-								className="text-white hover:text-primary transition-colors" // tailwind-ignore
-								title="チャプター一覧"
-							>
-								<List className="h-5 w-5" />
-							</button>
+							{onShare ? (
+								<button
+									type="button"
+									onClick={onShare}
+									className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur hover:bg-success/80 transition-colors"
+									aria-label="共有"
+									title="共有"
+								>
+									<Share2 className="h-5 w-5" />
+								</button>
+							) : null}
+							{onOpenAppSettings ? (
+								<button
+									type="button"
+									onClick={onOpenAppSettings}
+									className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur hover:bg-primary/80 transition-colors"
+									aria-label="アプリ設定"
+									title="アプリ設定"
+								>
+									<Settings className="h-5 w-5" />
+								</button>
+							) : null}
 						</div>
-					)}
+					</div>
+				</div>
+			) : null}
 
-					{!isMobileLayout && (
-						<div className="flex items-center gap-2">
+			<div
+				className={cn(
+					"absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay via-overlay/50 to-transparent transition-all duration-300 p-4",
+					show
+						? "opacity-100 visible"
+						: "opacity-0 invisible pointer-events-none",
+				)}
+			>
+				{/* チャプター対応プログレスバー */}
+				<ChapterProgressBar
+					duration={duration}
+					currentTime={currentTime}
+					chapters={chapters}
+					onSeek={onSeek}
+					onSeekStart={onSeekStart}
+					onSeekEnd={onSeekEnd}
+					getSeekStep={getSeekStep}
+					isSeeking={isSeeking}
+				/>
+
+				{/* 下部コントロール */}
+				<div className="flex items-center justify-between gap-6">
+					<div className="flex items-center gap-3 flex-1">
+						{isMobileLayout ? null : (
 							<button
 								type="button"
-								onClick={onToggleMute}
+								onClick={onTogglePlay}
 								className="text-white hover:text-primary transition-colors" // tailwind-ignore
 							>
-								{isMuted ? (
-									<VolumeX className="h-5 w-5" />
+								{isPlaying ? (
+									<Pause className="h-6 w-6" />
 								) : (
-									<Volume2 className="h-5 w-5" />
+									<Play className="h-6 w-6" />
 								)}
 							</button>
-							<input
-								type="range"
-								min="0"
-								max="1"
-								step="0.1"
-								value={isMuted ? 0 : volume}
-								onChange={onVolumeChange}
-								className="w-16 h-1 bg-surface-hover rounded-lg appearance-none cursor-pointer slider volume-slider"
-							/>
-						</div>
-					)}
-
-					<div
-						className="flex items-center gap-2 text-white text-sm font-mono" // tailwind-ignore
-					>
-						{timeDisplayButton}
-					</div>
-				</div>
-
-				<div className="flex items-center gap-3">
-					{/* 設定メニュー */}
-					<div className="relative">
-						<button
-							ref={settingsButtonRef}
-							type="button"
-							onClick={() => {
-								if (showSettings) {
-									onSetShowSettings(false);
-									onSetSettingsView("main"); // 閉じるときもメインビューにリセット
-								} else {
-									onSetShowSettings(true);
-									onSetSettingsView("main"); // 設定を開くときはメインビューに
-								}
-							}}
-							className="text-white hover:text-primary transition-colors relative top-[2.5px]" // tailwind-ignore
-						>
-							<Settings className="h-5 w-5" />
-						</button>
-					</div>
-					<button
-						type="button"
-						onClick={onTakeScreenshot}
-						className="text-white hover:text-primary transition-colors" // tailwind-ignore
-						title="スクリーンショットを撮る"
-					>
-						<Camera className="h-5 w-5" />
-					</button>
-					<button
-						type="button"
-						onClick={onTogglePictureInPicture}
-						className="text-white hover:text-primary transition-colors" // tailwind-ignore
-					>
-						<PictureInPicture2 className="h-5 w-5" />
-					</button>
-					<button
-						type="button"
-						onClick={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							onToggleFullscreen();
-						}}
-						className="text-white hover:text-primary transition-colors" // tailwind-ignore
-					>
-						{isFullscreen ? (
-							<Minimize className="h-5 w-5" />
-						) : (
-							<Maximize className="h-5 w-5" />
 						)}
-					</button>
-				</div>
-			</div>
 
-			{/* チャプターリストオーバーレイ */}
-			{showChapterList && chapters.length > 0 && (
-				<div className="absolute bottom-16 left-0 right-0 bg-surface/90 rounded-lg p-4 max-h-60 overflow-y-auto z-50">
-					<h3 className="text-text-secondary font-semibold mb-2">チャプター</h3>
-					<div className="space-y-1">
-						{chapters.map((chapter) => {
-							const currentChapter = chapters.find(
-								(ch) =>
-									currentTime >= ch.startTime && currentTime <= ch.endTime,
-							);
-							const isActive = currentChapter?.id === chapter.id;
-							const minutes = Math.floor(chapter.startTime / 60);
-							const seconds = Math.floor(chapter.startTime % 60);
-
-							return (
+						{!isMobileLayout && (
+							<div className="flex items-center gap-2">
 								<button
-									key={chapter.id}
+									type="button"
+									onClick={onSkipBackward}
+									className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
+									title={`${skipSeconds}秒戻す`}
+								>
+									<RotateCcw className="h-5 w-5" />
+									<span className="text-xs w-6">{skipSeconds}s</span>
+								</button>
+
+								<button
+									type="button"
+									onClick={onSkipForward}
+									className="text-white hover:text-primary transition-colors flex items-center gap-1" // tailwind-ignore
+									title={`${skipSeconds}秒進む`}
+								>
+									<RotateCw className="h-5 w-5" />
+									<span className="text-xs w-6">{skipSeconds}s</span>
+								</button>
+							</div>
+						)}
+
+						{!isMobileLayout && chapters.length > 0 && (
+							<div className="flex items-center gap-2">
+								<button
 									type="button"
 									onClick={() => {
-										onSeekToTime(chapter.startTime);
-										setShowChapterList(false);
+										const currentChapter = chapters.find(
+											(chapter) =>
+												currentTime >= chapter.startTime &&
+												currentTime <= chapter.endTime,
+										);
+										if (!currentChapter) return;
+
+										if (currentTime - currentChapter.startTime < 3) {
+											const prevChapterIndex =
+												chapters.findIndex((c) => c.id === currentChapter.id) -
+												1;
+											if (prevChapterIndex >= 0) {
+												onSeekToTime(chapters[prevChapterIndex].startTime);
+											}
+										} else {
+											onSeekToTime(currentChapter.startTime);
+										}
 									}}
-									className={cn(
-										"w-full text-left flex items-center justify-between p-2 rounded transition-colors",
-										isActive
-											? "bg-primary text-text-inverse"
-											: "text-text-secondary hover:bg-surface-elevated hover:text-white", // tailwind-ignore
-									)}
+									className="text-white hover:text-primary transition-colors" // tailwind-ignore
+									title="前のチャプター"
 								>
-									<span className="flex-1">{chapter.title}</span>
-									<span className="text-xs opacity-75">
-										{minutes}:{seconds.toString().padStart(2, "0")}
-									</span>
+									<SkipBack className="h-5 w-5" />
 								</button>
-							);
-						})}
+
+								<button
+									type="button"
+									onClick={() => {
+										const currentChapter = chapters.find(
+											(chapter) =>
+												currentTime >= chapter.startTime &&
+												currentTime <= chapter.endTime,
+										);
+										if (!currentChapter) return;
+
+										const nextChapterIndex =
+											chapters.findIndex((c) => c.id === currentChapter.id) + 1;
+										if (nextChapterIndex < chapters.length) {
+											onSeekToTime(chapters[nextChapterIndex].startTime);
+										}
+									}}
+									className="text-white hover:text-primary transition-colors" // tailwind-ignore
+									title="次のチャプター"
+								>
+									<SkipForward className="h-5 w-5" />
+								</button>
+
+								<button
+									type="button"
+									onClick={() => setShowChapterList(!showChapterList)}
+									className="text-white hover:text-primary transition-colors" // tailwind-ignore
+									title="チャプター一覧"
+								>
+									<List className="h-5 w-5" />
+								</button>
+							</div>
+						)}
+
+						{!isMobileLayout && (
+							<div className="flex items-center gap-2">
+								<button
+									type="button"
+									onClick={onToggleMute}
+									className="text-white hover:text-primary transition-colors" // tailwind-ignore
+								>
+									{isMuted ? (
+										<VolumeX className="h-5 w-5" />
+									) : (
+										<Volume2 className="h-5 w-5" />
+									)}
+								</button>
+								<input
+									type="range"
+									min="0"
+									max="1"
+									step="0.1"
+									value={isMuted ? 0 : volume}
+									onChange={onVolumeChange}
+									className="w-16 h-1 bg-surface-hover rounded-lg appearance-none cursor-pointer slider volume-slider"
+								/>
+							</div>
+						)}
+
+						<div
+							className="flex items-center gap-2 text-white text-sm font-mono" // tailwind-ignore
+						>
+							{timeDisplayButton}
+						</div>
+					</div>
+
+					<div className="flex items-center gap-3">
+						{/* 設定メニュー */}
+						<div className="relative">
+							<button
+								ref={settingsButtonRef}
+								type="button"
+								onClick={() => {
+									if (showSettings) {
+										onSetShowSettings(false);
+										onSetSettingsView("main"); // 閉じるときもメインビューにリセット
+									} else {
+										onSetShowSettings(true);
+										onSetSettingsView("main"); // 設定を開くときはメインビューに
+									}
+								}}
+								className="text-white hover:text-primary transition-colors relative top-[2.5px]" // tailwind-ignore
+							>
+								<Settings className="h-5 w-5" />
+							</button>
+						</div>
+						<button
+							type="button"
+							onClick={onTakeScreenshot}
+							className="text-white hover:text-primary transition-colors" // tailwind-ignore
+							title="スクリーンショットを撮る"
+						>
+							<Camera className="h-5 w-5" />
+						</button>
+						<button
+							type="button"
+							onClick={onTogglePictureInPicture}
+							className="text-white hover:text-primary transition-colors" // tailwind-ignore
+						>
+							<PictureInPicture2 className="h-5 w-5" />
+						</button>
+						<button
+							type="button"
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								onToggleFullscreen();
+							}}
+							className="text-white hover:text-primary transition-colors" // tailwind-ignore
+						>
+							{isFullscreen ? (
+								<Minimize className="h-5 w-5" />
+							) : (
+								<Maximize className="h-5 w-5" />
+							)}
+						</button>
 					</div>
 				</div>
-			)}
-		</div>
+
+				{/* チャプターリストオーバーレイ */}
+				{showChapterList && chapters.length > 0 && (
+					<div className="absolute bottom-16 left-0 right-0 bg-surface/90 rounded-lg p-4 max-h-60 overflow-y-auto z-50">
+						<h3 className="text-text-secondary font-semibold mb-2">
+							チャプター
+						</h3>
+						<div className="space-y-1">
+							{chapters.map((chapter) => {
+								const currentChapter = chapters.find(
+									(ch) =>
+										currentTime >= ch.startTime && currentTime <= ch.endTime,
+								);
+								const isActive = currentChapter?.id === chapter.id;
+								const minutes = Math.floor(chapter.startTime / 60);
+								const seconds = Math.floor(chapter.startTime % 60);
+
+								return (
+									<button
+										key={chapter.id}
+										type="button"
+										onClick={() => {
+											onSeekToTime(chapter.startTime);
+											setShowChapterList(false);
+										}}
+										className={cn(
+											"w-full text-left flex items-center justify-between p-2 rounded transition-colors",
+											isActive
+												? "bg-primary text-text-inverse"
+												: "text-text-secondary hover:bg-surface-elevated hover:text-white", // tailwind-ignore
+										)}
+									>
+										<span className="flex-1">{chapter.title}</span>
+										<span className="text-xs opacity-75">
+											{minutes}:{seconds.toString().padStart(2, "0")}
+										</span>
+									</button>
+								);
+							})}
+						</div>
+					</div>
+				)}
+			</div>
+		</>
 	);
 }

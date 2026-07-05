@@ -31,6 +31,10 @@ const ModernVideoPlayer = ({
 	src,
 	title,
 	thumbnailPath,
+	onBack,
+	onHome,
+	onShare,
+	onOpenAppSettings,
 	onTimeUpdate,
 	initialTime = 0,
 	className = "",
@@ -443,6 +447,10 @@ const ModernVideoPlayer = ({
 				onTakeScreenshot={takeScreenshot}
 				onTogglePictureInPicture={togglePictureInPicture}
 				onToggleFullscreen={toggleFullscreen}
+				onBack={onBack}
+				onHome={onHome}
+				onShare={onShare}
+				onOpenAppSettings={onOpenAppSettings}
 			/>
 
 			{/* 設定メニュー */}

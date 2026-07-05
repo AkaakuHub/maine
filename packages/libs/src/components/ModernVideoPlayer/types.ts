@@ -28,6 +28,9 @@ export interface ModernVideoPlayerProps {
 	title?: string;
 	thumbnailPath?: string;
 	onBack?: () => void;
+	onHome?: () => void;
+	onShare?: () => void;
+	onOpenAppSettings?: () => void;
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
 	initialTime?: number;
 	className?: string;

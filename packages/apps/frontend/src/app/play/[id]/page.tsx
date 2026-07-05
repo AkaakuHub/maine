@@ -237,20 +237,14 @@ export default function PlayPage() {
 
 	return (
 		<div className="min-h-screen bg-surface-variant">
-			{/* ナビゲーションバー - 全画面で表示 */}
-			<Navigation
-				onGoBack={handleGoBack}
-				onGoHome={handleGoHome}
-				onShare={handleShare}
-				onOpenSettings={() => setShowSettings(true)}
-			/>
-
 			{/* レスポンシブレイアウト */}
 			<ResponsiveVideoLayout
 				videoSrc={videoSrc}
 				videoInfo={videoInfo}
 				videoData={videoData}
 				onBack={handleGoBack}
+				onHome={handleGoHome}
+				onOpenSettings={() => setShowSettings(true)}
 				isLiked={isLiked}
 				isInWatchlist={isInWatchlist}
 				showDescription={showDescription}
