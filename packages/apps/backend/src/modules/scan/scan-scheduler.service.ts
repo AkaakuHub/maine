@@ -1,4 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { CronJob } from "cron";
 import type {
 	ScanScheduleSettings,
@@ -34,7 +35,7 @@ const DEFAULT_SCHEDULE_SETTINGS: ScanScheduleSettings = {
 
 @Injectable()
 export class ScanSchedulerService {
-	private readonly logger = new Logger(ScanSchedulerService.name);
+	private readonly logger = createAppLogger(ScanSchedulerService.name);
 	private cronJob: CronJob | null = null;
 	private settings: ScanScheduleSettings = DEFAULT_SCHEDULE_SETTINGS;
 	private isRunning = false;

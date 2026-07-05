@@ -7,8 +7,13 @@ import {
 	type ScanScheduleSettings,
 	DEFAULT_SCHEDULE_SETTINGS,
 } from "../types/scanScheduleSettings";
+import { createAppLogger } from "../common/logger";
 
 export class ScanSchedulePersistenceService {
+	private readonly logger = createAppLogger(
+		ScanSchedulePersistenceService.name,
+	);
+
 	/**
 	 * スケジュール設定をDBから読み込み
 	 */
@@ -20,7 +25,7 @@ export class ScanSchedulePersistenceService {
 
 			if (!record) {
 				// レコードが存在しない場合はデフォルト設定を使用
-				console.log(
+				this.logger.debug(
 					"スケジュール設定が存在しません。デフォルト設定を使用します",
 				);
 				return DEFAULT_SCHEDULE_SETTINGS;
@@ -29,8 +34,8 @@ export class ScanSchedulePersistenceService {
 			// DB形式からTypeScript型へ変換
 			return this.dbToTypeScript(record);
 		} catch (error) {
-			console.error("スケジュール設定の読み込みでエラー:", error);
-			return DEFAULT_SCHEDULE_SETTINGS;
+			this.logger.error("スケジュール設定の読み込みでエラー", error);
+			throw error;
 		}
 	}
 
@@ -50,9 +55,9 @@ export class ScanSchedulePersistenceService {
 				},
 			});
 
-			console.log("スケジュール設定をDBに保存しました");
+			this.logger.debug("スケジュール設定をDBに保存しました");
 		} catch (error) {
-			console.error("スケジュール設定の保存でエラー:", error);
+			this.logger.error("スケジュール設定の保存でエラー", error);
 			throw new Error("スケジュール設定の保存に失敗しました");
 		}
 	}
@@ -68,10 +73,10 @@ export class ScanSchedulePersistenceService {
 
 			if (!existingRecord) {
 				await this.saveSettings(DEFAULT_SCHEDULE_SETTINGS);
-				console.log("デフォルトスケジュール設定を初期化しました");
+				this.logger.debug("デフォルトスケジュール設定を初期化しました");
 			}
 		} catch (error) {
-			console.error("スケジュール設定の初期化でエラー:", error);
+			this.logger.error("スケジュール設定の初期化でエラー", error);
 			throw new Error("スケジュール設定の初期化に失敗しました");
 		}
 	}

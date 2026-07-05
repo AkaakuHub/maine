@@ -5,9 +5,9 @@ import {
 	Delete,
 	Get,
 	Inject,
-	Logger,
 	Post,
 } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { ScanScheduleSettings } from "../../types/scan-schedule-settings";
 import { ScanSchedulerService } from "../scan/scan-scheduler.service";
@@ -42,7 +42,7 @@ const SCHEDULE_SETTINGS_CONSTRAINTS: ScheduleConstraints = {
 @ApiTags("schedule")
 @Controller("scan/schedule")
 export class ScheduleController {
-	private readonly logger = new Logger(ScheduleController.name);
+	private readonly logger = createAppLogger(ScheduleController.name);
 
 	constructor(
 		@Inject(ScanSchedulerService)
@@ -53,7 +53,7 @@ export class ScheduleController {
 	@ApiResponse({ status: 200, description: "スケジュール設定取得" })
 	async getScheduleSettings() {
 		try {
-			this.logger.log("Getting schedule settings");
+			this.logger.info("Getting schedule settings");
 
 			// スケジューラーの遅延初期化を確実に実行
 			await this.scanScheduler.initializeSchedulerIfNeeded();
@@ -71,7 +71,7 @@ export class ScheduleController {
 			const settings = this.scanScheduler.getSettings();
 			const status = this.scanScheduler.getStatus();
 
-			this.logger.log("Schedule settings retrieved:", { settings, status });
+			this.logger.info("Schedule settings retrieved:", { settings, status });
 
 			return {
 				success: true,
@@ -93,7 +93,7 @@ export class ScheduleController {
 	@ApiResponse({ status: 400, description: "無効な設定" })
 	async saveScheduleSettings(@Body() settings: ScanScheduleSettings) {
 		try {
-			this.logger.log("Saving schedule settings");
+			this.logger.info("Saving schedule settings");
 
 			// 設定の検証
 			const validationResult = this.validateScheduleSettings(settings);
@@ -103,7 +103,7 @@ export class ScheduleController {
 
 			// スケジューラー設定を更新
 			await this.scanScheduler.updateSettings(settings);
-			this.logger.log("Schedule settings saved:", settings);
+			this.logger.info("Schedule settings saved:", settings);
 
 			// 更新後の設定と状態を取得
 			const updatedSettings = this.scanScheduler.getSettings();
@@ -132,7 +132,7 @@ export class ScheduleController {
 	@ApiResponse({ status: 200, description: "スケジュール無効化" })
 	async disableSchedule() {
 		try {
-			this.logger.log("Disabling schedule");
+			this.logger.info("Disabling schedule");
 
 			// スケジューラーを無効化
 			const currentSettings = this.scanScheduler.getSettings();
@@ -142,7 +142,7 @@ export class ScheduleController {
 			};
 
 			await this.scanScheduler.updateSettings(disabledSettings);
-			this.logger.log("Schedule disabled");
+			this.logger.info("Schedule disabled");
 
 			// 無効化後の設定と状態を取得
 			const updatedSettings = this.scanScheduler.getSettings();

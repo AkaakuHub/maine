@@ -5,6 +5,7 @@ import {
 	DEFAULT_SCHEDULE_SETTINGS,
 } from "../types/scanScheduleSettings";
 import { ScanSchedulePersistenceService } from "./ScanSchedulePersistenceService";
+import { createAppLogger } from "../common/logger";
 import type { ScanProgressEvent } from "../common/sse/sse-connection.store";
 import { sseStore } from "../common/sse/sse-connection.store";
 
@@ -13,6 +14,7 @@ declare global {
 }
 
 export class ScanScheduler {
+	private readonly logger = createAppLogger(ScanScheduler.name);
 	private cronJob: CronJob | null = null;
 	private settings: ScanScheduleSettings = DEFAULT_SCHEDULE_SETTINGS;
 	private isRunning = false;
@@ -66,7 +68,7 @@ export class ScanScheduler {
 			cronPattern,
 			() => {
 				this.executeScheduledScan().catch((error) => {
-					console.error("スケジュール実行でエラー:", error);
+					this.logger.error("スケジュール実行でエラー:", error);
 				});
 			},
 			null,
@@ -219,7 +221,7 @@ export class ScanScheduler {
 	 */
 	private async executeScheduledScan(): Promise<void> {
 		if (!this.scanExecutor) {
-			console.error("スキャン実行関数が設定されていません");
+			this.logger.error("スキャン実行関数が設定されていません");
 			return;
 		}
 
@@ -258,7 +260,7 @@ export class ScanScheduler {
 			// エラー
 			this.lastExecution = this.currentExecutionStartTime;
 			this.lastExecutionStatus = "failed";
-			console.error("スケジュールされたスキャンでエラーが発生:", error);
+			this.logger.error("スケジュールされたスキャンでエラーが発生:", error);
 
 			// SSEでエラー通知
 			const errorEvent: ScanProgressEvent = {
@@ -288,7 +290,7 @@ export class ScanScheduler {
 		const timeoutMs = this.settings.maxExecutionTimeMinutes * 60 * 1000;
 
 		if (executionTime > timeoutMs) {
-			console.warn(
+			this.logger.warn(
 				`スケジュール実行がタイムアウトしました（${this.settings.maxExecutionTimeMinutes}分）`,
 			);
 

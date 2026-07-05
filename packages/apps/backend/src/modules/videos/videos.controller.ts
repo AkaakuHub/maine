@@ -2,10 +2,10 @@ import {
 	BadRequestException,
 	Controller,
 	Get,
-	Logger,
 	Query,
 	UseGuards,
 } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { SearchVideosDto } from "./dto/search-videos.dto";
 import { ContinueWatchingQueryDto } from "./dto/continue-watching.dto";
@@ -34,7 +34,7 @@ type SearchVideosResponse = {
 @ApiTags("videos")
 @Controller("videos")
 export class VideosController {
-	private readonly logger = new Logger(VideosController.name);
+	private readonly logger = createAppLogger(VideosController.name);
 
 	constructor(
 		private readonly videosService: VideosService,
@@ -65,7 +65,7 @@ export class VideosController {
 			);
 
 			if (searchResult.videos.length === 0) {
-				this.logger.log(
+				this.logger.info(
 					`No videos found for search query: "${query.search}", returning empty result`,
 				);
 				const page = query.page || 1;
@@ -161,7 +161,7 @@ export class VideosController {
 	})
 	async getDirectories(): Promise<string[]> {
 		try {
-			this.logger.log("Getting directories from VIDEO_DIRECTORY");
+			this.logger.info("Getting directories from VIDEO_DIRECTORY");
 
 			// getVideoDirectories関数からディレクトリを取得
 			const directoriesList = getVideoDirectories();
@@ -169,7 +169,7 @@ export class VideosController {
 				this.logger.warn("VIDEO_DIRECTORY not found, using default");
 				return ["/"];
 			}
-			this.logger.log(
+			this.logger.info(
 				`Processing ${directoriesList.length} directories: ${directoriesList.join(", ")}`,
 			);
 
@@ -190,7 +190,7 @@ export class VideosController {
 
 			const directories = Array.from(allDirectories).sort();
 
-			this.logger.log(
+			this.logger.info(
 				`Found ${directories.length} directories from VIDEO_DIRECTORY: ${directoriesList.join(", ")}`,
 			);
 			return directories;

@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import { mkdir, copyFile, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
+import { createAppLogger } from "../common/logger";
 import { FFPROBE } from "../utils/constants";
 import type { VideoMetadata } from "./FFprobeMetadataExtractor";
 
@@ -27,6 +28,8 @@ interface ThumbnailResult {
  * 計画書で定義されたシーク+キーフレーム手法とWebP形式を使用
  */
 export class ThumbnailGenerator {
+	private readonly logger = createAppLogger(ThumbnailGenerator.name);
+
 	/**
 	 * サムネイル保存ディレクトリの基準パス
 	 */
@@ -115,7 +118,10 @@ export class ThumbnailGenerator {
 				fileSize: stat.size,
 			};
 		} catch (error) {
-			console.error(`Thumbnail generation failed for: ${videoFilePath}`, error);
+			this.logger.error(
+				`Thumbnail generation failed for: ${videoFilePath}`,
+				error,
+			);
 
 			return {
 				success: false,
@@ -160,7 +166,7 @@ export class ThumbnailGenerator {
 		try {
 			await mkdir(dir, { recursive: true });
 		} catch (error) {
-			console.error(`Failed to create thumbnail directory: ${dir}`, error);
+			this.logger.error(`Failed to create thumbnail directory: ${dir}`, error);
 			throw error;
 		}
 	}
@@ -197,7 +203,7 @@ export class ThumbnailGenerator {
 		try {
 			await unlink(thumbnailPath);
 		} catch (error) {
-			console.warn(
+			this.logger.warn(
 				`Failed to delete thumbnail for id=${videoMetadataId}:`,
 				error,
 			);
@@ -237,7 +243,7 @@ export class ThumbnailGenerator {
 			const stat = await import("node:fs/promises").then((fs) =>
 				fs.stat(destinationPath),
 			);
-			console.log(
+			this.logger.debug(
 				`既存webpファイルをコピー: ${sourcePath} -> ${destinationPath}`,
 			);
 
@@ -248,7 +254,7 @@ export class ThumbnailGenerator {
 				fileSize: stat.size,
 			};
 		} catch (error) {
-			console.error(`webpファイルのコピーに失敗: ${sourcePath}`, error);
+			this.logger.error(`webpファイルのコピーに失敗: ${sourcePath}`, error);
 			return {
 				success: false,
 				thumbnailPath: null,

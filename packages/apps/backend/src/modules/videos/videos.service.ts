@@ -1,5 +1,6 @@
 import { PAGINATION } from "../../utils";
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
 import * as fs from "node:fs";
@@ -30,13 +31,13 @@ interface ContinueWatchingVideo extends VideoData {
 
 @Injectable()
 export class VideosService {
-	private readonly logger = new Logger(VideosService.name);
+	private readonly logger = createAppLogger(VideosService.name);
 
 	constructor(private readonly prisma: PrismaService) {}
 
 	async getVideoByIdForApi(id: string) {
 		try {
-			this.logger.log(`Getting video by id: ${id}`);
+			this.logger.info(`Getting video by id: ${id}`);
 
 			const video = await this.prisma.videoMetadata.findUnique({
 				where: { id },
@@ -98,7 +99,7 @@ export class VideosService {
 		},
 	): Promise<SearchResult> {
 		try {
-			this.logger.log(`Searching videos with query: "${query}"`);
+			this.logger.info(`Searching videos with query: "${query}"`);
 
 			// Prismaクエリの構築
 			const where: Prisma.VideoMetadataWhereInput = {};
@@ -157,7 +158,7 @@ export class VideosService {
 				skip: skip,
 			});
 
-			this.logger.log(
+			this.logger.info(
 				`Found ${videos.length} videos (total: ${totalCount}, page: ${page}, limit: ${limit})`,
 			);
 
@@ -177,7 +178,7 @@ export class VideosService {
 				metadataExtractedAt: v.metadata_extracted_at,
 			}));
 
-			this.logger.log(`Returning ${videosWithProgress.length} videos`);
+			this.logger.info(`Returning ${videosWithProgress.length} videos`);
 
 			// ページネーション情報を計算
 			const pagination = {
@@ -208,7 +209,7 @@ export class VideosService {
 
 	async getVideo(filePath: string): Promise<VideoData | null> {
 		try {
-			this.logger.log(`Getting video with path: ${filePath}`);
+			this.logger.info(`Getting video with path: ${filePath}`);
 
 			const video = await this.prisma.videoMetadata.findUnique({
 				where: { filePath },
@@ -257,7 +258,7 @@ export class VideosService {
 		videoDirectory: string,
 	): Promise<string[]> {
 		try {
-			this.logger.log(
+			this.logger.info(
 				`Getting directories from VIDEO_DIRECTORY: ${videoDirectory}`,
 			);
 
@@ -275,7 +276,7 @@ export class VideosService {
 
 			// VIDEO_DIRECTORY自身のみを返す
 			const directories = [videoDirectory];
-			this.logger.log(`Returning VIDEO_DIRECTORY itself: ${videoDirectory}`);
+			this.logger.info(`Returning VIDEO_DIRECTORY itself: ${videoDirectory}`);
 			return directories;
 		} catch (error) {
 			this.logger.error(
@@ -318,7 +319,7 @@ export class VideosService {
 	// データベースからディレクトリ一覧を取得
 	async getDirectories(): Promise<string[]> {
 		try {
-			this.logger.log("Getting unique directories from database");
+			this.logger.info("Getting unique directories from database");
 
 			// データベースからユニークなディレクトリパスを取得
 			const videos = await this.prisma.videoMetadata.findMany({
@@ -359,7 +360,7 @@ export class VideosService {
 			}
 
 			const result = Array.from(directories).sort();
-			this.logger.log(`Found ${result.length} unique directories`);
+			this.logger.info(`Found ${result.length} unique directories`);
 			return result;
 		} catch (error) {
 			this.logger.error("Error getting directories:", error);

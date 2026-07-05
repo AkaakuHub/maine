@@ -1,9 +1,10 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { prisma } from "../../libs/prisma";
 
 @Injectable()
 export class SettingsService {
-	private readonly logger = new Logger(SettingsService.name);
+	private readonly logger = createAppLogger(SettingsService.name);
 
 	// チャプタースキップルール関連
 	async getChapterSkipRules() {

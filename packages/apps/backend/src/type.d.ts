@@ -37,7 +37,7 @@ export interface VideoFileData {
 	season?: string;
 	genre?: string;
 	year?: number;
-	fileModifiedAt?: Date; // ファイル更新日時（ファイル名から日付が取得できない場合のフォールバック）
+	fileModifiedAt?: Date;
 }
 
 export type VideoControlProps = {

@@ -2,10 +2,10 @@ import {
 	Controller,
 	ForbiddenException,
 	Get,
-	Logger,
 	Query,
 	Res,
 } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
@@ -15,7 +15,7 @@ import { ProgramInfoService } from "./program-info.service";
 @ApiTags("program-info")
 @Controller("programInfo")
 export class ProgramInfoController {
-	private readonly logger = new Logger(ProgramInfoController.name);
+	private readonly logger = createAppLogger(ProgramInfoController.name);
 
 	constructor(
 		private readonly programInfoService: ProgramInfoService,

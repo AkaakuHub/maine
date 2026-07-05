@@ -1,8 +1,10 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { stat } from "node:fs/promises";
+import { createAppLogger } from "../common/logger";
 
 const execAsync = promisify(exec);
+const logger = createAppLogger("FFprobeMetadataExtractor");
 
 export interface VideoMetadata {
 	filePath: string;
@@ -47,12 +49,7 @@ export class FFprobeMetadataExtractor {
 				lastModified: fileStat.mtime,
 			};
 		} catch (error) {
-			console.warn(
-				`FFprobe metadata extraction failed for: ${filePath}`,
-				error,
-			);
-
-			// フォールバック: ファイル統計のみ取得
+			logger.warn(`FFprobe metadata extraction failed for: ${filePath}`, error);
 			try {
 				const fileStat = await stat(filePath);
 				const fileName = filePath.split("/").pop() || filePath;
@@ -64,12 +61,9 @@ export class FFprobeMetadataExtractor {
 					duration: null,
 					lastModified: fileStat.mtime,
 				};
-			} catch (fallbackError) {
-				console.error(
-					`File stat fallback failed for: ${filePath}`,
-					fallbackError,
-				);
-				throw fallbackError;
+			} catch (statError) {
+				logger.error(`File stat failed for: ${filePath}`, statError);
+				throw statError;
 			}
 		}
 	}
@@ -108,7 +102,7 @@ export class FFprobeMetadataExtractor {
 		}
 
 		if (errors.length > 0) {
-			console.warn(
+			logger.warn(
 				`FFprobe batch extraction had ${errors.length} errors out of ${filePaths.length} files`,
 			);
 		}
@@ -144,7 +138,7 @@ export class FFprobeMetadataExtractor {
 
 			return { duration };
 		} catch (error) {
-			console.warn(`FFprobe command failed for: ${filePath}`, error);
+			logger.warn(`FFprobe command failed for: ${filePath}`, error);
 			return { duration: null };
 		}
 	}

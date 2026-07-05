@@ -1,4 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { sseStore } from "../../common/sse/sse-connection.store";
 import { videoCacheService } from "../../services/videoCacheService";
 import {
@@ -20,7 +21,7 @@ interface ScanControlResult {
 
 @Injectable()
 export class ScanService {
-	private readonly logger = new Logger(ScanService.name);
+	private readonly logger = createAppLogger(ScanService.name);
 
 	constructor(private readonly scanSettingsService: ScanSettingsService) {}
 
@@ -39,7 +40,7 @@ export class ScanService {
 			throw new Error("Scan already in progress");
 		}
 
-		this.logger.log("Starting manual scan");
+		this.logger.info("Starting manual scan");
 
 		videoCacheService.manualRefresh().catch((error) => {
 			this.logger.error("Background scan failed:", error);
@@ -51,7 +52,7 @@ export class ScanService {
 	async controlScan(
 		action: "pause" | "resume" | "cancel",
 	): Promise<ScanControlResult> {
-		this.logger.log(`Scan control: ${action}`);
+		this.logger.info(`Scan control: ${action}`);
 
 		const scanId = videoCacheService.getCurrentScanStatus().scanId;
 		if (!scanId) {
@@ -79,7 +80,7 @@ export class ScanService {
 	async updateScanSettings(
 		settings: Partial<ScanSettings>,
 	): Promise<ScanSettings> {
-		this.logger.log("Updating scan settings:", settings);
+		this.logger.info("Updating scan settings:", settings);
 		return await this.scanSettingsService.updateScanSettings(settings);
 	}
 }

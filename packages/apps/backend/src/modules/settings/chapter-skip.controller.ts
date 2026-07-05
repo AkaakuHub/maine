@@ -4,13 +4,13 @@ import {
 	Controller,
 	Delete,
 	Get,
-	Logger,
 	NotFoundException,
 	Param,
 	Post,
 	Put,
 	Query,
 } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { SettingsService } from "./settings.service";
 
@@ -27,7 +27,7 @@ interface UpdateChapterSkipRuleRequest {
 @ApiTags("settings")
 @Controller("settings/chapter-skip")
 export class ChapterSkipController {
-	private readonly logger = new Logger(ChapterSkipController.name);
+	private readonly logger = createAppLogger(ChapterSkipController.name);
 
 	constructor(private readonly settingsService: SettingsService) {}
 

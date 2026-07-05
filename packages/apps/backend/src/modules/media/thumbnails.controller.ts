@@ -11,10 +11,13 @@ import {
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { AllowCookieAuth } from "../../auth/decorators/allow-cookie-auth.decorator";
+import { createAppLogger } from "../../common/logger";
 
 @ApiTags("media")
 @Controller("thumbnails")
 export class ThumbnailsController {
+	private readonly logger = createAppLogger(ThumbnailsController.name);
+
 	@Get("*path")
 	@AllowCookieAuth()
 	@ApiResponse({ status: 200, description: "サムネイル画像配信" })
@@ -66,7 +69,7 @@ export class ThumbnailsController {
 
 			return response.send(new Uint8Array(fileBuffer));
 		} catch (error) {
-			console.error("Thumbnail serving error:", error);
+			this.logger.error("Thumbnail serving error", error);
 
 			throw new BadRequestException({
 				error: "Failed to serve thumbnail",

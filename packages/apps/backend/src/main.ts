@@ -6,18 +6,25 @@ import { createCorsOptions, getAllowedOrigins } from "./config/cors.config";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as https from "node:https";
+import { createAppLogger } from "./common/logger";
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+	const logger = createAppLogger("Bootstrap");
+	const app = await NestFactory.create(AppModule, {
+		logger: createAppLogger("Nest"),
+	});
 
 	// CORS設定
 	const allowedOrigins = getAllowedOrigins();
 	app.enableCors(createCorsOptions());
-	console.log(
-		"[CORS] CORS_ORIGINS(raw):",
-		process.env.CORS_ORIGINS ?? "(not set)",
-	);
-	console.log("[CORS] allowed origins(normalized):", allowedOrigins.join(", "));
+	logger.debug({
+		message: "CORS_ORIGINS",
+		value: process.env.CORS_ORIGINS ?? null,
+	});
+	logger.debug({
+		message: "Allowed CORS origins",
+		value: allowedOrigins,
+	});
 
 	// バリデーションパイプのグローバル設定
 	app.useGlobalPipes(
@@ -61,22 +68,26 @@ async function bootstrap() {
 			);
 			server.listen(port);
 
-			console.log(`Backend server running on https://localhost:${port}`);
-			console.log(`API Documentation: https://localhost:${port}/api/docs`);
+			logger.info(`Backend server running on https://localhost:${port}`);
+			logger.info(`API Documentation: https://localhost:${port}/api/docs`);
 		} catch (error) {
-			console.warn(
-				"Failed to start HTTPS server, falling back to HTTP:",
-				error.message,
-			);
-			await app.listen(port);
-			console.log(`Backend server running on http://localhost:${port}`);
-			console.log(`API Documentation: http://localhost:${port}/api/docs`);
+			logger.error("Failed to start HTTPS server", errorToTrace(error));
+			throw error;
 		}
 	} else {
 		// 本番環境ではHTTP
 		await app.listen(port);
-		console.log(`Backend server running on http://localhost:${port}`);
-		console.log(`API Documentation: http://localhost:${port}/api/docs`);
+		logger.info(`Backend server running on http://localhost:${port}`);
+		logger.info(`API Documentation: http://localhost:${port}/api/docs`);
 	}
 }
+
+function errorToTrace(error: unknown): string | undefined {
+	if (error instanceof Error) {
+		return error.stack;
+	}
+
+	return undefined;
+}
+
 bootstrap();

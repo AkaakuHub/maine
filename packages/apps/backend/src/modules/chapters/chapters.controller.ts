@@ -3,10 +3,10 @@ import {
 	Controller,
 	ForbiddenException,
 	Get,
-	Logger,
 	Query,
 	Res,
 } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
@@ -27,7 +27,7 @@ type GetVideoChaptersResponse =
 @ApiTags("chapters")
 @Controller("chapters")
 export class ChaptersController {
-	private readonly logger = new Logger(ChaptersController.name);
+	private readonly logger = createAppLogger(ChaptersController.name);
 
 	constructor(
 		private readonly chaptersService: ChaptersService,

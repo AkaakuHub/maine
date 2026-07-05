@@ -5,6 +5,7 @@ import { PrismaService } from "../common/database/prisma.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { FirstUserDto } from "./dto/first-user.dto";
+import { createAppLogger } from "../common/logger";
 import * as bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
 import {
@@ -37,6 +38,8 @@ interface ValidatedUser {
 
 @Injectable()
 export class AuthService {
+	private readonly logger = createAppLogger(AuthService.name);
+
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly jwtService: JwtService,
@@ -318,7 +321,7 @@ export class AuthService {
 			try {
 				userCount = await this.prisma.user.count();
 			} catch (countError) {
-				console.warn(
+				this.logger.warn(
 					"User count check failed:",
 					countError instanceof Error ? countError.message : "Unknown error",
 				);
@@ -332,9 +335,8 @@ export class AuthService {
 		} catch (error) {
 			// DB接続エラーやテーブル不存在の場合はfalseを返す
 			if (error instanceof Error) {
-				console.warn("First user check failed:", error.message);
+				this.logger.warn("First user check failed:", error.message);
 			}
-			console.log("Error case: returning false");
 			return false;
 		}
 	}

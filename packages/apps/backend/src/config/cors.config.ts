@@ -3,6 +3,9 @@
  */
 
 import type { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
+import { createAppLogger } from "../common/logger";
+
+const logger = createAppLogger("CorsConfig");
 
 const DEFAULT_ALLOWED_ORIGINS = [
 	"http://localhost:3000",
@@ -40,7 +43,7 @@ export function createCorsOptions(): CorsOptions {
 				callback(null, true);
 				return;
 			}
-			console.warn("[CORS] blocked origin:", origin);
+			logger.warn("Blocked CORS origin", origin);
 			callback(new Error(`Not allowed by CORS: ${origin}`), false);
 		},
 		credentials: true,

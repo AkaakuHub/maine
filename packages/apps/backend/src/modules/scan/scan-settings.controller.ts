@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Logger, Post, Put } from "@nestjs/common";
+import { Body, Controller, Get, Post, Put } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ScanSettingsService } from "./scan-settings.service";
 import type { ScanSettings } from "./scan-settings.service";
@@ -6,7 +7,7 @@ import type { ScanSettings } from "./scan-settings.service";
 @ApiTags("scan")
 @Controller("scan/settings")
 export class ScanSettingsController {
-	private readonly logger = new Logger(ScanSettingsController.name);
+	private readonly logger = createAppLogger(ScanSettingsController.name);
 
 	constructor(private readonly scanSettingsService: ScanSettingsService) {}
 

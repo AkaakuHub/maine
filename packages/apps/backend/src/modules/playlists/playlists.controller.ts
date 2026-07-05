@@ -4,8 +4,8 @@ import {
 	Param,
 	HttpException,
 	HttpStatus,
-	Logger,
 } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiTags, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { PermissionsService } from "../../auth/permissions.service";
 import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
@@ -16,7 +16,7 @@ import * as path from "node:path";
 @ApiTags("playlists")
 @Controller("playlists")
 export class PlaylistsController {
-	private readonly logger = new Logger(PlaylistsController.name);
+	private readonly logger = createAppLogger(PlaylistsController.name);
 
 	constructor(
 		private readonly permissionsService: PermissionsService,

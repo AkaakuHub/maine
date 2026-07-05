@@ -5,8 +5,8 @@ import {
 	HttpException,
 	HttpStatus,
 	ForbiddenException,
-	Logger,
 } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { VideosService } from "./videos.service";
 import { ApiTags, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { PermissionsService } from "../../auth/permissions.service";
@@ -15,7 +15,7 @@ import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
 @ApiTags("videos")
 @Controller("videos")
 export class VideoInfoController {
-	private readonly logger = new Logger(VideoInfoController.name);
+	private readonly logger = createAppLogger(VideoInfoController.name);
 
 	constructor(
 		private readonly videosService: VideosService,

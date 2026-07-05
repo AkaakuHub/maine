@@ -16,10 +16,13 @@ import { getAllowedOrigins, isOriginAllowed } from "../../config/cors.config";
 import { PermissionsService } from "../../auth/permissions.service";
 import { CurrentUserId } from "../../auth/decorators/current-user-id.decorator";
 import { AllowCookieAuth } from "../../auth/decorators/allow-cookie-auth.decorator";
+import { createAppLogger } from "../../common/logger";
 
 @ApiTags("video")
 @Controller("video")
 export class VideoController {
+	private readonly logger = createAppLogger(VideoController.name);
+
 	constructor(
 		private readonly videosService: VideosService,
 		private readonly permissionsService: PermissionsService,
@@ -110,7 +113,7 @@ export class VideoController {
 			try {
 				await access(videoData.filePath, constants.R_OK);
 			} catch (error) {
-				console.warn(
+				this.logger.warn(
 					`Video file not found on disk: ${videoData.filePath}`,
 					error,
 				);
@@ -152,7 +155,7 @@ export class VideoController {
 			}
 
 			// Range リクエストの処理（動画ストリーミング用）
-			console.log(`Range request received for id ${id}:`, range);
+			this.logger.debug(`Range request received for id ${id}`, range);
 
 			const parts = range.replace(/bytes=/, "").split("-");
 			const start = Number.parseInt(parts[0], 10);
@@ -206,7 +209,7 @@ export class VideoController {
 					errorMessage.includes("EACCES")
 				) {
 					// 予期されるエラー（ファイルが存在しない） - 警告レベルでログ
-					console.warn(`Video file not found: ${errorMessage}`);
+					this.logger.warn(`Video file not found: ${errorMessage}`);
 					res.status(404).json({
 						error: "Video file not found or not accessible",
 						status: 404,
@@ -216,7 +219,7 @@ export class VideoController {
 			}
 
 			// その他の予期せぬエラーのみエラーログ
-			console.error("Video streaming error:", error);
+			this.logger.error("Video streaming error", error);
 			res.status(500).json({
 				error: error instanceof Error ? error.message : "Internal server error",
 				status: 500,

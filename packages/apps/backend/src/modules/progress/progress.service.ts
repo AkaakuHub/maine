@@ -1,9 +1,10 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { PrismaService } from "../../common/database/prisma.service";
 
 @Injectable()
 export class ProgressService {
-	private readonly logger = new Logger(ProgressService.name);
+	private readonly logger = createAppLogger(ProgressService.name);
 
 	constructor(private readonly prisma: PrismaService) {}
 

@@ -9,6 +9,7 @@ import { FFprobeMetadataExtractor } from "../../services/FFprobeMetadataExtracto
 import { ThumbnailGenerator } from "../../services/ThumbnailGenerator";
 import type { ScanProgressEvent } from "../../common/sse/sse-connection.store";
 import { sseStore } from "../../common/sse/sse-connection.store";
+import { createAppLogger } from "../../common/logger";
 import { PlaylistDetector } from "../../libs/fileUtils";
 import type { PlaylistData } from "../../libs/fileUtils";
 
@@ -37,6 +38,7 @@ export interface VideoFile {
  * メモリ使用量を最小化しながら大量のファイルを効率的に処理
  */
 export class ScanStreamProcessor {
+	private readonly logger = createAppLogger(ScanStreamProcessor.name);
 	private ffprobeExtractor: FFprobeMetadataExtractor;
 	private thumbnailGenerator: ThumbnailGenerator;
 	private playlistDetector: PlaylistDetector;
@@ -88,6 +90,7 @@ export class ScanStreamProcessor {
 
 		// メタデータ処理変換ストリーム
 		const self = this;
+		const logger = this.logger;
 		const metadataTransform = new Transform({
 			objectMode: true,
 			highWaterMark: this.settings.batchSize,
@@ -136,7 +139,7 @@ export class ScanStreamProcessor {
 								thumbnailPath = thumbnailResult.relativePath; // API配信用の相対パスをDB保存
 							}
 						} catch (error) {
-							console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
+							logger.warn(`サムネイル生成失敗 ${videoFile.filePath}`, error);
 						}
 					}
 
@@ -170,7 +173,7 @@ export class ScanStreamProcessor {
 					// メモリ使用量をチェック
 					const memUsage = self.getMemoryUsage();
 					if (memUsage.used > self.settings.memoryThresholdMB) {
-						console.warn(
+						logger.warn(
 							`⚠️ Memory threshold exceeded: ${memUsage.used}MB > ${self.settings.memoryThresholdMB}MB`,
 						);
 
@@ -219,10 +222,7 @@ export class ScanStreamProcessor {
 
 					callback(null, record);
 				} catch (fileError) {
-					console.warn(
-						`ストリーム処理エラー: ${videoFile.fileName}`,
-						fileError,
-					);
+					logger.warn(`ストリーム処理エラー: ${videoFile.fileName}`, fileError);
 					callback(fileError as Error);
 				}
 			},
@@ -245,7 +245,7 @@ export class ScanStreamProcessor {
 
 			return results;
 		} catch (error) {
-			console.error("ストリーム処理エラー:", error);
+			this.logger.error("ストリーム処理エラー", error);
 			throw error;
 		}
 	}

@@ -1,4 +1,5 @@
-import { Controller, Get, Logger, Post, Res } from "@nestjs/common";
+import { Controller, Get, Post, Res } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { sseStore } from "../../common/sse/sse-connection.store";
@@ -7,7 +8,7 @@ import { videoCacheService } from "../../services/videoCacheService";
 @ApiTags("scan")
 @Controller("scan")
 export class ScanStartController {
-	private readonly logger = new Logger(ScanStartController.name);
+	private readonly logger = createAppLogger(ScanStartController.name);
 
 	@Post("start")
 	@ApiResponse({ status: 200, description: "スキャン開始" })

@@ -1,6 +1,7 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { PrismaService } from "../../common/database/prisma.service";
 import { findFileInVideoDirectories } from "../../libs/fileUtils";
 
@@ -36,7 +37,7 @@ interface FFProbeOutput {
 
 @Injectable()
 export class ChaptersService {
-	private readonly logger = new Logger(ChaptersService.name);
+	private readonly logger = createAppLogger(ChaptersService.name);
 
 	constructor(private readonly prisma: PrismaService) {}
 
@@ -45,7 +46,7 @@ export class ChaptersService {
 	 */
 	async extractVideoChapters(filePath: string): Promise<VideoChapter[]> {
 		try {
-			this.logger.log(`Extracting chapters for: ${filePath}`);
+			this.logger.info(`Extracting chapters for: ${filePath}`);
 
 			// ffprobeでチャプター情報をJSON形式で取得
 			const command = `ffprobe -v quiet -print_format json -show_chapters "${filePath}"`;
@@ -75,7 +76,7 @@ export class ChaptersService {
 				};
 			});
 
-			this.logger.log(`Found ${chapters.length} chapters`);
+			this.logger.info(`Found ${chapters.length} chapters`);
 			return chapters;
 		} catch (error) {
 			this.logger.error("Failed to extract video chapters:", error);

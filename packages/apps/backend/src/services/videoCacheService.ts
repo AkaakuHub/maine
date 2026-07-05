@@ -13,6 +13,7 @@ import {
 } from "../libs/fileUtils";
 import type { SearchResult, VideoFileData } from "../type";
 import { parseVideoFileName } from "../utils/videoFileNameParser";
+import { createAppLogger } from "../common/logger";
 import { sseStore } from "../common/sse/sse-connection.store";
 import type { ScanSettings } from "../types/scanSettings";
 import { DEFAULT_SCAN_SETTINGS } from "../types/scanSettings";
@@ -36,6 +37,7 @@ import { ScanScheduler } from "./ScanScheduler";
  */
 class VideoCacheService {
 	private static instance: VideoCacheService | null = null;
+	private readonly logger = createAppLogger(VideoCacheService.name);
 
 	private isUpdating = false;
 	private updateProgress = -1;
@@ -189,7 +191,7 @@ class VideoCacheService {
 				}
 			}
 		} catch (error) {
-			console.error("Failed to sync playlists:", error);
+			this.logger.error("Failed to sync playlists:", error);
 			throw error;
 		}
 	}
@@ -231,7 +233,7 @@ class VideoCacheService {
 				},
 			});
 		} catch (error) {
-			console.warn("スキャン設定保存エラー:", error);
+			this.logger.warn("スキャン設定保存エラー:", error);
 		}
 	}
 
@@ -388,7 +390,10 @@ class VideoCacheService {
 				}
 			} catch (error) {
 				// ファイル情報取得エラーの場合は変更ありとして処理
-				console.warn(`ファイル情報取得エラー ${videoFile.filePath}:`, error);
+				this.logger.warn(
+					`ファイル情報取得エラー ${videoFile.filePath}:`,
+					error,
+				);
 				changedFiles.push(videoFile);
 			}
 		}
@@ -536,20 +541,20 @@ class VideoCacheService {
 				typeof directory !== "string" ||
 				directory.trim() === ""
 			) {
-				console.warn(`無効なディレクトリパスをスキップ: ${directory}`);
+				this.logger.warn(`無効なディレクトリパスをスキップ: ${directory}`);
 				return [];
 			}
 
 			const dirExists = await directoryExists(directory);
 			if (!dirExists) {
-				console.warn(`ディレクトリが存在しないためスキップ: ${directory}`);
+				this.logger.warn(`ディレクトリが存在しないためスキップ: ${directory}`);
 				return [];
 			}
 			try {
 				const result = await this.scanDirectory(directory);
 				return result;
 			} catch (error) {
-				console.warn(`ディレクトリスキャンエラー: ${directory}`, error);
+				this.logger.warn(`ディレクトリスキャンエラー: ${directory}`, error);
 				return [];
 			}
 		});
@@ -707,7 +712,10 @@ class VideoCacheService {
 							thumbnailPath = thumbnailResult.relativePath;
 						}
 					} catch (error) {
-						console.warn(`サムネイル生成失敗 ${videoFile.filePath}:`, error);
+						this.logger.warn(
+							`サムネイル生成失敗 ${videoFile.filePath}:`,
+							error,
+						);
 					}
 				}
 
@@ -765,14 +773,14 @@ class VideoCacheService {
 			this.deduplicateVideoRecords(allDbRecords);
 
 		if (duplicateGroups.length > 0) {
-			console.warn(
+			this.logger.warn(
 				`[SCAN][database] Detected ${duplicateGroups.length} duplicate filePath entries. Keeping the most recently modified file.`,
 			);
 			for (const group of duplicateGroups) {
 				const skipped = group.skipped
 					.map((record) => record.filePath)
 					.join(", ");
-				console.warn(
+				this.logger.warn(
 					`[SCAN][database] filePath=${group.filePath} kept=${group.kept.filePath} skipped=[${skipped}]`,
 				);
 			}
@@ -1030,7 +1038,7 @@ class VideoCacheService {
 				} catch {}
 			}
 		} catch (error) {
-			console.warn(`ディレクトリ読み取りエラー: ${directory}`, error);
+			this.logger.warn(`ディレクトリ読み取りエラー: ${directory}`, error);
 		}
 		return videoFiles;
 	}
@@ -1135,7 +1143,7 @@ class VideoCacheService {
 				message: `${videosWithProgress.length}件の動画が見つかりました`,
 			};
 		} catch (error) {
-			console.error("searchVideos error:", error);
+			this.logger.error("searchVideos error:", error);
 			return {
 				success: false,
 				videos: [],
@@ -1169,7 +1177,7 @@ class VideoCacheService {
 
 			return videosWithProgress;
 		} catch (error) {
-			console.error("動画取得エラー:", error);
+			this.logger.error("動画取得エラー:", error);
 			return [];
 		}
 	}
@@ -1257,7 +1265,7 @@ class VideoCacheService {
 		try {
 			await this.manualRefresh();
 		} catch (error) {
-			console.error("スケジュールされたスキャンでエラー:", error);
+			this.logger.error("スケジュールされたスキャンでエラー:", error);
 			throw error;
 		}
 	}

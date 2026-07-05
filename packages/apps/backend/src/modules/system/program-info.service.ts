@@ -1,11 +1,12 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import iconv from "iconv-lite";
 
 @Injectable()
 export class ProgramInfoService {
-	private readonly logger = new Logger(ProgramInfoService.name);
+	private readonly logger = createAppLogger(ProgramInfoService.name);
 
 	async getProgramInfo(filePath: string): Promise<{
 		success: boolean;

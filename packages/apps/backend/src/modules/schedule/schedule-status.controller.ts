@@ -1,11 +1,12 @@
-import { Controller, Get, Inject, Logger } from "@nestjs/common";
+import { Controller, Get, Inject } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ScanSchedulerService } from "../scan/scan-scheduler.service";
 
 @ApiTags("schedule")
 @Controller("scan/schedule/status")
 export class ScheduleStatusController {
-	private readonly logger = new Logger(ScheduleStatusController.name);
+	private readonly logger = createAppLogger(ScheduleStatusController.name);
 
 	constructor(
 		@Inject(ScanSchedulerService)
@@ -16,7 +17,7 @@ export class ScheduleStatusController {
 	@ApiResponse({ status: 200, description: "スケジューラー状態取得" })
 	async getScheduleStatus() {
 		try {
-			this.logger.log("Getting schedule status");
+			this.logger.info("Getting schedule status");
 
 			// スケジューラーの遅延初期化を確実に実行
 			await this.scanScheduler.initializeSchedulerIfNeeded();

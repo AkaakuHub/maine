@@ -1,4 +1,5 @@
 import { prisma } from "../../libs/prisma";
+import { createAppLogger } from "../../common/logger";
 import { SCAN } from "../../utils/constants";
 
 type ScanPhase = "discovery" | "metadata" | "database";
@@ -25,6 +26,8 @@ interface ScanCheckpoint {
  * スキャンの進捗状態保存・復元を担当
  */
 export class ScanCheckpointManager {
+	private readonly logger = createAppLogger(ScanCheckpointManager.name);
+
 	/**
 	 * チェックポイントを保存
 	 */
@@ -67,7 +70,7 @@ export class ScanCheckpointManager {
 
 			// Checkpoint saved
 		} catch (error) {
-			console.error("チェックポイント保存エラー:", error);
+			this.logger.error("チェックポイント保存エラー", error);
 			throw error;
 		}
 	}

@@ -1,6 +1,9 @@
 import * as path from "node:path";
 import { promises as fs } from "node:fs";
 import * as crypto from "node:crypto";
+import { createAppLogger } from "../common/logger";
+
+const logger = createAppLogger("FileUtils");
 
 /**
  * クロスプラットフォーム対応のファイルパス正規化
@@ -172,7 +175,7 @@ export class PlaylistDetector {
 	async detectPlaylists(videoDirectories: string[]): Promise<PlaylistData[]> {
 		const playlists = new Map<string, PlaylistData>();
 
-		console.log(
+		logger.debug(
 			`Detecting playlists in directories: ${videoDirectories.join(", ")}`,
 		);
 
@@ -180,11 +183,11 @@ export class PlaylistDetector {
 			try {
 				// ディレクトリの存在確認
 				await fs.access(baseDir, fs.constants.R_OK);
-				console.log(`Scanning base directory: ${baseDir}`);
+				logger.debug(`Scanning base directory: ${baseDir}`);
 
 				// 直接の子ディレクトリのみをスキャン
 				const immediateSubdirs = await this.getImmediateSubdirectories(baseDir);
-				console.log(
+				logger.debug(
 					`Found ${immediateSubdirs.length} immediate subdirectories: ${immediateSubdirs.join(", ")}`,
 				);
 
@@ -192,13 +195,13 @@ export class PlaylistDetector {
 					const relativePath = path.relative(baseDir, subdir);
 					const playlistName = path.basename(subdir);
 
-					console.log(
+					logger.debug(
 						`Checking subdirectory: ${subdir} (relative: ${relativePath}, name: ${playlistName})`,
 					);
 
 					// このディレクトリに動画ファイルが含まれているか確認
 					const hasVideos = await this.hasVideoFiles(subdir);
-					console.log(`Has videos in ${playlistName}: ${hasVideos}`);
+					logger.debug(`Has videos in ${playlistName}: ${hasVideos}`);
 
 					if (hasVideos) {
 						const playlistData: PlaylistData = {
@@ -212,20 +215,20 @@ export class PlaylistDetector {
 							isActive: true,
 						};
 						playlists.set(relativePath, playlistData);
-						console.log(
+						logger.debug(
 							`Created playlist: ${playlistName} (${playlistData.id}) with path: ${relativePath}`,
 						);
 					}
 				}
 			} catch (error) {
-				console.warn(`Failed to scan directory ${baseDir}:`, error);
+				logger.warn(`Failed to scan directory ${baseDir}:`, error);
 			}
 		}
 
 		const result = Array.from(playlists.values());
-		console.log(`Total playlists detected: ${result.length}`);
+		logger.debug(`Total playlists detected: ${result.length}`);
 		for (const p of result) {
-			console.log(`  - ${p.name} (${p.path})`);
+			logger.debug(`  - ${p.name} (${p.path})`);
 		}
 
 		return result;
@@ -242,7 +245,7 @@ export class PlaylistDetector {
 				.map((entry) => path.join(dir, entry.name))
 				.filter((subdir) => !this.isHiddenDirectory(subdir));
 		} catch (error) {
-			console.warn(`Failed to read directory ${dir}:`, error);
+			logger.warn(`Failed to read directory ${dir}:`, error);
 			return [];
 		}
 	}
@@ -255,7 +258,7 @@ export class PlaylistDetector {
 			const files = await this.getAllFilesRecursive(dir);
 			return files.some((file) => isVideoFile(file));
 		} catch (error) {
-			console.warn(`Failed to check video files in ${dir}:`, error);
+			logger.warn(`Failed to check video files in ${dir}:`, error);
 			return false;
 		}
 	}
@@ -287,7 +290,7 @@ export class PlaylistDetector {
 				}
 			}
 		} catch (error) {
-			console.warn(`Failed to read directory ${dir}:`, error);
+			logger.warn(`Failed to read directory ${dir}:`, error);
 		}
 
 		return files;

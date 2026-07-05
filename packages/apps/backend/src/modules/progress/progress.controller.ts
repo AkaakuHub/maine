@@ -4,11 +4,11 @@ import {
 	Controller,
 	ForbiddenException,
 	Get,
-	Logger,
 	Post,
 	Put,
 	Query,
 } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { UpdateProgressDto } from "./dto/update-progress.dto";
 import { ProgressService } from "./progress.service";
@@ -18,7 +18,7 @@ import { PermissionsService } from "../../auth/permissions.service";
 @ApiTags("progress")
 @Controller("progress")
 export class ProgressController {
-	private readonly logger = new Logger(ProgressController.name);
+	private readonly logger = createAppLogger(ProgressController.name);
 
 	constructor(
 		private readonly progressService: ProgressService,

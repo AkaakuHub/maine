@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Logger, Post, Res } from "@nestjs/common";
+import { Body, Controller, Get, Post, Res } from "@nestjs/common";
+import { createAppLogger } from "../../common/logger";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import type { ScanProgressEvent } from "../../common/sse/sse-connection.store";
@@ -13,7 +14,7 @@ interface ControlRequestBody {
 @ApiTags("scan")
 @Controller("scan/control")
 export class ScanControlController {
-	private readonly logger = new Logger(ScanControlController.name);
+	private readonly logger = createAppLogger(ScanControlController.name);
 
 	@Post()
 	@ApiResponse({ status: 200, description: "スキャン制御コマンド送信" })
