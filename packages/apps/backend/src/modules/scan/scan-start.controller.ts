@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Res } from "@nestjs/common";
+import { Controller, Get, Logger, Post, Res } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { sseStore } from "../../common/sse/sse-connection.store";
@@ -7,17 +7,16 @@ import { videoCacheService } from "../../services/videoCacheService";
 @ApiTags("scan")
 @Controller("scan")
 export class ScanStartController {
+	private readonly logger = new Logger(ScanStartController.name);
+
 	@Post("start")
 	@ApiResponse({ status: 200, description: "スキャン開始" })
 	@ApiResponse({ status: 409, description: "スキャン実行中" })
 	async startScan(@Res({ passthrough: true }) response: Response) {
 		try {
-			console.log("Manual scan start requested via API");
-
-			// 既にスキャン中かチェック
 			const status = videoCacheService.getUpdateStatus();
 			if (status.isUpdating) {
-				response.status(409); // Conflict
+				response.status(409);
 				return {
 					error: "Scan already in progress",
 					message: "スキャンは既に実行中です",
@@ -25,16 +24,8 @@ export class ScanStartController {
 				};
 			}
 
-			// スキャンを開始（SSE接続は非同期で確立される）
-			console.log(
-				"Starting scan - SSE connections will receive progress asynchronously",
-			);
-			sseStore.getConnectionCount();
-			// Current active SSE connections
-
-			// スキャンを非同期で開始（ブロッキングしないように）
 			videoCacheService.manualRefresh().catch((error) => {
-				console.error("Background scan failed:", error);
+				this.logger.error("Background scan failed:", error);
 			});
 
 			return {
@@ -44,7 +35,7 @@ export class ScanStartController {
 				activeConnections: sseStore.getConnectionCount(),
 			};
 		} catch (error) {
-			console.error("Scan start API error:", error);
+			this.logger.error("Scan start API error:", error);
 
 			response.status(500);
 			return {
@@ -68,7 +59,7 @@ export class ScanStartController {
 				message: status.message,
 			};
 		} catch (error) {
-			console.error("Scan status API error:", error);
+			this.logger.error("Scan status API error:", error);
 
 			return {
 				error: "Failed to get scan status",

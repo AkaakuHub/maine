@@ -33,8 +33,6 @@ export class ScanSettingsController {
 	@ApiResponse({ status: 200, description: "スキャン設定更新" })
 	async updateScanSettings(@Body() settings: Partial<ScanSettings>) {
 		try {
-			this.logger.log("Updating scan settings");
-
 			const result =
 				await this.scanSettingsService.updateScanSettings(settings);
 
@@ -57,8 +55,6 @@ export class ScanSettingsController {
 	@ApiResponse({ status: 200, description: "スキャン設定リセット" })
 	async resetScanSettings() {
 		try {
-			this.logger.log("Resetting scan settings to default");
-
 			const defaultSettings =
 				await this.scanSettingsService.resetScanSettings();
 

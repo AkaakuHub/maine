@@ -433,13 +433,6 @@ class VideoCacheService {
 			existingIdByPath,
 		} = await this.detectFileChanges(allVideoFiles);
 
-		// 処理統計をログ出力
-		console.log(`スキャン統計:
-			- 総ファイル数: ${allVideoFiles.length}
-			- 変更/新規ファイル: ${changedFiles.length} (処理対象)
-			- 未変更ファイル: ${unchangedFiles.length} (スキップ)
-			- 新規ファイル: ${newFiles.length}`);
-
 		// Phase 2: メタデータ処理（変更ファイルのみ処理）
 		let processedDbRecords: ProcessedVideoRecord[] = [];
 		let deletedFilesCount = 0;
@@ -661,12 +654,6 @@ class VideoCacheService {
 				totalElapsedTime: progressMetrics.totalElapsedTime,
 				currentPhaseElapsed: progressMetrics.currentPhaseElapsed,
 			});
-
-			if (this.scanSettings.enableDetailedLogging) {
-				console.log(
-					`[SCAN][metadata][parallel] ${processedCount}/${totalFiles} processing ${file.filePath}`,
-				);
-			}
 		};
 
 		const concurrentOperations = this.scanSettings.maxConcurrentOperations;
@@ -1040,9 +1027,7 @@ class VideoCacheService {
 							fileName: file,
 						});
 					}
-				} catch (statError) {
-					console.warn(`[DEBUG] Failed to stat "${filePath}":`, statError);
-				}
+				} catch {}
 			}
 		} catch (error) {
 			console.warn(`ディレクトリ読み取りエラー: ${directory}`, error);
@@ -1112,8 +1097,6 @@ class VideoCacheService {
 
 	async searchVideos(query: string): Promise<SearchResult> {
 		try {
-			console.log(`[searchVideos] Query: "${query}"`);
-
 			// 基本的な検索をPrismaのfindManyで実行
 			const searchCondition =
 				query.trim() === ""
@@ -1131,10 +1114,6 @@ class VideoCacheService {
 				orderBy: { title: "asc" },
 			});
 
-			console.log(
-				`[searchVideos] Found ${videos.length} videos matching query`,
-			);
-
 			// 動画の基本情報を返す（進捗情報は含めない）
 			const videosWithProgress = videos.map((v) => ({
 				id: v.id,
@@ -1148,10 +1127,6 @@ class VideoCacheService {
 				duration: v.duration ?? undefined,
 				thumbnailPath: v.thumbnail_path ?? undefined,
 			}));
-
-			console.log(
-				`[searchVideos] Returning ${videosWithProgress.length} videos`,
-			);
 
 			return {
 				success: true,
@@ -1178,8 +1153,6 @@ class VideoCacheService {
 				orderBy: { title: "asc" },
 			});
 
-			console.log(`[getAllVideos] Found ${videos.length} videos in database`);
-
 			// 動画の基本情報を返す（進捗情報は含めない）
 			const videosWithProgress = videos.map((v) => ({
 				id: v.id,
@@ -1194,9 +1167,6 @@ class VideoCacheService {
 				thumbnailPath: v.thumbnail_path ?? undefined,
 			}));
 
-			console.log(
-				`[getAllVideos] Returning ${videosWithProgress.length} videos`,
-			);
 			return videosWithProgress;
 		} catch (error) {
 			console.error("動画取得エラー:", error);
@@ -1272,40 +1242,20 @@ class VideoCacheService {
 		return this.scheduler;
 	}
 
-	/**
-	 * スケジューラーを必要な時だけ初期化
-	 */
 	async initializeSchedulerIfNeeded(): Promise<void> {
 		if (typeof window === "undefined" && !this.schedulerInitialized) {
-			console.log("🚀 VideoCacheService: スケジューラーを遅延初期化します");
-			try {
-				await this.getScheduler().initializeFromDatabase();
-				this.schedulerInitialized = true;
-				console.log("✅ スケジューラーの遅延初期化が完了しました");
-			} catch (error) {
-				console.error("❌ スケジューラー初期化エラー:", error);
-			}
+			await this.getScheduler().initializeFromDatabase();
+			this.schedulerInitialized = true;
 		}
 	}
 
-	/**
-	 * スケジュールされたスキャン実行
-	 */
 	private async executeScheduledScan(): Promise<void> {
-		console.log("スケジュールされたスキャンを実行中...");
-
-		// 手動スキャンが実行中の場合はスキップ
 		if (this.isUpdating) {
-			console.log(
-				"手動スキャンが実行中のため、スケジュールされたスキャンをスキップ",
-			);
 			return;
 		}
 
 		try {
-			// 通常のスキャン実行
-			const result = await this.manualRefresh();
-			console.log("スケジュールされたスキャン完了:", result.message);
+			await this.manualRefresh();
 		} catch (error) {
 			console.error("スケジュールされたスキャンでエラー:", error);
 			throw error;

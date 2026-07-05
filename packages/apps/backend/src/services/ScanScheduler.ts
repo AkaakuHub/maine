@@ -1,7 +1,3 @@
-/**
- * スキャンスケジューラー（Cronライブラリ版）
- * cronライブラリを使用した定期的なビデオスキャンの自動実行を管理
- */
 import { CronJob } from "cron";
 import {
 	type ScanScheduleSettings,
@@ -12,10 +8,6 @@ import { ScanSchedulePersistenceService } from "./ScanSchedulePersistenceService
 import type { ScanProgressEvent } from "../common/sse/sse-connection.store";
 import { sseStore } from "../common/sse/sse-connection.store";
 
-/**
- * スケジューラーサービス
- */
-// Next.js環境でのグローバルインスタンス管理
 declare global {
 	var __scanScheduler: ScanScheduler | undefined;
 }
@@ -61,17 +53,14 @@ export class ScanScheduler {
 	 */
 	async start(): Promise<void> {
 		if (this.cronJob) {
-			console.log("スケジューラーは既に開始されています");
 			return;
 		}
 
 		if (!this.settings.enabled) {
-			console.log("スケジュールが無効化されているため開始しません");
 			return;
 		}
 
 		const cronPattern = this.generateCronPattern();
-		console.log(`スキャンスケジューラーを開始: ${cronPattern}`);
 
 		this.cronJob = new CronJob(
 			cronPattern,
@@ -95,7 +84,6 @@ export class ScanScheduler {
 		if (this.cronJob) {
 			this.cronJob.stop();
 			this.cronJob = null;
-			console.log("スキャンスケジューラーを停止しました");
 		}
 	}
 
@@ -116,13 +104,7 @@ export class ScanScheduler {
 		const wasEnabled = this.settings.enabled;
 		this.settings = { ...newSettings };
 
-		try {
-			// DBに設定を保存
-			await this.persistenceService.saveSettings(this.settings);
-		} catch (error) {
-			console.error("設定のDB保存に失敗しました:", error);
-			// DB保存に失敗してもメモリ上の設定更新は継続
-		}
+		await this.persistenceService.saveSettings(this.settings);
 
 		// スケジューラーの状態を調整
 		if (this.settings.enabled && !wasEnabled) {
@@ -135,12 +117,6 @@ export class ScanScheduler {
 			// 有効→有効（設定変更）: 再起動
 			await this.restart();
 		}
-
-		console.log("スケジュール設定を更新しました:", {
-			enabled: this.settings.enabled,
-			interval: this.settings.interval,
-			cronPattern: this.settings.enabled ? this.generateCronPattern() : null,
-		});
 	}
 
 	/**
@@ -149,7 +125,6 @@ export class ScanScheduler {
 	async initializeFromDatabase(): Promise<void> {
 		// 多重初期化を防止（実際のcronJobの有無でチェック）
 		if (this.cronJob) {
-			console.log("スケジューラーは既に初期化済みです（cronJobが存在）");
 			return;
 		}
 
@@ -159,46 +134,24 @@ export class ScanScheduler {
 			process.env.NEXT_PHASE === "PHASE_PRODUCTION_BUILD";
 
 		if (isBuildTime) {
-			console.log("ビルド時はスケジューラー初期化をスキップします");
 			return;
 		}
 
-		console.log("DBからスケジュール設定を読み込み中...");
 		const loadedSettings = await this.persistenceService.loadSettings();
-
-		console.log("DBから読み込んだ設定:", {
-			enabled: loadedSettings.enabled,
-			interval: loadedSettings.interval,
-			executionTime: loadedSettings.executionTime,
-		});
-
 		this.settings = loadedSettings;
 
 		// 設定が有効な場合はスケジューラーを開始
 		if (this.settings.enabled) {
-			console.log("スケジューラーを開始します...");
 			await this.start();
-		} else {
-			console.log("スケジュールは無効です");
 		}
-
-		console.log("スケジュール設定の初期化が完了しました:", {
-			enabled: this.settings.enabled,
-			interval: this.settings.interval,
-		});
 	}
 
 	/**
 	 * 現在の設定をDBから再読み込み
 	 */
 	async loadSettingsFromDatabase(): Promise<ScanScheduleSettings> {
-		try {
-			this.settings = await this.persistenceService.loadSettings();
-			return this.settings;
-		} catch (error) {
-			console.error("設定の読み込みでエラー:", error);
-			return this.settings; // 既存設定を返す
-		}
+		this.settings = await this.persistenceService.loadSettings();
+		return this.settings;
 	}
 
 	/**
@@ -241,7 +194,7 @@ export class ScanScheduler {
 
 			case "weekly": {
 				if (this.settings.weeklyDays.length === 0) {
-					return `${minute} ${hour} * * 0`; // デフォルト: 日曜日
+					throw new Error("weeklyDays is required for weekly schedule");
 				}
 				const days = this.settings.weeklyDays.join(",");
 				return `${minute} ${hour} * * ${days}`;
@@ -254,9 +207,10 @@ export class ScanScheduler {
 				// カスタム間隔: N時間ごと
 				return `${minute} */${this.settings.intervalHours} * * *`;
 
-			default:
-				// フォールバック: 毎日
-				return `${minute} ${hour} * * *`;
+			default: {
+				const unexpectedInterval: never = this.settings.interval;
+				throw new Error(`Unsupported schedule interval: ${unexpectedInterval}`);
+			}
 		}
 	}
 
@@ -271,13 +225,9 @@ export class ScanScheduler {
 
 		// 手動実行中の場合はスキップ
 		if (this.settings.skipIfRunning && this.isManualScanRunning()) {
-			console.log(
-				"手動スキャンが実行中のため、スケジュールされたスキャンをスキップしました",
-			);
 			return;
 		}
 
-		console.log("スケジュールされたスキャンを開始します");
 		this.isRunning = true;
 		this.currentExecutionStartTime = new Date();
 
@@ -296,7 +246,6 @@ export class ScanScheduler {
 			// 成功
 			this.lastExecution = this.currentExecutionStartTime;
 			this.lastExecutionStatus = "completed";
-			console.log("スケジュールされたスキャンが完了しました");
 
 			// SSEで完了通知
 			const completeEvent: ScanProgressEvent = {

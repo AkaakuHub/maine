@@ -1,13 +1,9 @@
-/**
- * SSE Connection Store
- *
- * Next.jsからNestJSへの移管用
- * 接続管理とリアルタイム配信を行うシングルトンクラス
- */
+import type { Response } from "express";
+import { SCAN } from "../../utils/constants";
 
 export interface SSEConnection {
 	id: string;
-	controller: ReadableStreamDefaultController;
+	response: Response;
 	createdAt: Date;
 	lastHeartbeat: Date;
 	metadata: {
@@ -55,17 +51,23 @@ export interface ScanProgressEvent {
 	};
 }
 
+const RETAINED_EVENT_TYPES: ReadonlySet<ScanProgressEvent["type"]> = new Set([
+	"progress",
+	"phase",
+	"complete",
+	"error",
+	"control_pause",
+	"control_resume",
+	"control_cancel",
+	"scan_stats",
+	"scheduler_status",
+]);
+
 export class SSEConnectionStore {
 	private static instance: SSEConnectionStore;
 	private connections = new Map<string, SSEConnection>();
 	private lastProgressEvent: ScanProgressEvent | null = null;
 	private currentScanId: string | null = null;
-
-	public readonly instanceId: string;
-
-	private constructor() {
-		this.instanceId = `store_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-	}
 
 	static getInstance(): SSEConnectionStore {
 		if (!SSEConnectionStore.instance) {
@@ -80,41 +82,40 @@ export class SSEConnectionStore {
 		}
 
 		this.connections.set(connection.id, connection);
-
-		if (this.connections.size > 1) {
-			// Multiple connections detected
-		}
-
-		if (this.lastProgressEvent && this.currentScanId) {
-			const eventToSend = this.lastProgressEvent;
-			setTimeout(() => {
-				this.sendToConnection(connection.id, eventToSend);
-			}, 100);
-		}
 	}
 
 	removeConnection(connectionId: string): void {
+		const connection = this.connections.get(connectionId);
 		this.connections.delete(connectionId);
+
+		if (
+			connection &&
+			!connection.response.destroyed &&
+			!connection.response.writableEnded
+		) {
+			connection.response.end();
+		}
 	}
 
-	private sendToConnection(
-		connectionId: string,
-		message: ScanProgressEvent,
-	): boolean {
+	sendToConnection(connectionId: string, message: ScanProgressEvent): boolean {
 		const connection = this.connections.get(connectionId);
 		if (!connection) {
 			return false;
 		}
 
+		if (connection.response.destroyed || connection.response.writableEnded) {
+			this.removeConnection(connectionId);
+			return false;
+		}
+
 		try {
-			const encoder = new TextEncoder();
 			const data = `data: ${JSON.stringify({
 				...message,
 				timestamp: message.timestamp || new Date().toISOString(),
 				activeConnections: this.connections.size,
 			})}\n\n`;
 
-			connection.controller.enqueue(encoder.encode(data));
+			connection.response.write(data);
 			connection.lastHeartbeat = new Date();
 			return true;
 		} catch {
@@ -124,10 +125,12 @@ export class SSEConnectionStore {
 	}
 
 	broadcast(message: ScanProgressEvent): void {
-		this.lastProgressEvent = {
-			...message,
-			timestamp: new Date().toISOString(),
-		};
+		if (RETAINED_EVENT_TYPES.has(message.type)) {
+			this.lastProgressEvent = {
+				...message,
+				timestamp: new Date().toISOString(),
+			};
+		}
 
 		if (message.scanId) {
 			this.currentScanId = message.scanId;
@@ -139,14 +142,14 @@ export class SSEConnectionStore {
 		}
 	}
 
-	sendHeartbeat(): void {
+	sendHeartbeatToConnection(connectionId: string): boolean {
 		const heartbeat: ScanProgressEvent = {
 			type: "heartbeat",
 			timestamp: new Date().toISOString(),
 			activeConnections: this.connections.size,
 		};
 
-		this.broadcast(heartbeat);
+		return this.sendToConnection(connectionId, heartbeat);
 	}
 
 	getConnectionCount(): number {
@@ -174,10 +177,12 @@ export class SSEConnectionStore {
 
 	cleanup(): void {
 		const now = new Date();
-		const timeoutMs = 30 * 60 * 1000;
 
 		for (const [id, connection] of this.connections) {
-			if (now.getTime() - connection.lastHeartbeat.getTime() > timeoutMs) {
+			if (
+				now.getTime() - connection.lastHeartbeat.getTime() >
+				SCAN.SSE_CONNECTION_TIMEOUT_MS
+			) {
 				this.removeConnection(id);
 			}
 		}
@@ -187,10 +192,7 @@ export class SSEConnectionStore {
 export const sseStore = SSEConnectionStore.getInstance();
 
 if (typeof window === "undefined") {
-	setInterval(
-		() => {
-			sseStore.cleanup();
-		},
-		5 * 60 * 1000,
-	);
+	setInterval(() => {
+		sseStore.cleanup();
+	}, SCAN.SSE_CLEANUP_INTERVAL_MS);
 }

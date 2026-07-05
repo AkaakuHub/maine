@@ -5,25 +5,16 @@ import { AuthAPI } from "../api/auth";
 import type { ScanProgressEvent } from "../libs/sse-connection-store";
 import { useScanStore } from "../stores/scan-store";
 import { createApiUrl } from "../utils/api";
+import { SCAN } from "../utils/constants";
 
-/**
- * Zustandベースのスキャン進捗追跡フック
- *
- * 新しいSSEConnectionStore + Zustandアーキテクチャを使用
- * EventEmitterの代わりにReactiveな状態管理を提供
- */
 export function useScanProgress() {
-	// EventSource管理用のref
 	const eventSourceRef = useRef<EventSource | null>(null);
 	const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
 		null,
 	);
 	const reconnectAttemptsRef = useRef(0);
-	const isConnectingRef = useRef(false); // 重複接続防止フラグ
+	const isConnectingRef = useRef(false);
 
-	const maxReconnectAttempts = 5;
-
-	// Zustand store から状態とアクションを安定して取得
 	const scanId = useScanStore((state) => state.scanId);
 	const setConnectionState = useScanStore((state) => state.setConnectionState);
 	const setConnectionError = useScanStore((state) => state.setConnectionError);
@@ -31,11 +22,7 @@ export function useScanProgress() {
 	const updateProgress = useScanStore((state) => state.updateProgress);
 	const resetScan = useScanStore((state) => state.resetScan);
 
-	/**
-	 * SSE接続を確立
-	 */
 	const connect = useCallback(() => {
-		// React StrictMode重複接続防止
 		if (
 			isConnectingRef.current ||
 			eventSourceRef.current?.readyState === EventSource.OPEN
@@ -45,7 +32,6 @@ export function useScanProgress() {
 
 		isConnectingRef.current = true;
 
-		// 既存接続をクリーンアップ
 		if (eventSourceRef.current) {
 			eventSourceRef.current.close();
 			eventSourceRef.current = null;
@@ -91,23 +77,22 @@ export function useScanProgress() {
 							updateProgress(data);
 							break;
 					}
-				} catch (parseError) {
-					console.warn("Failed to parse SSE message:", parseError);
+				} catch {
+					setConnectionError("Invalid SSE message");
 				}
 			};
 
-			eventSource.onerror = (error) => {
-				console.warn("SSE connection error:", error);
+			eventSource.onerror = () => {
 				isConnectingRef.current = false;
 
 				setConnectionState(false, 0);
 				setConnectionError("Connection lost");
 
-				// 自動再接続（指数バックオフ）
-				if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+				if (reconnectAttemptsRef.current < SCAN.SSE_MAX_RECONNECT_ATTEMPTS) {
 					const delay = Math.min(
-						1000 * 2 ** reconnectAttemptsRef.current,
-						30000,
+						SCAN.SSE_RECONNECT_BASE_DELAY_MS *
+							2 ** reconnectAttemptsRef.current,
+						SCAN.SSE_RECONNECT_MAX_DELAY_MS,
 					);
 					reconnectAttemptsRef.current += 1;
 
@@ -118,17 +103,13 @@ export function useScanProgress() {
 					setConnectionError("Max reconnection attempts reached");
 				}
 			};
-		} catch (error) {
-			console.error("Failed to establish SSE connection:", error);
+		} catch {
 			isConnectingRef.current = false;
 			setConnectionState(false, 0);
 			setConnectionError("Failed to connect");
 		}
 	}, [setConnectionState, setConnectionError, setHeartbeat, updateProgress]);
 
-	/**
-	 * SSE接続を切断
-	 */
 	const disconnect = useCallback(() => {
 		if (eventSourceRef.current) {
 			eventSourceRef.current.close();
@@ -145,29 +126,19 @@ export function useScanProgress() {
 		setConnectionError(null);
 	}, [setConnectionState, setConnectionError]);
 
-	/**
-	 * 手動再接続
-	 */
 	const reconnect = useCallback(() => {
 		reconnectAttemptsRef.current = 0;
 		disconnect();
-		setTimeout(connect, 100);
+		setTimeout(connect, SCAN.SSE_MANUAL_RECONNECT_DELAY_MS);
 	}, [connect, disconnect]);
 
-	/**
-	 * スキャン状態をリセット
-	 */
 	const resetScanState = useCallback(() => {
 		resetScan();
 	}, [resetScan]);
 
-	/**
-	 * スキャン制御コマンドを送信
-	 */
 	const sendScanControl = useCallback(
 		async (action: "pause" | "resume" | "cancel") => {
 			if (!scanId) {
-				console.warn("No active scan ID found");
 				return false;
 			}
 
@@ -185,24 +156,18 @@ export function useScanProgress() {
 				});
 
 				if (!response.ok) {
-					const error = await response.json();
-					console.error(`Scan control ${action} failed:`, error);
 					return false;
 				}
 
 				await response.json();
 				return true;
-			} catch (error) {
-				console.error(`Scan control ${action} request failed:`, error);
+			} catch {
 				return false;
 			}
 		},
 		[scanId],
 	);
 
-	/**
-	 * スキャン制御関数
-	 */
 	const pauseScan = useCallback(async () => {
 		return await sendScanControl("pause");
 	}, [sendScanControl]);
@@ -215,40 +180,30 @@ export function useScanProgress() {
 		return await sendScanControl("cancel");
 	}, [sendScanControl]);
 
-	// コンポーネントマウント時に接続開始
 	useEffect(() => {
-		// React StrictMode対応: 少し遅延してから接続
 		const timer = setTimeout(() => {
 			connect();
-		}, 100);
+		}, SCAN.SSE_INITIAL_CONNECT_DELAY_MS);
 
-		// クリーンアップ
 		return () => {
 			clearTimeout(timer);
 			disconnect();
 		};
 	}, [connect, disconnect]);
 
-	// storeの全状態を返す + 制御関数
 	const storeState = useScanStore();
 
 	return {
-		// Zustand storeの状態
 		...storeState,
-
-		// 制御関数
 		connect,
 		disconnect,
 		reconnect,
 		resetScanState,
-
-		// スキャン制御関数
 		pauseScan,
 		resumeScan,
 		cancelScan,
-
-		// ヘルパー
-		canReconnect: reconnectAttemptsRef.current < maxReconnectAttempts,
+		canReconnect:
+			reconnectAttemptsRef.current < SCAN.SSE_MAX_RECONNECT_ATTEMPTS,
 		reconnectAttempts: reconnectAttemptsRef.current,
 	};
 }

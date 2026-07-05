@@ -24,17 +24,11 @@ export class ScanControlController {
 		@Res({ passthrough: true }) response: Response,
 	) {
 		try {
-			this.logger.log(
-				`Scan control command: ${body.action} for scan ${body.scanId}`,
-			);
-
-			// バリデーション
 			if (!body.action || !body.scanId) {
 				response.status(400);
 				return { error: "action and scanId are required" };
 			}
 
-			// アクションのバリデーション
 			if (!["pause", "resume", "cancel"].includes(body.action)) {
 				response.status(400);
 				return {
@@ -42,14 +36,12 @@ export class ScanControlController {
 				};
 			}
 
-			// 現在のスキャン状態を確認
 			const currentState = sseStore.getCurrentScanState();
 			if (!currentState.scanId) {
 				response.status(404);
 				return { error: "No active scan found" };
 			}
 
-			// スキャンIDが一致するかチェック
 			if (currentState.scanId !== body.scanId) {
 				response.status(400);
 				return {
@@ -59,7 +51,6 @@ export class ScanControlController {
 				};
 			}
 
-			// 制御コマンドを送信
 			const event: ScanProgressEvent = {
 				type: `control_${body.action}` as
 					| "control_pause"
@@ -71,7 +62,6 @@ export class ScanControlController {
 			};
 			sseStore.broadcast(event);
 
-			// 実際のスキャン制御（videoCacheService側のフラグを更新）
 			const controlResult =
 				body.action === "pause"
 					? await videoCacheService.pauseScan(body.scanId)
@@ -86,7 +76,7 @@ export class ScanControlController {
 				message: controlResult.message,
 			};
 		} catch (error) {
-			console.error("Scan control API error:", error);
+			this.logger.error("Scan control API error:", error);
 			response.status(500);
 			return {
 				error: "Internal server error",
@@ -109,7 +99,7 @@ export class ScanControlController {
 				lastEvent: currentState.lastEvent,
 			};
 		} catch (error) {
-			console.error("Scan status API error:", error);
+			this.logger.error("Scan status API error:", error);
 			return {
 				success: false,
 				error: "Internal server error",

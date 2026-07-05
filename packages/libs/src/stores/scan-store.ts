@@ -1,51 +1,38 @@
-/**
- * Scan Store (Zustand)
- *
- * スキャン進捗とSSE接続状態を統一管理するZustandストア
- * EventEmitterの代わりにReactiveな状態管理を提供
- */
-
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { ScanProgressEvent } from "../libs/sse-connection-store";
 
 interface ScanState {
-	// 接続状態
 	isConnected: boolean;
 	isConnecting: boolean;
 	connectionError: string | null;
 	connectionCount: number;
 	lastHeartbeat: Date | null;
 
-	// スキャン状態
 	isScanning: boolean;
 	scanId: string | null;
 	phase: "discovery" | "metadata" | "database" | null;
-	progress: number; // 0-100
+	progress: number;
 	processedFiles: number;
 	totalFiles: number;
 	currentFile: string | null;
 	message: string | null;
 	error: string | null;
 
-	// 制御状態
 	isPaused: boolean;
 	canPause: boolean;
 	canResume: boolean;
 	canCancel: boolean;
 
-	// 完了状態
 	isComplete: boolean;
 	completedAt: Date | null;
 
-	// 詳細プログレス情報
 	processingSpeed?: number;
 	estimatedTimeRemaining?: number;
 	phaseStartTime?: Date;
 	totalElapsedTime?: number;
 	currentPhaseElapsed?: number;
 
-	// スキップ統計情報
 	skipStats?: {
 		totalFiles: number;
 		newFiles: number;
@@ -57,16 +44,11 @@ interface ScanState {
 }
 
 interface ScanActions {
-	// 接続制御
 	setConnectionState: (connected: boolean, count: number) => void;
 	setConnectionError: (error: string | null) => void;
 	setHeartbeat: (time: Date) => void;
-
-	// スキャン状態更新
 	updateProgress: (event: ScanProgressEvent) => void;
 	resetScan: () => void;
-
-	// 制御状態
 	setControlState: (
 		canPause: boolean,
 		canResume: boolean,
@@ -80,7 +62,6 @@ type ScanStore = ScanState & ScanActions;
 export const useScanStore = create<ScanStore>()(
 	devtools(
 		(set) => ({
-			// 初期状態
 			isConnected: false,
 			isConnecting: false,
 			connectionError: null,
@@ -113,7 +94,6 @@ export const useScanStore = create<ScanStore>()(
 
 			skipStats: undefined,
 
-			// アクション
 			setConnectionState: (connected, count) =>
 				set(
 					(state) => ({
@@ -168,16 +148,15 @@ export const useScanStore = create<ScanStore>()(
 
 							case "phase":
 								newState.isScanning = true;
-								newState.scanId = event.scanId || newState.scanId;
-								newState.phase = event.phase || newState.phase;
-								newState.progress = event.progress || 0;
-								newState.processedFiles = event.processedFiles || 0;
-								newState.totalFiles = event.totalFiles || 0;
-								newState.message = event.message || null;
+								newState.scanId = event.scanId ?? newState.scanId;
+								newState.phase = event.phase ?? newState.phase;
+								newState.progress = event.progress ?? 0;
+								newState.processedFiles = event.processedFiles ?? 0;
+								newState.totalFiles = event.totalFiles ?? 0;
+								newState.message = event.message ?? null;
 								newState.isComplete = false;
 								newState.error = null;
 
-								// 詳細プログレス情報
 								newState.processingSpeed = event.processingSpeed;
 								newState.estimatedTimeRemaining = event.estimatedTimeRemaining;
 								newState.phaseStartTime = event.timestamp
@@ -186,7 +165,6 @@ export const useScanStore = create<ScanStore>()(
 								newState.totalElapsedTime = event.totalElapsedTime;
 								newState.currentPhaseElapsed = event.currentPhaseElapsed;
 
-								// 制御ボタンを有効化
 								newState.canPause = true;
 								newState.canCancel = true;
 								newState.canResume = false;
@@ -195,15 +173,14 @@ export const useScanStore = create<ScanStore>()(
 
 							case "progress":
 								newState.isScanning = true;
-								newState.scanId = event.scanId || newState.scanId;
-								newState.phase = event.phase || newState.phase;
-								newState.progress = event.progress || 0;
-								newState.processedFiles = event.processedFiles || 0;
-								newState.totalFiles = event.totalFiles || newState.totalFiles;
-								newState.currentFile = event.currentFile || null;
-								newState.message = event.message || null;
+								newState.scanId = event.scanId ?? newState.scanId;
+								newState.phase = event.phase ?? newState.phase;
+								newState.progress = event.progress ?? 0;
+								newState.processedFiles = event.processedFiles ?? 0;
+								newState.totalFiles = event.totalFiles ?? newState.totalFiles;
+								newState.currentFile = event.currentFile ?? null;
+								newState.message = event.message ?? null;
 
-								// 詳細プログレス情報
 								newState.processingSpeed = event.processingSpeed;
 								newState.estimatedTimeRemaining = event.estimatedTimeRemaining;
 								newState.totalElapsedTime = event.totalElapsedTime;
@@ -219,11 +196,9 @@ export const useScanStore = create<ScanStore>()(
 								newState.currentFile = null;
 								newState.error = null;
 
-								// 詳細プログレス情報（完了時）
 								newState.processingSpeed = event.processingSpeed;
 								newState.totalElapsedTime = event.totalElapsedTime;
 
-								// 制御を無効化
 								newState.canPause = false;
 								newState.canResume = false;
 								newState.canCancel = false;
@@ -236,7 +211,6 @@ export const useScanStore = create<ScanStore>()(
 								newState.message = event.message || "エラーが発生しました";
 								newState.progress = -1;
 
-								// 制御を無効化
 								newState.canPause = false;
 								newState.canResume = false;
 								newState.canCancel = false;
@@ -244,9 +218,8 @@ export const useScanStore = create<ScanStore>()(
 								break;
 
 							case "scan_stats":
-								// スキップ統計情報を更新
 								newState.skipStats = event.skipStats;
-								newState.message = event.message || newState.message;
+								newState.message = event.message ?? newState.message;
 								break;
 						}
 

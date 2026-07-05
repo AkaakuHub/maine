@@ -200,7 +200,7 @@ export class ScanStreamProcessor {
 							type: "progress",
 							scanId,
 							phase: "metadata",
-							progress: progressValue, // メタデータ処理は50%まで
+							progress: progressValue,
 							processedFiles: processedCount,
 							totalFiles,
 							currentFile: videoFile.fileName,
@@ -214,11 +214,6 @@ export class ScanStreamProcessor {
 							currentPhaseElapsed: progressMetrics.currentPhaseElapsed,
 						};
 
-						if (self.settings.enableDetailedLogging) {
-							console.log(
-								`[SCAN][metadata][stream] ${processedCount}/${totalFiles} processing ${videoFile.filePath}`,
-							);
-						}
 						sseStore.broadcast(progressEvent);
 					}
 
