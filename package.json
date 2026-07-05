@@ -12,6 +12,7 @@
 		"knip": "knip",
 		"postinstall": "pnpm lefthook install",
 		"service:install": "pnpm --filter @maine/backend service:install",
+		"service:configure": "pnpm --filter @maine/backend service:configure",
 		"service:start": "pnpm --filter @maine/backend service:start",
 		"service:stop": "pnpm --filter @maine/backend service:stop",
 		"service:restart": "pnpm --filter @maine/backend service:restart",

@@ -16,6 +16,7 @@
 		"db:setup": "cd prisma && prisma generate && prisma migrate dev --name init",
 		"db:migrate": "cd prisma && prisma migrate dev",
 		"service:install": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action install",
+		"service:configure": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action configure",
 		"service:start": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action start",
 		"service:stop": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action stop",
 		"service:restart": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action restart",

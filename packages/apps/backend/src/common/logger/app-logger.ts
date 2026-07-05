@@ -14,12 +14,13 @@ const LOG_LEVEL_PRIORITY: Record<AppLogLevel, number> = {
 };
 
 const DEFAULT_LOG_LEVEL: AppLogLevel = "error";
+const LOG_LEVEL_ENV_NAME = "MAINE_BACKEND_LOG_LEVEL";
 
 class AppLogger implements LoggerService {
 	private readonly configuredLevel: AppLogLevel;
 
 	constructor(private readonly context?: string) {
-		this.configuredLevel = resolveLogLevel(process.env.LOG_LEVEL);
+		this.configuredLevel = resolveLogLevel(process.env[LOG_LEVEL_ENV_NAME]);
 	}
 
 	error(message: unknown, ...optionalParams: unknown[]): void {
@@ -83,7 +84,7 @@ function resolveLogLevel(value: string | undefined): AppLogLevel {
 		return value;
 	}
 
-	throw new Error(`Invalid LOG_LEVEL: ${value}`);
+	throw new Error(`Invalid ${LOG_LEVEL_ENV_NAME}: ${value}`);
 }
 
 function isLogLevel(value: string): value is AppLogLevel {

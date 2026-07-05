@@ -1,8 +1,11 @@
 [CmdletBinding()]
 param(
 	[Parameter(Mandatory = $true)]
-	[ValidateSet("install", "start", "stop", "restart", "status", "uninstall")]
-	[string]$Action
+	[ValidateSet("install", "configure", "start", "stop", "restart", "status", "uninstall")]
+	[string]$Action,
+
+	[ValidateSet("error", "warn", "info", "debug", "trace")]
+	[string]$LogLevel = "error"
 )
 
 $ErrorActionPreference = "Stop"
@@ -75,6 +78,7 @@ function Write-ServiceConfig {
 	$escapedEntryPoint = Escape-XmlValue $entryPoint
 	$escapedBackendRoot = Escape-XmlValue $backendRoot
 	$escapedLogDirectory = Escape-XmlValue $logDirectory
+	$escapedLogLevel = Escape-XmlValue $LogLevel
 
 	$config = @"
 <service>
@@ -85,6 +89,7 @@ function Write-ServiceConfig {
   <arguments>&quot;$escapedEntryPoint&quot;</arguments>
   <workingdirectory>$escapedBackendRoot</workingdirectory>
   <env name="NODE_ENV" value="production" />
+  <env name="MAINE_BACKEND_LOG_LEVEL" value="$escapedLogLevel" />
   <logpath>$escapedLogDirectory</logpath>
   <log mode="roll" />
   <startmode>Automatic</startmode>
@@ -117,6 +122,11 @@ switch ($Action) {
 		Write-ServiceConfig
 		Invoke-WinSw "install"
 		Invoke-WinSw "start"
+	}
+	"configure" {
+		New-ServiceRuntime
+		Write-ServiceConfig
+		Invoke-WinSw "restart"
 	}
 	"start" {
 		Invoke-WinSw "start"
