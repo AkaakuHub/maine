@@ -4,3 +4,4 @@ node_modules
 *.pem
 
 tsconfig.tsbuildinfo
+packages/apps/backend/service-runtime/

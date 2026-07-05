@@ -11,7 +11,6 @@
 		"start": "nest start",
 		"start:dev": "nest start --watch",
 		"start:debug": "nest start --debug --watch",
-		"start:prod": "node dist/main.js",
 		"lint": "biome lint --write ./src",
 		"typecheck": "tsc --noEmit",
 		"test": "jest",
@@ -22,7 +21,13 @@
 		"db:setup": "cd prisma && prisma generate && prisma migrate dev --name init",
 		"db:migrate": "cd prisma && prisma migrate dev",
 		"db:studio": "cd prisma && prisma studio",
-		"db:reset": "cd prisma && prisma migrate reset --force"
+		"db:reset": "cd prisma && prisma migrate reset --force",
+		"service:install": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action install",
+		"service:start": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action start",
+		"service:stop": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action stop",
+		"service:restart": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action restart",
+		"service:status": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action status",
+		"service:uninstall": "powershell -ExecutionPolicy Bypass -File ./scripts/windows-service/service.ps1 -Action uninstall"
 	},
 	"dependencies": {
 		"@nestjs/common": "^11.0.1",
@@ -64,13 +69,19 @@
 		"webpack": "^5.102.1"
 	},
 	"jest": {
-		"moduleFileExtensions": ["js", "json", "ts"],
+		"moduleFileExtensions": [
+			"js",
+			"json",
+			"ts"
+		],
 		"rootDir": "src",
 		"testRegex": ".*\\.spec\\.ts$",
 		"transform": {
 			"^.+\\.(t|j)s$": "ts-jest"
 		},
-		"collectCoverageFrom": ["**/*.(t|j)s"],
+		"collectCoverageFrom": [
+			"**/*.(t|j)s"
+		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
 	}

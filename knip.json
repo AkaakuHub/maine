@@ -26,5 +26,6 @@
 		}
 	},
 	"ignoreDependencies": ["ts-loader", "webpack"],
+	"ignoreBinaries": ["powershell"],
 	"includeEntryExports": true
 }

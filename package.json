@@ -3,12 +3,20 @@
 	"name": "maine",
 	"version": "0.1.0",
 	"private": true,
-	"workspaces": ["packages/*"],
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
 		"dev": "concurrently \"pnpm --filter @maine/frontend dev:https\" \"pnpm --filter @maine/backend start:dev\"",
-		"start": "concurrently \"pnpm --filter @maine/frontend build && pnpm --filter @maine/frontend start\" \"pnpm --filter @maine/backend build && pnpm --filter @maine/backend start:prod\"",
+		"start": "pnpm --filter @maine/frontend build && pnpm --filter @maine/frontend start",
 		"knip": "knip",
-		"postinstall": "pnpm lefthook install"
+		"postinstall": "pnpm lefthook install",
+		"service:install": "pnpm --filter @maine/backend service:install",
+		"service:start": "pnpm --filter @maine/backend service:start",
+		"service:stop": "pnpm --filter @maine/backend service:stop",
+		"service:restart": "pnpm --filter @maine/backend service:restart",
+		"service:status": "pnpm --filter @maine/backend service:status",
+		"service:uninstall": "pnpm --filter @maine/backend service:uninstall"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^19.8.1",
