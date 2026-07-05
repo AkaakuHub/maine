@@ -66,7 +66,7 @@ function Resolve-NodeExecutable {
 
 	$actualNodeVersion = Get-NodeVersion $nodeExecutable
 	if ($actualNodeVersion -ne $requiredNodeVersion) {
-		throw "Expected Node $requiredNodeVersion, but resolved Node $actualNodeVersion: $nodeExecutable"
+		throw ("Expected Node {0}, but resolved Node {1}: {2}" -f $requiredNodeVersion, $actualNodeVersion, $nodeExecutable)
 	}
 
 	return $nodeExecutable
