@@ -85,7 +85,7 @@ export function ResponsiveVideoLayout({
 				<button
 					type="button"
 					onClick={() => setIsDesktopSidebarOpen(true)}
-					className="hidden lg:inline-flex absolute right-4 top-16 z-40 h-10 w-10 items-center justify-center rounded-full bg-overlay/55 text-text-inverse backdrop-blur transition-colors hover:bg-primary/80"
+					className="hidden lg:inline-flex absolute right-4 top-1/2 z-40 h-12 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-overlay/55 text-white backdrop-blur transition-colors hover:text-primary" // tailwind-ignore
 					aria-label="サイドバーを開く"
 					title="サイドバーを開く"
 				>
@@ -126,21 +126,19 @@ export function ResponsiveVideoLayout({
 					className={cn(
 						"flex-1 bg-surface-variant overflow-y-auto",
 						isDesktopSidebarOpen
-							? "lg:w-96 lg:flex-initial lg:border-l lg:border-border lg:backdrop-blur-sm lg:max-h-full"
+							? "relative lg:w-96 lg:flex-initial lg:border-l lg:border-border lg:backdrop-blur-sm lg:max-h-full"
 							: "lg:hidden",
 					)}
 				>
-					<div className="hidden lg:flex justify-end p-3 pb-0">
-						<button
-							type="button"
-							onClick={() => setIsDesktopSidebarOpen(false)}
-							className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-elevated hover:text-text"
-							aria-label="サイドバーを閉じる"
-							title="サイドバーを閉じる"
-						>
-							<PanelRightClose className="h-5 w-5" />
-						</button>
-					</div>
+					<button
+						type="button"
+						onClick={() => setIsDesktopSidebarOpen(false)}
+						className="hidden lg:inline-flex absolute left-3 top-1/2 z-40 h-12 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-overlay/55 text-white backdrop-blur transition-colors hover:text-primary" // tailwind-ignore
+						aria-label="サイドバーを閉じる"
+						title="サイドバーを閉じる"
+					>
+						<PanelRightClose className="h-5 w-5" />
+					</button>
 					{/* 動画情報 */}
 					<VideoInfo
 						videoInfo={videoInfo}
