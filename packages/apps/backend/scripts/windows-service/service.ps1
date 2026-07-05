@@ -27,7 +27,7 @@ $entryPoint = Join-Path $backendRoot "dist/main.js"
 
 function Assert-Windows {
 	if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
-		throw "Windowsサービス操作はWindowsでのみ実行できます。"
+		throw "Windows service operations can only run on Windows."
 	}
 }
 
@@ -35,7 +35,7 @@ function Assert-Administrator {
 	$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 	$principal = [Security.Principal.WindowsPrincipal]::new($identity)
 	if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-		throw "Windowsサービス操作は管理者権限のPowerShellで実行してください。"
+		throw "Run this command from an elevated PowerShell session."
 	}
 }
 
@@ -48,7 +48,7 @@ function Invoke-BackendBuild {
 	try {
 		& pnpm build
 		if ($LASTEXITCODE -ne 0) {
-			throw "バックエンドのビルドに失敗しました。"
+			throw "Backend build failed."
 		}
 	}
 	finally {
@@ -68,7 +68,7 @@ function New-ServiceRuntime {
 function Write-ServiceConfig {
 	$nodeExecutable = (Get-Command node.exe -ErrorAction Stop).Source
 	if (-not (Test-Path $entryPoint)) {
-		throw "サービスのエントリーポイントが存在しません: $entryPoint"
+		throw "Service entry point does not exist: $entryPoint"
 	}
 
 	$escapedServiceId = Escape-XmlValue $serviceId
@@ -103,12 +103,12 @@ function Write-ServiceConfig {
 
 function Invoke-WinSw([string]$Command) {
 	if (-not (Test-Path $serviceExecutable)) {
-		throw "WinSW実行ファイルが存在しません。先にservice:installを実行してください。"
+		throw "WinSW executable does not exist. Run service:install first."
 	}
 
 	& $serviceExecutable $Command
 	if ($LASTEXITCODE -ne 0) {
-		throw "WinSWの$Commandに失敗しました。"
+		throw "WinSW command failed: $Command"
 	}
 }
 
