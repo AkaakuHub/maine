@@ -16,6 +16,7 @@ $serviceName = "Maine Backend"
 $serviceDescription = "Maine backend API server"
 $winswVersion = "v2.12.0"
 $winswDownloadUrl = "https://github.com/winsw/winsw/releases/download/$winswVersion/WinSW-x64.exe"
+$requiredNodeVersion = "24.11.0"
 
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $backendRoot = (Resolve-Path (Join-Path $scriptDirectory "../..")).Path
@@ -43,9 +44,46 @@ function Escape-XmlValue([string]$Value) {
 	return [Security.SecurityElement]::Escape($Value)
 }
 
+function Get-NodeVersion([string]$NodeExecutable) {
+	$versionOutput = & $NodeExecutable --version
+	if ($LASTEXITCODE -ne 0) {
+		throw "Failed to read Node version: $NodeExecutable"
+	}
+
+	return $versionOutput.TrimStart("v")
+}
+
+function Resolve-NodeExecutable {
+	$protoExecutable = (Get-Command proto.exe -ErrorAction Stop).Source
+	$nodeExecutable = (& $protoExecutable bin node $requiredNodeVersion).Trim()
+	if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($nodeExecutable)) {
+		throw "Node $requiredNodeVersion is not installed in proto. Run: proto install node $requiredNodeVersion"
+	}
+
+	if (-not (Test-Path $nodeExecutable)) {
+		throw "Resolved Node executable does not exist: $nodeExecutable"
+	}
+
+	$actualNodeVersion = Get-NodeVersion $nodeExecutable
+	if ($actualNodeVersion -ne $requiredNodeVersion) {
+		throw "Expected Node $requiredNodeVersion, but resolved Node $actualNodeVersion: $nodeExecutable"
+	}
+
+	return $nodeExecutable
+}
+
+function Assert-CurrentNodeVersion {
+	$currentNodeExecutable = (Get-Command node.exe -ErrorAction Stop).Source
+	$currentNodeVersion = Get-NodeVersion $currentNodeExecutable
+	if ($currentNodeVersion -ne $requiredNodeVersion) {
+		throw "Expected current Node $requiredNodeVersion, but found Node $currentNodeVersion. Run this command from a proto-activated shell."
+	}
+}
+
 function Invoke-BackendBuild {
 	Push-Location $backendRoot
 	try {
+		Assert-CurrentNodeVersion
 		& pnpm build
 		if ($LASTEXITCODE -ne 0) {
 			throw "Backend build failed."
@@ -66,7 +104,7 @@ function New-ServiceRuntime {
 }
 
 function Write-ServiceConfig {
-	$nodeExecutable = (Get-Command node.exe -ErrorAction Stop).Source
+	$nodeExecutable = Resolve-NodeExecutable
 	if (-not (Test-Path $entryPoint)) {
 		throw "Service entry point does not exist: $entryPoint"
 	}

@@ -1,11 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
-import { promises as fs, existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 import {
 	derivePasswordVerifier,
 	generateAuthSalt,
 } from "../src/auth/password.utils";
+import { createAppLogger } from "../src/common/logger";
+
+const logger = createAppLogger("MigratePassword");
 
 loadEnvFileIfNeeded();
 
@@ -37,18 +40,9 @@ function loadEnvFileIfNeeded() {
 
 		mergeEnvFromFile(envPath);
 		if (process.env.DATABASE_URL) {
-			console.log(`Loaded environment variables from ${envPath}`);
+			logger.debug(`Loaded environment variables from ${envPath}`);
 			return;
 		}
-	}
-
-	const defaultSqlitePath = path.resolve(backendRoot, "prisma", "dev.db");
-	if (existsSync(defaultSqlitePath)) {
-		process.env.DATABASE_URL = `file:${defaultSqlitePath}`;
-		console.warn(
-			"DATABASE_URL was not set. Falling back to local prisma/dev.db file.",
-		);
-		return;
 	}
 
 	throw new Error(
@@ -123,7 +117,7 @@ async function migratePassword(username: string, password: string) {
 		},
 	});
 
-	console.log(`Updated verifier for ${username}`);
+	logger.info(`Updated verifier for ${username}`);
 }
 
 async function main() {
@@ -132,10 +126,10 @@ async function main() {
 			parseArgs(process.argv.slice(2));
 
 		if (!username || !password) {
-			console.error(
+			logger.error(
 				"Usage: pnpm ts-node scripts/migrate-password.ts --username=<name> --password=<plain>",
 			);
-			console.error(
+			logger.error(
 				"または環境変数 TARGET_USER/TARGET_PASS を設定してください",
 			);
 			process.exit(1);
@@ -143,7 +137,7 @@ async function main() {
 
 		await migratePassword(username, password);
 	} catch (error) {
-		console.error(error instanceof Error ? error.message : error);
+		logger.error(error instanceof Error ? error.message : error);
 		process.exitCode = 1;
 	} finally {
 		await prisma.$disconnect();

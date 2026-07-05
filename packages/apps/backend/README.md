@@ -16,7 +16,16 @@ pnpm run start:dev
 
 ## Windowsサービス
 
-管理者権限のPowerShellで実行する。
+protoで指定バージョンを有効にしてから、管理者権限のPowerShellで実行する。
+
+```powershell
+proto install node 24.11.0
+proto install pnpm 10.18.0
+node --version
+pnpm --version
+```
+
+`node --version`が`v24.11.0`ではない場合、サービス操作は失敗する。
 
 ```powershell
 pnpm service:install
@@ -26,7 +35,7 @@ pnpm service:stop
 pnpm service:uninstall
 ```
 
-`service:install`はバックエンドをビルドし、WinSWで`MaineBackend`サービスを登録して起動する。サービスは`node dist/main.js`を直接実行する。
+`service:install`はバックエンドをビルドし、WinSWで`MaineBackend`サービスを登録して起動する。サービスはprotoが解決したNode24.11.0で`dist/main.js`を直接実行する。
 
 ログレベルは`error`、`warn`、`info`、`debug`、`trace`を指定できる。未指定時は`error`になる。
 

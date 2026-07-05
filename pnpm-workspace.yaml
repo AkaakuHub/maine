@@ -2,6 +2,8 @@ packages:
   - packages/apps/*
   - packages/libs
 
+engineStrict: true
+
 onlyBuiltDependencies:
   - '@biomejs/biome'
   - '@nestjs/core'
