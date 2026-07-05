@@ -21,6 +21,7 @@ protoで指定バージョンを有効にしてから、管理者権限のPowerS
 ```powershell
 proto install node 24.11.0
 proto install pnpm 10.18.0
+proto activate pwsh | Out-String | Invoke-Expression
 node --version
 pnpm --version
 ```
@@ -37,10 +38,21 @@ pnpm service:uninstall
 
 `service:install`はバックエンドをビルドし、WinSWで`MaineBackend`サービスを登録して起動する。サービスはprotoが解決したNode24.11.0で`dist/main.js`を直接実行する。
 
+## 設定変更
+
+`packages/apps/backend/.env`を書き換えた場合は、サービスを再起動する。
+
+```powershell
+notepad .\packages\apps\backend\.env
+pnpm service:restart
+```
+
+ディレクトリ追加など、アプリが`.env`から読む設定は`service:configure`では反映しない。
+
 ログレベルは`error`、`warn`、`info`、`debug`、`trace`を指定できる。未指定時は`error`になる。
 
 ```powershell
 pnpm service:configure -- -LogLevel error
 ```
 
-`service:configure`はWinSWのサービス設定XMLに`MAINE_BACKEND_LOG_LEVEL`を書き込み、サービスを再起動する。PowerShellセッションの一時環境変数は使用しない。
+`service:configure`はWinSWのサービス設定XMLに`MAINE_BACKEND_LOG_LEVEL`を書き込み、サービスを再起動する。PowerShellセッションの一時環境変数は使用しない。登録済みサービスのWinSW設定を書き換えるためのコマンドで、初回登録には使用しない。
