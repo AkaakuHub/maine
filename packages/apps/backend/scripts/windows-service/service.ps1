@@ -99,7 +99,15 @@ function New-ServiceRuntime {
 	New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
 
 	if (-not (Test-Path $serviceExecutable)) {
-		Invoke-WebRequest -Uri $winswDownloadUrl -OutFile $serviceExecutable
+		Write-Host "Downloading WinSW $winswVersion to $serviceExecutable"
+		$previousProgressPreference = $ProgressPreference
+		$ProgressPreference = "SilentlyContinue"
+		try {
+			Invoke-WebRequest -Uri $winswDownloadUrl -OutFile $serviceExecutable
+		}
+		finally {
+			$ProgressPreference = $previousProgressPreference
+		}
 	}
 }
 
