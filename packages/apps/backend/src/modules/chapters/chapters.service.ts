@@ -46,7 +46,7 @@ export class ChaptersService {
 	 */
 	async extractVideoChapters(filePath: string): Promise<VideoChapter[]> {
 		try {
-			this.logger.info(`Extracting chapters for: ${filePath}`);
+			this.logger.debug(`Extracting chapters for: ${filePath}`);
 
 			// ffprobeでチャプター情報をJSON形式で取得
 			const command = `ffprobe -v quiet -print_format json -show_chapters "${filePath}"`;
@@ -76,7 +76,7 @@ export class ChaptersService {
 				};
 			});
 
-			this.logger.info(`Found ${chapters.length} chapters`);
+			this.logger.debug(`Found ${chapters.length} chapters`);
 			return chapters;
 		} catch (error) {
 			this.logger.error("Failed to extract video chapters:", error);

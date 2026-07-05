@@ -39,8 +39,15 @@ export class VideoController {
 			};
 		}
 
-		// 許可リストの最初のオリジンをデフォルトとして使用
-		const defaultOrigin = allowedOrigins.length > 0 ? allowedOrigins[0] : "*";
+		if (requestOrigin) {
+			throw new ForbiddenException("Origin is not allowed");
+		}
+
+		const defaultOrigin = allowedOrigins[0];
+		if (!defaultOrigin) {
+			throw new ForbiddenException("Allowed origin is not configured");
+		}
+
 		return {
 			"Access-Control-Allow-Origin": defaultOrigin,
 			"Access-Control-Allow-Credentials": "true",

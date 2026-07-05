@@ -65,7 +65,7 @@ export class VideosController {
 			);
 
 			if (searchResult.videos.length === 0) {
-				this.logger.info(
+				this.logger.debug(
 					`No videos found for search query: "${query.search}", returning empty result`,
 				);
 				const page = query.page || 1;
@@ -161,15 +161,14 @@ export class VideosController {
 	})
 	async getDirectories(): Promise<string[]> {
 		try {
-			this.logger.info("Getting directories from VIDEO_DIRECTORY");
+			this.logger.debug("Getting directories from VIDEO_DIRECTORY");
 
 			// getVideoDirectories関数からディレクトリを取得
 			const directoriesList = getVideoDirectories();
 			if (directoriesList.length === 0) {
-				this.logger.warn("VIDEO_DIRECTORY not found, using default");
-				return ["/"];
+				return [];
 			}
-			this.logger.info(
+			this.logger.debug(
 				`Processing ${directoriesList.length} directories: ${directoriesList.join(", ")}`,
 			);
 
@@ -190,7 +189,7 @@ export class VideosController {
 
 			const directories = Array.from(allDirectories).sort();
 
-			this.logger.info(
+			this.logger.debug(
 				`Found ${directories.length} directories from VIDEO_DIRECTORY: ${directoriesList.join(", ")}`,
 			);
 			return directories;

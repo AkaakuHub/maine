@@ -40,7 +40,7 @@ export class ScanService {
 			throw new Error("Scan already in progress");
 		}
 
-		this.logger.info("Starting manual scan");
+		this.logger.debug("Starting manual scan");
 
 		videoCacheService.manualRefresh().catch((error) => {
 			this.logger.error("Background scan failed:", error);
@@ -52,7 +52,7 @@ export class ScanService {
 	async controlScan(
 		action: "pause" | "resume" | "cancel",
 	): Promise<ScanControlResult> {
-		this.logger.info(`Scan control: ${action}`);
+		this.logger.debug(`Scan control: ${action}`);
 
 		const scanId = videoCacheService.getCurrentScanStatus().scanId;
 		if (!scanId) {
@@ -80,7 +80,7 @@ export class ScanService {
 	async updateScanSettings(
 		settings: Partial<ScanSettings>,
 	): Promise<ScanSettings> {
-		this.logger.info("Updating scan settings:", settings);
+		this.logger.debug("Updating scan settings:", settings);
 		return await this.scanSettingsService.updateScanSettings(settings);
 	}
 }

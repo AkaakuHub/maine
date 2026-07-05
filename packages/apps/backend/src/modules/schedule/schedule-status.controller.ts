@@ -17,7 +17,7 @@ export class ScheduleStatusController {
 	@ApiResponse({ status: 200, description: "スケジューラー状態取得" })
 	async getScheduleStatus() {
 		try {
-			this.logger.info("Getting schedule status");
+			this.logger.debug("Getting schedule status");
 
 			// スケジューラーの遅延初期化を確実に実行
 			await this.scanScheduler.initializeSchedulerIfNeeded();

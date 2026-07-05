@@ -53,25 +53,18 @@ export class ScheduleController {
 	@ApiResponse({ status: 200, description: "スケジュール設定取得" })
 	async getScheduleSettings() {
 		try {
-			this.logger.info("Getting schedule settings");
+			this.logger.debug("Getting schedule settings");
 
 			// スケジューラーの遅延初期化を確実に実行
 			await this.scanScheduler.initializeSchedulerIfNeeded();
 
 			// DBから最新設定を確実に読み込み（Next.jsと同じ動作）
-			try {
-				await this.scanScheduler.loadSettingsFromDatabase();
-			} catch (dbError) {
-				this.logger.warn(
-					"DB設定読み込み中にエラー（メモリ上の設定を使用）:",
-					dbError,
-				);
-			}
+			await this.scanScheduler.loadSettingsFromDatabase();
 
 			const settings = this.scanScheduler.getSettings();
 			const status = this.scanScheduler.getStatus();
 
-			this.logger.info("Schedule settings retrieved:", { settings, status });
+			this.logger.debug("Schedule settings retrieved:", { settings, status });
 
 			return {
 				success: true,
@@ -93,7 +86,7 @@ export class ScheduleController {
 	@ApiResponse({ status: 400, description: "無効な設定" })
 	async saveScheduleSettings(@Body() settings: ScanScheduleSettings) {
 		try {
-			this.logger.info("Saving schedule settings");
+			this.logger.debug("Saving schedule settings");
 
 			// 設定の検証
 			const validationResult = this.validateScheduleSettings(settings);
@@ -103,7 +96,7 @@ export class ScheduleController {
 
 			// スケジューラー設定を更新
 			await this.scanScheduler.updateSettings(settings);
-			this.logger.info("Schedule settings saved:", settings);
+			this.logger.debug("Schedule settings saved:", settings);
 
 			// 更新後の設定と状態を取得
 			const updatedSettings = this.scanScheduler.getSettings();
@@ -132,7 +125,7 @@ export class ScheduleController {
 	@ApiResponse({ status: 200, description: "スケジュール無効化" })
 	async disableSchedule() {
 		try {
-			this.logger.info("Disabling schedule");
+			this.logger.debug("Disabling schedule");
 
 			// スケジューラーを無効化
 			const currentSettings = this.scanScheduler.getSettings();
@@ -142,7 +135,7 @@ export class ScheduleController {
 			};
 
 			await this.scanScheduler.updateSettings(disabledSettings);
-			this.logger.info("Schedule disabled");
+			this.logger.debug("Schedule disabled");
 
 			// 無効化後の設定と状態を取得
 			const updatedSettings = this.scanScheduler.getSettings();
