@@ -31,6 +31,8 @@ export interface ModernVideoPlayerProps {
 	onHome?: () => void;
 	onShare?: () => void;
 	onOpenAppSettings?: () => void;
+	isSidebarOpen?: boolean;
+	onToggleSidebar?: () => void;
 	onTimeUpdate?: (currentTime: number, duration: number) => void;
 	initialTime?: number;
 	className?: string;

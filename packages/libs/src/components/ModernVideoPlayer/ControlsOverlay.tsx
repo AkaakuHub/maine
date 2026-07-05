@@ -6,6 +6,8 @@ import {
 	Maximize,
 	Minimize,
 	Pause,
+	PanelRightClose,
+	PanelRightOpen,
 	PictureInPicture2,
 	Play,
 	RotateCcw,
@@ -59,6 +61,8 @@ interface ControlsOverlayProps {
 	onHome?: () => void;
 	onShare?: () => void;
 	onOpenAppSettings?: () => void;
+	isSidebarOpen?: boolean;
+	onToggleSidebar?: () => void;
 }
 
 export default function ControlsOverlay({
@@ -97,11 +101,18 @@ export default function ControlsOverlay({
 	onHome,
 	onShare,
 	onOpenAppSettings,
+	isSidebarOpen,
+	onToggleSidebar,
 }: ControlsOverlayProps) {
 	const [showChapterList, setShowChapterList] = useState(false);
 	const isMobileLayout = variant === "mobile";
+	const shouldShowSidebarControl = !isMobileLayout && onToggleSidebar;
 	const hasNavigationControls =
-		onBack || onHome || onShare || onOpenAppSettings;
+		onBack ||
+		onHome ||
+		onShare ||
+		onOpenAppSettings ||
+		shouldShowSidebarControl;
 
 	const timeDisplayButton = (
 		<button
@@ -187,6 +198,25 @@ export default function ControlsOverlay({
 									title="アプリ設定"
 								>
 									<Settings className="h-5 w-5" />
+								</button>
+							) : null}
+							{shouldShowSidebarControl ? (
+								<button
+									type="button"
+									onClick={onToggleSidebar}
+									className="inline-flex h-10 w-10 items-center justify-center text-white hover:text-primary transition-colors" // tailwind-ignore
+									aria-label={
+										isSidebarOpen ? "サイドバーを閉じる" : "サイドバーを開く"
+									}
+									title={
+										isSidebarOpen ? "サイドバーを閉じる" : "サイドバーを開く"
+									}
+								>
+									{isSidebarOpen ? (
+										<PanelRightClose className="h-5 w-5" />
+									) : (
+										<PanelRightOpen className="h-5 w-5" />
+									)}
 								</button>
 							) : null}
 						</div>

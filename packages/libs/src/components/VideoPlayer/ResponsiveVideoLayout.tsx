@@ -1,6 +1,5 @@
 "use client";
 
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import HelpModal from "../../components/HelpModal";
 import ModernVideoPlayer from "../../components/ModernVideoPlayer";
@@ -81,18 +80,6 @@ export function ResponsiveVideoLayout({
 	}, [showHelpModal]);
 	return (
 		<div className="relative h-screen">
-			{!isDesktopSidebarOpen ? (
-				<button
-					type="button"
-					onClick={() => setIsDesktopSidebarOpen(true)}
-					className="hidden lg:inline-flex absolute right-4 top-1/2 z-40 h-12 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-overlay/55 text-white backdrop-blur transition-colors hover:text-primary" // tailwind-ignore
-					aria-label="サイドバーを開く"
-					title="サイドバーを開く"
-				>
-					<PanelRightOpen className="h-5 w-5" />
-				</button>
-			) : null}
-
 			{/* レスポンシブなメインコンテンツ */}
 			<div className="flex flex-col lg:flex-row lg:h-full min-h-0 overflow-y-scroll lg:overflow-y-auto hidden-scrollbar">
 				{/* 動画プレイヤーセクション - モバイル: full width, デスクトップ: flex-1 */}
@@ -106,6 +93,10 @@ export function ResponsiveVideoLayout({
 							onHome={onHome}
 							onShare={onShare}
 							onOpenAppSettings={onOpenSettings}
+							isSidebarOpen={isDesktopSidebarOpen}
+							onToggleSidebar={() =>
+								setIsDesktopSidebarOpen((isOpen) => !isOpen)
+							}
 							onTimeUpdate={onTimeUpdate}
 							initialTime={initialTime}
 							onShowHelp={() => setShowHelpModal(true)}
@@ -126,19 +117,10 @@ export function ResponsiveVideoLayout({
 					className={cn(
 						"flex-1 bg-surface-variant overflow-y-auto",
 						isDesktopSidebarOpen
-							? "relative lg:w-96 lg:flex-initial lg:border-l lg:border-border lg:backdrop-blur-sm lg:max-h-full"
+							? "lg:w-96 lg:flex-initial lg:border-l lg:border-border lg:backdrop-blur-sm lg:max-h-full"
 							: "lg:hidden",
 					)}
 				>
-					<button
-						type="button"
-						onClick={() => setIsDesktopSidebarOpen(false)}
-						className="hidden lg:inline-flex absolute left-3 top-1/2 z-40 h-12 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-overlay/55 text-white backdrop-blur transition-colors hover:text-primary" // tailwind-ignore
-						aria-label="サイドバーを閉じる"
-						title="サイドバーを閉じる"
-					>
-						<PanelRightClose className="h-5 w-5" />
-					</button>
 					{/* 動画情報 */}
 					<VideoInfo
 						videoInfo={videoInfo}

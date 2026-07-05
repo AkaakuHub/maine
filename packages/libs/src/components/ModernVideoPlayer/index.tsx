@@ -35,6 +35,8 @@ const ModernVideoPlayer = ({
 	onHome,
 	onShare,
 	onOpenAppSettings,
+	isSidebarOpen,
+	onToggleSidebar,
 	onTimeUpdate,
 	initialTime = 0,
 	className = "",
@@ -451,6 +453,8 @@ const ModernVideoPlayer = ({
 				onHome={onHome}
 				onShare={onShare}
 				onOpenAppSettings={onOpenAppSettings}
+				isSidebarOpen={isSidebarOpen}
+				onToggleSidebar={onToggleSidebar}
 			/>
 
 			{/* 設定メニュー */}
